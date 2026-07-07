@@ -321,9 +321,13 @@ b{color:var(--ink)}
 /* welcome / hub chooser */
 .welcomewrap{max-width:560px;padding-top:46px}
 .welcome{text-align:center;animation:fadeUp .5s ease both}
-.wbrand{font-family:var(--mono);font-size:29px;font-weight:700;letter-spacing:.2em;line-height:1.3;color:var(--phos)}
+.wbrand{font-family:var(--font-ui);font-weight:800;font-size:clamp(28px,8.8vw,42px);letter-spacing:.12em;line-height:1.02;color:var(--accent-soft);text-transform:uppercase;text-indent:.12em}
+.topekg{position:absolute;top:3px;left:0;width:100%;height:11px;opacity:.6;pointer-events:none}
+.topekg polyline{fill:none;stroke:var(--accent-soft);stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round;vector-effect:non-scaling-stroke}
 .wtag{color:var(--muted);margin:13px 0 28px;font-size:13px;font-family:var(--mono);letter-spacing:.02em}
-.wservire{font-family:var(--font-read);font-style:italic;font-weight:500;font-size:24px;color:var(--text-2);letter-spacing:.07em;margin:8px 0 30px}
+.wservire{display:flex;align-items:center;justify-content:center;gap:15px;margin:8px 0 30px}
+.wservire span{font-family:var(--font-read);font-style:italic;font-weight:500;font-size:24px;color:var(--text-2);letter-spacing:.07em}
+.wservire::before,.wservire::after{content:"";height:1px;width:42px;background:var(--border-strong)}
 .hubs{display:flex;flex-direction:column;gap:16px}
 .hubcard{position:relative;display:block;width:100%;text-align:left;background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:20px;cursor:pointer;overflow:hidden;transition:transform .14s,border-color .2s}
 .hubcard:hover{border-color:var(--phos-dim)}
@@ -867,7 +871,8 @@ function chrome(active){
   const tabs=[["today","Today"],["plan","Calendar"],["stats","Stats"],["adjust","Plan"]];
   if(S.active==="nbme")tabs.push(["step","STEP"]);
   const nm=(S.active==="nbme")?"Home":hubName(S.active||"step1");
-  return '<div class="topbar"><button class="brandbtn" id="brandBtn" title="Switch hub">‹ <span class="brandnm">'+escHTML(nm)+'</span></button>'
+  const ekg='<svg class="topekg" viewBox="0 0 1200 24" preserveAspectRatio="none" aria-hidden="true"><polyline points="0,12 540,12 552,12 562,8 572,16 582,3 592,21 602,13 616,12 1200,12"/></svg>';
+  return '<div class="topbar">'+ekg+'<button class="brandbtn" id="brandBtn" title="Switch hub">‹ <span class="brandnm">'+escHTML(nm)+'</span></button>'
    +'<div class="topright"><span class="led" title="online"></span><button class="iconbtn" id="menuBtn" aria-label="menu">⋮</button></div></div>'
    +'<div class="nav">'+tabs.map(t=>'<button class="navb '+(active===t[0]?"on":"")+'" data-view="'+t[0]+'">'+t[1]+'</button>').join('')+'</div>';}
 
@@ -1566,7 +1571,7 @@ function renderWelcome(){
   // chooser is open can't re-activate the hub and pull the user back inside
   if(S.active){S.active=null;S.cfg=null;save();}
   let body='<div class="welcome"><div class="wbrand">LOW YIELD ONLY</div>'
-    +'<div class="wservire">SERVIRE</div>'
+    +'<div class="wservire"><span>SERVIRE</span></div>'
     +'<div class="hubs">'+hubCard("nbme")+'</div>'
     +'<div class="wfoot"><button class="link" id="w_step1">Step 1 Command Center (legacy)</button> \u00b7 '+((Cloud.user&&Cloud.user.email)?('Signed in as '+escHTML(Cloud.user.email)+' \u00b7 <button class="link" id="w_signout">Sign out</button> \u00b7 '):'')+'<button class="link" id="w_restore">Restore a backup</button></div>'
     +'</div>';
@@ -1730,7 +1735,7 @@ function doResetAll(){
     S.cfgs=snap.cfgs;S.active=snap.active;S.cfg=S.active?S.cfgs[S.active]:null;_prevSig=progressSig();save();
     if(S.cfg){reflow();render();}else renderWelcome();toast("Restored ✓");});
 }
-const BUILD="2026-07-11b";
+const BUILD="2026-07-12c";
 function openMenu(){
   const email=Cloud.user&&Cloud.user.email;
   const inHub=!!S.active;
