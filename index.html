@@ -487,6 +487,15 @@ store.init();
 let SKEY="cc_state";          // active local-cache key (becomes per-account after sign-in)
 const LEGACY_KEY="cc_state";  // pre-account local data lives here (offered for one-time import)
 let AUTHED=false;             // required sign-in gate
+/* ---------- access control: ECU students only (+ admin allowlist) ----------
+   Client gate for honest users; real enforcement lives in firestore.rules.
+   Edit these lists to manage access. */
+const ACCESS_DOMAINS=["students.ecu.edu"];
+const ACCESS_EMAILS=["dylanwlewis@protonmail.com"]; // admins / exceptions
+function emailAllowed(email){email=(email||"").trim().toLowerCase();if(!email)return false;
+  if(ACCESS_EMAILS.indexOf(email)>=0)return true;
+  const d=email.split("@")[1]||"";return ACCESS_DOMAINS.indexOf(d)>=0;}
+const ACCESS_MSG="Access is limited to ECU students. Sign in with your @students.ecu.edu email.";
 
 /* ---------- NBME exam blocks (your school's combined units) ----------
    Each block maps to a set of systems; B&B/Pathoma/Sketchy follow per system. */
@@ -509,7 +518,7 @@ function flatSys(blocks){let out=[];blocks.forEach(b=>{out=out.concat(blockSyste
    Video progress (vdone/vskip/...) is shared — a watched video is watched
    regardless of which exam you're prepping. S.cfg points at the active hub. */
 let S={active:null,cfgs:{step1:null,nbme:null},vdone:{},vskip:{},vdoneDate:{},akdone:{},notes:{},streak:{days:{}},settings:{},_updatedAt:0,cfg:null};
-function emptyState(){return {active:null,cfgs:{step1:null,nbme:null},vdone:{},vskip:{},vdoneDate:{},akdone:{},notes:{},streak:{days:{}},assessments:{},uworld:{total:null,blocks:{}},vshaky:{},settings:{},_updatedAt:0,_resetAt:0,cfg:null};}
+function emptyState(){return {active:null,cfgs:{step1:null,nbme:null},vdone:{},vskip:{},vdoneDate:{},akdone:{},notes:{},streak:{days:{}},assessments:{},uworld:{total:null,blocks:{}},amboss:{total:null,blocks:{}},vshaky:{},settings:{},_updatedAt:0,_resetAt:0,cfg:null};}
 function resetStateToEmpty(){Object.assign(S,emptyState());S.cfgs={step1:null,nbme:null};S.streak={days:{}};}
 /* load a specific account's cached state (empty if none yet) */
 function loadState(key){
@@ -517,7 +526,7 @@ function loadState(key){
   let raw={};try{raw=JSON.parse(store.get(key)||"{}");}catch(e){}
   S.vdone=raw.vdone||{};S.vskip=raw.vskip||{};S.vdoneDate=raw.vdoneDate||{};S.akdone=raw.akdone||{};
   S.notes=raw.notes||{};S.streak=raw.streak||{days:{}};S.streak.days=S.streak.days||{};
-  S.assessments=raw.assessments||{};S.uworld=raw.uworld||{total:null,blocks:{}};S.uworld.blocks=S.uworld.blocks||{};S.vshaky=raw.vshaky||{};
+  S.assessments=raw.assessments||{};S.uworld=raw.uworld||{total:null,blocks:{}};S.uworld.blocks=S.uworld.blocks||{};S.amboss=raw.amboss||{total:null,blocks:{}};S.amboss.blocks=S.amboss.blocks||{};S.vshaky=raw.vshaky||{};
   S.settings=raw.settings||{};S._updatedAt=raw._updatedAt||0;S._resetAt=raw._resetAt||0;
   if(raw.cfgs){S.cfgs={step1:raw.cfgs.step1||null,nbme:raw.cfgs.nbme||null};S.active=raw.active||null;}
   else if(raw.cfg){ // migrate the old single-plan shape into the matching hub
@@ -551,7 +560,7 @@ function activate(key){S.active=key;S.cfg=S.cfgs[key]||null;}
 function hubName(key){return key==="step1"?"STEP 1 Command Center":"Brody Command Center";}
 let _prevSig=null;
 
-function persistObj(){return {active:S.active,cfgs:S.cfgs,vdone:S.vdone,vskip:S.vskip,vdoneDate:S.vdoneDate,akdone:S.akdone,notes:S.notes,streak:S.streak,assessments:S.assessments,uworld:S.uworld,vshaky:S.vshaky,settings:S.settings,_updatedAt:S._updatedAt,_resetAt:S._resetAt||0};}
+function persistObj(){return {active:S.active,cfgs:S.cfgs,vdone:S.vdone,vskip:S.vskip,vdoneDate:S.vdoneDate,akdone:S.akdone,notes:S.notes,streak:S.streak,assessments:S.assessments,uworld:S.uworld,amboss:S.amboss,vshaky:S.vshaky,settings:S.settings,_updatedAt:S._updatedAt,_resetAt:S._resetAt||0};}
 function save(){S._updatedAt=Date.now();markStreakIfProgress();store.set(SKEY,JSON.stringify(persistObj()));Cloud.schedulePush();}
 
 /* ---------- streak (set of studied dates; merge-safe) ---------- */
@@ -668,7 +677,7 @@ function mergeState(a,b){a=a||{};b=b||{};
   // so its progress maps must not be union-merged back in (they'd resurrect
   // everything the user just cleared).
   const resetAt=Math.max(a._resetAt||0,b._resetAt||0);
-  const strip=s=>((s._updatedAt||0)>=resetAt)?s:Object.assign({},s,{vdone:{},vskip:{},vdoneDate:{},akdone:{},notes:{},streak:{days:{}},assessments:{},uworld:{total:null,blocks:{}},vshaky:{}});
+  const strip=s=>((s._updatedAt||0)>=resetAt)?s:Object.assign({},s,{vdone:{},vskip:{},vdoneDate:{},akdone:{},notes:{},streak:{days:{}},assessments:{},uworld:{total:null,blocks:{}},amboss:{total:null,blocks:{}},vshaky:{}});
   if(resetAt){a=strip(a);b=strip(b);}
   const aT=a._updatedAt||0,bT=b._updatedAt||0;const newer=bT>=aT?b:a,older=bT>=aT?a:b;
   const out={};
@@ -683,6 +692,7 @@ function mergeState(a,b){a=a||{};b=b||{};
   out.streak={days:unionTrue((a.streak||{}).days,(b.streak||{}).days)};
   out.assessments=Object.assign({},a.assessments||{},b.assessments||{});
   out.uworld={total:((newer.uworld||{}).total!=null?(newer.uworld||{}).total:(older.uworld||{}).total),blocks:Object.assign({},(a.uworld||{}).blocks||{},(b.uworld||{}).blocks||{})};
+  out.amboss={total:((newer.amboss||{}).total!=null?(newer.amboss||{}).total:(older.amboss||{}).total),blocks:Object.assign({},(a.amboss||{}).blocks||{},(b.amboss||{}).blocks||{})};
   out.vshaky=unionTrue(a.vshaky,b.vshaky);
   out.settings=Object.assign({},older.settings||{},newer.settings||{});
   out._updatedAt=Math.max(aT,bT);
@@ -705,6 +715,7 @@ Cloud.init=async function(){if(Cloud.inited||!fbEnabled())return;Cloud.inited=tr
 Cloud.onAuth=function(u){
   // ignore leftover anonymous sessions from older versions
   if(u&&u.isAnonymous){try{firebase.auth().signOut();}catch(e){}return;}
+  if(u&&!emailAllowed(u.email)){try{firebase.auth().signOut();}catch(e){}Cloud.user=null;AUTHED=false;renderAuthGate({denied:true});return;}
   Cloud.user=u;
   if(Cloud.unsub){try{Cloud.unsub();}catch(e){}Cloud.unsub=null;}
   if(u){AUTHED=true;enterAccount(u);}
@@ -747,7 +758,7 @@ Cloud.adopt=function(m){Cloud.applying=true;
   S.active=m.active||null;S.cfgs=m.cfgs||{step1:null,nbme:null};
   S.vdone=m.vdone||{};S.vskip=m.vskip||{};S.vdoneDate=m.vdoneDate||{};S.akdone=m.akdone||{};
   S.notes=m.notes||{};S.streak=m.streak||{days:{}};S.settings=m.settings||{};S._updatedAt=m._updatedAt||0;S._resetAt=m._resetAt||0;
-  S.assessments=m.assessments||{};S.uworld=m.uworld||{total:null,blocks:{}};S.uworld.blocks=S.uworld.blocks||{};S.vshaky=m.vshaky||{};
+  S.assessments=m.assessments||{};S.uworld=m.uworld||{total:null,blocks:{}};S.uworld.blocks=S.uworld.blocks||{};S.amboss=m.amboss||{total:null,blocks:{}};S.amboss.blocks=S.amboss.blocks||{};S.vshaky=m.vshaky||{};
   ["step1","nbme"].forEach(k=>{if(S.cfgs[k])normalizeCfg(S.cfgs[k],k);});
   S.cfg=S.active?S.cfgs[S.active]:null;_prevSig=progressSig();
   try{store.set(SKEY,JSON.stringify(persistObj()));}catch(e){}
@@ -853,6 +864,7 @@ function uncheckDay(iso){const row=SCHED&&SCHED.dayMap[iso];if(!row||!row.items.
 /* ---------- top bar + nav ---------- */
 function chrome(active){
   const tabs=[["today","Today"],["plan","Calendar"],["stats","Stats"],["adjust","Plan"]];
+  if(S.active==="nbme")tabs.push(["step","STEP"]);
   const nm=hubName(S.active||"step1");
   return '<div class="topbar"><button class="brandbtn" id="brandBtn" title="Switch hub">‹ <span class="brandnm">'+escHTML(nm)+'</span></button>'
    +'<div class="topright"><span class="led" title="online"></span><button class="iconbtn" id="menuBtn" aria-label="menu">⋮</button></div></div>'
@@ -863,6 +875,8 @@ function wireChrome(){
   const mb=document.getElementById("menuBtn");if(mb)mb.onclick=openMenu;
   const bb=document.getElementById("brandBtn");if(bb)bb.onclick=renderWelcome;
   document.querySelectorAll("[data-goready]").forEach(b=>b.onclick=()=>{VIEW="stats";render();});
+  document.querySelectorAll("[data-gouworld]").forEach(b=>b.onclick=()=>{VIEW="stats";render();});
+  document.querySelectorAll("[data-gostep]").forEach(b=>b.onclick=()=>{VIEW="step";render();});
   bindFolds();
 }
 
@@ -871,10 +885,12 @@ function render(){
   if(!S.cfg){renderWelcome();return;}
   reflow();
   if(VIEW==="ready"||VIEW==="progress")VIEW="stats"; // legacy views merged into Stats
+  if(VIEW==="step"&&S.active!=="nbme")VIEW="today"; // STEP tab is Brody-only
   if(VIEW==="today")renderToday();
   else if(VIEW==="plan")renderPlan();
   else if(VIEW==="stats")renderStats();
   else if(VIEW==="adjust")renderAdjust();
+  else if(VIEW==="step")renderStep();
   else renderToday();
   wireChrome();
 }
@@ -903,32 +919,51 @@ function readinessVerdict(pct){
 }
 let RDRAFT={form:"NBME 28",dateISO:todayISO(),pct:"",estProb:""};
 let UDRAFT={sys:"",q:"40",correct:""};
-function assessList(){const a=S.assessments||{};return Object.keys(a).map(k=>Object.assign({id:k},a[k])).filter(x=>x.hub===S.active).sort((x,y)=>x.dateISO<y.dateISO?-1:(x.dateISO>y.dateISO?1:(x._t||0)-(y._t||0)));}
-function latestAssess(){const l=assessList();return l.length?l[l.length-1]:null;}
-function addAssessment(o){S.assessments=S.assessments||{};S.assessments[uid()]={hub:S.active,form:o.form,dateISO:o.dateISO,pct:o.pct,estProb:(o.estProb!=null?o.estProb:null),note:o.note||"",_t:Date.now()};save();}
+function assessList(scope){scope=scope||S.active;const a=S.assessments||{};return Object.keys(a).map(k=>Object.assign({id:k},a[k])).filter(x=>x.hub===scope).sort((x,y)=>x.dateISO<y.dateISO?-1:(x.dateISO>y.dateISO?1:(x._t||0)-(y._t||0)));}
+function latestAssess(scope){const l=assessList(scope);return l.length?l[l.length-1]:null;}
+function addAssessment(o,scope){S.assessments=S.assessments||{};S.assessments[uid()]={hub:(scope||S.active),form:o.form,dateISO:o.dateISO,pct:o.pct,estProb:(o.estProb!=null?o.estProb:null),note:o.note||"",_t:Date.now()};save();}
 function delAssessment(id){if(S.assessments&&S.assessments[id]){delete S.assessments[id];save();}}
 /* UWorld rollups derived from the append-only block log */
-function uworldRollup(){
+function uworldRollup(scope){scope=scope||S.active;
   const u=S.uworld||{total:null,blocks:{}};const blocks=u.blocks||{};
-  const mine=Object.keys(blocks).map(k=>blocks[k]).filter(b=>b&&b.hub===S.active);
+  const mine=Object.keys(blocks).map(k=>blocks[k]).filter(b=>b&&b.hub===scope);
   let done=0,correct=0;const bySys={};
   mine.forEach(b=>{const q=+b.q||0,c=+b.correct||0;done+=q;correct+=c;
     if(b.sys){const e=bySys[b.sys]=bySys[b.sys]||{done:0,correct:0};e.done+=q;e.correct+=c;}});
   Object.keys(bySys).forEach(s=>{const e=bySys[s];e.pct=e.done?Math.round(e.correct/e.done*100):null;});
   return {total:u.total,done,correct,pct:done?Math.round(correct/done*100):null,bySys};
 }
-function addUworldBlock(o){S.uworld=S.uworld||{total:null,blocks:{}};S.uworld.blocks=S.uworld.blocks||{};S.uworld.blocks[uid()]={hub:S.active,dateISO:o.dateISO||todayISO(),sys:o.sys||"",q:+o.q||0,correct:+o.correct||0,mode:o.mode||"random",_t:Date.now()};save();}
+function addUworldBlock(o,scope){S.uworld=S.uworld||{total:null,blocks:{}};S.uworld.blocks=S.uworld.blocks||{};S.uworld.blocks[uid()]={hub:(scope||S.active),dateISO:o.dateISO||todayISO(),sys:o.sys||"",q:+o.q||0,correct:+o.correct||0,mode:o.mode||"random",_t:Date.now()};save();}
 function setUworldTotal(n){S.uworld=S.uworld||{total:null,blocks:{}};S.uworld.total=(n>0?n:null);save();}
+/* AMBOSS log — same shape/rollup as UWorld (dedicated STEP prep) */
+function ambossRollup(scope){scope=scope||S.active;
+  const u=S.amboss||{total:null,blocks:{}};const blocks=u.blocks||{};
+  const mine=Object.keys(blocks).map(k=>blocks[k]).filter(b=>b&&b.hub===scope);
+  let done=0,correct=0;const bySys={};
+  mine.forEach(b=>{const q=+b.q||0,c=+b.correct||0;done+=q;correct+=c;
+    if(b.sys){const e=bySys[b.sys]=bySys[b.sys]||{done:0,correct:0};e.done+=q;e.correct+=c;}});
+  Object.keys(bySys).forEach(s=>{const e=bySys[s];e.pct=e.done?Math.round(e.correct/e.done*100):null;});
+  return {total:u.total,done,correct,pct:done?Math.round(correct/done*100):null,bySys};
+}
+function addAmbossBlock(o,scope){S.amboss=S.amboss||{total:null,blocks:{}};S.amboss.blocks=S.amboss.blocks||{};S.amboss.blocks[uid()]={hub:(scope||S.active),dateISO:o.dateISO||todayISO(),sys:o.sys||"",q:+o.q||0,correct:+o.correct||0,_t:Date.now()};save();}
+function setAmbossTotal(n){S.amboss=S.amboss||{total:null,blocks:{}};S.amboss.total=(n>0?n:null);save();}
 /* confidence flags + review queue (Change 4) */
 function isShaky(id){return !!(S.vshaky&&S.vshaky[id]);}
 function toggleShaky(id){S.vshaky=S.vshaky||{};if(S.vshaky[id])delete S.vshaky[id];else S.vshaky[id]=true;save();}
-function weakSystems(target){const roll=uworldRollup();const out=[];Object.keys(roll.bySys).forEach(s=>{const e=roll.bySys[s];if(e.pct!=null&&e.done>=20&&e.pct<(target||65))out.push({sys:s,pct:e.pct});});return out.sort((a,b)=>a.pct-b.pct);}
+function weakSystems(target,scope){const roll=uworldRollup(scope);const out=[];Object.keys(roll.bySys).forEach(s=>{const e=roll.bySys[s];if(e.pct!=null&&e.done>=20&&e.pct<(target||65))out.push({sys:s,pct:e.pct});});return out.sort((a,b)=>a.pct-b.pct);}
 /* small readiness chip for the Today hero */
 function readinessChip(){
   const la=latestAssess();
   if(!la)return '<button class="rchip rchip-info" data-goready="1">Log your first self-assessment →</button>';
   const v=readinessVerdict(la.pct);
   return '<button class="rchip rchip-'+v.cls+'" data-goready="1"><span class="rchip-n">'+la.pct+'%</span><span class="rchip-t">'+escHTML(la.form)+' · '+v.text+'</span></button>';
+}
+/* Today chip — block-phase UWorld progress (Brody is school-block focused) */
+function uworldChip(){
+  const r=uworldRollup();
+  if(!r.done)return '<button class="rchip rchip-info" data-gouworld="1">Log your first UWorld block →</button>';
+  const cls=r.pct>=70?"ok":(r.pct>=60?"warn":"bad");
+  return '<button class="rchip rchip-'+cls+'" data-gouworld="1"><span class="rchip-n">'+r.pct+'%</span><span class="rchip-t">UWorld · '+r.done+(r.total?(" / "+r.total):"")+' Qs correct</span></button>';
 }
 function loadCaveat(){const a=(S.cfg&&S.cfg.ankiMinPerDay)||0,u=(S.cfg&&S.cfg.uworldMinPerDay)||0;if(!a&&!u)return '';const parts=[];if(a)parts.push('~'+(Math.round(a/60*10)/10)+' h Anki');if(u)parts.push('~'+(Math.round(u/60*10)/10)+' h UWorld');return '<p class="muted small hcav">Video time only — your day also reserves '+parts.join(' + ')+'.</p>';}
 /* ---- Ready view ---- */
@@ -981,7 +1016,17 @@ function reviewCard(){
   if(shaky.length){body+='<div class="alist">'+shaky.slice(0,40).map(it=>'<div class="arow"><span class="adot warn"></span><span class="aform">'+escHTML(vName(it))+'</span><button class="alink" data-unshaky="'+escAttr(it.id)+'">clear</button></div>').join('')+'</div>';if(shaky.length>40)body+='<p class="muted small">+'+(shaky.length-40)+' more flagged.</p>';}
   body+='</div>';return body;
 }
-function readinessCards(){
+function readinessCards(){return S.active==="nbme"?brodyStatsCards():stepReadinessCards();}
+/* Brody Stats — UWorld first; NBME self-assessments tucked to the STEP tab */
+function brodyStatsCards(){
+  let body=uworldCard();
+  body+=reviewCard();
+  body+='<div class="card soft"><div class="cardhd">STEP self-assessments</div>'
+    +'<p class="muted small" style="margin-top:0">NBME self-assessment scores (NBME 26\u201332, UWSA, Free 120) are dedicated Step prep \u2014 they now live in the <b>STEP</b> tab.</p>'
+    +'<button class="btn ghost" data-gostep="1">Open the STEP tab \u2192</button></div>';
+  return body;
+}
+function stepReadinessCards(){
   const c=S.cfg;const daysLeft=c&&c.examISO?Math.max(0,daysBetween(todayISO(),c.examISO)):null;
   const list=assessList();const la=latestAssess();const v=readinessVerdict(la?la.pct:null);
   let body='';
@@ -1037,6 +1082,87 @@ function bindReady(){
   const rvd=document.getElementById("rst_vid");if(rvd)rvd.onclick=()=>confirmClear("Reset video progress?","Clears every video checkmark and daily Anki check across BOTH hubs. Scores, UWorld log, and flags stay. You'll get one chance to undo.",clearVideos);
   wireChrome();
 }
+/* ============================================================
+   STEP DEDICATED TAB (Brody hub) — dedicated Step 1 prep.
+   Data is scoped to DSCOPE ("step1") so it stays separate from
+   block-phase (Brody/nbme) UWorld. AMBOSS is a new dedicated log.
+   ============================================================ */
+const DSCOPE="step1";
+let SRDRAFT={form:"NBME 28",dateISO:todayISO(),pct:"",estProb:""};
+let SUDRAFT={sys:"",q:"40",correct:""};
+let SADRAFT={sys:"",q:"40",correct:""};
+function stepScoreForm(){
+  return '<div class="form2">'
+    +'<label>Form<select id="sr_form">'+NBME_FORMS.map(f=>'<option'+(SRDRAFT.form===f?' selected':'')+'>'+f+'</option>').join('')+'</select></label>'
+    +'<label>Date taken'+dateTriggerHTML("sr_date",SRDRAFT.dateISO,"Date")+'</label>'
+    +'<label>% correct<input id="sr_pct" type="number" inputmode="numeric" min="0" max="100" value="'+escAttr(SRDRAFT.pct)+'" placeholder="e.g. 72"></label>'
+    +'<label>Est. pass probability <span class="opt">(optional)</span><input id="sr_prob" type="number" inputmode="numeric" min="0" max="100" value="'+escAttr(SRDRAFT.estProb)+'" placeholder="%"></label>'
+    +'<button class="btn" id="sr_save">Save score</button></div>';
+}
+/* generic question-bank form + card, reused for dedicated UWorld and AMBOSS */
+function qbankForm(pfx,draft,total){
+  const sysOpts=['<option value="">System (optional)…</option>'].concat(SYS.map(x=>'<option'+(draft.sys===x?' selected':'')+'>'+x+'</option>')).join('');
+  return '<div class="form2">'
+    +'<label>System<select id="'+pfx+'_sys">'+sysOpts+'</select></label>'
+    +'<label>Questions<input id="'+pfx+'_q" type="number" inputmode="numeric" min="1" value="'+escAttr(draft.q)+'"></label>'
+    +'<label># correct<input id="'+pfx+'_c" type="number" inputmode="numeric" min="0" value="'+escAttr(draft.correct)+'" placeholder="in that block"></label>'
+    +'<label>Qbank size <span class="opt">(optional)</span><input id="'+pfx+'_total" type="number" inputmode="numeric" min="0" value="'+escAttr(total||"")+'" placeholder="e.g. 3300"></label>'
+    +'<button class="btn ghost" id="'+pfx+'_save">Log block</button></div>';
+}
+function qbankCard(title,pfx,roll,resetId){
+  const pctTxt=roll.pct!=null?roll.pct+'%':'—';const doneTxt=roll.done+(roll.total?(' / '+roll.total):'')+' Qs';
+  let bars='';const sysList=Object.keys(roll.bySys).sort((a,b)=>(roll.bySys[a].pct||0)-(roll.bySys[b].pct||0));
+  sysList.forEach(x=>{const e=roll.bySys[x];const col=e.pct==null?'var(--faint)':(e.pct>=70?'var(--success)':(e.pct>=60?'var(--warning)':'var(--danger)'));
+    bars+='<div class="bar"><div class="barlab">'+escHTML(x)+'</div><div class="bartrack"><div class="barfill" style="width:'+(e.pct||0)+'%;background:'+col+'"></div></div><div class="barpct">'+(e.pct==null?'—':e.pct+'%')+'</div></div>';});
+  const draft=pfx==="su"?SUDRAFT:SADRAFT;
+  return '<div class="card"><div class="cardhd">'+title+(roll.done?'<button class="hdreset" id="'+resetId+'">Reset</button>':'')+'</div>'
+    +'<div class="uwtop"><div class="uwbig">'+pctTxt+' <span>correct</span></div><div class="uwsub">'+doneTxt+'</div></div>'
+    +fold(pfx+"form","Log a block",qbankForm(pfx,draft,roll.total),roll.done===0)
+    +(bars?('<div class="uwhd">By system — accuracy</div><div class="bars">'+bars+'</div>'):'<p class="muted small">Log a block to start tracking per-system accuracy.</p>')
+    +'</div>';
+}
+function renderStep(){
+  const list=assessList(DSCOPE);const la=list.length?list[list.length-1]:null;const v=readinessVerdict(la?la.pct:null);
+  let colA='';
+  colA+='<div class="card soft"><div class="cardhd">STEP dedicated</div><p class="muted small" style="margin-top:0">Your dedicated Step 1 prep — NBME self-assessments, UWorld, and AMBOSS — tracked separately from your block work.</p></div>';
+  colA+='<div class="card"><div class="cardhd">NBME self-assessments'+(list.length?'<button class="hdreset" id="sst_scores">Reset</button>':'')+'</div>'
+    +'<div class="status '+v.cls+'">'+(la?('Latest: <b>'+la.pct+'%</b> on '+escHTML(la.form)+' ('+fmtShort(la.dateISO)+') — '+v.text+'.'):'No self-assessment logged yet. Your NBME forms are the single best predictor of your Step score.')+'</div>'
+    +(list.length>=2?scoreTrend(list)+'<div class="placeleg"><span class="pl pl-a">Your scores</span></div>':'')
+    +fold("sscoreform","Log a score",stepScoreForm(),!list.length)
+    +(list.length?('<div class="uwhd">Logged scores</div><div class="alist">'+list.slice().reverse().map(x=>{const vv=readinessVerdict(x.pct);return '<div class="arow"><span class="adot '+vv.cls+'"></span><span class="aform">'+escHTML(x.form)+'</span><span class="apct">'+x.pct+'%</span><span class="adate">'+fmtShort(x.dateISO)+'</span><button class="alink" data-sdel="'+escAttr(x.id)+'">remove</button></div>';}).join('')+'</div>'):'')
+    +'<p class="muted small">Bands (65 / 70) are common guidance, not guarantees — trend matters more than any one score.</p></div>';
+  let colB='';
+  colB+=qbankCard("UWorld — dedicated","su",uworldRollup(DSCOPE),"sst_uw");
+  colB+=qbankCard("AMBOSS","sa",ambossRollup(DSCOPE),"sst_am");
+  colB+='<div class="card soft"><div class="cardhd">Dedicated video plan <span class="pill">WIP</span></div><p class="muted small" style="margin-top:0">A structured video list for your dedicated period is coming — still mapping out what dedicated actually looks like. For now, use the Brody plan for content.</p></div>';
+  app.innerHTML=chrome("step")+'<div class="wrap"><div class="cols"><div>'+colA+'</div><div>'+colB+'</div></div></div>';
+  bindStep();
+}
+function bindQbank(pfx,draft,addFn,totalFn){
+  const sy=document.getElementById(pfx+"_sys");if(sy)sy.onchange=()=>{draft.sys=sy.value;};
+  const q=document.getElementById(pfx+"_q");if(q)q.onchange=()=>{draft.q=q.value;};
+  const c=document.getElementById(pfx+"_c");if(c)c.onchange=()=>{draft.correct=c.value;};
+  const t=document.getElementById(pfx+"_total");if(t)t.onchange=()=>{const n=parseInt(t.value,10);totalFn(isNaN(n)?0:n);};
+  const sv=document.getElementById(pfx+"_save");if(sv)sv.onclick=()=>{const qq=parseInt(q?q.value:draft.q,10),cc=parseInt(c?c.value:draft.correct,10);if(isNaN(qq)||qq<1){toast("How many questions in the block?");return;}if(isNaN(cc)||cc<0||cc>qq){toast("# correct can’t exceed the question count");return;}addFn({sys:(sy?sy.value:draft.sys),q:qq,correct:cc},DSCOPE);draft.q="40";draft.correct="";toast("Block logged ✓");render();};
+}
+function bindStep(){
+  const rf=document.getElementById("sr_form");if(rf)rf.onchange=()=>{SRDRAFT.form=rf.value;};
+  const rd=document.getElementById("sr_date");if(rd)rd.onclick=()=>openDatePicker({value:SRDRAFT.dateISO,title:"Date taken",onPick:(iso)=>{SRDRAFT.dateISO=iso;render();}});
+  const rp=document.getElementById("sr_pct");if(rp)rp.onchange=()=>{SRDRAFT.pct=rp.value;};
+  const rpr=document.getElementById("sr_prob");if(rpr)rpr.onchange=()=>{SRDRAFT.estProb=rpr.value;};
+  const rs=document.getElementById("sr_save");if(rs)rs.onclick=()=>{const pct=parseFloat(rp?rp.value:SRDRAFT.pct);if(isNaN(pct)||pct<0||pct>100){toast("Enter a % between 0 and 100");return;}const prob=parseFloat(rpr?rpr.value:SRDRAFT.estProb);addAssessment({form:(rf?rf.value:SRDRAFT.form),dateISO:SRDRAFT.dateISO,pct:Math.round(pct),estProb:isNaN(prob)?null:Math.round(prob)},DSCOPE);SRDRAFT={form:(rf?rf.value:SRDRAFT.form),dateISO:todayISO(),pct:"",estProb:""};toast("Score logged ✓");render();};
+  document.querySelectorAll("[data-sdel]").forEach(b=>b.onclick=()=>{delAssessment(b.dataset.sdel);render();});
+  bindQbank("su",SUDRAFT,addUworldBlock,setUworldTotal);
+  bindQbank("sa",SADRAFT,addAmbossBlock,setAmbossTotal);
+  const z1=document.getElementById("sst_scores");if(z1)z1.onclick=()=>confirmClear("Clear dedicated NBME scores?","Removes every dedicated Step self-assessment. You'll get one chance to undo.",()=>clearScopedAssess(DSCOPE));
+  const z2=document.getElementById("sst_uw");if(z2)z2.onclick=()=>confirmClear("Clear dedicated UWorld?","Removes every dedicated UWorld block. You'll get one chance to undo.",()=>clearScopedUworld(DSCOPE));
+  const z3=document.getElementById("sst_am");if(z3)z3.onclick=()=>confirmClear("Clear AMBOSS log?","Removes every AMBOSS block. You'll get one chance to undo.",clearAmboss);
+  wireChrome();
+}
+function clearScopedAssess(scope){const snap=Object.assign({},S.assessments);Object.keys(S.assessments||{}).forEach(k=>{if(S.assessments[k].hub===scope)delete S.assessments[k];});bumpReset();save();render();toastUndo("Dedicated scores cleared.",()=>{S.assessments=snap;save();render();});}
+function clearScopedUworld(scope){const snap=JSON.parse(JSON.stringify(S.uworld||{total:null,blocks:{}}));const bl=(S.uworld||{}).blocks||{};Object.keys(bl).forEach(k=>{if(bl[k].hub===scope)delete bl[k];});bumpReset();save();render();toastUndo("Dedicated UWorld cleared.",()=>{S.uworld=snap;save();render();});}
+function clearAmboss(){const snap=JSON.parse(JSON.stringify(S.amboss||{total:null,blocks:{}}));S.amboss={total:null,blocks:{}};bumpReset();save();render();toastUndo("AMBOSS log cleared.",()=>{S.amboss=snap;save();render();});}
+
 /* ---------- daily encouragement (positive reinforcement, top of Today) ----------
    A warm one-liner: celebrates finishing the day, honors a streak, nudges
    wellness on rest days, and otherwise rotates daily through a mixed pool so
@@ -1089,7 +1215,7 @@ function renderToday(){
     +'<div class="hero-l">'+ring(overall().pct,72)+'</div>'
     +'<div class="hero-r"><div class="big">'+examLeft+' <span>days to '+escHTML(S.cfg.examLabel||(S.cfg.examType==="step1"?"Step 1":"your exam"))+'</span></div>'
       +'<div class="sub">'+overall().done+' / '+overall().total+' videos done'+(cs>0?' · 🔥 '+cs+'-day streak':'')+'</div></div></div>';
-  colA+='<div class="hchips">'+readinessChip()+'</div>'+loadCaveat();
+  colA+='<div class="hchips">'+uworldChip()+'</div>'+loadCaveat();
   colA+=statusLine();
   if(isOffToday){
     colB+='<div class="card"><div class="cardhd">'+(todayRow.off?'Day off':'Rest day')+' · '+fmtLong(todayISO())+'</div><p class="muted">No videos scheduled today.'+(todayRow.off?' <button class="link" id="unoff">Cancel day off</button>':'')+'</p></div>';
@@ -1371,10 +1497,19 @@ function renderAuthGate(opts){opts=opts||{};AUTHED=false;
     const r=document.getElementById("auth_retry");if(r)r.onclick=()=>boot();
     return;
   }
+  if(opts.denied){
+    app.innerHTML='<div class="wrap welcomewrap"><div class="welcome"><div class="wbrand">LOW YIELD ONLY</div>'
+      +'<p class="wtag">This account isn\u2019t eligible.</p>'
+      +'<div class="authcard"><p class="muted small" style="margin:0 0 14px">'+escHTML(ACCESS_MSG)+'</p>'
+      +'<button class="btn" id="auth_back">Back to sign in</button></div></div></div>';
+    const bk=document.getElementById("auth_back");if(bk)bk.onclick=()=>{AUTH_MODE="signin";renderAuthGate();};
+    return;
+  }
   const signup=AUTH_MODE==="signup";
   app.innerHTML='<div class="wrap welcomewrap"><div class="welcome">'
     +'<div class="wbrand">LOW YIELD ONLY</div>'
-    +'<p class="wtag">'+(signup?"Create your profile to begin.":"Sign in to your profile.")+'</p>'
+    +'<p class="wtag">'+(signup?"Create your ECU profile to begin.":"Sign in to your profile.")+'</p>'
+    +'<p class="muted small" style="margin:-6px 0 14px">ECU students only \u2014 use your <b>@students.ecu.edu</b> email.</p>'
     +'<div class="authtabs"><button class="atab '+(!signup?"on":"")+'" data-mode="signin">Sign in</button><button class="atab '+(signup?"on":"")+'" data-mode="signup">Create account</button></div>'
     +'<div class="authcard"><div class="form">'
     +'<label>Email<input type="email" id="auth_email" autocomplete="email" inputmode="email" autocapitalize="none" spellcheck="false" placeholder="you@school.edu"></label>'
@@ -1410,6 +1545,7 @@ function authSubmit(){
   const pw=(document.getElementById("auth_pw")||{}).value||"";
   if(!email){authErr("Enter your email.");return;}
   if(!pw){authErr("Enter your password.");return;}
+  if(!emailAllowed(email)){authErr(ACCESS_MSG);return;}
   authErr("");authBusy(true);
   const a=firebase.auth();
   const p=(AUTH_MODE==="signup")?a.createUserWithEmailAndPassword(email,pw):a.signInWithEmailAndPassword(email,pw);
@@ -1428,16 +1564,16 @@ function renderWelcome(){
   // leaving a hub = no active hub; persist so a sync merge arriving while the
   // chooser is open can't re-activate the hub and pull the user back inside
   if(S.active){S.active=null;S.cfg=null;save();}
-  const any=S.cfgs.step1||S.cfgs.nbme;
   let body='<div class="welcome"><div class="wbrand">LOW YIELD ONLY</div>'
-    +'<p class="wtag">'+(any?"Pick a command center to jump back in.":"Two command centers \u2014 one for Step, one for your shelves. Build the one you need.")+'</p>'
-    +'<div class="hubs">'+hubCard("step1")+hubCard("nbme")+'</div>'
-    +'<div class="wfoot">'+((Cloud.user&&Cloud.user.email)?('Signed in as '+escHTML(Cloud.user.email)+' \u00b7 <button class="link" id="w_signout">Sign out</button> \u00b7 '):'')+'<button class="link" id="w_restore">Restore a backup</button></div>'
+    +'<p class="wtag">Your Brody command center \u2014 school blocks, NBME exams, and dedicated STEP prep in one place.</p>'
+    +'<div class="hubs">'+hubCard("nbme")+'</div>'
+    +'<div class="wfoot"><button class="link" id="w_step1">Step 1 Command Center (legacy)</button> \u00b7 '+((Cloud.user&&Cloud.user.email)?('Signed in as '+escHTML(Cloud.user.email)+' \u00b7 <button class="link" id="w_signout">Sign out</button> \u00b7 '):'')+'<button class="link" id="w_restore">Restore a backup</button></div>'
     +'</div>';
   app.innerHTML='<div class="wrap welcomewrap">'+body+'</div>';
   document.querySelectorAll("[data-enter]").forEach(b=>b.onclick=()=>enterHub(b.dataset.enter));
   document.querySelectorAll("[data-setup]").forEach(b=>b.onclick=()=>startOnboard(b.dataset.setup));
   const wso=document.getElementById("w_signout");if(wso)wso.onclick=confirmSignOut;
+  const ws=document.getElementById("w_step1");if(ws)ws.onclick=()=>enterHub("step1");
   const wr=document.getElementById("w_restore");if(wr)wr.onclick=()=>{const inp=document.getElementById("fileIn");if(inp){inp.value="";inp.click();}};
 }
 function enterHub(key){if(!S.cfgs[key]){startOnboard(key);return;}activate(key);S.active=key;VIEW="today";reflow();render();}
@@ -1569,16 +1705,16 @@ function modalSheet(o){
 function doResetAll(){
   // nuclear: wipe progress AND the saved plans, drop the user back to the
   // setup screen to craft a fresh plan. Tombstoned so sync can't resurrect it.
-  const snap={vdone:S.vdone,vskip:S.vskip,vdoneDate:S.vdoneDate,akdone:S.akdone,notes:S.notes,assessments:S.assessments,uworld:S.uworld,vshaky:S.vshaky,streak:S.streak,cfgs:S.cfgs,active:S.active};
-  S.vdone={};S.vskip={};S.vdoneDate={};S.akdone={};S.notes={};S.assessments={};S.uworld={total:null,blocks:{}};S.vshaky={};S.streak={days:{}};
+  const snap={vdone:S.vdone,vskip:S.vskip,vdoneDate:S.vdoneDate,akdone:S.akdone,notes:S.notes,assessments:S.assessments,uworld:S.uworld,amboss:S.amboss,vshaky:S.vshaky,streak:S.streak,cfgs:S.cfgs,active:S.active};
+  S.vdone={};S.vskip={};S.vdoneDate={};S.akdone={};S.notes={};S.assessments={};S.uworld={total:null,blocks:{}};S.amboss={total:null,blocks:{}};S.vshaky={};S.streak={days:{}};
   S.cfgs={step1:null,nbme:null};S.active=null;S.cfg=null;_prevSig=0;S._resetAt=Date.now();save();
   renderWelcome();
   toastUndo("Everything cleared — build a new plan, or tap Undo to restore.",()=>{
-    S.vdone=snap.vdone;S.vskip=snap.vskip;S.vdoneDate=snap.vdoneDate;S.akdone=snap.akdone;S.notes=snap.notes;S.assessments=snap.assessments;S.uworld=snap.uworld;S.vshaky=snap.vshaky;S.streak=snap.streak;
+    S.vdone=snap.vdone;S.vskip=snap.vskip;S.vdoneDate=snap.vdoneDate;S.akdone=snap.akdone;S.notes=snap.notes;S.assessments=snap.assessments;S.uworld=snap.uworld;S.amboss=snap.amboss;S.vshaky=snap.vshaky;S.streak=snap.streak;
     S.cfgs=snap.cfgs;S.active=snap.active;S.cfg=S.active?S.cfgs[S.active]:null;_prevSig=progressSig();save();
     if(S.cfg){reflow();render();}else renderWelcome();toast("Restored ✓");});
 }
-const BUILD="2026-07-09a";
+const BUILD="2026-07-10a";
 function openMenu(){
   const email=Cloud.user&&Cloud.user.email;
   const inHub=!!S.active;
@@ -1586,7 +1722,7 @@ function openMenu(){
     +(email?'<div class="mrow acctrow"><span class="acctlbl">Signed in</span><span class="acctml">'+escHTML(email)+'</span></div>':'')
     +(inHub?'<button class="mrow" data-m="adjust">Edit this plan</button>':'')
     +(S.active==="nbme"?'<button class="mrow" data-m="newunit">Start a new Brody unit</button>':'')
-    +(inHub?'<button class="mrow" data-m="switch">'+(S.cfgs[S.active==="step1"?"nbme":"step1"]?('Switch to '+escHTML(hubName(S.active==="step1"?"nbme":"step1"))):'Switch hub (Step 1 ⇄ NBME)')+'</button>':'')
+    +(inHub?'<button class="mrow" data-m="switch">'+(S.active==="nbme"?"Open Step 1 Command Center":"Back to Brody Command Center")+'</button>':'')
     +'<button class="mrow" data-m="backup">Download a backup</button>'
     +'<button class="mrow" data-m="restore">Restore from a backup</button>'
     +'<button class="mrow" data-m="theme">'+(Theme.current()==="dark"?"Switch to light theme":"Switch to dark theme")+'</button>'
@@ -1603,13 +1739,13 @@ function openMenu(){
 function menuAct(m){
   if(m==="close")return;
   if(m==="theme"){Theme.toggle();}
-  else if(m==="switch"){const other=(S.active==="step1"?"nbme":"step1");if(S.active&&S.cfgs[other])enterHub(other);else renderWelcome();}
+  else if(m==="switch"){enterHub(S.active==="nbme"?"step1":"nbme");}
   else if(m==="adjust"){VIEW="adjust";render();}
   else if(m==="newunit"){startOnboard("nbme",true);}
   else if(m==="signout"){confirmSignOut();}
   else if(m==="backup"){const blob=new Blob([JSON.stringify(persistObj(),null,2)],{type:"application/json"});const u=URL.createObjectURL(blob);const a=document.createElement("a");a.href=u;a.download="lowyieldonly-backup-"+todayISO()+".json";a.click();URL.revokeObjectURL(u);toast("Backup downloaded");}
   else if(m==="restore"){const inp=document.getElementById("fileIn");inp.value="";inp.click();}
-  else if(m==="help"){modalSheet({title:"How this works",okLabel:"Got it",cancel:false,msg:"Two command centers — one for Step 1, one for your Brody blocks & shelves — each set up on its own.\n\nInside a hub, your plan is the remaining videos repacked from today to your exam date: check off what you watch and the rest re-distributes. Reorder systems (or Brody blocks), take a day off, move your exam date, or change resources and the plan re-paces live.\n\nFinished a block? Use ‘Start a new Brody unit’. Watched videos count across both hubs. Progress is saved to your account and synced across your devices. Tap the title to switch hubs."});}
+  else if(m==="help"){modalSheet({title:"How this works",okLabel:"Got it",cancel:false,msg:"The Brody Command Center is your daily home for school blocks and NBME exams. Your plan is the remaining videos repacked from today to your exam date — check off what you watch and the rest re-distributes.\n\nDedicated Step 1 prep (NBME self-assessments, UWorld, AMBOSS) lives in the STEP tab. Log a UWorld block from Today or Stats to track block accuracy.\n\nReset all wipes everything and returns you to setup. The legacy Step 1 Command Center is still available from this menu. Progress syncs across your devices."});}
   else if(m==="reset"){modalSheet({title:"Reset everything?",danger:true,okLabel:"Erase & start over",msg:"This erases EVERYTHING across both hubs — every checkmark, Anki check, note, self-assessment score, UWorld block, review flag, your streak, AND your saved plans (exam dates, systems, settings), here and in your synced account.\n\nYou’ll be taken back to the start to build a fresh plan. You’ll get one chance to undo.",onOk:doResetAll});}
 }
 
@@ -1645,7 +1781,7 @@ function wireFileInput(){
   const inp=document.getElementById("fileIn");
   if(inp)inp.onchange=(e)=>{const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=()=>{try{const o=JSON.parse(r.result);
     if(o.cfgs!==undefined)S.cfgs=o.cfgs;else if(o.cfg!==undefined){const key=(o.cfg.examType&&o.cfg.examType!=="step1")?"nbme":"step1";S.cfgs={step1:null,nbme:null};S.cfgs[key]=o.cfg;}
-    ["vdone","vskip","vdoneDate","akdone","notes","streak","assessments","uworld","vshaky","_resetAt"].forEach(k=>{if(o[k]!==undefined)S[k]=o[k];});
+    ["vdone","vskip","vdoneDate","akdone","notes","streak","assessments","uworld","amboss","vshaky","_resetAt"].forEach(k=>{if(o[k]!==undefined)S[k]=o[k];});
     S.uworld=S.uworld||{total:null,blocks:{}};S.uworld.blocks=S.uworld.blocks||{};
     ["step1","nbme"].forEach(k=>{if(S.cfgs[k])normalizeCfg(S.cfgs[k],k);});
     S.active=null;S.cfg=null;_prevSig=progressSig();save();renderWelcome();toast("Backup restored");
