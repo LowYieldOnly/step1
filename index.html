@@ -7,7 +7,7 @@
 <script>(function(){try{var s=localStorage.getItem('lyo_theme');var m=(s==='light'||s==='dark')?s:((window.matchMedia&&matchMedia('(prefers-color-scheme: dark)').matches)?'dark':'light');document.documentElement.setAttribute('data-theme',m);var mt=document.querySelector('meta[name="theme-color"]');if(mt)mt.setAttribute('content',m==='dark'?'#15111C':'#EDF1F6');}catch(e){}})();</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Mulish:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Mulish:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="icon-192.png">
 <title>LOW YIELD ONLY</title>
@@ -51,7 +51,7 @@
   /* ---- Typography (Mulish — warm humanist sans; mono kept for data) ---- */
   --font-ui:"Mulish",system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
   --font-read:"Source Serif 4",Georgia,"Times New Roman",serif;  /* long-form only */
-  --font-mono:"JetBrains Mono",ui-monospace,"SF Mono","Cascadia Mono",Menlo,Consolas,monospace;
+  --font-mono:var(--font-ui);  /* full Mulish — mono role folded into the UI font */
   --mono:var(--font-mono); --sans:var(--font-ui);
 }
 :root[data-theme="dark"]{
@@ -548,7 +548,7 @@ function normalizeCfg(c,key){
   if(Array.isArray(c.systems))c.systems=c.systems.filter(s=>SYS.indexOf(s)>=0);
 }
 function activate(key){S.active=key;S.cfg=S.cfgs[key]||null;}
-function hubName(key){return key==="step1"?"STEP 1 Command Center":"NBME Command Center";}
+function hubName(key){return key==="step1"?"STEP 1 Command Center":"Brody Command Center";}
 let _prevSig=null;
 
 function persistObj(){return {active:S.active,cfgs:S.cfgs,vdone:S.vdone,vskip:S.vskip,vdoneDate:S.vdoneDate,akdone:S.akdone,notes:S.notes,streak:S.streak,assessments:S.assessments,uworld:S.uworld,vshaky:S.vshaky,settings:S.settings,_updatedAt:S._updatedAt,_resetAt:S._resetAt||0};}
@@ -805,13 +805,13 @@ function fallbackCopy(t){try{const ta=document.createElement("textarea");ta.valu
 function copyText(t){t=t||"";if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(t).then(()=>toast("Copied"),()=>fallbackCopy(t));}else fallbackCopy(t);}
 function dayTagPairs(iso){const row=SCHED&&SCHED.dayMap[iso];if(!row)return [];const seen={},out=[];row.items.forEach(it=>{if(it.res==="bnb"&&it.tag&&!seen[it.tag]){seen[it.tag]=1;out.push([vName(it),it.tag]);}});return out;}
 function dayTags(iso){return dayTagPairs(iso).map(p=>p[1]);}
-function ankiBlock(iso){if(!hasRes("anking"))return "";const pairs=dayTagPairs(iso);const on=!!(S.akdone&&S.akdone[iso]);
+function ankiBlock(iso,openTags){if(!hasRes("anking"))return "";const pairs=dayTagPairs(iso);const on=!!(S.akdone&&S.akdone[iso]);
   let h='<div class="anki"><button class="chk akchk '+(on?"on":"")+'" data-akiso="'+iso+'" aria-label="anki reviews done">'+(on?"✓":"")+'</button>'
     +'<div class="akmeta"><span class="aklab">Anki reviews — AnKing</span>'
     +'<span class="akcount">'+(pairs.length?(pairs.length+' AnKing tag'+(pairs.length>1?"s":"")+' for today'):'Today\u2019s spaced-repetition reviews')+'</span></div>'
     +(pairs.length?'<button class="cpyall" data-cpyall="'+iso+'">Copy all</button>':'')+'</div>';
   if(pairs.length){
-    h+='<details class="aktags"><summary>Show AnKing tags</summary><div class="aktaglist">'
+    h+='<details class="aktags"'+(openTags?' open':'')+'><summary>Show AnKing tags</summary><div class="aktaglist">'
       + pairs.map(p=>'<button class="aktagrow" data-copy="'+escAttr(p[1])+'" title="Copy tag"><span class="aktagname">'+escHTML(p[0])+'</span><span class="aktagcopy">⧉</span></button>').join('')
       + '</div></details>';
   }
@@ -852,7 +852,7 @@ function uncheckDay(iso){const row=SCHED&&SCHED.dayMap[iso];if(!row||!row.items.
 
 /* ---------- top bar + nav ---------- */
 function chrome(active){
-  const tabs=[["today","Today"],["plan","Plan"],["stats","Stats"],["adjust","Adjust"]];
+  const tabs=[["today","Today"],["plan","Calendar"],["stats","Stats"],["adjust","Plan"]];
   const nm=hubName(S.active||"step1");
   return '<div class="topbar"><button class="brandbtn" id="brandBtn" title="Switch hub">‹ <span class="brandnm">'+escHTML(nm)+'</span></button>'
    +'<div class="topright"><span class="led" title="online"></span><button class="iconbtn" id="menuBtn" aria-label="menu">⋮</button></div></div>'
@@ -882,7 +882,7 @@ function render(){
 function statusLine(){const st=SCHED.stats;
   if(st.remItems===0)return '<div class="status ok">🎉 You\'ve finished every scheduled video. Spend your remaining days on UWorld and review.</div>';
   if(st.feasible)return '<div class="status ok">On track — about '+Math.round(st.reqPerDay/60*10)/10+' h/day of videos keeps you finishing '+(st.reviewDaysLeft>0?('with '+st.reviewDaysLeft+' review day'+(st.reviewDaysLeft===1?'':'s')+' to spare'):'right at your exam')+'.</div>';
-  return '<div class="status warn">⚠ Behind pace. To finish before your review window you\'d need ~'+Math.round(st.reqPerDay/60*10)/10+' h/day (you\'ve planned less). Move your exam date, add hours, or trim resources in <b>Adjust</b>. '+SCHED.atRisk.length+' videos don\'t currently fit.</div>';}
+  return '<div class="status warn">⚠ Behind pace. To finish before your review window you\'d need ~'+Math.round(st.reqPerDay/60*10)/10+' h/day (you\'ve planned less). Move your exam date, add hours, or trim resources in <b>Plan</b>. '+SCHED.atRisk.length+' videos don\'t currently fit.</div>';}
 
 /* ============================================================
    READINESS LAYER (spec Changes 1, 2, 4)
@@ -1098,10 +1098,10 @@ function renderToday(){
     const anyDone=row.items.some(it=>isDone(it.id));
     colB+='<div class="card"><div class="cardhd">'+escHTML(heading)+' <span class="pill">'+row.min+' min</span>'+(anyDone?'<button class="hdreset" data-dayreset="'+row.iso+'" title="Uncheck everything on this day">Uncheck all</button>':'')+'</div>'
       +'<div class="vlist">'+itemRows(row.items)+'</div>'
-      +ankiBlock(row.iso)
+      +ankiBlock(row.iso,true)
       +'<div class="rowtools">'+(todayRow&&!isOffToday?'<button class="btn ghost" id="offToday">Take today off</button>':'')+'</div></div>';
   } else if(!isOffToday){
-    colB+='<div class="card"><div class="cardhd">Nothing scheduled today</div><p class="muted">Get ahead from the <b>Plan</b> tab, or enjoy the breather.</p></div>';
+    colB+='<div class="card"><div class="cardhd">Nothing scheduled today</div><p class="muted">Get ahead from the <b>Calendar</b> tab, or enjoy the breather.</p></div>';
   }
   app.innerHTML=chrome("today")+'<div class="wrap"><div class="cols"><div>'+colA+'</div><div>'+colB+'</div></div></div>';
   bindVlist();bindExtras();
@@ -1167,7 +1167,7 @@ function renderPlan(){
   body+='<div class="calwk">'+["Su","Mo","Tu","We","Th","Fr","Sa"].map(d=>'<div>'+d+'</div>').join('')+'</div>';
   body+='<div class="calgrid">'+monthMatrix(CAL_YM).map(calCell).join('')+'</div>';
   body+='<div class="callegend"><span><i class="lg load"></i>study</span><span><i class="lg alldone"></i>done</span><span><i class="lg rest"></i>rest</span><span><i class="lg review"></i>review</span><span><i class="lg off"></i>off</span></div>';
-  if(SCHED.atRisk.length)body+='<div class="status warn">⚠ '+SCHED.atRisk.length+' videos ('+Math.round(SCHED.atRisk.reduce((a,b)=>a+b.min,0)/60)+' h) don\'t fit before your review window — they keep re-flowing forward. Fix the squeeze in <b>Adjust</b>.</div>';
+  if(SCHED.atRisk.length)body+='<div class="status warn">⚠ '+SCHED.atRisk.length+' videos ('+Math.round(SCHED.atRisk.reduce((a,b)=>a+b.min,0)/60)+' h) don\'t fit before your review window — they keep re-flowing forward. Fix the squeeze in <b>Plan</b>.</div>';
   app.innerHTML=chrome("plan")+'<div class="wrap planwrap"><div class="cols"><div>'+body+'</div><div>'+dayDetail(CAL_SEL)+'</div></div></div>';
   wireChrome();bindVlist();bindExtras();
   const pv=document.getElementById("calPrev");if(pv)pv.onclick=()=>{CAL_YM=ymShift(CAL_YM,-1);renderPlan();};
@@ -1215,7 +1215,7 @@ function pacingChart(){
   else if(today>exam){cls=doneMin>=totalMin-avgPerDay?"ok":"warn";txt=doneMin>=totalMin?"Plan complete — every video done.":"Exam date passed with ~"+((totalMin-doneMin)/60).toFixed(1)+" h of videos unfinished.";}
   else if(Math.abs(diff)<avgPerDay*0.5){cls="ok";txt="On pace — right about where your plan expects you today.";}
   else if(diff>0){cls="ok";txt="Ahead by ~"+diffH+" h ("+diffDays+" study "+dW+"). Nice work.";}
-  else {cls="warn";txt="Behind by ~"+diffH+" h ("+diffDays+" study "+dW+"). Catch up, or rebalance in Adjust.";}
+  else {cls="warn";txt="Behind by ~"+diffH+" h ("+diffDays+" study "+dW+"). Catch up, or rebalance in Plan.";}
   // svg
   const W=340,H=168,padL=30,padR=10,padT=12,padB=20;
   const ix=x=>padL+x*(W-padL-padR); const iy=v=>padT+(1-v/totalMin)*(H-padT-padB);
@@ -1242,6 +1242,17 @@ function pacingChart(){
 }
 
 /* ---------- ADJUST ---------- */
+/* live hint for the UWorld/review buffer: when new content wraps + days left for UWorld */
+function bufferHint(){
+  const c=S.cfg;
+  if(!c||!c.examISO||!SCHED)return "Set an exam date to see when your content wraps.";
+  const cd=SCHED.contentDates||[],rd=SCHED.reviewDates||[];
+  const cEnd=cd.length?cd[cd.length-1]:null;const bufDays=rd.length;
+  if(!cEnd)return "No content fits before your buffer — trim the buffer or add study time.";
+  const base='New content wraps by <b>'+fmtShort(cEnd)+'</b>';
+  if(bufDays>0)return base+', leaving '+bufDays+' study day'+(bufDays===1?'':'s')+' for UWorld &amp; review before your exam ('+fmtShort(c.examISO)+').';
+  return base+' — no buffer set, so content runs right up to your exam.';
+}
 function renderAdjust(){
   const c=S.cfg;const st=SCHED.stats;
   const dows=DOW.map((d,i)=>'<button type="button" class="tog '+((c.restDays||[]).includes(i)?"on":"")+'" data-dow="'+i+'">'+d+'</button>').join('');
@@ -1257,7 +1268,8 @@ function renderAdjust(){
     +'<label>Start date'+dateTriggerHTML("f_start",c.startISO||todayISO(),"Pick a start date")+'</label>'
     +'<label>Weekday hours/day<input type="number" id="f_wk" min="0" step="0.5" value="'+(c.wkdayHrs)+'"></label>'
     +'<label>Weekend hours/day<input type="number" id="f_we" min="0" step="0.5" value="'+(c.wkendHrs)+'"></label>'
-    +'<label>Review buffer (study days before exam, no new videos)<input type="number" id="f_rev" min="0" step="1" value="'+(c.reviewDays)+'"></label>'
+    +'<label>UWorld / review buffer — finish all new content this many study days before your exam<input type="number" id="f_rev" min="0" step="1" value="'+(c.reviewDays)+'"></label>'
+    +'<p class="muted small" style="margin:-4px 0 2px">'+bufferHint()+'</p>'
     +'<label>Reserve for Anki reviews (min/day)<input type="number" id="f_anki" min="0" step="15" value="'+(c.ankiMinPerDay||0)+'"></label>'
     +'<label>Reserve for UWorld (min/day)<input type="number" id="f_uw" min="0" step="15" value="'+(c.uworldMinPerDay||0)+'"></label>'
     +'<p class="muted small" style="margin:2px 0 0">Reserved time is subtracted from your daily hours so the plan schedules a realistic number of videos — not more than a real day holds.</p>'
@@ -1274,7 +1286,7 @@ function renderAdjust(){
   colB+='<div class="card"><div class="cardhd">'+(S.active==="nbme"?'Units &amp; study order':'Study order &amp; systems')+'</div>'
     + fold("adj_sys",(c.systems||SYS).length+' of '+SYS.length+' systems selected — edit / reorder',sysInner,false)+'</div>';
   if(S.active==="nbme"){
-    colB+='<div class="card soft"><div class="cardhd">Finished this unit?</div><p class="muted small">Start a fresh NBME plan for your next shelf — new exam, dates, and systems.</p><button class="btn" id="newUnit">Start a new unit…</button></div>';
+    colB+='<div class="card soft"><div class="cardhd">Finished this unit?</div><p class="muted small">Start a fresh Brody plan for your next block or shelf — new exam, dates, and systems.</p><button class="btn" id="newUnit">Start a new unit…</button></div>';
   }
   colB+='<div class="card soft"><button class="btn" id="saveDone">Done — back to Today</button><p class="muted small center" style="margin-top:10px">Every change here saves and re-flows your plan instantly.</p></div>';
   app.innerHTML=chrome("adjust")+'<div class="wrap"><div class="cols"><div>'+body+'</div><div>'+colB+'</div></div></div>';
@@ -1302,7 +1314,7 @@ function renderAdjust(){
 function hubStat(cfg){if(!cfg)return {total:0,done:0,pct:0};const sv=S.cfg;S.cfg=cfg;const bl=buildBacklog();const total=bl.length;let done=0;bl.forEach(it=>{if(isDone(it.id))done++;});S.cfg=sv;return {total,done,pct:total?Math.round(done/total*100):0};}
 function hubCard(key){
   const cfg=S.cfgs[key];const nm=hubName(key);
-  const desc=key==="step1"?"Comprehensive USMLE Step 1 prep across every system.":"A focused plan for an NBME shelf or subject exam.";
+  const desc=key==="step1"?"Comprehensive USMLE Step 1 prep across every system.":"A focused plan for a Brody block or shelf exam.";
   if(cfg){const s=hubStat(cfg);const dleft=cfg.examISO?Math.max(0,daysBetween(todayISO(),cfg.examISO)):null;
     return '<button class="hubcard set" data-enter="'+key+'"><div class="hubtop"><div class="hubname">'+escHTML(nm)+'</div>'+ring(s.pct,52)+'</div>'
       +'<div class="hubsub">'+s.done+' / '+s.total+' videos'+(dleft!=null?(' \u00b7 '+dleft+' days to '+escHTML(cfg.examLabel||"exam")):'')+'</div>'
@@ -1462,7 +1474,7 @@ function renderOnboard(){
   const goLbl=ob.fresh?"Start this unit":(editing?"Save changes":"Build my hub");
   const dows=DOW.map((d,i)=>'<button type="button" class="tog '+(ob.restDays.includes(i)?"on":"")+'" data-odow="'+i+'">'+d+'</button>').join('');
   const resBtn=(k,lab)=>'<button type="button" class="tog '+(ob.resources[k]?"on":"")+'" data-ores="'+k+'">'+lab+'</button>';
-  let body='<div class="onboard"><button class="link" id="o_back">'+closeLbl+'</button><h1>'+headVerb+escHTML(ob.fresh?"NBME Command Center":hubName(ob.hub))+'</h1><p class="muted">A plan that paces itself to your exam date and re-flows whenever life happens.</p>';
+  let body='<div class="onboard"><button class="link" id="o_back">'+closeLbl+'</button><h1>'+headVerb+escHTML(ob.fresh?"Brody Command Center":hubName(ob.hub))+'</h1><p class="muted">A plan that paces itself to your exam date and re-flows whenever life happens.</p>';
   if(obIsNbme())body+='<div class="card"><div class="cardhd">Which exam?</div><div class="form"><label>Name this exam<input type="text" id="o_label" value="'+escAttr(ob.examLabel)+'" placeholder="e.g. Cardiology shelf"></label></div></div>';
   body+='<div class="card"><div class="cardhd">Dates</div><div class="form">'
     +'<label>Exam date'+dateTriggerHTML("o_exam",ob.examISO,"Pick your exam date")+'</label>'
@@ -1471,7 +1483,7 @@ function renderOnboard(){
     +'<label>Weekday hours/day<input type="number" id="o_wk" min="0" step="0.5" value="'+ob.wkdayHrs+'"></label>'
     +'<label>Weekend hours/day<input type="number" id="o_we" min="0" step="0.5" value="'+ob.wkendHrs+'"></label>'
     +'<div class="flab">Weekly rest days</div><div class="togrow">'+dows+'</div>'
-    +'<label class="mt">Review buffer before exam (study days for UWorld &amp; review)<input type="number" id="o_rev" min="0" step="1" value="'+ob.reviewDays+'"></label>'
+    +'<label class="mt">UWorld / review buffer — finish content this many study days before your exam<input type="number" id="o_rev" min="0" step="1" value="'+ob.reviewDays+'"></label>'
     +'</div></div>';
   body+='<div class="card"><div class="cardhd">Resources</div><div class="togrow">'
     +resBtn("bnb","Boards &amp; Beyond")+resBtn("pathoma","Pathoma")+resBtn("sketchy","Sketchy")+resBtn("fa","First Aid")+resBtn("anking","AnKing")+resBtn("uworld","UWorld")
@@ -1555,19 +1567,25 @@ function modalSheet(o){
   const cx=ov.querySelector('[data-c="cancel"]');if(cx)cx.onclick=()=>{ov.remove();if(o.onCancel)o.onCancel();};
 }
 function doResetAll(){
-  const snap={vdone:S.vdone,vskip:S.vskip,vdoneDate:S.vdoneDate,akdone:S.akdone,notes:S.notes,assessments:S.assessments,uworld:S.uworld,vshaky:S.vshaky,streak:S.streak};
-  S.vdone={};S.vskip={};S.vdoneDate={};S.akdone={};S.notes={};S.assessments={};S.uworld={total:null,blocks:{}};S.vshaky={};S.streak={days:{}};_prevSig=0;S._resetAt=Date.now();save();
-  if(S.cfg){reflow();render();}else renderWelcome();
-  toastUndo("All progress cleared — tap Undo to restore.",()=>{S.vdone=snap.vdone;S.vskip=snap.vskip;S.vdoneDate=snap.vdoneDate;S.akdone=snap.akdone;S.notes=snap.notes;S.assessments=snap.assessments;S.uworld=snap.uworld;S.vshaky=snap.vshaky;S.streak=snap.streak;_prevSig=progressSig();save();if(S.cfg){reflow();render();}else renderWelcome();toast("Progress restored ✓");});
+  // nuclear: wipe progress AND the saved plans, drop the user back to the
+  // setup screen to craft a fresh plan. Tombstoned so sync can't resurrect it.
+  const snap={vdone:S.vdone,vskip:S.vskip,vdoneDate:S.vdoneDate,akdone:S.akdone,notes:S.notes,assessments:S.assessments,uworld:S.uworld,vshaky:S.vshaky,streak:S.streak,cfgs:S.cfgs,active:S.active};
+  S.vdone={};S.vskip={};S.vdoneDate={};S.akdone={};S.notes={};S.assessments={};S.uworld={total:null,blocks:{}};S.vshaky={};S.streak={days:{}};
+  S.cfgs={step1:null,nbme:null};S.active=null;S.cfg=null;_prevSig=0;S._resetAt=Date.now();save();
+  renderWelcome();
+  toastUndo("Everything cleared — build a new plan, or tap Undo to restore.",()=>{
+    S.vdone=snap.vdone;S.vskip=snap.vskip;S.vdoneDate=snap.vdoneDate;S.akdone=snap.akdone;S.notes=snap.notes;S.assessments=snap.assessments;S.uworld=snap.uworld;S.vshaky=snap.vshaky;S.streak=snap.streak;
+    S.cfgs=snap.cfgs;S.active=snap.active;S.cfg=S.active?S.cfgs[S.active]:null;_prevSig=progressSig();save();
+    if(S.cfg){reflow();render();}else renderWelcome();toast("Restored ✓");});
 }
-const BUILD="2026-07-08d";
+const BUILD="2026-07-09a";
 function openMenu(){
   const email=Cloud.user&&Cloud.user.email;
   const inHub=!!S.active;
   const html='<div class="sheet"><div class="sheethd">Menu</div>'
     +(email?'<div class="mrow acctrow"><span class="acctlbl">Signed in</span><span class="acctml">'+escHTML(email)+'</span></div>':'')
-    +(inHub?'<button class="mrow" data-m="adjust">Adjust this plan</button>':'')
-    +(S.active==="nbme"?'<button class="mrow" data-m="newunit">Start a new NBME unit</button>':'')
+    +(inHub?'<button class="mrow" data-m="adjust">Edit this plan</button>':'')
+    +(S.active==="nbme"?'<button class="mrow" data-m="newunit">Start a new Brody unit</button>':'')
     +(inHub?'<button class="mrow" data-m="switch">'+(S.cfgs[S.active==="step1"?"nbme":"step1"]?('Switch to '+escHTML(hubName(S.active==="step1"?"nbme":"step1"))):'Switch hub (Step 1 ⇄ NBME)')+'</button>':'')
     +'<button class="mrow" data-m="backup">Download a backup</button>'
     +'<button class="mrow" data-m="restore">Restore from a backup</button>'
@@ -1591,8 +1609,8 @@ function menuAct(m){
   else if(m==="signout"){confirmSignOut();}
   else if(m==="backup"){const blob=new Blob([JSON.stringify(persistObj(),null,2)],{type:"application/json"});const u=URL.createObjectURL(blob);const a=document.createElement("a");a.href=u;a.download="lowyieldonly-backup-"+todayISO()+".json";a.click();URL.revokeObjectURL(u);toast("Backup downloaded");}
   else if(m==="restore"){const inp=document.getElementById("fileIn");inp.value="";inp.click();}
-  else if(m==="help"){modalSheet({title:"How this works",okLabel:"Got it",cancel:false,msg:"Two command centers — one for Step 1, one for NBME shelf exams — each set up on its own.\n\nInside a hub, your plan is the remaining videos repacked from today to your exam date: check off what you watch and the rest re-distributes. Reorder systems (or NBME blocks), take a day off, move your exam date, or change resources and the plan re-paces live.\n\nFinished a shelf? Use ‘Start a new NBME unit’. Watched videos count across both hubs. Progress is saved to your account and synced across your devices. Tap the title to switch hubs."});}
-  else if(m==="reset"){modalSheet({title:"Reset all progress?",danger:true,okLabel:"Reset everything",msg:"This clears every checkmark, Anki check, note, self-assessment score, UWorld block, review flag, and your streak across BOTH hubs — here and in your synced account.\n\nYour hubs, exam dates, and settings stay exactly as they are. You’ll get one chance to undo.",onOk:doResetAll});}
+  else if(m==="help"){modalSheet({title:"How this works",okLabel:"Got it",cancel:false,msg:"Two command centers — one for Step 1, one for your Brody blocks & shelves — each set up on its own.\n\nInside a hub, your plan is the remaining videos repacked from today to your exam date: check off what you watch and the rest re-distributes. Reorder systems (or Brody blocks), take a day off, move your exam date, or change resources and the plan re-paces live.\n\nFinished a block? Use ‘Start a new Brody unit’. Watched videos count across both hubs. Progress is saved to your account and synced across your devices. Tap the title to switch hubs."});}
+  else if(m==="reset"){modalSheet({title:"Reset everything?",danger:true,okLabel:"Erase & start over",msg:"This erases EVERYTHING across both hubs — every checkmark, Anki check, note, self-assessment score, UWorld block, review flag, your streak, AND your saved plans (exam dates, systems, settings), here and in your synced account.\n\nYou’ll be taken back to the start to build a fresh plan. You’ll get one chance to undo.",onOk:doResetAll});}
 }
 
 /* ---------- boot ---------- */
