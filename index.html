@@ -865,7 +865,7 @@ function uncheckDay(iso){const row=SCHED&&SCHED.dayMap[iso];if(!row||!row.items.
 function chrome(active){
   const tabs=[["today","Today"],["plan","Calendar"],["stats","Stats"],["adjust","Plan"]];
   if(S.active==="nbme")tabs.push(["step","STEP"]);
-  const nm=hubName(S.active||"step1");
+  const nm=(S.active==="nbme")?"Home":hubName(S.active||"step1");
   return '<div class="topbar"><button class="brandbtn" id="brandBtn" title="Switch hub">‹ <span class="brandnm">'+escHTML(nm)+'</span></button>'
    +'<div class="topright"><span class="led" title="online"></span><button class="iconbtn" id="menuBtn" aria-label="menu">⋮</button></div></div>'
    +'<div class="nav">'+tabs.map(t=>'<button class="navb '+(active===t[0]?"on":"")+'" data-view="'+t[0]+'">'+t[1]+'</button>').join('')+'</div>';}
@@ -1631,7 +1631,7 @@ function renderOnboard(){
     + '<button class="link" id="sordReset">\u21ba Reset to recommended order</button>';
   body+='<div class="card"><div class="cardhd">'+(obIsNbme()?'Units &amp; study order':'Study order &amp; systems')+'</div>'
     + fold("ob_sys",ob.systems.length+' of '+SYS.length+' systems selected \u2014 edit / reorder',obSysInner,obIsNbme())+'</div>';}
-  body+='<div class="card soft"><div class="cardhd">Preview</div><p class="muted small">'+obPreview()+'</p></div>';
+  body+='<div class="card soft" id="o_reco"><div class="cardhd">Recommended pace</div>'+obPreview()+'</div>';
   body+='<button class="btn big" id="o_go">'+goLbl+'</button>';
   body+='</div>';
   app.innerHTML='<div class="wrap onb">'+body+'</div>';
@@ -1649,27 +1649,42 @@ function renderOnboard(){
   const sr=document.getElementById("sordReset");if(sr)sr.onclick=()=>{ob.sysOrder=SYS_ORDER_DEFAULT.slice();renderOnboard();};
   const go=document.getElementById("o_go");if(go)go.onclick=commitOnboard;
   const bk=document.getElementById("o_back");if(bk)bk.onclick=()=>{if((editing||ob.fresh)&&S.cfgs[ob.hub]){activate(ob.hub);S.active=ob.hub;VIEW="today";reflow();render();}else renderWelcome();};
-  bindFolds();
+  bindUsePace();bindFolds();
 }
 function renderObTogs(){
   document.querySelectorAll("[data-odow]").forEach(b=>b.classList.toggle("on",_ob.restDays.includes(+b.dataset.odow)));
   document.querySelectorAll("[data-ores]").forEach(b=>b.classList.toggle("on",!!_ob.resources[b.dataset.ores]));
 }
-function obLive(){const p=document.querySelector(".onb .soft p");if(p)p.innerHTML=obPreview();}
-function obPreview(){const ob=_ob;
-  if(!ob.examISO)return "Pick an exam date to see your pacing.";
-  if(ob.hub==="nbme"&&!ob.systems.length)return "Pick the units this shelf covers to see your pacing.";
+function obLive(){const c=document.getElementById("o_reco");if(c){c.innerHTML='<div class="cardhd">Recommended pace</div>'+obPreview();bindUsePace();}}
+/* pacing recommendation for onboarding — a suggestion only; the user keeps
+   full control of rest days and weekday/weekend hours. */
+function obReco(){const ob=_ob;
+  if(!ob.examISO)return {ok:false,msg:"Pick an exam date to see your recommended pace."};
+  if(ob.hub==="nbme"&&!ob.systems.length)return {ok:false,msg:"Pick the units this shelf covers to see your recommended pace."};
   const order=(ob.sysOrder||SYS_ORDER_DEFAULT).filter(s=>new Set(ob.systems).has(s));
   let total=0;const bySys={};CAT.forEach(c=>bySys[c.s]=c);
   if(ob.resources.pathoma)PATHOMA.filter(p=>p[3]===null).forEach(p=>total+=p[2]);
   order.forEach(sn=>{const c=bySys[sn];if(!c)return;if(ob.resources.bnb)c.v.forEach(v=>total+=v[1]);if(ob.resources.pathoma)PATHOMA.filter(p=>p[3]===sn).forEach(p=>total+=p[2]);if(ob.resources.sketchy&&sn==="Infectious Disease")SKMICRO.forEach(m=>total+=m[1]);if(ob.resources.sketchy)SKPHARM.filter(s=>s[2]===sn).forEach(s=>total+=s[1]);});
-  if(!total)return "No video resources selected \u2014 turn on at least one (B&amp;B, Pathoma, or Sketchy).";
-  const cur=(ob.startISO>todayISO())?ob.startISO:todayISO();const rest=ob.restDays;let d=isoToDate(cur),sd=0,g=0;
-  while(isoFromDate(d)<ob.examISO&&g++<800){if(!rest.includes(d.getDay()))sd++;d=addDays(d,1);}
-  const content=Math.max(1,sd-(ob.reviewDays||0));
-  const perDay=Math.round(total/content/60*10)/10;const hh=Math.round(total/60);
-  return hh+" h of video across "+order.length+" system"+(order.length>1?"s":"")+". From "+fmtShort(cur)+" to "+fmtShort(ob.examISO)+" you have ~"+sd+" study days ("+content+" for videos + "+(ob.reviewDays||0)+" review). About <b>"+perDay+" h/day</b>.";
+  if(!total)return {ok:false,msg:"Turn on at least one video resource (B&amp;B, Pathoma, or Sketchy)."};
+  const cur=(ob.startISO>todayISO())?ob.startISO:todayISO();const rest=ob.restDays||[];
+  let d=isoToDate(cur),g=0;const sdw=[];
+  while(isoFromDate(d)<ob.examISO&&g++<800){const wd=d.getDay();if(rest.indexOf(wd)<0)sdw.push(wd);d=addDays(d,1);}
+  const sd=sdw.length;const content=Math.max(1,sd-(ob.reviewDays||0));
+  const totalH=total/60;const perDay=totalH/content;
+  const studyDaysPerWeek=Math.max(1,7-rest.length);const perWeek=perDay*studyDaysPerWeek;
+  let cap=0;for(let i=0;i<content&&i<sdw.length;i++){cap+=((sdw[i]===0||sdw[i]===6)?(ob.wkendHrs||0):(ob.wkdayHrs||0));}
+  const feasible=cap>=totalH-0.05;const gap=Math.max(0,totalH-cap);
+  return {ok:true,totalH:Math.round(totalH),nSys:order.length,sd:sd,content:content,perDay:perDay,perWeek:perWeek,reviewDays:(ob.reviewDays||0),feasible:feasible,gap:gap,wd:ob.wkdayHrs,we:ob.wkendHrs,fromISO:cur,examISO:ob.examISO};
 }
+function obPreview(){const r=obReco();
+  if(!r.ok)return '<p class="muted small" style="margin:0">'+r.msg+'</p>';
+  const pd=Math.round(r.perDay*10)/10,pw=Math.round(r.perWeek);
+  let h='<p class="muted small" style="margin:0 0 8px">'+r.totalH+' h of video across '+r.nSys+' system'+(r.nSys>1?"s":"")+', '+fmtShort(r.fromISO)+' \u2192 '+fmtShort(r.examISO)+'. To finish before your '+r.reviewDays+'-study-day question buffer, aim for about <b>'+pd+' h/day</b> on study days (\u2248 <b>'+pw+' h/week</b>).</p>';
+  h+='<button type="button" class="btn ghost" id="o_usepace">Use this pace ('+Math.max(0.5,Math.ceil(r.perDay*2)/2)+' h/day)</button>';
+  h+='<p class="small" style="margin:8px 0 0;color:'+(r.feasible?"var(--text-2)":"var(--warning)")+'">'+(r.feasible?("\u2713 Your hours ("+r.wd+" weekday / "+r.we+" weekend) cover this with room to spare \u2014 adjust anytime."):("\u26a0 Your hours ("+r.wd+" wd / "+r.we+" we) fall about "+Math.ceil(r.gap)+" h short. Raise your hours, lengthen the buffer, move the date, or trim resources."))+'</p>';
+  return h;
+}
+function bindUsePace(){const u=document.getElementById("o_usepace");if(u)u.onclick=()=>{const r=obReco();if(r.ok){const pd=Math.max(0.5,Math.ceil(r.perDay*2)/2);_ob.wkdayHrs=pd;_ob.wkendHrs=pd;renderOnboard();}};}
 function commitOnboard(){const ob=_ob;
   if(!ob.examISO){toast("Pick an exam date first");return;}
   if(!ob.systems.length){toast("Pick at least one system");return;}
@@ -1714,7 +1729,7 @@ function doResetAll(){
     S.cfgs=snap.cfgs;S.active=snap.active;S.cfg=S.active?S.cfgs[S.active]:null;_prevSig=progressSig();save();
     if(S.cfg){reflow();render();}else renderWelcome();toast("Restored ✓");});
 }
-const BUILD="2026-07-10a";
+const BUILD="2026-07-11a";
 function openMenu(){
   const email=Cloud.user&&Cloud.user.email;
   const inHub=!!S.active;
