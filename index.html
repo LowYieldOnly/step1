@@ -48,12 +48,12 @@ b{color:var(--ink)}
 
 /* top bar + nav */
 .topbar{position:sticky;top:0;z-index:20;display:flex;align-items:center;justify-content:space-between;gap:10px;padding:13px 16px;background:rgba(8,12,16,.7);backdrop-filter:blur(16px) saturate(1.3);-webkit-backdrop-filter:blur(16px) saturate(1.3);border-bottom:1px solid var(--line)}
-.brandbtn{background:none;border:0;color:var(--muted);font-weight:800;font-size:13px;cursor:pointer;padding:0;display:flex;align-items:center;gap:7px;min-width:0;overflow:hidden}
+.brandbtn{background:none;border:0;color:var(--muted);font-weight:800;font-size:13px;cursor:pointer;padding:12px 10px;margin:-12px -10px;display:flex;align-items:center;gap:7px;min-width:0;overflow:hidden;border-radius:10px}
 .brandbtn .brandnm{color:var(--ink);font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-family:var(--mono);font-size:12.5px;text-transform:uppercase;letter-spacing:.1em}
 .brandbtn:hover{color:var(--phos)} .brandbtn:hover .brandnm{color:var(--phos)}
 .topright{display:flex;align-items:center;gap:11px;flex:0 0 auto}
 .led{width:8px;height:8px;border-radius:50%;background:var(--phos-dim)}
-.iconbtn{background:none;border:0;font-size:21px;color:var(--muted);cursor:pointer;padding:2px 6px;line-height:1;border-radius:8px;transition:color .15s}
+.iconbtn{background:none;border:0;font-size:21px;color:var(--muted);cursor:pointer;padding:11px 12px;margin:-9px -6px;line-height:1;border-radius:10px;transition:color .15s}
 .iconbtn:hover{color:var(--phos)}
 .nav{position:sticky;top:50px;z-index:19;display:flex;gap:5px;padding:9px 12px;background:rgba(8,12,16,.66);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border-bottom:1px solid var(--line);max-width:680px;margin:0 auto}
 .navb{flex:1;background:none;border:0;color:var(--faint);font-weight:700;font-size:11px;text-transform:uppercase;letter-spacing:.09em;font-family:var(--mono);padding:9px 6px;border-radius:10px;cursor:pointer;transition:color .18s,background .18s,box-shadow .18s}
@@ -1332,6 +1332,9 @@ function authForgot(){
 function confirmSignOut(){modalSheet({title:"Sign out?",okLabel:"Sign out",danger:true,cancel:true,msg:"You\u2019ll need to sign in again to get back in. Your progress is saved to your account.",onOk:()=>Cloud.signOut()});}
 
 function renderWelcome(){
+  // leaving a hub = no active hub; persist so a sync merge arriving while the
+  // chooser is open can't re-activate the hub and pull the user back inside
+  if(S.active){S.active=null;S.cfg=null;save();}
   const any=S.cfgs.step1||S.cfgs.nbme;
   let body='<div class="welcome"><div class="wbrand">LOW YIELD ONLY</div>'
     +'<p class="wtag">'+(any?"Pick a command center to jump back in.":"Two command centers \u2014 one for Step, one for your shelves. Build the one you need.")+'</p>'
@@ -1476,7 +1479,7 @@ function doResetAll(){
   if(S.cfg){reflow();render();}else renderWelcome();
   toastUndo("All progress cleared — tap Undo to restore.",()=>{S.vdone=snap.vdone;S.vskip=snap.vskip;S.vdoneDate=snap.vdoneDate;S.akdone=snap.akdone;S.notes=snap.notes;S.assessments=snap.assessments;S.uworld=snap.uworld;S.vshaky=snap.vshaky;S.streak=snap.streak;_prevSig=progressSig();save();if(S.cfg){reflow();render();}else renderWelcome();toast("Progress restored ✓");});
 }
-const BUILD="2026-07-07a";
+const BUILD="2026-07-07b";
 function openMenu(){
   const email=Cloud.user&&Cloud.user.email;
   const inHub=!!S.active;
@@ -1484,7 +1487,7 @@ function openMenu(){
     +(email?'<div class="mrow acctrow"><span class="acctlbl">Signed in</span><span class="acctml">'+escHTML(email)+'</span></div>':'')
     +(inHub?'<button class="mrow" data-m="adjust">Adjust this plan</button>':'')
     +(S.active==="nbme"?'<button class="mrow" data-m="newunit">Start a new NBME unit</button>':'')
-    +(inHub?'<button class="mrow" data-m="switch">Switch hub (Step 1 ⇄ NBME)</button>':'')
+    +(inHub?'<button class="mrow" data-m="switch">'+(S.cfgs[S.active==="step1"?"nbme":"step1"]?('Switch to '+escHTML(hubName(S.active==="step1"?"nbme":"step1"))):'Switch hub (Step 1 ⇄ NBME)')+'</button>':'')
     +'<button class="mrow" data-m="backup">Download a backup</button>'
     +'<button class="mrow" data-m="restore">Restore from a backup</button>'
     +'<button class="mrow" data-m="help">How this works</button>'
@@ -1499,7 +1502,7 @@ function openMenu(){
 }
 function menuAct(m){
   if(m==="close")return;
-  if(m==="switch"){renderWelcome();}
+  if(m==="switch"){const other=(S.active==="step1"?"nbme":"step1");if(S.active&&S.cfgs[other])enterHub(other);else renderWelcome();}
   else if(m==="adjust"){VIEW="adjust";render();}
   else if(m==="newunit"){startOnboard("nbme",true);}
   else if(m==="signout"){confirmSignOut();}
