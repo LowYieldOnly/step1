@@ -99,6 +99,47 @@ b{color:var(--ink)}
 .pl::before{content:"";width:14px;height:3px;border-radius:2px}
 .pl-a::before{background:var(--phos);box-shadow:0 0 6px var(--phos-glow)}
 .pl-i::before{background:var(--cyan);opacity:.9}
+/* readiness layer UI */
+.status.bad{background:rgba(255,94,87,.12);border:1px solid rgba(255,94,87,.35);color:#ffc9c5}
+.status.bad::before{background:var(--red);box-shadow:0 0 9px rgba(255,94,87,.6)}
+.hchips{margin:10px 0 0}
+.hcav{margin:6px 0 0}
+.rchip{display:inline-flex;align-items:center;gap:9px;width:100%;text-align:left;border-radius:12px;padding:10px 13px;border:1px solid var(--line2);background:var(--bg2);color:var(--ink);font-family:inherit;font-size:12.5px;cursor:pointer;transition:border-color .15s}
+.rchip:hover{border-color:var(--phos)}
+.rchip-n{font-family:var(--mono);font-weight:800;font-size:16px}
+.rchip-t{color:var(--muted)}
+.rchip-ok .rchip-n{color:var(--phos)}
+.rchip-warn .rchip-n{color:var(--amber)}
+.rchip-bad .rchip-n{color:var(--red)}
+.rchip-info{justify-content:center;color:var(--cyan)}
+.form2{display:flex;flex-direction:column;gap:10px}
+.form2 label{display:flex;flex-direction:column;gap:5px;font-size:12.5px;color:var(--muted);font-weight:600}
+.form2 input,.form2 select{background:var(--bg2);border:1px solid var(--line2);color:var(--ink);border-radius:10px;padding:11px;font-size:15px;font-family:inherit}
+.form2 input:focus,.form2 select:focus{outline:none;border-color:var(--phos);box-shadow:0 0 0 3px var(--phos-soft)}
+.form2 .opt{font-weight:500;color:var(--faint);text-transform:none;letter-spacing:0}
+.alist{display:flex;flex-direction:column;gap:1px}
+.arow{display:flex;align-items:center;gap:10px;padding:8px 3px;border-bottom:1px solid var(--line)}
+.arow:last-child{border-bottom:0}
+.adot{flex:0 0 auto;width:9px;height:9px;border-radius:50%;background:var(--faint)}
+.adot.ok{background:var(--phos)}
+.adot.warn{background:var(--amber)}
+.adot.bad{background:var(--red)}
+.adot.info{background:var(--cyan)}
+.aform{flex:1;min-width:0;font-size:13.5px;color:var(--ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.apct{font-family:var(--mono);font-weight:700;font-size:14px}
+.adate{font-family:var(--mono);font-size:11px;color:var(--faint)}
+.alink{background:none;border:0;color:var(--faint);font-size:11px;cursor:pointer;padding:2px 4px;font-family:inherit}
+.alink:hover{color:var(--red)}
+.uwtop{display:flex;align-items:baseline;justify-content:space-between;margin:2px 0 10px}
+.uwbig{font-family:var(--mono);font-weight:800;font-size:26px;color:var(--phos)}
+.uwbig span{font-size:12px;color:var(--muted);font-weight:600}
+.uwsub{font-family:var(--mono);font-size:12px;color:var(--muted)}
+.uwhd{font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--faint);margin:12px 0 6px}
+.vmeta{flex:1;min-width:0}
+.flagb{flex:0 0 auto;width:26px;height:26px;border-radius:8px;border:1.5px solid transparent;background:none;color:var(--faint);font-size:13px;cursor:pointer;transition:all .15s}
+.flagb:hover{color:var(--amber);border-color:var(--line2)}
+.flagb.on{color:var(--amber);border-color:rgba(234,166,58,.4);background:var(--amber-soft)}
+.vrow.shaky .vn{border-color:var(--amber)!important}
 
 /* video list */
 .vlist{display:flex;flex-direction:column;gap:5px}
@@ -106,6 +147,7 @@ b{color:var(--ink)}
 .vgrp .vghdr{font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--faint);margin:4px 0 6px}
 .vrow{display:flex;align-items:center;gap:11px;padding:6px 8px;border-radius:11px;transition:background .15s}
 .vrow:hover{background:rgba(255,255,255,.02)}
+.mfoot{text-align:center;font-family:var(--mono);font-size:10px;color:var(--faint);padding:8px 0 4px;letter-spacing:.04em;opacity:.7}
 .vrow.done .vn{opacity:.45;text-decoration:line-through}
 .vrow.done .vmin{opacity:.4}
 .chk{flex:0 0 auto;width:26px;height:26px;border-radius:8px;border:1.5px solid var(--line2);background:var(--bg2);color:#06140f;font-size:14px;font-weight:800;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .16s}
@@ -411,7 +453,7 @@ function applyBlocks(o){const set=new Set(o.blocks||[]);o.sysOrder=flatSys(o.blo
    Video progress (vdone/vskip/...) is shared — a watched video is watched
    regardless of which exam you're prepping. S.cfg points at the active hub. */
 let S={active:null,cfgs:{step1:null,nbme:null},vdone:{},vskip:{},vdoneDate:{},akdone:{},notes:{},streak:{days:{}},settings:{},_updatedAt:0,cfg:null};
-function emptyState(){return {active:null,cfgs:{step1:null,nbme:null},vdone:{},vskip:{},vdoneDate:{},akdone:{},notes:{},streak:{days:{}},settings:{},_updatedAt:0,cfg:null};}
+function emptyState(){return {active:null,cfgs:{step1:null,nbme:null},vdone:{},vskip:{},vdoneDate:{},akdone:{},notes:{},streak:{days:{}},assessments:{},uworld:{total:null,blocks:{}},vshaky:{},settings:{},_updatedAt:0,cfg:null};}
 function resetStateToEmpty(){Object.assign(S,emptyState());S.cfgs={step1:null,nbme:null};S.streak={days:{}};}
 /* load a specific account's cached state (empty if none yet) */
 function loadState(key){
@@ -419,6 +461,7 @@ function loadState(key){
   let raw={};try{raw=JSON.parse(store.get(key)||"{}");}catch(e){}
   S.vdone=raw.vdone||{};S.vskip=raw.vskip||{};S.vdoneDate=raw.vdoneDate||{};S.akdone=raw.akdone||{};
   S.notes=raw.notes||{};S.streak=raw.streak||{days:{}};S.streak.days=S.streak.days||{};
+  S.assessments=raw.assessments||{};S.uworld=raw.uworld||{total:null,blocks:{}};S.uworld.blocks=S.uworld.blocks||{};S.vshaky=raw.vshaky||{};
   S.settings=raw.settings||{};S._updatedAt=raw._updatedAt||0;
   if(raw.cfgs){S.cfgs={step1:raw.cfgs.step1||null,nbme:raw.cfgs.nbme||null};S.active=raw.active||null;}
   else if(raw.cfg){ // migrate the old single-plan shape into the matching hub
@@ -441,6 +484,7 @@ function normalizeCfg(c,key){
   c.restDays=c.restDays||[0];c.off=c.off||{};
   if(c.reviewDays==null)c.reviewDays=14;
   if(c.wkdayHrs==null)c.wkdayHrs=6; if(c.wkendHrs==null)c.wkendHrs=4;
+  if(c.ankiMinPerDay==null)c.ankiMinPerDay=0; if(c.uworldMinPerDay==null)c.uworldMinPerDay=0;
   if(!c.startISO)c.startISO=todayISO();
   // study order: a full permutation of all systems; default = recommended B&B sequence
   const ok=Array.isArray(c.sysOrder)&&c.sysOrder.length===SYS.length&&SYS.every(s=>c.sysOrder.indexOf(s)>=0);
@@ -451,7 +495,7 @@ function activate(key){S.active=key;S.cfg=S.cfgs[key]||null;}
 function hubName(key){return key==="step1"?"STEP 1 Command Center":"NBME Command Center";}
 let _prevSig=null;
 
-function persistObj(){return {active:S.active,cfgs:S.cfgs,vdone:S.vdone,vskip:S.vskip,vdoneDate:S.vdoneDate,akdone:S.akdone,notes:S.notes,streak:S.streak,settings:S.settings,_updatedAt:S._updatedAt};}
+function persistObj(){return {active:S.active,cfgs:S.cfgs,vdone:S.vdone,vskip:S.vskip,vdoneDate:S.vdoneDate,akdone:S.akdone,notes:S.notes,streak:S.streak,assessments:S.assessments,uworld:S.uworld,vshaky:S.vshaky,settings:S.settings,_updatedAt:S._updatedAt};}
 function save(){S._updatedAt=Date.now();markStreakIfProgress();store.set(SKEY,JSON.stringify(persistObj()));Cloud.schedulePush();}
 
 /* ---------- streak (set of studied dates; merge-safe) ---------- */
@@ -489,7 +533,7 @@ function buildBacklog(){
    today to the exam, reserving a review/UWorld buffer at the end.
    ============================================================ */
 let SCHED=null;   // {days:[{iso,off,rest,review,items,min}], atRisk:[items], stats:{...}, byId:{}}
-function dayBudgetMin(d){const we=(d.getDay()===0||d.getDay()===6);return Math.max(15,Math.round((we?S.cfg.wkendHrs:S.cfg.wkdayHrs)*60));}
+function dayBudgetMin(d){const we=(d.getDay()===0||d.getDay()===6);const total=Math.max(15,Math.round((we?S.cfg.wkendHrs:S.cfg.wkdayHrs)*60));const reserved=(S.cfg.ankiMinPerDay||0)+(S.cfg.uworldMinPerDay||0);return Math.max(15,total-reserved);}
 function isDone(id){return !!S.vdone[id];}
 function isSkip(id){return !!S.vskip[id];}
 function reflow(){
@@ -574,6 +618,9 @@ function mergeState(a,b){a=a||{};b=b||{};const aT=a._updatedAt||0,bT=b._updatedA
   out.akdone=unionTrue(a.akdone,b.akdone);
   out.notes=mergeNotes(older.notes,newer.notes);
   out.streak={days:unionTrue((a.streak||{}).days,(b.streak||{}).days)};
+  out.assessments=Object.assign({},a.assessments||{},b.assessments||{});
+  out.uworld={total:((newer.uworld||{}).total!=null?(newer.uworld||{}).total:(older.uworld||{}).total),blocks:Object.assign({},(a.uworld||{}).blocks||{},(b.uworld||{}).blocks||{})};
+  out.vshaky=unionTrue(a.vshaky,b.vshaky);
   out.settings=Object.assign({},older.settings||{},newer.settings||{});
   out._updatedAt=Math.max(aT,bT);
   return out;}
@@ -633,6 +680,7 @@ Cloud.adopt=function(m){Cloud.applying=true;
   S.active=m.active||null;S.cfgs=m.cfgs||{step1:null,nbme:null};
   S.vdone=m.vdone||{};S.vskip=m.vskip||{};S.vdoneDate=m.vdoneDate||{};S.akdone=m.akdone||{};
   S.notes=m.notes||{};S.streak=m.streak||{days:{}};S.settings=m.settings||{};S._updatedAt=m._updatedAt||0;
+  S.assessments=m.assessments||{};S.uworld=m.uworld||{total:null,blocks:{}};S.uworld.blocks=S.uworld.blocks||{};S.vshaky=m.vshaky||{};
   ["step1","nbme"].forEach(k=>{if(S.cfgs[k])normalizeCfg(S.cfgs[k],k);});
   S.cfg=S.active?S.cfgs[S.active]:null;_prevSig=progressSig();
   try{store.set(SKEY,JSON.stringify(persistObj()));}catch(e){}
@@ -677,11 +725,12 @@ function itemRows(items,opts){opts=opts||{};if(!items.length)return '<div class=
   const order=["bnb","pathoma","skmicro","skpharm"];const merged=mergeItems(items);const groups={};merged.forEach(it=>{(groups[it.res]=groups[it.res]||[]).push(it);});
   const keys=order.filter(k=>groups[k]).concat(Object.keys(groups).filter(k=>order.indexOf(k)<0));
   return keys.map(k=>'<div class="vgrp"><div class="vghdr">'+resLabel(k)+'</div>'+groups[k].map(it=>{
-    const done=it.ids.every(isDone);const idsAttr=escAttr(it.ids.join(","));
-    return '<div class="vrow '+(done?"done":"")+'">'
+    const done=it.ids.every(isDone);const shaky=it.ids.some(isShaky);const idsAttr=escAttr(it.ids.join(","));
+    return '<div class="vrow '+(done?"done":"")+(shaky?" shaky":"")+'">'
       +'<button class="chk '+(done?"on":"")+'" data-ids="'+idsAttr+'" aria-label="watched">'+(done?"✓":"")+'</button>'
       +'<div class="vmeta"><span class="vn" style="border-color:'+(SYS_COLOR[it.sys]||"#999")+'">'+escHTML(vName(it))+'</span>'
       +'<span class="vmin">'+it.min+'m</span></div>'
+      +'<button class="flagb '+(shaky?"on":"")+'" data-flag="'+idsAttr+'" aria-label="flag for review" title="Flag as shaky — collects in your review queue">⚑</button>'
       +'</div>';}).join('')+'</div>').join('');}
 
 /* ---------- copy helpers + per-day Anki block ---------- */
@@ -710,7 +759,7 @@ function toggleItems(ids){const all=ids.every(isDone);S.vdoneDate=S.vdoneDate||{
 
 /* ---------- top bar + nav ---------- */
 function chrome(active){
-  const tabs=[["today","Today"],["plan","Plan"],["progress","Progress"],["adjust","Adjust"]];
+  const tabs=[["today","Today"],["ready","Ready"],["plan","Plan"],["progress","Progress"],["adjust","Adjust"]];
   const nm=hubName(S.active||"step1");
   return '<div class="topbar"><button class="brandbtn" id="brandBtn" title="Switch hub">‹ <span class="brandnm">'+escHTML(nm)+'</span></button>'
    +'<div class="topright"><span class="led" title="online"></span><button class="iconbtn" id="menuBtn" aria-label="menu">⋮</button></div></div>'
@@ -727,6 +776,7 @@ function render(){
   if(!S.cfg){renderWelcome();return;}
   reflow();
   if(VIEW==="today")renderToday();
+  else if(VIEW==="ready")renderReady();
   else if(VIEW==="plan")renderPlan();
   else if(VIEW==="progress")renderProgress();
   else if(VIEW==="adjust")renderAdjust();
@@ -739,6 +789,140 @@ function statusLine(){const st=SCHED.stats;
   if(st.feasible)return '<div class="status ok">On track — about '+Math.round(st.reqPerDay/60*10)/10+' h/day of videos keeps you finishing '+(st.reviewDaysLeft>0?('with '+st.reviewDaysLeft+' review day'+(st.reviewDaysLeft===1?'':'s')+' to spare'):'right at your exam')+'.</div>';
   return '<div class="status warn">⚠ Behind pace. To finish before your review window you\'d need ~'+Math.round(st.reqPerDay/60*10)/10+' h/day (you\'ve planned less). Move your exam date, add hours, or trim resources in <b>Adjust</b>. '+SCHED.atRisk.length+' videos don\'t currently fit.</div>';}
 
+/* ============================================================
+   READINESS LAYER (spec Changes 1, 2, 4)
+   Self-assessment scores + UWorld accuracy + confidence flags.
+   Every value here is USER-ENTERED — nothing is scraped or pulled.
+   All three maps live top-level with per-entry merge (see mergeState).
+   ============================================================ */
+function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2,7);}
+// Current NBME Step 1 self-assessment inventory (confirmed via nbme.org, 2026).
+// "Other" future-proofs against forms being retired/added.
+const NBME_FORMS=["NBME 26","NBME 27","NBME 28","NBME 29","NBME 30","NBME 31","NBME 32","UWSA 1","UWSA 2","UWSA 3","Free 120","Other"];
+// Bands are common tutor / NBME-report guidance — NOT guarantees. Framed as such in UI.
+function readinessVerdict(pct){
+  if(pct==null||isNaN(pct))return {text:"Not yet taken",cls:"info"};
+  if(pct>=70)return {text:"in the likely-pass range",cls:"ok"};
+  if(pct>=65)return {text:"low-pass range — build a cushion",cls:"warn"};
+  return {text:"below the passing range",cls:"bad"};
+}
+let RDRAFT={form:"NBME 28",dateISO:todayISO(),pct:"",estProb:""};
+let UDRAFT={sys:"",q:"40",correct:""};
+function assessList(){const a=S.assessments||{};return Object.keys(a).map(k=>Object.assign({id:k},a[k])).filter(x=>x.hub===S.active).sort((x,y)=>x.dateISO<y.dateISO?-1:(x.dateISO>y.dateISO?1:(x._t||0)-(y._t||0)));}
+function latestAssess(){const l=assessList();return l.length?l[l.length-1]:null;}
+function addAssessment(o){S.assessments=S.assessments||{};S.assessments[uid()]={hub:S.active,form:o.form,dateISO:o.dateISO,pct:o.pct,estProb:(o.estProb!=null?o.estProb:null),note:o.note||"",_t:Date.now()};save();}
+function delAssessment(id){if(S.assessments&&S.assessments[id]){delete S.assessments[id];save();}}
+/* UWorld rollups derived from the append-only block log */
+function uworldRollup(){
+  const u=S.uworld||{total:null,blocks:{}};const blocks=u.blocks||{};
+  const mine=Object.keys(blocks).map(k=>blocks[k]).filter(b=>b&&b.hub===S.active);
+  let done=0,correct=0;const bySys={};
+  mine.forEach(b=>{const q=+b.q||0,c=+b.correct||0;done+=q;correct+=c;
+    if(b.sys){const e=bySys[b.sys]=bySys[b.sys]||{done:0,correct:0};e.done+=q;e.correct+=c;}});
+  Object.keys(bySys).forEach(s=>{const e=bySys[s];e.pct=e.done?Math.round(e.correct/e.done*100):null;});
+  return {total:u.total,done,correct,pct:done?Math.round(correct/done*100):null,bySys};
+}
+function addUworldBlock(o){S.uworld=S.uworld||{total:null,blocks:{}};S.uworld.blocks=S.uworld.blocks||{};S.uworld.blocks[uid()]={hub:S.active,dateISO:o.dateISO||todayISO(),sys:o.sys||"",q:+o.q||0,correct:+o.correct||0,mode:o.mode||"random",_t:Date.now()};save();}
+function setUworldTotal(n){S.uworld=S.uworld||{total:null,blocks:{}};S.uworld.total=(n>0?n:null);save();}
+/* confidence flags + review queue (Change 4) */
+function isShaky(id){return !!(S.vshaky&&S.vshaky[id]);}
+function toggleShaky(id){S.vshaky=S.vshaky||{};if(S.vshaky[id])delete S.vshaky[id];else S.vshaky[id]=true;save();}
+function weakSystems(target){const roll=uworldRollup();const out=[];Object.keys(roll.bySys).forEach(s=>{const e=roll.bySys[s];if(e.pct!=null&&e.done>=20&&e.pct<(target||65))out.push({sys:s,pct:e.pct});});return out.sort((a,b)=>a.pct-b.pct);}
+/* small readiness chip for the Today hero */
+function readinessChip(){
+  const la=latestAssess();
+  if(!la)return '<button class="rchip rchip-info" data-goready="1">Log your first self-assessment →</button>';
+  const v=readinessVerdict(la.pct);
+  return '<button class="rchip rchip-'+v.cls+'" data-goready="1"><span class="rchip-n">'+la.pct+'%</span><span class="rchip-t">'+escHTML(la.form)+' · '+v.text+'</span></button>';
+}
+function loadCaveat(){const a=(S.cfg&&S.cfg.ankiMinPerDay)||0,u=(S.cfg&&S.cfg.uworldMinPerDay)||0;if(!a&&!u)return '';const parts=[];if(a)parts.push('~'+(Math.round(a/60*10)/10)+' h Anki');if(u)parts.push('~'+(Math.round(u/60*10)/10)+' h UWorld');return '<p class="muted small hcav">Video time only — your day also reserves '+parts.join(' + ')+'.</p>';}
+/* ---- Ready view ---- */
+function scoreForm(){
+  return '<div class="form2">'
+    +'<label>Form<select id="r_form">'+NBME_FORMS.map(f=>'<option'+(RDRAFT.form===f?' selected':'')+'>'+f+'</option>').join('')+'</select></label>'
+    +'<label>Date taken'+dateTriggerHTML("r_date",RDRAFT.dateISO,"Date")+'</label>'
+    +'<label>% correct<input id="r_pct" type="number" inputmode="numeric" min="0" max="100" value="'+escAttr(RDRAFT.pct)+'" placeholder="e.g. 72"></label>'
+    +'<label>Est. pass probability <span class="opt">(optional, from your report)</span><input id="r_prob" type="number" inputmode="numeric" min="0" max="100" value="'+escAttr(RDRAFT.estProb)+'" placeholder="%"></label>'
+    +'<button class="btn" id="r_save">Save score</button></div>';
+}
+function scoreTrend(list){
+  const W=320,H=96,padL=22,padR=8,padT=10,padB=16;const ys=list.map(x=>x.pct);
+  const minY=Math.min(60,Math.min.apply(null,ys)-3),maxY=Math.max(85,Math.max.apply(null,ys)+3);
+  const ix=i=>padL+(list.length<=1?0:i/(list.length-1))*(W-padL-padR);
+  const iy=v=>padT+(1-(v-minY)/(maxY-minY))*(H-padT-padB);
+  let svg='<svg viewBox="0 0 '+W+' '+H+'" class="pacesvg">';
+  [65,70].forEach(t=>{if(t>=minY&&t<=maxY){const y=iy(t);svg+='<line x1="'+padL+'" y1="'+y.toFixed(1)+'" x2="'+(W-padR)+'" y2="'+y.toFixed(1)+'" class="pgrid"/><text x="'+(padL-3)+'" y="'+(y+3).toFixed(1)+'" class="pax" text-anchor="end">'+t+'</text>';}});
+  svg+='<polyline points="'+list.map((x,i)=>ix(i).toFixed(1)+","+iy(x.pct).toFixed(1)).join(" ")+'" class="pactual"/>';
+  list.forEach((x,i)=>{svg+='<circle cx="'+ix(i).toFixed(1)+'" cy="'+iy(x.pct).toFixed(1)+'" r="2.7" fill="var(--phos)"/>';});
+  svg+='</svg>';return svg;
+}
+function uworldForm(){
+  const sysOpts=['<option value="">System (optional)…</option>'].concat(planSystems().map(s=>'<option'+(UDRAFT.sys===s?' selected':'')+'>'+s+'</option>')).join('');
+  return '<div class="form2">'
+    +'<label>System<select id="u_sys">'+sysOpts+'</select></label>'
+    +'<label>Questions<input id="u_q" type="number" inputmode="numeric" min="1" value="'+escAttr(UDRAFT.q)+'"></label>'
+    +'<label># correct<input id="u_c" type="number" inputmode="numeric" min="0" value="'+escAttr(UDRAFT.correct)+'" placeholder="in that block"></label>'
+    +'<label>Qbank size <span class="opt">(confirm in UWorld)</span><input id="u_total" type="number" inputmode="numeric" min="0" value="'+escAttr((S.uworld&&S.uworld.total)||"")+'" placeholder="~3300"></label>'
+    +'<button class="btn ghost" id="u_save">Log block</button></div>';
+}
+function uworldCard(){
+  const r=uworldRollup();const pctTxt=r.pct!=null?r.pct+'%':'—';const doneTxt=r.done+(r.total?(' / '+r.total):'')+' Qs';
+  let bars='';const sysList=Object.keys(r.bySys).sort((a,b)=>(r.bySys[a].pct||0)-(r.bySys[b].pct||0));
+  sysList.forEach(s=>{const e=r.bySys[s];const col=e.pct==null?'#777':(e.pct>=70?'var(--phos)':(e.pct>=60?'var(--amber)':'var(--red)'));
+    bars+='<div class="bar"><div class="barlab">'+escHTML(s)+'</div><div class="bartrack"><div class="barfill" style="width:'+(e.pct||0)+'%;background:'+col+'"></div></div><div class="barpct">'+(e.pct==null?'—':e.pct+'%')+'</div></div>';});
+  return '<div class="card"><div class="cardhd">UWorld</div>'
+    +'<div class="uwtop"><div class="uwbig">'+pctTxt+' <span>correct</span></div><div class="uwsub">'+doneTxt+'</div></div>'
+    +uworldForm()
+    +(bars?('<div class="uwhd">By system — accuracy</div><div class="bars">'+bars+'</div><p class="muted small">Systems under 65% feed your review queue below.</p>'):'<p class="muted small">Log a block to start tracking per-system accuracy — the most actionable weak-area signal you have.</p>')
+    +'</div>';
+}
+function reviewCard(){
+  const shaky=[];buildBacklog().forEach(it=>{if(isShaky(it.id))shaky.push(it);});
+  const weak=weakSystems(65);
+  if(!shaky.length&&!weak.length)return '';
+  let body='<div class="card soft"><div class="cardhd">Review queue</div>';
+  if(weak.length)body+='<p class="muted small">Weak UWorld systems (&lt; 65%): '+weak.map(w=>escHTML(w.sys)+' <b>'+w.pct+'%</b>').join(', ')+'</p>';
+  if(shaky.length){body+='<div class="alist">'+shaky.slice(0,40).map(it=>'<div class="arow"><span class="adot warn"></span><span class="aform">'+escHTML(vName(it))+'</span><button class="alink" data-unshaky="'+escAttr(it.id)+'">clear</button></div>').join('')+'</div>';if(shaky.length>40)body+='<p class="muted small">+'+(shaky.length-40)+' more flagged.</p>';}
+  body+='</div>';return body;
+}
+function renderReady(){
+  const c=S.cfg;const daysLeft=c&&c.examISO?Math.max(0,daysBetween(todayISO(),c.examISO)):null;
+  const list=assessList();const la=latestAssess();const v=readinessVerdict(la?la.pct:null);
+  let body='';
+  body+='<div class="card"><div class="cardhd">Readiness'+(daysLeft!=null?' <span class="pill">'+daysLeft+' days left</span>':'')+'</div>'
+    +'<div class="status '+v.cls+'">'+(la?('Latest: <b>'+la.pct+'%</b> on '+escHTML(la.form)+' ('+fmtShort(la.dateISO)+') — '+v.text+'.'):'No self-assessment logged yet. Your first NBME is the single best signal of whether you\u2019ll pass — worth more than any video count.')+'</div>';
+  if(daysLeft!=null){
+    const passing=list.some(x=>x.pct>=70);
+    if(la){const wk=Math.floor(daysBetween(la.dateISO,todayISO())/7);if(wk>=3)body+='<p class="muted small">~'+wk+' weeks since your last score — a fresh form keeps the trend honest.</p>';}
+    if(daysLeft<=28&&!passing)body+='<p class="muted small">Exam in '+daysLeft+' days with nothing in the passing range yet. NBME 28 and UWSA 2 have the strongest predictive reputations near test day.</p>';
+  }
+  body+='<p class="muted small">Bands (65 / 70) are common guidance, not guarantees — even a high estimate still carries real fail risk. Trend across several forms matters more than any single score.</p></div>';
+  if(list.length>=2)body+='<div class="card"><div class="cardhd">Score trend</div>'+scoreTrend(list)+'<div class="placeleg"><span class="pl pl-a">Your scores</span></div></div>';
+  body+='<div class="card"><div class="cardhd">Log a score</div>'+scoreForm()+'</div>';
+  if(list.length)body+='<div class="card"><div class="cardhd">Logged scores</div><div class="alist">'
+    +list.slice().reverse().map(x=>{const vv=readinessVerdict(x.pct);return '<div class="arow"><span class="adot '+vv.cls+'"></span><span class="aform">'+escHTML(x.form)+'</span><span class="apct">'+x.pct+'%</span><span class="adate">'+fmtShort(x.dateISO)+'</span><button class="alink" data-del="'+escAttr(x.id)+'">remove</button></div>';}).join('')
+    +'</div></div>';
+  body+=uworldCard();
+  body+=reviewCard();
+  app.innerHTML=chrome("ready")+'<div class="wrap">'+body+'</div>';
+  bindReady();
+}
+function bindReady(){
+  const rf=document.getElementById("r_form");if(rf)rf.onchange=()=>{RDRAFT.form=rf.value;};
+  const rd=document.getElementById("r_date");if(rd)rd.onclick=()=>openDatePicker({value:RDRAFT.dateISO,title:"Date taken",onPick:(iso)=>{RDRAFT.dateISO=iso;renderReady();}});
+  const rp=document.getElementById("r_pct");if(rp)rp.onchange=()=>{RDRAFT.pct=rp.value;};
+  const rpr=document.getElementById("r_prob");if(rpr)rpr.onchange=()=>{RDRAFT.estProb=rpr.value;};
+  const rs=document.getElementById("r_save");if(rs)rs.onclick=()=>{const pct=parseFloat(rp?rp.value:RDRAFT.pct);if(isNaN(pct)||pct<0||pct>100){toast("Enter a % between 0 and 100");return;}const prob=parseFloat(rpr?rpr.value:RDRAFT.estProb);addAssessment({form:(rf?rf.value:RDRAFT.form),dateISO:RDRAFT.dateISO,pct:Math.round(pct),estProb:isNaN(prob)?null:Math.round(prob)});RDRAFT={form:(rf?rf.value:RDRAFT.form),dateISO:todayISO(),pct:"",estProb:""};toast("Score logged \u2713");renderReady();};
+  document.querySelectorAll("[data-del]").forEach(b=>b.onclick=()=>{delAssessment(b.dataset.del);renderReady();});
+  const us=document.getElementById("u_sys");if(us)us.onchange=()=>{UDRAFT.sys=us.value;};
+  const uq=document.getElementById("u_q");if(uq)uq.onchange=()=>{UDRAFT.q=uq.value;};
+  const uc=document.getElementById("u_c");if(uc)uc.onchange=()=>{UDRAFT.correct=uc.value;};
+  const ut=document.getElementById("u_total");if(ut)ut.onchange=()=>{const n=parseInt(ut.value,10);setUworldTotal(isNaN(n)?0:n);};
+  const usv=document.getElementById("u_save");if(usv)usv.onclick=()=>{const q=parseInt(uq?uq.value:UDRAFT.q,10),cc=parseInt(uc?uc.value:UDRAFT.correct,10);if(isNaN(q)||q<1){toast("How many questions in the block?");return;}if(isNaN(cc)||cc<0||cc>q){toast("# correct can\u2019t exceed the question count");return;}addUworldBlock({sys:(us?us.value:UDRAFT.sys),q:q,correct:cc});UDRAFT={sys:(us?us.value:UDRAFT.sys),q:"40",correct:""};toast("Block logged \u2713");renderReady();};
+  document.querySelectorAll("[data-unshaky]").forEach(b=>b.onclick=()=>{toggleShaky(b.dataset.unshaky);renderReady();});
+  document.querySelectorAll("[data-goready]").forEach(b=>b.onclick=()=>{VIEW="ready";render();});
+  wireChrome();
+}
 function renderToday(){
   const st=SCHED.stats; const cs=currentStreak();
   // today's assignment = the content day whose iso === today (or the first upcoming content day)
@@ -757,6 +941,7 @@ function renderToday(){
     +'<div class="hero-l">'+ring(overall().pct,72)+'</div>'
     +'<div class="hero-r"><div class="big">'+examLeft+' <span>days to '+escHTML(S.cfg.examLabel||(S.cfg.examType==="step1"?"Step 1":"your exam"))+'</span></div>'
       +'<div class="sub">'+overall().done+' / '+overall().total+' videos done'+(cs>0?' · 🔥 '+cs+'-day streak':'')+'</div></div></div>';
+  body+='<div class="hchips">'+readinessChip()+'</div>'+loadCaveat();
   body+=statusLine();
   if(isOffToday){
     body+='<div class="card"><div class="cardhd">'+(todayRow.off?'Day off':'Rest day')+' · '+fmtLong(todayISO())+'</div><p class="muted">No videos scheduled today.'+(todayRow.off?' <button class="link" id="unoff">Cancel day off</button>':'')+'</p></div>';
@@ -781,7 +966,9 @@ function renderToday(){
   const o1=document.getElementById("offToday");if(o1)o1.onclick=()=>dayOffToggle(todayISO(),true);
   const o2=document.getElementById("unoff");if(o2)o2.onclick=()=>dayOffToggle(todayISO(),false);
 }
-function bindVlist(){document.querySelectorAll(".chk[data-ids]").forEach(b=>b.onclick=()=>toggleItems(b.dataset.ids.split(",")));}
+function toggleShakyItems(ids){const all=ids.every(isShaky);S.vshaky=S.vshaky||{};ids.forEach(id=>{if(all)delete S.vshaky[id];else S.vshaky[id]=true;});save();}
+function bindVlist(){document.querySelectorAll(".chk[data-ids]").forEach(b=>b.onclick=()=>toggleItems(b.dataset.ids.split(",")));
+  document.querySelectorAll(".flagb[data-flag]").forEach(b=>b.onclick=()=>{toggleShakyItems(b.dataset.flag.split(","));render();});}
 
 function setDayOff(iso,on){S.cfg.off=S.cfg.off||{};if(on)S.cfg.off[iso]=true;else delete S.cfg.off[iso];save();reflow();render();}
 function dayOffToggle(iso,on){setDayOff(iso,on);toastUndo(on?(fmtShort(iso)+" off — work re-flowed."):(fmtShort(iso)+" back on."),()=>{setDayOff(iso,!on);});}
@@ -940,6 +1127,9 @@ function renderAdjust(){
     +'<label>Weekday hours/day<input type="number" id="f_wk" min="0" step="0.5" value="'+(c.wkdayHrs)+'"></label>'
     +'<label>Weekend hours/day<input type="number" id="f_we" min="0" step="0.5" value="'+(c.wkendHrs)+'"></label>'
     +'<label>Review buffer (study days before exam, no new videos)<input type="number" id="f_rev" min="0" step="1" value="'+(c.reviewDays)+'"></label>'
+    +'<label>Reserve for Anki reviews (min/day)<input type="number" id="f_anki" min="0" step="15" value="'+(c.ankiMinPerDay||0)+'"></label>'
+    +'<label>Reserve for UWorld (min/day)<input type="number" id="f_uw" min="0" step="15" value="'+(c.uworldMinPerDay||0)+'"></label>'
+    +'<p class="muted small" style="margin:2px 0 0">Reserved time is subtracted from your daily hours so the plan schedules a realistic number of videos — not more than a real day holds.</p>'
     +'<div class="flab">Weekly rest days</div><div class="togrow">'+dows+'</div>'
     +'</div></div>';
   body+='<div class="card"><div class="cardhd">Resources</div><div class="togrow">'
@@ -962,6 +1152,8 @@ function renderAdjust(){
   const fe=document.getElementById("f_exam");if(fe)fe.onclick=()=>openDatePicker({value:c.examISO,min:todayISO(),title:"Exam date",onPick:(iso)=>{c.examISO=iso;apply();}});
   const fs=document.getElementById("f_start");if(fs)fs.onclick=()=>openDatePicker({value:c.startISO||todayISO(),title:"Start date",onPick:(iso)=>{c.startISO=iso;apply();}});
   bindNum("f_wk","wkdayHrs");bindNum("f_we","wkendHrs");
+  const fa2=document.getElementById("f_anki");if(fa2)fa2.onchange=()=>{let v=parseInt(fa2.value,10);c.ankiMinPerDay=(isNaN(v)||v<0)?0:v;apply();};
+  const fu2=document.getElementById("f_uw");if(fu2)fu2.onchange=()=>{let v=parseInt(fu2.value,10);c.uworldMinPerDay=(isNaN(v)||v<0)?0:v;apply();};
   const fr=document.getElementById("f_rev");if(fr)fr.onchange=()=>{let v=parseInt(fr.value,10);if(isNaN(v)||v<0)v=0;c.reviewDays=v;apply();};
   document.querySelectorAll("[data-dow]").forEach(b=>b.onclick=()=>{const i=+b.dataset.dow;c.restDays=c.restDays||[];const k=c.restDays.indexOf(i);if(k>=0)c.restDays.splice(k,1);else c.restDays.push(i);apply();});
   document.querySelectorAll("[data-res]").forEach(b=>b.onclick=()=>{c.resources=c.resources||{};c.resources[b.dataset.res]=!hasRes(b.dataset.res);apply();});
@@ -1108,7 +1300,7 @@ let _ob=null;
 function defaultsForHub(key,fresh){const ex=fresh?null:S.cfgs[key];
   let o;
   if(ex)o={hub:key,fresh:false,examLabel:ex.examLabel||"",examISO:ex.examISO||"",startISO:ex.startISO||todayISO(),wkdayHrs:ex.wkdayHrs,wkendHrs:ex.wkendHrs,restDays:(ex.restDays||[0]).slice(),reviewDays:ex.reviewDays,resources:Object.assign({bnb:true,pathoma:true,sketchy:true,fa:true,anking:true,uworld:true},ex.resources||{}),systems:(ex.systems||SYS).slice(),sysOrder:(ex.sysOrder&&ex.sysOrder.length===SYS.length?ex.sysOrder:SYS_ORDER_DEFAULT).slice()};
-  else o={hub:key,fresh:!!fresh,examLabel:key==="step1"?"Step 1":"",examISO:"",startISO:todayISO(),wkdayHrs:6,wkendHrs:4,restDays:[0],reviewDays:14,resources:{bnb:true,pathoma:true,sketchy:true,fa:true,anking:true,uworld:true},systems:SYS.slice(),sysOrder:SYS_ORDER_DEFAULT.slice()};
+  else o={hub:key,fresh:!!fresh,examLabel:key==="step1"?"Step 1":"",examISO:"",startISO:todayISO(),wkdayHrs:6,wkendHrs:4,restDays:[0],reviewDays:14,resources:{bnb:true,pathoma:true,sketchy:true,fa:true,anking:true,uworld:true},systems:(key==="nbme"?[]:SYS.slice()),sysOrder:SYS_ORDER_DEFAULT.slice()};
   // NBME hub now selects individual systems (like Step 1); migrate any legacy block selection
   if(key==="nbme"&&ex&&(!ex.systems||!ex.systems.length)&&Array.isArray(ex.blocks)&&ex.blocks.length){
     const set=new Set(ex.blocks);o.systems=flatSys((ex.blockOrder||blockNames()).filter(b=>set.has(b)));
@@ -1189,6 +1381,7 @@ function renderObTogs(){
 function obLive(){const p=document.querySelector(".onb .soft p");if(p)p.innerHTML=obPreview();}
 function obPreview(){const ob=_ob;
   if(!ob.examISO)return "Pick an exam date to see your pacing.";
+  if(ob.hub==="nbme"&&!ob.systems.length)return "Pick the units this shelf covers to see your pacing.";
   const order=(ob.sysOrder||SYS_ORDER_DEFAULT).filter(s=>new Set(ob.systems).has(s));
   let total=0;const bySys={};CAT.forEach(c=>bySys[c.s]=c);
   if(ob.resources.pathoma)PATHOMA.filter(p=>p[3]===null).forEach(p=>total+=p[2]);
@@ -1238,6 +1431,7 @@ function doResetAll(){
   if(S.cfg){reflow();render();}else renderWelcome();
   toastUndo("All progress cleared — tap Undo to restore.",()=>{S.vdone=snap.vdone;S.vskip=snap.vskip;S.vdoneDate=snap.vdoneDate;S.akdone=snap.akdone;S.notes=snap.notes;_prevSig=progressSig();save();if(S.cfg){reflow();render();}else renderWelcome();toast("Progress restored ✓");});
 }
+const BUILD="2026-06-25i";
 function openMenu(){
   const email=Cloud.user&&Cloud.user.email;
   const inHub=!!S.active;
@@ -1251,7 +1445,8 @@ function openMenu(){
     +'<button class="mrow" data-m="help">How this works</button>'
     +'<button class="mrow danger" data-m="reset">Reset all progress</button>'
     +'<button class="mrow" data-m="signout">Sign out</button>'
-    +'<button class="mrow close" data-m="close">Close</button></div>';
+    +'<button class="mrow close" data-m="close">Close</button>'
+    +'<div class="mfoot">Build '+BUILD+'</div></div>';
   const ov=document.createElement("div");ov.className="overlay";ov.id="overlay";ov.innerHTML=html;
   ov.onclick=(e)=>{if(e.target===ov)ov.remove();};
   document.body.appendChild(ov);
