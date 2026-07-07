@@ -111,6 +111,12 @@ b{color:var(--ink)}
 .hero-r .big span{font-family:var(--sans);font-size:13px;font-weight:600;color:var(--muted);letter-spacing:0;text-shadow:none}
 .hero-r .sub{color:var(--muted);font-size:13px;margin-top:7px}
 
+/* daily encouragement / wellness nudge (top of Today) */
+.cheer{display:flex;align-items:flex-start;gap:11px;background:var(--panel);border:1px solid var(--line);border-left:3px solid var(--accent);border-radius:var(--r);padding:12px 14px;margin:12px 0}
+.cheer-ic{font-size:19px;line-height:1.45;flex:0 0 auto}
+.cheer-tx{font-size:14px;color:var(--ink);line-height:1.5;min-width:0}
+.cheer-tx b{color:var(--ink);font-weight:700}
+
 /* ring (analog gauge) */
 .ring{display:block}
 .ring .rbg{fill:none;stroke:var(--ring-track);stroke-width:6;stroke-dasharray:1.4 5;stroke-linecap:round}
@@ -1031,6 +1037,39 @@ function bindReady(){
   const rvd=document.getElementById("rst_vid");if(rvd)rvd.onclick=()=>confirmClear("Reset video progress?","Clears every video checkmark and daily Anki check across BOTH hubs. Scores, UWorld log, and flags stay. You'll get one chance to undo.",clearVideos);
   wireChrome();
 }
+/* ---------- daily encouragement (positive reinforcement, top of Today) ----------
+   A warm one-liner: celebrates finishing the day, honors a streak, nudges
+   wellness on rest days, and otherwise rotates daily through a mixed pool so
+   it stays fresh. Seeded by the date so it's stable across re-renders. */
+const CHEER=[
+  {ic:"🌱",tx:"Small, steady reps beat cramming every time — you're doing it the right way."},
+  {ic:"🧠",tx:"You don't have to know everything today. Just a little more than yesterday."},
+  {ic:"⭐",tx:"Progress over perfection. Showing up is most of the battle."},
+  {ic:"🧭",tx:"Trust the plan. One block at a time is how you get there."},
+  {ic:"💧",tx:"Quick check — have you had water recently? Hydrate before the next block."},
+  {ic:"🌤️",tx:"Step outside for five minutes today. Your brain consolidates better after a break."},
+  {ic:"😴",tx:"Sleep is a study tool. Protect your 7–8 hours tonight — memory is built while you rest."},
+  {ic:"🧘",tx:"Take one slow breath before you start. In for four, out for four."},
+  {ic:"🚶",tx:"Feeling stiff? Stand up and stretch. Focus resets when your body does."},
+  {ic:"🍎",tx:"Fuel matters — grab a real meal between blocks, not just caffeine."},
+  {ic:"👏",tx:"You showed up again today. That consistency is exactly what passing takes."},
+  {ic:"💪",tx:"This is hard, and you're still here. That says something about you."},
+  {ic:"🌟",tx:"Be as kind to yourself as you'd be to a friend studying this hard."},
+  {ic:"🎯",tx:"You're closer than you were yesterday. Keep chipping away."},
+  {ic:"❤️",tx:"Your worth isn't a score. Do your best, and let that be enough today."},
+  {ic:"📈",tx:"Every video you finish is a concept that can show up on test day. It adds up."}
+];
+function daySeed(){const s=todayISO();let h=0;for(let i=0;i<s.length;i++)h=(h*31+s.charCodeAt(i))|0;return Math.abs(h);}
+function greeting(){const h=new Date().getHours();return h<12?"Good morning":(h<18?"Good afternoon":"Good evening");}
+function encouragement(todayRow,isOff,streak){
+  let ic="✦",tx;
+  const allDone=todayRow&&!isOff&&todayRow.items.length&&todayRow.items.every(it=>isDone(it.id));
+  if(allDone){ic="🎉";tx="Today's plan is done — that's a real win. Rest easy tonight.";}
+  else if(isOff){ic="🌿";tx="Rest is part of the plan. Recharge today so tomorrow's you is sharper.";}
+  else if(streak>=3&&daySeed()%3===0){ic="🔥";tx=streak+" days in a row — consistency is the whole game. Keep the chain alive.";}
+  else{const p=CHEER[daySeed()%CHEER.length];ic=p.ic;tx=p.tx;}
+  return '<div class="cheer"><span class="cheer-ic">'+ic+'</span><div class="cheer-tx"><b>'+greeting()+'.</b> '+escHTML(tx)+'</div></div>';
+}
 function renderToday(){
   const st=SCHED.stats; const cs=currentStreak();
   // today's assignment = the content day whose iso === today (or the first upcoming content day)
@@ -1045,6 +1084,7 @@ function renderToday(){
   const isOffToday=todayRow&&(todayRow.off||todayRow.rest);
   const examLeft=st.examDaysLeft;
   let colA='',colB='';
+  colA+=encouragement(todayRow,isOffToday,cs);
   colA+='<div class="hero">'
     +'<div class="hero-l">'+ring(overall().pct,72)+'</div>'
     +'<div class="hero-r"><div class="big">'+examLeft+' <span>days to '+escHTML(S.cfg.examLabel||(S.cfg.examType==="step1"?"Step 1":"your exam"))+'</span></div>'
@@ -1520,7 +1560,7 @@ function doResetAll(){
   if(S.cfg){reflow();render();}else renderWelcome();
   toastUndo("All progress cleared — tap Undo to restore.",()=>{S.vdone=snap.vdone;S.vskip=snap.vskip;S.vdoneDate=snap.vdoneDate;S.akdone=snap.akdone;S.notes=snap.notes;S.assessments=snap.assessments;S.uworld=snap.uworld;S.vshaky=snap.vshaky;S.streak=snap.streak;_prevSig=progressSig();save();if(S.cfg){reflow();render();}else renderWelcome();toast("Progress restored ✓");});
 }
-const BUILD="2026-07-08c";
+const BUILD="2026-07-08d";
 function openMenu(){
   const email=Cloud.user&&Cloud.user.email;
   const inHub=!!S.active;
