@@ -337,6 +337,25 @@ b{color:var(--ink)}
 .toast button{pointer-events:auto;margin-left:12px;background:var(--phos-soft);border:1px solid var(--phos-dim);color:var(--phos);padding:6px 13px;border-radius:9px;cursor:pointer;font-weight:800;font-size:13px;transition:all .15s}
 .toast button:hover{background:var(--phos);color:#06140f}
 
+/* two-column layout on wide screens (kills the long single-column scroll) */
+.cols>div{min-width:0}
+@media (min-width:960px){
+  .wrap{max-width:1072px}
+  .nav{max-width:1072px}
+  .cols{display:grid;grid-template-columns:1fr 1fr;gap:0 16px;align-items:start}
+  .cols .daydetail{margin-top:0}
+}
+
+/* collapsible sections */
+.fold>summary{list-style:none;cursor:pointer;font-family:var(--mono);font-size:11.5px;font-weight:700;color:var(--phos);padding:7px 0;text-transform:uppercase;letter-spacing:.05em}
+.fold>summary::-webkit-details-marker{display:none}
+.fold>summary::before{content:"▸ ";color:var(--faint)}
+.fold[open]>summary::before{content:"▾ "}
+
+/* per-card reset button */
+.cardhd .hdreset{margin-left:auto;background:none;border:1px solid transparent;color:var(--faint);font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;cursor:pointer;padding:3px 7px;border-radius:7px;transition:color .15s,border-color .15s}
+.cardhd .hdreset:hover{color:var(--red);border-color:rgba(224,100,94,.35)}
+
 /* motion */
 @keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
 @keyframes fadeIn{from{opacity:0}to{opacity:1}}
@@ -447,7 +466,7 @@ function flatSys(blocks){let out=[];blocks.forEach(b=>{out=out.concat(blockSyste
    Video progress (vdone/vskip/...) is shared — a watched video is watched
    regardless of which exam you're prepping. S.cfg points at the active hub. */
 let S={active:null,cfgs:{step1:null,nbme:null},vdone:{},vskip:{},vdoneDate:{},akdone:{},notes:{},streak:{days:{}},settings:{},_updatedAt:0,cfg:null};
-function emptyState(){return {active:null,cfgs:{step1:null,nbme:null},vdone:{},vskip:{},vdoneDate:{},akdone:{},notes:{},streak:{days:{}},assessments:{},uworld:{total:null,blocks:{}},vshaky:{},settings:{},_updatedAt:0,cfg:null};}
+function emptyState(){return {active:null,cfgs:{step1:null,nbme:null},vdone:{},vskip:{},vdoneDate:{},akdone:{},notes:{},streak:{days:{}},assessments:{},uworld:{total:null,blocks:{}},vshaky:{},settings:{},_updatedAt:0,_resetAt:0,cfg:null};}
 function resetStateToEmpty(){Object.assign(S,emptyState());S.cfgs={step1:null,nbme:null};S.streak={days:{}};}
 /* load a specific account's cached state (empty if none yet) */
 function loadState(key){
@@ -456,7 +475,7 @@ function loadState(key){
   S.vdone=raw.vdone||{};S.vskip=raw.vskip||{};S.vdoneDate=raw.vdoneDate||{};S.akdone=raw.akdone||{};
   S.notes=raw.notes||{};S.streak=raw.streak||{days:{}};S.streak.days=S.streak.days||{};
   S.assessments=raw.assessments||{};S.uworld=raw.uworld||{total:null,blocks:{}};S.uworld.blocks=S.uworld.blocks||{};S.vshaky=raw.vshaky||{};
-  S.settings=raw.settings||{};S._updatedAt=raw._updatedAt||0;
+  S.settings=raw.settings||{};S._updatedAt=raw._updatedAt||0;S._resetAt=raw._resetAt||0;
   if(raw.cfgs){S.cfgs={step1:raw.cfgs.step1||null,nbme:raw.cfgs.nbme||null};S.active=raw.active||null;}
   else if(raw.cfg){ // migrate the old single-plan shape into the matching hub
     const key2=(raw.cfg.examType&&raw.cfg.examType!=="step1")?"nbme":"step1";
@@ -489,7 +508,7 @@ function activate(key){S.active=key;S.cfg=S.cfgs[key]||null;}
 function hubName(key){return key==="step1"?"STEP 1 Command Center":"NBME Command Center";}
 let _prevSig=null;
 
-function persistObj(){return {active:S.active,cfgs:S.cfgs,vdone:S.vdone,vskip:S.vskip,vdoneDate:S.vdoneDate,akdone:S.akdone,notes:S.notes,streak:S.streak,assessments:S.assessments,uworld:S.uworld,vshaky:S.vshaky,settings:S.settings,_updatedAt:S._updatedAt};}
+function persistObj(){return {active:S.active,cfgs:S.cfgs,vdone:S.vdone,vskip:S.vskip,vdoneDate:S.vdoneDate,akdone:S.akdone,notes:S.notes,streak:S.streak,assessments:S.assessments,uworld:S.uworld,vshaky:S.vshaky,settings:S.settings,_updatedAt:S._updatedAt,_resetAt:S._resetAt||0};}
 function save(){S._updatedAt=Date.now();markStreakIfProgress();store.set(SKEY,JSON.stringify(persistObj()));Cloud.schedulePush();}
 
 /* ---------- streak (set of studied dates; merge-safe) ---------- */
@@ -601,8 +620,15 @@ function sysProgress(){const by={};buildBacklog().forEach(it=>{const k=it.sys;(b
 const FB_CONFIG={apiKey:"AIzaSyCzdsBV5UUnngsqXni9IdSD6tIMTKzNPGE",authDomain:"step1-command-center.firebaseapp.com",projectId:"step1-command-center",storageBucket:"step1-command-center.firebasestorage.app",messagingSenderId:"87587621964",appId:"1:87587621964:web:e0342f057167ac457538e9"};
 function unionTrue(x,y){const o={};x=x||{};y=y||{};for(const k in x)if(x[k])o[k]=true;for(const k in y)if(y[k])o[k]=true;return o;}
 function mergeNotes(older,newer){const o=Object.assign({},older||{});const n=newer||{};for(const k in n){if(n[k]&&n[k].length)o[k]=n[k];else if(o[k]==null)o[k]=n[k];}return o;}
-function mergeState(a,b){a=a||{};b=b||{};const aT=a._updatedAt||0,bT=b._updatedAt||0;const newer=bT>=aT?b:a,older=bT>=aT?a:b;
-  const out={};
+function mergeState(a,b){a=a||{};b=b||{};
+  // a reset is a tombstone: any copy last saved BEFORE the reset predates it,
+  // so its progress maps must not be union-merged back in (they'd resurrect
+  // everything the user just cleared).
+  const resetAt=Math.max(a._resetAt||0,b._resetAt||0);
+  const strip=s=>((s._updatedAt||0)>=resetAt)?s:Object.assign({},s,{vdone:{},vskip:{},vdoneDate:{},akdone:{},notes:{},streak:{days:{}},assessments:{},uworld:{total:null,blocks:{}},vshaky:{}});
+  if(resetAt){a=strip(a);b=strip(b);}
+  const aT=a._updatedAt||0,bT=b._updatedAt||0;const newer=bT>=aT?b:a,older=bT>=aT?a:b;
+  const out={};out._resetAt=resetAt;
   out.active=(newer.active!==undefined?newer.active:older.active)||null;
   out.cfgs={};["step1","nbme"].forEach(k=>{out.cfgs[k]=(newer.cfgs&&newer.cfgs[k])||(older.cfgs&&older.cfgs[k])||null;});
   out.vdone=unionTrue(a.vdone,b.vdone);
@@ -673,7 +699,7 @@ function importLegacy(raw){const cur=persistObj();const m=mergeState(cur,normali
 Cloud.adopt=function(m){Cloud.applying=true;
   S.active=m.active||null;S.cfgs=m.cfgs||{step1:null,nbme:null};
   S.vdone=m.vdone||{};S.vskip=m.vskip||{};S.vdoneDate=m.vdoneDate||{};S.akdone=m.akdone||{};
-  S.notes=m.notes||{};S.streak=m.streak||{days:{}};S.settings=m.settings||{};S._updatedAt=m._updatedAt||0;
+  S.notes=m.notes||{};S.streak=m.streak||{days:{}};S.settings=m.settings||{};S._updatedAt=m._updatedAt||0;S._resetAt=m._resetAt||0;
   S.assessments=m.assessments||{};S.uworld=m.uworld||{total:null,blocks:{}};S.uworld.blocks=S.uworld.blocks||{};S.vshaky=m.vshaky||{};
   ["step1","nbme"].forEach(k=>{if(S.cfgs[k])normalizeCfg(S.cfgs[k],k);});
   S.cfg=S.active?S.cfgs[S.active]:null;_prevSig=progressSig();
@@ -751,9 +777,35 @@ function bindExtras(){
 
 function toggleItems(ids){const all=ids.every(isDone);S.vdoneDate=S.vdoneDate||{};ids.forEach(id=>{if(all){delete S.vdone[id];delete S.vdoneDate[id];}else{S.vdone[id]=true;delete S.vskip[id];S.vdoneDate[id]=todayISO();}});if(!all)markStudiedToday();save();reflow();render();}
 
+/* ---------- collapsible sections (state survives re-renders) ---------- */
+const FOLDS={};
+function fold(id,label,inner,openDefault){const open=(FOLDS[id]!=null)?FOLDS[id]:!!openDefault;
+  return '<details class="fold" data-fold="'+escAttr(id)+'"'+(open?' open':'')+'><summary>'+label+'</summary>'+inner+'</details>';}
+function bindFolds(){document.querySelectorAll("[data-fold]").forEach(d=>{d.ontoggle=()=>{FOLDS[d.dataset.fold]=d.open;};});}
+
+/* ---------- per-section resets (confirm + undo; tombstoned so cloud
+   sync can't resurrect what was just cleared) ---------- */
+function bumpReset(){S._resetAt=Date.now();}
+function confirmClear(title,msg,fn){modalSheet({title:title,danger:true,okLabel:"Clear",cancel:true,msg:msg,onOk:fn});}
+function clearVideos(){const snap={vdone:S.vdone,vskip:S.vskip,vdoneDate:S.vdoneDate,akdone:S.akdone};
+  S.vdone={};S.vskip={};S.vdoneDate={};S.akdone={};bumpReset();save();reflow();render();
+  toastUndo("Video progress cleared.",()=>{Object.assign(S,snap);save();reflow();render();});}
+function clearScores(){const snap=S.assessments;S.assessments={};bumpReset();save();render();
+  toastUndo("Assessment scores cleared.",()=>{S.assessments=snap;save();render();});}
+function clearUworld(){const snap=S.uworld;S.uworld={total:null,blocks:{}};bumpReset();save();render();
+  toastUndo("UWorld log cleared.",()=>{S.uworld=snap;save();render();});}
+function clearFlags(){const snap=S.vshaky;S.vshaky={};bumpReset();save();render();
+  toastUndo("Review flags cleared.",()=>{S.vshaky=snap;save();render();});}
+function uncheckDay(iso){const row=SCHED&&SCHED.dayMap[iso];if(!row||!row.items.length)return;
+  const snap={vdone:Object.assign({},S.vdone),vdoneDate:Object.assign({},S.vdoneDate),ak:!!(S.akdone&&S.akdone[iso])};
+  row.items.forEach(it=>{delete S.vdone[it.id];delete S.vdoneDate[it.id];});
+  if(S.akdone)delete S.akdone[iso];
+  save();reflow();render();
+  toastUndo(fmtShort(iso)+" unchecked.",()=>{S.vdone=snap.vdone;S.vdoneDate=snap.vdoneDate;if(snap.ak){S.akdone=S.akdone||{};S.akdone[iso]=true;}save();reflow();render();});}
+
 /* ---------- top bar + nav ---------- */
 function chrome(active){
-  const tabs=[["today","Today"],["ready","Ready"],["plan","Plan"],["progress","Progress"],["adjust","Adjust"]];
+  const tabs=[["today","Today"],["plan","Plan"],["stats","Stats"],["adjust","Adjust"]];
   const nm=hubName(S.active||"step1");
   return '<div class="topbar"><button class="brandbtn" id="brandBtn" title="Switch hub">‹ <span class="brandnm">'+escHTML(nm)+'</span></button>'
    +'<div class="topright"><span class="led" title="online"></span><button class="iconbtn" id="menuBtn" aria-label="menu">⋮</button></div></div>'
@@ -763,16 +815,18 @@ function wireChrome(){
   document.querySelectorAll(".navb").forEach(b=>b.onclick=()=>{VIEW=b.dataset.view;render();});
   const mb=document.getElementById("menuBtn");if(mb)mb.onclick=openMenu;
   const bb=document.getElementById("brandBtn");if(bb)bb.onclick=renderWelcome;
+  document.querySelectorAll("[data-goready]").forEach(b=>b.onclick=()=>{VIEW="stats";render();});
+  bindFolds();
 }
 
 /* ---------- TODAY ---------- */
 function render(){
   if(!S.cfg){renderWelcome();return;}
   reflow();
+  if(VIEW==="ready"||VIEW==="progress")VIEW="stats"; // legacy views merged into Stats
   if(VIEW==="today")renderToday();
-  else if(VIEW==="ready")renderReady();
   else if(VIEW==="plan")renderPlan();
-  else if(VIEW==="progress")renderProgress();
+  else if(VIEW==="stats")renderStats();
   else if(VIEW==="adjust")renderAdjust();
   else renderToday();
   wireChrome();
@@ -864,9 +918,10 @@ function uworldCard(){
   let bars='';const sysList=Object.keys(r.bySys).sort((a,b)=>(r.bySys[a].pct||0)-(r.bySys[b].pct||0));
   sysList.forEach(s=>{const e=r.bySys[s];const col=e.pct==null?'#777':(e.pct>=70?'var(--phos)':(e.pct>=60?'var(--amber)':'var(--red)'));
     bars+='<div class="bar"><div class="barlab">'+escHTML(s)+'</div><div class="bartrack"><div class="barfill" style="width:'+(e.pct||0)+'%;background:'+col+'"></div></div><div class="barpct">'+(e.pct==null?'—':e.pct+'%')+'</div></div>';});
-  return '<div class="card"><div class="cardhd">UWorld</div>'
+  const hasData=r.done>0||r.total;
+  return '<div class="card"><div class="cardhd">UWorld'+(hasData?'<button class="hdreset" id="rst_uw" title="Clear the UWorld log">Reset</button>':'')+'</div>'
     +'<div class="uwtop"><div class="uwbig">'+pctTxt+' <span>correct</span></div><div class="uwsub">'+doneTxt+'</div></div>'
-    +uworldForm()
+    +fold("uwform","Log a block",uworldForm(),r.done===0)
     +(bars?('<div class="uwhd">By system — accuracy</div><div class="bars">'+bars+'</div><p class="muted small">Systems under 65% feed your review queue below.</p>'):'<p class="muted small">Log a block to start tracking per-system accuracy — the most actionable weak-area signal you have.</p>')
     +'</div>';
 }
@@ -874,12 +929,12 @@ function reviewCard(){
   const shaky=[];buildBacklog().forEach(it=>{if(isShaky(it.id))shaky.push(it);});
   const weak=weakSystems(65);
   if(!shaky.length&&!weak.length)return '';
-  let body='<div class="card soft"><div class="cardhd">Review queue</div>';
+  let body='<div class="card soft"><div class="cardhd">Review queue'+(shaky.length?'<button class="hdreset" id="rst_flags" title="Clear every review flag">Reset</button>':'')+'</div>';
   if(weak.length)body+='<p class="muted small">Weak UWorld systems (&lt; 65%): '+weak.map(w=>escHTML(w.sys)+' <b>'+w.pct+'%</b>').join(', ')+'</p>';
   if(shaky.length){body+='<div class="alist">'+shaky.slice(0,40).map(it=>'<div class="arow"><span class="adot warn"></span><span class="aform">'+escHTML(vName(it))+'</span><button class="alink" data-unshaky="'+escAttr(it.id)+'">clear</button></div>').join('')+'</div>';if(shaky.length>40)body+='<p class="muted small">+'+(shaky.length-40)+' more flagged.</p>';}
   body+='</div>';return body;
 }
-function renderReady(){
+function readinessCards(){
   const c=S.cfg;const daysLeft=c&&c.examISO?Math.max(0,daysBetween(todayISO(),c.examISO)):null;
   const list=assessList();const la=latestAssess();const v=readinessVerdict(la?la.pct:null);
   let body='';
@@ -890,31 +945,49 @@ function renderReady(){
     if(la){const wk=Math.floor(daysBetween(la.dateISO,todayISO())/7);if(wk>=3)body+='<p class="muted small">~'+wk+' weeks since your last score — a fresh form keeps the trend honest.</p>';}
     if(daysLeft<=28&&!passing)body+='<p class="muted small">Exam in '+daysLeft+' days with nothing in the passing range yet. NBME 28 and UWSA 2 have the strongest predictive reputations near test day.</p>';
   }
-  body+='<p class="muted small">Bands (65 / 70) are common guidance, not guarantees — even a high estimate still carries real fail risk. Trend across several forms matters more than any single score.</p></div>';
-  if(list.length>=2)body+='<div class="card"><div class="cardhd">Score trend</div>'+scoreTrend(list)+'<div class="placeleg"><span class="pl pl-a">Your scores</span></div></div>';
-  body+='<div class="card"><div class="cardhd">Log a score</div>'+scoreForm()+'</div>';
-  if(list.length)body+='<div class="card"><div class="cardhd">Logged scores</div><div class="alist">'
+  if(list.length>=2)body+=scoreTrend(list)+'<div class="placeleg"><span class="pl pl-a">Your scores</span></div>';
+  body+=fold("scoreform","Log a score",scoreForm(),!list.length);
+  body+='<p class="muted small">Bands (65 / 70) are common guidance, not guarantees — trend across several forms matters more than any single score.</p></div>';
+  if(list.length)body+='<div class="card"><div class="cardhd">Logged scores<button class="hdreset" id="rst_scores" title="Clear all logged scores">Reset</button></div><div class="alist">'
     +list.slice().reverse().map(x=>{const vv=readinessVerdict(x.pct);return '<div class="arow"><span class="adot '+vv.cls+'"></span><span class="aform">'+escHTML(x.form)+'</span><span class="apct">'+x.pct+'%</span><span class="adate">'+fmtShort(x.dateISO)+'</span><button class="alink" data-del="'+escAttr(x.id)+'">remove</button></div>';}).join('')
     +'</div></div>';
   body+=uworldCard();
   body+=reviewCard();
-  app.innerHTML=chrome("ready")+'<div class="wrap">'+body+'</div>';
-  bindReady();
+  return body;
+}
+function videoCards(){
+  const by=sysProgress();const o=overall();
+  let body='<div class="hero"><div class="hero-l">'+ring(o.pct,72)+'</div><div class="hero-r"><div class="big">'+o.done+' <span>/ '+o.total+' videos</span></div><div class="sub">'+SCHED.stats.remItems+' remaining · 🔥 '+currentStreak()+'-day streak</div></div></div>';
+  body+=pacingChart();
+  body+='<div class="card"><div class="cardhd">By subject'+(o.done?'<button class="hdreset" id="rst_vid" title="Clear every video checkmark">Reset</button>':'')+'</div><div class="bars">';
+  const rows=[]; if(by["General Pathology"]&&by["General Pathology"].t)rows.push("General Pathology");
+  planSystems().forEach(s=>{if(by[s]&&by[s].t)rows.push(s);});
+  rows.forEach(s=>{const x=by[s];const pct=Math.round(x.d/x.t*100);
+    body+='<div class="bar"><div class="barlab"><span style="color:'+(SYS_COLOR[s]||"#999")+'">●</span> '+escHTML(s)+'</div><div class="bartrack"><div class="barfill" style="width:'+pct+'%;background:'+(SYS_COLOR[s]||"#999")+'"></div></div><div class="barpct">'+pct+'%</div></div>';});
+  body+='</div></div>';
+  return body;
+}
+function renderStats(){
+  app.innerHTML=chrome("stats")+'<div class="wrap"><div class="cols"><div>'+videoCards()+'</div><div>'+readinessCards()+'</div></div></div>';
+  bindReady();bindVlist();
 }
 function bindReady(){
   const rf=document.getElementById("r_form");if(rf)rf.onchange=()=>{RDRAFT.form=rf.value;};
-  const rd=document.getElementById("r_date");if(rd)rd.onclick=()=>openDatePicker({value:RDRAFT.dateISO,title:"Date taken",onPick:(iso)=>{RDRAFT.dateISO=iso;renderReady();}});
+  const rd=document.getElementById("r_date");if(rd)rd.onclick=()=>openDatePicker({value:RDRAFT.dateISO,title:"Date taken",onPick:(iso)=>{RDRAFT.dateISO=iso;render();}});
   const rp=document.getElementById("r_pct");if(rp)rp.onchange=()=>{RDRAFT.pct=rp.value;};
   const rpr=document.getElementById("r_prob");if(rpr)rpr.onchange=()=>{RDRAFT.estProb=rpr.value;};
-  const rs=document.getElementById("r_save");if(rs)rs.onclick=()=>{const pct=parseFloat(rp?rp.value:RDRAFT.pct);if(isNaN(pct)||pct<0||pct>100){toast("Enter a % between 0 and 100");return;}const prob=parseFloat(rpr?rpr.value:RDRAFT.estProb);addAssessment({form:(rf?rf.value:RDRAFT.form),dateISO:RDRAFT.dateISO,pct:Math.round(pct),estProb:isNaN(prob)?null:Math.round(prob)});RDRAFT={form:(rf?rf.value:RDRAFT.form),dateISO:todayISO(),pct:"",estProb:""};toast("Score logged \u2713");renderReady();};
-  document.querySelectorAll("[data-del]").forEach(b=>b.onclick=()=>{delAssessment(b.dataset.del);renderReady();});
+  const rs=document.getElementById("r_save");if(rs)rs.onclick=()=>{const pct=parseFloat(rp?rp.value:RDRAFT.pct);if(isNaN(pct)||pct<0||pct>100){toast("Enter a % between 0 and 100");return;}const prob=parseFloat(rpr?rpr.value:RDRAFT.estProb);addAssessment({form:(rf?rf.value:RDRAFT.form),dateISO:RDRAFT.dateISO,pct:Math.round(pct),estProb:isNaN(prob)?null:Math.round(prob)});RDRAFT={form:(rf?rf.value:RDRAFT.form),dateISO:todayISO(),pct:"",estProb:""};toast("Score logged \u2713");render();};
+  document.querySelectorAll("[data-del]").forEach(b=>b.onclick=()=>{delAssessment(b.dataset.del);render();});
   const us=document.getElementById("u_sys");if(us)us.onchange=()=>{UDRAFT.sys=us.value;};
   const uq=document.getElementById("u_q");if(uq)uq.onchange=()=>{UDRAFT.q=uq.value;};
   const uc=document.getElementById("u_c");if(uc)uc.onchange=()=>{UDRAFT.correct=uc.value;};
   const ut=document.getElementById("u_total");if(ut)ut.onchange=()=>{const n=parseInt(ut.value,10);setUworldTotal(isNaN(n)?0:n);};
-  const usv=document.getElementById("u_save");if(usv)usv.onclick=()=>{const q=parseInt(uq?uq.value:UDRAFT.q,10),cc=parseInt(uc?uc.value:UDRAFT.correct,10);if(isNaN(q)||q<1){toast("How many questions in the block?");return;}if(isNaN(cc)||cc<0||cc>q){toast("# correct can\u2019t exceed the question count");return;}addUworldBlock({sys:(us?us.value:UDRAFT.sys),q:q,correct:cc});UDRAFT={sys:(us?us.value:UDRAFT.sys),q:"40",correct:""};toast("Block logged \u2713");renderReady();};
-  document.querySelectorAll("[data-unshaky]").forEach(b=>b.onclick=()=>{toggleShaky(b.dataset.unshaky);renderReady();});
-  document.querySelectorAll("[data-goready]").forEach(b=>b.onclick=()=>{VIEW="ready";render();});
+  const usv=document.getElementById("u_save");if(usv)usv.onclick=()=>{const q=parseInt(uq?uq.value:UDRAFT.q,10),cc=parseInt(uc?uc.value:UDRAFT.correct,10);if(isNaN(q)||q<1){toast("How many questions in the block?");return;}if(isNaN(cc)||cc<0||cc>q){toast("# correct can\u2019t exceed the question count");return;}addUworldBlock({sys:(us?us.value:UDRAFT.sys),q:q,correct:cc});UDRAFT={sys:(us?us.value:UDRAFT.sys),q:"40",correct:""};toast("Block logged \u2713");render();};
+  document.querySelectorAll("[data-unshaky]").forEach(b=>b.onclick=()=>{toggleShaky(b.dataset.unshaky);render();});
+  const rsc=document.getElementById("rst_scores");if(rsc)rsc.onclick=()=>confirmClear("Clear all logged scores?","Removes every self-assessment score in this hub's log. You'll get one chance to undo.",clearScores);
+  const ruw=document.getElementById("rst_uw");if(ruw)ruw.onclick=()=>confirmClear("Clear the UWorld log?","Removes every logged UWorld block and your qbank size. You'll get one chance to undo.",clearUworld);
+  const rfl=document.getElementById("rst_flags");if(rfl)rfl.onclick=()=>confirmClear("Clear all review flags?","Un-flags every video you marked as shaky. You'll get one chance to undo.",clearFlags);
+  const rvd=document.getElementById("rst_vid");if(rvd)rvd.onclick=()=>confirmClear("Reset video progress?","Clears every video checkmark and daily Anki check across BOTH hubs. Scores, UWorld log, and flags stay. You'll get one chance to undo.",clearVideos);
   wireChrome();
 }
 function renderToday(){
@@ -930,39 +1003,34 @@ function renderToday(){
   const todayRow=SCHED.dayMap[todayISO()];
   const isOffToday=todayRow&&(todayRow.off||todayRow.rest);
   const examLeft=st.examDaysLeft;
-  let body='';
-  body+='<div class="hero">'
+  let colA='',colB='';
+  colA+='<div class="hero">'
     +'<div class="hero-l">'+ring(overall().pct,72)+'</div>'
     +'<div class="hero-r"><div class="big">'+examLeft+' <span>days to '+escHTML(S.cfg.examLabel||(S.cfg.examType==="step1"?"Step 1":"your exam"))+'</span></div>'
       +'<div class="sub">'+overall().done+' / '+overall().total+' videos done'+(cs>0?' · 🔥 '+cs+'-day streak':'')+'</div></div></div>';
-  body+='<div class="hchips">'+readinessChip()+'</div>'+loadCaveat();
-  body+=statusLine();
+  colA+='<div class="hchips">'+readinessChip()+'</div>'+loadCaveat();
+  colA+=statusLine();
   if(isOffToday){
-    body+='<div class="card"><div class="cardhd">'+(todayRow.off?'Day off':'Rest day')+' · '+fmtLong(todayISO())+'</div><p class="muted">No videos scheduled today.'+(todayRow.off?' <button class="link" id="unoff">Cancel day off</button>':'')+'</p></div>';
+    colB+='<div class="card"><div class="cardhd">'+(todayRow.off?'Day off':'Rest day')+' · '+fmtLong(todayISO())+'</div><p class="muted">No videos scheduled today.'+(todayRow.off?' <button class="link" id="unoff">Cancel day off</button>':'')+'</p></div>';
   }
   if(row && row.items.length){
-    body+='<div class="card"><div class="cardhd">'+escHTML(heading)+' <span class="pill">'+row.min+' min</span></div>'
+    const anyDone=row.items.some(it=>isDone(it.id));
+    colB+='<div class="card"><div class="cardhd">'+escHTML(heading)+' <span class="pill">'+row.min+' min</span>'+(anyDone?'<button class="hdreset" data-dayreset="'+row.iso+'" title="Uncheck everything on this day">Uncheck all</button>':'')+'</div>'
       +'<div class="vlist">'+itemRows(row.items)+'</div>'
       +ankiBlock(row.iso)
       +'<div class="rowtools">'+(todayRow&&!isOffToday?'<button class="btn ghost" id="offToday">Take today off</button>':'')+'</div></div>';
   } else if(!isOffToday){
-    body+='<div class="card"><div class="cardhd">Nothing scheduled today</div><p class="muted">Get ahead from the <b>Plan</b> tab, or enjoy the breather.</p></div>';
+    colB+='<div class="card"><div class="cardhd">Nothing scheduled today</div><p class="muted">Get ahead from the <b>Plan</b> tab, or enjoy the breather.</p></div>';
   }
-  // quick resource reminders
-  if(hasRes("uworld")||hasRes("fa")){
-    body+='<div class="card soft"><div class="cardhd">Daily habits</div><ul class="habits">'
-     +(hasRes("uworld")?'<li>Do a <b>UWorld</b> block on a finished system — read every explanation.</li>':'')
-     +(hasRes("fa")?'<li>Annotate <b>First Aid</b> alongside today\'s topics.</li>':'')
-     +'</ul></div>';
-  }
-  app.innerHTML=chrome("today")+'<div class="wrap">'+body+'</div>';
+  app.innerHTML=chrome("today")+'<div class="wrap"><div class="cols"><div>'+colA+'</div><div>'+colB+'</div></div></div>';
   bindVlist();bindExtras();
   const o1=document.getElementById("offToday");if(o1)o1.onclick=()=>dayOffToggle(todayISO(),true);
   const o2=document.getElementById("unoff");if(o2)o2.onclick=()=>dayOffToggle(todayISO(),false);
 }
 function toggleShakyItems(ids){const all=ids.every(isShaky);S.vshaky=S.vshaky||{};ids.forEach(id=>{if(all)delete S.vshaky[id];else S.vshaky[id]=true;});save();}
 function bindVlist(){document.querySelectorAll(".chk[data-ids]").forEach(b=>b.onclick=()=>toggleItems(b.dataset.ids.split(",")));
-  document.querySelectorAll(".flagb[data-flag]").forEach(b=>b.onclick=()=>{toggleShakyItems(b.dataset.flag.split(","));render();});}
+  document.querySelectorAll(".flagb[data-flag]").forEach(b=>b.onclick=()=>{toggleShakyItems(b.dataset.flag.split(","));render();});
+  document.querySelectorAll("[data-dayreset]").forEach(b=>b.onclick=()=>uncheckDay(b.dataset.dayreset));}
 
 function setDayOff(iso,on){S.cfg.off=S.cfg.off||{};if(on)S.cfg.off[iso]=true;else delete S.cfg.off[iso];save();reflow();render();}
 function dayOffToggle(iso,on){setDayOff(iso,on);toastUndo(on?(fmtShort(iso)+" off — work re-flowed."):(fmtShort(iso)+" back on."),()=>{setDayOff(iso,!on);});}
@@ -996,7 +1064,8 @@ function calCell(iso){
 function dayDetail(iso){
   const row=SCHED.dayMap[iso];const head=fmtLong(iso)+(iso===todayISO()?" · today":"");
   let h='<div class="card daydetail"><div class="cardhd">'+escHTML(head);
-  if(row&&!row.off&&!row.rest&&!row.review&&row.items.length)h+=' <span class="pill">'+fmtH(row.min)+'</span>';
+  if(row&&!row.off&&!row.rest&&!row.review&&row.items.length){h+=' <span class="pill">'+fmtH(row.min)+'</span>';
+    if(row.items.some(it=>isDone(it.id)))h+='<button class="hdreset" data-dayreset="'+iso+'" title="Uncheck everything on this day">Uncheck all</button>';}
   h+='</div>';
   if(!row)h+='<p class="muted small">Outside your current plan window'+(iso<todayISO()?" (past)":"")+'.</p>';
   else if(row.off)h+='<p class="muted">Day off — no videos scheduled. <button class="link" id="d_unoff">Cancel day off</button></p>';
@@ -1018,8 +1087,7 @@ function renderPlan(){
   body+='<div class="calgrid">'+monthMatrix(CAL_YM).map(calCell).join('')+'</div>';
   body+='<div class="callegend"><span><i class="lg load"></i>study</span><span><i class="lg alldone"></i>done</span><span><i class="lg rest"></i>rest</span><span><i class="lg review"></i>review</span><span><i class="lg off"></i>off</span></div>';
   if(SCHED.atRisk.length)body+='<div class="status warn">⚠ '+SCHED.atRisk.length+' videos ('+Math.round(SCHED.atRisk.reduce((a,b)=>a+b.min,0)/60)+' h) don\'t fit before your review window — they keep re-flowing forward. Fix the squeeze in <b>Adjust</b>.</div>';
-  body+=dayDetail(CAL_SEL);
-  app.innerHTML=chrome("plan")+'<div class="wrap planwrap">'+body+'</div>';
+  app.innerHTML=chrome("plan")+'<div class="wrap planwrap"><div class="cols"><div>'+body+'</div><div>'+dayDetail(CAL_SEL)+'</div></div></div>';
   wireChrome();bindVlist();bindExtras();
   const pv=document.getElementById("calPrev");if(pv)pv.onclick=()=>{CAL_YM=ymShift(CAL_YM,-1);renderPlan();};
   const nx=document.getElementById("calNext");if(nx)nx.onclick=()=>{CAL_YM=ymShift(CAL_YM,1);renderPlan();};
@@ -1091,25 +1159,13 @@ function pacingChart(){
   return '<div class="card"><div class="cardhd">Pacing</div><div class="status '+cls+'">'+txt+'</div>'+svg
     +'<div class="placeleg"><span class="pl pl-a">Completed</span><span class="pl pl-i">Target pace</span></div></div>';
 }
-function renderProgress(){
-  const by=sysProgress();const o=overall();
-  let body='<div class="hero"><div class="hero-l">'+ring(o.pct,72)+'</div><div class="hero-r"><div class="big">'+o.done+' <span>/ '+o.total+' videos</span></div><div class="sub">'+SCHED.stats.remItems+' remaining · 🔥 '+currentStreak()+'-day streak</div></div></div>';
-  body+=pacingChart();
-  body+='<div class="card"><div class="cardhd">By subject</div><div class="bars">';
-  const rows=[]; if(by["General Pathology"]&&by["General Pathology"].t)rows.push("General Pathology");
-  planSystems().forEach(s=>{if(by[s]&&by[s].t)rows.push(s);});
-  rows.forEach(s=>{const x=by[s];const pct=Math.round(x.d/x.t*100);
-    body+='<div class="bar"><div class="barlab"><span style="color:'+(SYS_COLOR[s]||"#999")+'">●</span> '+escHTML(s)+'</div><div class="bartrack"><div class="barfill" style="width:'+pct+'%;background:'+(SYS_COLOR[s]||"#999")+'"></div></div><div class="barpct">'+pct+'%</div></div>';});
-  body+='</div></div>';
-  app.innerHTML=chrome("progress")+'<div class="wrap">'+body+'</div>';
-}
 
 /* ---------- ADJUST ---------- */
 function renderAdjust(){
   const c=S.cfg;const st=SCHED.stats;
   const dows=DOW.map((d,i)=>'<button type="button" class="tog '+((c.restDays||[]).includes(i)?"on":"")+'" data-dow="'+i+'">'+d+'</button>').join('');
   const resBtn=(k,lab)=>'<button type="button" class="tog '+(hasRes(k)?"on":"")+'" data-res="'+k+'">'+lab+'</button>';
-  let body='';
+  let body='',colB='';
   body+='<div class="card"><div class="cardhd">Feasibility</div>'+statusLine()
     +'<div class="grid2"><div><div class="kv">'+st.contentDaysLeft+'</div><div class="kvl">study days for videos</div></div>'
     +'<div><div class="kv">'+(st.remItems)+'</div><div class="kvl">videos left</div></div>'
@@ -1126,20 +1182,21 @@ function renderAdjust(){
     +'<p class="muted small" style="margin:2px 0 0">Reserved time is subtracted from your daily hours so the plan schedules a realistic number of videos — not more than a real day holds.</p>'
     +'<div class="flab">Weekly rest days</div><div class="togrow">'+dows+'</div>'
     +'</div></div>';
-  body+='<div class="card"><div class="cardhd">Resources</div><div class="togrow">'
+  colB+='<div class="card"><div class="cardhd">Resources</div><div class="togrow">'
     +resBtn("bnb","Boards &amp; Beyond")+resBtn("pathoma","Pathoma")+resBtn("sketchy","Sketchy")+resBtn("fa","First Aid")+resBtn("anking","AnKing")+resBtn("uworld","UWorld")
     +'</div><p class="muted small">Pick the video resources to weave into this plan — turn any off you\'re not using.</p></div>';
-  if(S.active==="nbme")body+='<div class="card"><div class="cardhd">Units &amp; study order</div><p class="muted small" style="margin-top:0">Pick the systems this shelf covers \u2014 immuno, micro, genetics and the rest are each selectable. Reorder with ▲▼ to set what\u2019s studied first; the plan re-flows live.</p>'
+  const sysInner='<p class="muted small" style="margin-top:6px">'+(S.active==="nbme"
+      ?'Pick the systems this shelf covers — immuno, micro, genetics and the rest are each selectable. Reorder with ▲▼ to set what’s studied first; the plan re-flows live.'
+      :'Recommended Boards &amp; Beyond sequence. Reorder with ▲▼ or tap to include/drop — the plan re-flows live.')+'</p>'
     + orderedSysHTML(c.sysOrder||SYS_ORDER_DEFAULT,c.systems||SYS)
-    + '<button class="link" id="sordReset">↺ Reset to recommended order</button></div>';
-  else body+='<div class="card"><div class="cardhd">Study order &amp; systems</div><p class="muted small" style="margin-top:0">Recommended Boards &amp; Beyond sequence. Reorder with ▲▼ or tap to include/drop — the plan re-flows live.</p>'
-    + orderedSysHTML(c.sysOrder||SYS_ORDER_DEFAULT,c.systems||SYS)
-    + '<button class="link" id="sordReset">↺ Reset to recommended order</button></div>';
+    + '<button class="link" id="sordReset">↺ Reset to recommended order</button>';
+  colB+='<div class="card"><div class="cardhd">'+(S.active==="nbme"?'Units &amp; study order':'Study order &amp; systems')+'</div>'
+    + fold("adj_sys",(c.systems||SYS).length+' of '+SYS.length+' systems selected — edit / reorder',sysInner,false)+'</div>';
   if(S.active==="nbme"){
-    body+='<div class="card soft"><div class="cardhd">Finished this unit?</div><p class="muted small">Start a fresh NBME plan for your next shelf — new exam, dates, and systems.</p><button class="btn" id="newUnit">Start a new unit…</button></div>';
+    colB+='<div class="card soft"><div class="cardhd">Finished this unit?</div><p class="muted small">Start a fresh NBME plan for your next shelf — new exam, dates, and systems.</p><button class="btn" id="newUnit">Start a new unit…</button></div>';
   }
-  body+='<div class="card soft"><button class="btn" id="saveDone">Update &amp; save changes</button><p class="muted small center" style="margin-top:10px">Your changes save automatically — tap to confirm and return to your plan.</p></div>';
-  app.innerHTML=chrome("adjust")+'<div class="wrap">'+body+'</div>';
+  colB+='<div class="card soft"><button class="btn" id="saveDone">Done — back to Today</button><p class="muted small center" style="margin-top:10px">Every change here saves and re-flows your plan instantly.</p></div>';
+  app.innerHTML=chrome("adjust")+'<div class="wrap"><div class="cols"><div>'+body+'</div><div>'+colB+'</div></div></div>';
   // live-apply
   const apply=()=>{save();reflow();renderAdjust();};
   const bindNum=(id,key,mul)=>{const e=document.getElementById(id);if(e)e.onchange=()=>{let v=parseFloat(e.value);if(isNaN(v))v=0;c[key]=v;apply();};};
@@ -1335,12 +1392,13 @@ function renderOnboard(){
   body+='<div class="card"><div class="cardhd">Resources</div><div class="togrow">'
     +resBtn("bnb","Boards &amp; Beyond")+resBtn("pathoma","Pathoma")+resBtn("sketchy","Sketchy")+resBtn("fa","First Aid")+resBtn("anking","AnKing")+resBtn("uworld","UWorld")
     +'</div><p class="muted small">Turn on the video resources you use \u2014 they interleave into the plan.</p></div>';
-  if(obIsNbme())body+='<div class="card"><div class="cardhd">Units &amp; study order</div><p class="muted small" style="margin-top:0">Tap the systems this shelf covers \u2014 immuno, micro, genetics, biochem and the rest are each selectable. The B&amp;B/Pathoma topics for each come with it. Reorder with ▲▼ to set what you study first.</p>'
+  {const obSysInner='<p class="muted small" style="margin-top:6px">'+(obIsNbme()
+      ?'Tap the systems this shelf covers \u2014 immuno, micro, genetics, biochem and the rest are each selectable. The B&amp;B/Pathoma topics for each come with it. Reorder with \u25b2\u25bc to set what you study first.'
+      :'This is the recommended Boards &amp; Beyond sequence. Reorder with \u25b2\u25bc, and tap a system to include or drop it.')+'</p>'
     + orderedSysHTML(ob.sysOrder,ob.systems)
-    + '<button class="link" id="sordReset">↺ Reset to recommended order</button></div>';
-  else body+='<div class="card"><div class="cardhd">Study order &amp; systems</div><p class="muted small" style="margin-top:0">This is the recommended Boards &amp; Beyond sequence. Reorder with ▲▼, and tap a system to include or drop it.</p>'
-    + orderedSysHTML(ob.sysOrder,ob.systems)
-    + '<button class="link" id="sordReset">↺ Reset to recommended order</button></div>';
+    + '<button class="link" id="sordReset">\u21ba Reset to recommended order</button>';
+  body+='<div class="card"><div class="cardhd">'+(obIsNbme()?'Units &amp; study order':'Study order &amp; systems')+'</div>'
+    + fold("ob_sys",ob.systems.length+' of '+SYS.length+' systems selected \u2014 edit / reorder',obSysInner,obIsNbme())+'</div>';}
   body+='<div class="card soft"><div class="cardhd">Preview</div><p class="muted small">'+obPreview()+'</p></div>';
   body+='<button class="btn big" id="o_go">'+goLbl+'</button>';
   body+='</div>';
@@ -1359,6 +1417,7 @@ function renderOnboard(){
   const sr=document.getElementById("sordReset");if(sr)sr.onclick=()=>{ob.sysOrder=SYS_ORDER_DEFAULT.slice();renderOnboard();};
   const go=document.getElementById("o_go");if(go)go.onclick=commitOnboard;
   const bk=document.getElementById("o_back");if(bk)bk.onclick=()=>{if((editing||ob.fresh)&&S.cfgs[ob.hub]){activate(ob.hub);S.active=ob.hub;VIEW="today";reflow();render();}else renderWelcome();};
+  bindFolds();
 }
 function renderObTogs(){
   document.querySelectorAll("[data-odow]").forEach(b=>b.classList.toggle("on",_ob.restDays.includes(+b.dataset.odow)));
@@ -1412,12 +1471,12 @@ function modalSheet(o){
   const cx=ov.querySelector('[data-c="cancel"]');if(cx)cx.onclick=()=>{ov.remove();if(o.onCancel)o.onCancel();};
 }
 function doResetAll(){
-  const snap={vdone:S.vdone,vskip:S.vskip,vdoneDate:S.vdoneDate,akdone:S.akdone,notes:S.notes,assessments:S.assessments,uworld:S.uworld,vshaky:S.vshaky};
-  S.vdone={};S.vskip={};S.vdoneDate={};S.akdone={};S.notes={};S.assessments={};S.uworld={total:null,blocks:{}};S.vshaky={};_prevSig=0;save();
+  const snap={vdone:S.vdone,vskip:S.vskip,vdoneDate:S.vdoneDate,akdone:S.akdone,notes:S.notes,assessments:S.assessments,uworld:S.uworld,vshaky:S.vshaky,streak:S.streak};
+  S.vdone={};S.vskip={};S.vdoneDate={};S.akdone={};S.notes={};S.assessments={};S.uworld={total:null,blocks:{}};S.vshaky={};S.streak={days:{}};_prevSig=0;S._resetAt=Date.now();save();
   if(S.cfg){reflow();render();}else renderWelcome();
-  toastUndo("All progress cleared — tap Undo to restore.",()=>{S.vdone=snap.vdone;S.vskip=snap.vskip;S.vdoneDate=snap.vdoneDate;S.akdone=snap.akdone;S.notes=snap.notes;S.assessments=snap.assessments;S.uworld=snap.uworld;S.vshaky=snap.vshaky;_prevSig=progressSig();save();if(S.cfg){reflow();render();}else renderWelcome();toast("Progress restored ✓");});
+  toastUndo("All progress cleared — tap Undo to restore.",()=>{S.vdone=snap.vdone;S.vskip=snap.vskip;S.vdoneDate=snap.vdoneDate;S.akdone=snap.akdone;S.notes=snap.notes;S.assessments=snap.assessments;S.uworld=snap.uworld;S.vshaky=snap.vshaky;S.streak=snap.streak;_prevSig=progressSig();save();if(S.cfg){reflow();render();}else renderWelcome();toast("Progress restored ✓");});
 }
-const BUILD="2026-07-06b";
+const BUILD="2026-07-07a";
 function openMenu(){
   const email=Cloud.user&&Cloud.user.email;
   const inHub=!!S.active;
@@ -1447,7 +1506,7 @@ function menuAct(m){
   else if(m==="backup"){const blob=new Blob([JSON.stringify(persistObj(),null,2)],{type:"application/json"});const u=URL.createObjectURL(blob);const a=document.createElement("a");a.href=u;a.download="lowyieldonly-backup-"+todayISO()+".json";a.click();URL.revokeObjectURL(u);toast("Backup downloaded");}
   else if(m==="restore"){const inp=document.getElementById("fileIn");inp.value="";inp.click();}
   else if(m==="help"){modalSheet({title:"How this works",okLabel:"Got it",cancel:false,msg:"Two command centers — one for Step 1, one for NBME shelf exams — each set up on its own.\n\nInside a hub, your plan is the remaining videos repacked from today to your exam date: check off what you watch and the rest re-distributes. Reorder systems (or NBME blocks), take a day off, move your exam date, or change resources and the plan re-paces live.\n\nFinished a shelf? Use ‘Start a new NBME unit’. Watched videos count across both hubs. Progress is saved to your account and synced across your devices. Tap the title to switch hubs."});}
-  else if(m==="reset"){modalSheet({title:"Reset all progress?",danger:true,okLabel:"Reset everything",msg:"This clears every checkmark, Anki check, note, self-assessment score, UWorld block, and review flag across BOTH hubs.\n\nYour hubs, exam dates, and settings stay exactly as they are. You’ll get one chance to undo.",onOk:doResetAll});}
+  else if(m==="reset"){modalSheet({title:"Reset all progress?",danger:true,okLabel:"Reset everything",msg:"This clears every checkmark, Anki check, note, self-assessment score, UWorld block, review flag, and your streak across BOTH hubs — here and in your synced account.\n\nYour hubs, exam dates, and settings stay exactly as they are. You’ll get one chance to undo.",onOk:doResetAll});}
 }
 
 /* ---------- boot ---------- */
@@ -1467,7 +1526,7 @@ function wireFileInput(){
   const inp=document.getElementById("fileIn");
   if(inp)inp.onchange=(e)=>{const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=()=>{try{const o=JSON.parse(r.result);
     if(o.cfgs!==undefined)S.cfgs=o.cfgs;else if(o.cfg!==undefined){const key=(o.cfg.examType&&o.cfg.examType!=="step1")?"nbme":"step1";S.cfgs={step1:null,nbme:null};S.cfgs[key]=o.cfg;}
-    ["vdone","vskip","vdoneDate","akdone","notes","streak","assessments","uworld","vshaky"].forEach(k=>{if(o[k]!==undefined)S[k]=o[k];});
+    ["vdone","vskip","vdoneDate","akdone","notes","streak","assessments","uworld","vshaky","_resetAt"].forEach(k=>{if(o[k]!==undefined)S[k]=o[k];});
     S.uworld=S.uworld||{total:null,blocks:{}};S.uworld.blocks=S.uworld.blocks||{};
     ["step1","nbme"].forEach(k=>{if(S.cfgs[k])normalizeCfg(S.cfgs[k],k);});
     S.active=null;S.cfg=null;_prevSig=progressSig();save();renderWelcome();toast("Backup restored");
