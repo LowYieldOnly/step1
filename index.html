@@ -7,7 +7,7 @@
 <script>(function(){try{var s=localStorage.getItem('lyo_theme');var m=(s==='light'||s==='dark')?s:((window.matchMedia&&matchMedia('(prefers-color-scheme: dark)').matches)?'dark':'light');document.documentElement.setAttribute('data-theme',m);var mt=document.querySelector('meta[name="theme-color"]');if(mt)mt.setAttribute('content',m==='dark'?'#0E1116':'#F5F7FA');}catch(e){}})();</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="icon-192.png">
 <title>LOW YIELD ONLY</title>
@@ -40,8 +40,11 @@
   --blue:var(--accent); --blue-soft:var(--accent-bg); --green:var(--success); --navy:var(--toast-bg);
   --on-accent:var(--accent-contrast);
   --r:var(--radius-lg);
-  --mono:"IBM Plex Mono",ui-monospace,"SF Mono","Cascadia Mono","Roboto Mono",Menlo,Consolas,monospace;
-  --sans:"Inter",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  /* ---- Typography ---- */
+  --font-ui:"Inter",system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  --font-read:"Source Serif 4",Georgia,"Times New Roman",serif;  /* long-form only */
+  --font-mono:"JetBrains Mono",ui-monospace,"SF Mono","Cascadia Mono",Menlo,Consolas,monospace;
+  --mono:var(--font-mono); --sans:var(--font-ui);
 }
 :root[data-theme="dark"]{
   color-scheme:dark;
@@ -59,8 +62,12 @@
 :root[data-theme="light"]{color-scheme:light}
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html{background:var(--bg)}
-html,body{margin:0;color:var(--ink);font-family:var(--sans);font-size:15px;line-height:1.55;font-variant-numeric:tabular-nums}
+html,body{margin:0;color:var(--ink);font-family:var(--font-ui);font-size:16px;line-height:1.6;font-variant-numeric:tabular-nums slashed-zero;font-feature-settings:"tnum" 1,"zero" 1}
 body{padding-bottom:40px;position:relative;min-height:100vh;background:var(--bg)}
+/* dark: white blooms bolder — let it breathe a touch */
+:root[data-theme="dark"] body{line-height:1.65;letter-spacing:.005em}
+/* schedule numbers — times, dates, counts, timers: align + disambiguate */
+.tabular{font-variant-numeric:tabular-nums slashed-zero;font-feature-settings:"tnum" 1,"zero" 1}
 button{font-family:inherit;color:inherit}
 .wrap{max-width:680px;margin:0 auto;padding:14px 16px 64px}
 .muted{color:var(--muted)} .small{font-size:13px} .center{text-align:center}
@@ -346,7 +353,7 @@ b{color:var(--ink)}
 .authforgot{display:block;text-align:center;margin:14px auto 0;font-size:13px}
 .authspin{width:26px;height:26px;margin:24px auto 0;border:3px solid var(--line2);border-top-color:var(--phos);border-radius:50%;animation:aspin .8s linear infinite}
 @keyframes aspin{to{transform:rotate(360deg)}}
-.cfmsg{padding:4px 16px 14px;margin:0;color:var(--muted);font-size:14px;line-height:1.5;white-space:pre-line}
+.cfmsg{padding:4px 16px 14px;margin:0;color:var(--text-secondary);font-family:var(--font-read);font-size:15px;line-height:1.6;white-space:pre-line}
 .mrow.solidred{justify-content:center;border-top:0;margin:6px 8px 4px;border-radius:var(--radius);background:var(--danger-bg);color:var(--danger);font-weight:700;letter-spacing:.01em}
 .mrow.solidred:hover{background:color-mix(in srgb,var(--danger) 20%,transparent)}
 .mrow.ctr{justify-content:center}
@@ -1503,7 +1510,7 @@ function doResetAll(){
   if(S.cfg){reflow();render();}else renderWelcome();
   toastUndo("All progress cleared — tap Undo to restore.",()=>{S.vdone=snap.vdone;S.vskip=snap.vskip;S.vdoneDate=snap.vdoneDate;S.akdone=snap.akdone;S.notes=snap.notes;S.assessments=snap.assessments;S.uworld=snap.uworld;S.vshaky=snap.vshaky;S.streak=snap.streak;_prevSig=progressSig();save();if(S.cfg){reflow();render();}else renderWelcome();toast("Progress restored ✓");});
 }
-const BUILD="2026-07-08a";
+const BUILD="2026-07-08b";
 function openMenu(){
   const email=Cloud.user&&Cloud.user.email;
   const inHub=!!S.active;
