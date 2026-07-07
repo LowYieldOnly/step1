@@ -323,6 +323,7 @@ b{color:var(--ink)}
 .welcome{text-align:center;animation:fadeUp .5s ease both}
 .wbrand{font-family:var(--mono);font-size:29px;font-weight:700;letter-spacing:.2em;line-height:1.3;color:var(--phos)}
 .wtag{color:var(--muted);margin:13px 0 28px;font-size:13px;font-family:var(--mono);letter-spacing:.02em}
+.wservire{font-family:var(--font-read);font-style:italic;font-weight:500;font-size:24px;color:var(--text-2);letter-spacing:.07em;margin:8px 0 30px}
 .hubs{display:flex;flex-direction:column;gap:16px}
 .hubcard{position:relative;display:block;width:100%;text-align:left;background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:20px;cursor:pointer;overflow:hidden;transition:transform .14s,border-color .2s}
 .hubcard:hover{border-color:var(--phos-dim)}
@@ -1565,7 +1566,7 @@ function renderWelcome(){
   // chooser is open can't re-activate the hub and pull the user back inside
   if(S.active){S.active=null;S.cfg=null;save();}
   let body='<div class="welcome"><div class="wbrand">LOW YIELD ONLY</div>'
-    +'<p class="wtag">Your Brody command center \u2014 school blocks, NBME exams, and dedicated STEP prep in one place.</p>'
+    +'<div class="wservire">SERVIRE</div>'
     +'<div class="hubs">'+hubCard("nbme")+'</div>'
     +'<div class="wfoot"><button class="link" id="w_step1">Step 1 Command Center (legacy)</button> \u00b7 '+((Cloud.user&&Cloud.user.email)?('Signed in as '+escHTML(Cloud.user.email)+' \u00b7 <button class="link" id="w_signout">Sign out</button> \u00b7 '):'')+'<button class="link" id="w_restore">Restore a backup</button></div>'
     +'</div>';
@@ -1729,7 +1730,7 @@ function doResetAll(){
     S.cfgs=snap.cfgs;S.active=snap.active;S.cfg=S.active?S.cfgs[S.active]:null;_prevSig=progressSig();save();
     if(S.cfg){reflow();render();}else renderWelcome();toast("Restored ✓");});
 }
-const BUILD="2026-07-11a";
+const BUILD="2026-07-11b";
 function openMenu(){
   const email=Cloud.user&&Cloud.user.email;
   const inHub=!!S.active;
