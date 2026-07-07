@@ -3,36 +3,44 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="theme-color" content="#F5F7FA">
-<script>(function(){try{var s=localStorage.getItem('lyo_theme');var m=(s==='light'||s==='dark')?s:((window.matchMedia&&matchMedia('(prefers-color-scheme: dark)').matches)?'dark':'light');document.documentElement.setAttribute('data-theme',m);var mt=document.querySelector('meta[name="theme-color"]');if(mt)mt.setAttribute('content',m==='dark'?'#0E1116':'#F5F7FA');}catch(e){}})();</script>
+<meta name="theme-color" content="#EDF1F6">
+<script>(function(){try{var s=localStorage.getItem('lyo_theme');var m=(s==='light'||s==='dark')?s:((window.matchMedia&&matchMedia('(prefers-color-scheme: dark)').matches)?'dark':'light');document.documentElement.setAttribute('data-theme',m);var mt=document.querySelector('meta[name="theme-color"]');if(mt)mt.setAttribute('content',m==='dark'?'#15111C':'#EDF1F6');}catch(e){}})();</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Mulish:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="icon-192.png">
 <title>LOW YIELD ONLY</title>
 <style>
 :root{
   color-scheme:light dark;
-  /* ---- Design tokens (light defaults) ---- */
-  --surface-base:#F5F7FA; --surface-raised:#FFFFFF; --surface-overlay:#FFFFFF; --surface-sunken:#EEF1F5;
-  --border:#DCE1E8; --border-strong:#C4CCD6;
-  --text-primary:#1C2128; --text-secondary:#57606A; --text-muted:#8B949E;
-  --accent:#4F46E5; --accent-hover:#4338CA; --accent-soft:#4F46E5; --accent-bg:#EEEDFE; --accent-contrast:#FFFFFF;
-  --success:#1A7F37; --success-bg:#DEF2E4;
-  --warning:#9A6700; --warning-bg:#FBF1D6;
-  --danger:#CF222E;  --danger-bg:#FBE9E9;
-  --info:#0969DA;    --info-bg:#DDF0FF;
-  --scrim:rgba(28,33,40,.42); --toast-bg:#21262D; --toast-ink:#FFFFFF;
-  --shadow:0 10px 30px -12px rgba(28,33,40,.22);
+  /* ============================================================
+     THEME — light (azure, Boards & Beyond feel). Canonical tokens
+     use the handoff's names; legacy aliases below keep existing
+     rules working. Flat: hairline borders, no gradients/glass/glow.
+     ============================================================ */
+  --bg:#EDF1F6; --surface:#FFFFFF; --surface-2:#F1F5FA;
+  --text:#16202B; --text-2:#566575; --text-muted:#8595A4;
+  --accent:#1160C8; --accent-hover:#0E52AC; --accent-soft:#0F5DC4; --accent-bg:#E4EEFB; --accent-contrast:#FFFFFF;
+  --border:#D8DFE8; --border-strong:#BFC9D5; --ring-track:#DBE2EC;
+  --success:#1E8E4E; --success-bg:#E2F3E9;
+  --warning:#B4690E; --warning-bg:#FBEEDB;
+  --danger:#CC3340;  --danger-bg:#FBE7E9;
+  --info:#0B6BCB;    --info-bg:#E2EEFB;
+  /* subject / category coding (6 distinguishable hues) */
+  --cat-blue:#2F6FE0; --cat-teal:#0E9384; --cat-violet:#7C5CFC; --cat-amber:#B45309; --cat-rose:#D6336C; --cat-green:#2C9A5A;
+  --scrim:rgba(22,32,43,.42); --toast-bg:#1B2530; --toast-ink:#FFFFFF;
+  --shadow:0 1px 2px rgba(20,30,45,.06),0 8px 24px -16px rgba(20,30,45,.18);
   --radius-sm:6px; --radius:8px; --radius-lg:12px;
 
-  /* ---- Legacy aliases → new tokens (keeps existing rules working) ---- */
-  --bg:var(--surface-base); --bg1:var(--surface-base); --bg2:var(--surface-sunken); --soft:var(--surface-base);
-  --panel:var(--surface-raised); --panel2:var(--surface-sunken);
-  --ink:var(--text-primary); --muted:var(--text-secondary); --faint:var(--text-muted);
+  /* ---- Legacy aliases → canonical tokens (keeps existing rules working) ---- */
+  --surface-base:var(--bg); --surface-raised:var(--surface); --surface-overlay:var(--surface); --surface-sunken:var(--surface-2);
+  --text-primary:var(--text); --text-secondary:var(--text-2);
+  --bg1:var(--bg); --bg2:var(--surface-2); --soft:var(--surface-2);
+  --panel:var(--surface); --panel2:var(--surface-2);
+  --ink:var(--text); --muted:var(--text-2); --faint:var(--text-muted);
   --line:var(--border); --line2:var(--border-strong);
-  --phos:var(--accent); --phos2:var(--accent-hover); --phos-dim:var(--accent); --phos-soft:var(--accent-bg); --phos-glow:transparent;
+  --phos:var(--accent-soft); --phos2:var(--accent-hover); --phos-dim:var(--accent-soft); --phos-soft:var(--accent-bg); --phos-glow:transparent;
   --amber:var(--warning); --amber2:var(--warning); --amber-soft:var(--warning-bg); --amber-glow:transparent;
   --cyan:var(--info); --cyan2:var(--info); --cyan-soft:var(--info-bg); --cyan-glow:transparent;
   --violet:var(--info); --violet-soft:var(--info-bg);
@@ -40,24 +48,26 @@
   --blue:var(--accent); --blue-soft:var(--accent-bg); --green:var(--success); --navy:var(--toast-bg);
   --on-accent:var(--accent-contrast);
   --r:var(--radius-lg);
-  /* ---- Typography ---- */
-  --font-ui:"Inter",system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  /* ---- Typography (Mulish — warm humanist sans; mono kept for data) ---- */
+  --font-ui:"Mulish",system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
   --font-read:"Source Serif 4",Georgia,"Times New Roman",serif;  /* long-form only */
   --font-mono:"JetBrains Mono",ui-monospace,"SF Mono","Cascadia Mono",Menlo,Consolas,monospace;
   --mono:var(--font-mono); --sans:var(--font-ui);
 }
 :root[data-theme="dark"]{
   color-scheme:dark;
-  --surface-base:#0E1116; --surface-raised:#171B22; --surface-overlay:#21262D; --surface-sunken:#0B0E12;
-  --border:#2D333B; --border-strong:#3A424D;
-  --text-primary:#E6EDF3; --text-secondary:#9DA7B3; --text-muted:#6E7681;
-  --accent:#6366F1; --accent-hover:#7C7FF5; --accent-soft:#8B93F8; --accent-bg:#1E2140; --accent-contrast:#FFFFFF;
-  --success:#3FB950; --success-bg:#12261A;
-  --warning:#D29922; --warning-bg:#2A2210;
-  --danger:#F85149;  --danger-bg:#2C1416;
-  --info:#58A6FF;    --info-bg:#0D2135;
-  --scrim:rgba(1,4,9,.6); --toast-bg:#21262D; --toast-ink:#FFFFFF;
-  --shadow:0 16px 40px -14px rgba(0,0,0,.6);
+  /* dark — flat deep-plum surfaces, restrained lavender accent */
+  --bg:#15111C; --surface:#1E1826; --surface-2:#282034;
+  --text:#ECE6F3; --text-2:#ABA0B9; --text-muted:#776D84;
+  --accent:#BCACF2; --accent-hover:#CBBEF6; --accent-soft:#C6B7F5; --accent-bg:#282142; --accent-contrast:#1A1326;
+  --border:#2E2739; --border-strong:#3E3449; --ring-track:#2C2539;
+  --success:#46C46A; --success-bg:#132417;
+  --warning:#E0A93B; --warning-bg:#2A2110;
+  --danger:#EE6A63;  --danger-bg:#2C1519;
+  --info:#8FB6F2;    --info-bg:#141F30;
+  --cat-blue:#6AA5FF; --cat-teal:#4FD1C5; --cat-violet:#A78BFA; --cat-amber:#F0B24B; --cat-rose:#F472A0; --cat-green:#63C88B;
+  --scrim:rgba(8,5,14,.62); --toast-bg:#282034; --toast-ink:#F3EEF8;
+  --shadow:none;
 }
 :root[data-theme="light"]{color-scheme:light}
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
@@ -88,14 +98,14 @@ b{color:var(--ink)}
 .navb.on{background:var(--phos-soft);color:var(--phos);box-shadow:inset 0 0 0 1px var(--line2)}
 
 /* cards */
-.card{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:16px;margin:12px 0;box-shadow:var(--shadow)}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:16px;margin:12px 0}
 .card.soft{background:var(--soft);border-color:var(--line)}
 .cardhd{font-family:var(--mono);font-weight:700;font-size:11.5px;margin-bottom:12px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;text-transform:uppercase;letter-spacing:.12em;color:var(--muted)}
 .pill{font-family:var(--mono);font-size:11.5px;font-weight:700;color:var(--phos);background:var(--phos-soft);border:1px solid var(--line2);padding:3px 9px;border-radius:999px;letter-spacing:.02em}
 
 /* hero */
-.hero{position:relative;display:flex;align-items:center;gap:18px;background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:20px;margin:12px 0;overflow:hidden;box-shadow:var(--shadow)}
-.hero::after{content:"";position:absolute;inset:0;background:radial-gradient(80% 120% at 0% 0%, var(--phos-soft), transparent 60%);pointer-events:none}
+.hero{position:relative;display:flex;align-items:center;gap:18px;background:var(--accent-bg);border:1px solid var(--border-strong);border-radius:var(--r);padding:20px;margin:12px 0;overflow:hidden}
+.hero::after{content:"";position:absolute;inset:0;pointer-events:none}
 .hero-l,.hero-r{position:relative}
 .hero-r .big{font-family:var(--mono);font-size:34px;font-weight:700;letter-spacing:-.01em;line-height:1;color:var(--ink)}
 .hero-r .big span{font-family:var(--sans);font-size:13px;font-weight:600;color:var(--muted);letter-spacing:0;text-shadow:none}
@@ -103,7 +113,7 @@ b{color:var(--ink)}
 
 /* ring (analog gauge) */
 .ring{display:block}
-.ring .rbg{fill:none;stroke:var(--line2);stroke-width:6;stroke-dasharray:1.4 5;stroke-linecap:round}
+.ring .rbg{fill:none;stroke:var(--ring-track);stroke-width:6;stroke-dasharray:1.4 5;stroke-linecap:round}
 .ring .rfg{fill:none;stroke:var(--phos);stroke-width:6;stroke-linecap:round;transition:stroke-dashoffset .8s cubic-bezier(.5,1.4,.4,1)}
 .ring .rdot{fill:var(--phos)}
 .ring .rtxt{fill:var(--ink);font-family:var(--mono);font-size:15px;font-weight:700;text-anchor:middle;dominant-baseline:middle}
@@ -308,7 +318,7 @@ b{color:var(--ink)}
 .wbrand{font-family:var(--mono);font-size:29px;font-weight:700;letter-spacing:.2em;line-height:1.3;color:var(--phos)}
 .wtag{color:var(--muted);margin:13px 0 28px;font-size:13px;font-family:var(--mono);letter-spacing:.02em}
 .hubs{display:flex;flex-direction:column;gap:16px}
-.hubcard{position:relative;display:block;width:100%;text-align:left;background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:20px;cursor:pointer;overflow:hidden;box-shadow:var(--shadow);transition:transform .14s,border-color .2s}
+.hubcard{position:relative;display:block;width:100%;text-align:left;background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:20px;cursor:pointer;overflow:hidden;transition:transform .14s,border-color .2s}
 .hubcard:hover{border-color:var(--phos-dim)}
 @media (hover:hover){.hubcard:hover{transform:translateY(-2px)}.calcell:not(.empty):hover{transform:translateY(-1px)}}
 .hubcard:active{transform:translateY(0)}
@@ -1510,7 +1520,7 @@ function doResetAll(){
   if(S.cfg){reflow();render();}else renderWelcome();
   toastUndo("All progress cleared — tap Undo to restore.",()=>{S.vdone=snap.vdone;S.vskip=snap.vskip;S.vdoneDate=snap.vdoneDate;S.akdone=snap.akdone;S.notes=snap.notes;S.assessments=snap.assessments;S.uworld=snap.uworld;S.vshaky=snap.vshaky;S.streak=snap.streak;_prevSig=progressSig();save();if(S.cfg){reflow();render();}else renderWelcome();toast("Progress restored ✓");});
 }
-const BUILD="2026-07-08b";
+const BUILD="2026-07-08c";
 function openMenu(){
   const email=Cloud.user&&Cloud.user.email;
   const inHub=!!S.active;
@@ -1547,7 +1557,7 @@ function menuAct(m){
 
 /* ---------- boot ---------- */
 /* ---------- theme (light / dark, follows OS until the user overrides) ---------- */
-const Theme={KEY:"lyo_theme",META:{light:"#F5F7FA",dark:"#0E1116"},
+const Theme={KEY:"lyo_theme",META:{light:"#EDF1F6",dark:"#15111C"},
   system(){try{return matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light";}catch(e){return "dark";}},
   saved(){const v=store.get(this.KEY);return (v==="light"||v==="dark")?v:null;},
   current(){return this.saved()||this.system();},
