@@ -628,7 +628,7 @@ function mergeState(a,b){a=a||{};b=b||{};
   const strip=s=>((s._updatedAt||0)>=resetAt)?s:Object.assign({},s,{vdone:{},vskip:{},vdoneDate:{},akdone:{},notes:{},streak:{days:{}},assessments:{},uworld:{total:null,blocks:{}},vshaky:{}});
   if(resetAt){a=strip(a);b=strip(b);}
   const aT=a._updatedAt||0,bT=b._updatedAt||0;const newer=bT>=aT?b:a,older=bT>=aT?a:b;
-  const out={};out._resetAt=resetAt;
+  const out={};
   out.active=(newer.active!==undefined?newer.active:older.active)||null;
   out.cfgs={};["step1","nbme"].forEach(k=>{out.cfgs[k]=(newer.cfgs&&newer.cfgs[k])||(older.cfgs&&older.cfgs[k])||null;});
   out.vdone=unionTrue(a.vdone,b.vdone);
@@ -643,6 +643,10 @@ function mergeState(a,b){a=a||{};b=b||{};
   out.vshaky=unionTrue(a.vshaky,b.vshaky);
   out.settings=Object.assign({},older.settings||{},newer.settings||{});
   out._updatedAt=Math.max(aT,bT);
+  // keep key order identical to persistObj() — the sync layer compares
+  // JSON.stringify(merged) vs JSON.stringify(current), so a mismatched key
+  // order reads as "changed" every tick and loops adopt→render (screen blink)
+  out._resetAt=resetAt;
   return out;}
 const Cloud={inited:false,user:null,db:null,applying:false,unsub:null,pushT:null};
 function fbEnabled(){return !!(FB_CONFIG&&FB_CONFIG.apiKey&&FB_CONFIG.projectId);}
@@ -1479,7 +1483,7 @@ function doResetAll(){
   if(S.cfg){reflow();render();}else renderWelcome();
   toastUndo("All progress cleared — tap Undo to restore.",()=>{S.vdone=snap.vdone;S.vskip=snap.vskip;S.vdoneDate=snap.vdoneDate;S.akdone=snap.akdone;S.notes=snap.notes;S.assessments=snap.assessments;S.uworld=snap.uworld;S.vshaky=snap.vshaky;S.streak=snap.streak;_prevSig=progressSig();save();if(S.cfg){reflow();render();}else renderWelcome();toast("Progress restored ✓");});
 }
-const BUILD="2026-07-07b";
+const BUILD="2026-07-07c";
 function openMenu(){
   const email=Cloud.user&&Cloud.user.email;
   const inHub=!!S.active;
