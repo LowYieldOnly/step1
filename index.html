@@ -443,6 +443,13 @@ b{color:var(--ink)}
 .mrow:hover{background:var(--accent-bg)}
 .mrow.danger{color:var(--red)} .mrow.danger:hover{background:var(--danger-bg)}
 .mrow.close{color:var(--muted);font-weight:700}
+.chglog{padding:2px 14px 6px;display:flex;flex-direction:column;gap:18px}
+.chgentry{border-left:2px solid var(--gold);padding-left:13px}
+.chgdate{font-family:var(--mono);font-size:10px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:var(--phos);margin-bottom:4px}
+.chgtitle{font-family:var(--font-display,serif);font-size:17px;color:var(--ink);line-height:1.35;margin-bottom:8px}
+.chglist{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:7px}
+.chglist li{position:relative;padding-left:16px;font-size:13.5px;line-height:1.5;color:var(--text-2)}
+.chglist li::before{content:"";position:absolute;left:2px;top:8px;width:5px;height:5px;border-radius:50%;background:var(--gold)}
 .acctrow{flex-direction:column;align-items:flex-start;gap:2px;cursor:default;border-top:0}
 .acctlbl{font-family:var(--mono);font-size:10px;text-transform:uppercase;letter-spacing:.12em;color:var(--faint)}
 .acctml{font-size:14px;color:var(--ink);font-weight:600;word-break:break-all}
@@ -868,6 +875,7 @@ function enterAccount(u){
   else if(S.active==="stepd"){render();}
   else if(S.cfg){reflow();render();}else renderWelcome();
   Cloud.subscribe();                 // pull this account's cloud data + offer import if new
+  maybeShowUpdates();                // "what's new" pop-up, once per new changelog entry
 }
 Cloud.ref=function(){return Cloud.db.collection("users").doc(Cloud.user.uid);};
 Cloud.subscribe=function(){if(!Cloud.db||!Cloud.user)return;
@@ -2232,11 +2240,37 @@ function doResetAll(){
     S.cfgs=snap.cfgs;S.active=snap.active;S.cfg=S.active?S.cfgs[S.active]:null;_prevSig=progressSig();save();
     if(S.cfg){reflow();render();}else renderWelcome();toast("Restored ✓");});
 }
-const BUILD="2026-07-16t";
+const BUILD="2026-07-16u";
+/* ---------- What's new (changelog) ----------
+   Newest entry first. Bump the top entry's id whenever you add one and the
+   pop-up shows once per person (tracked in synced settings.seenUpdate). */
+const CHANGELOG=[
+  {id:"2026-07-08", date:"July 2026", title:"A bigger resource library and a cleaner Study page", items:[
+    "New resource: Bootcamp is now available — plus refreshed Boards & Beyond, Pathoma, and Sketchy, each broken down to the individual video and its length.",
+    "Sketchy Micro and Sketchy Pharm now show as separate sections, so they never mix together.",
+    "New plans start with every resource unchecked — pick the ones you actually use.",
+    "Redesigned Study page: choose any day on the calendar to study ahead, with that day’s checklist, exam countdown, quote, and copy-ready AnKing tags all in one place.",
+    "“Log practice questions” now sits right under your daily checklist.",
+    "Fixed a background flicker on desktop when moving the mouse."
+  ]}
+];
+const LATEST_UPDATE=CHANGELOG.length?CHANGELOG[0].id:null;
+function updatesHTML(entries){return entries.map(e=>'<div class="chgentry"><div class="chgdate">'+escHTML(e.date)+'</div><div class="chgtitle">'+escHTML(e.title)+'</div><ul class="chglist">'+e.items.map(it=>'<li>'+escHTML(it)+'</li>').join('')+'</ul></div>').join('');}
+function showUpdates(){
+  if(document.getElementById("updates"))return;
+  const ov=document.createElement("div");ov.className="overlay";ov.id="updates";
+  ov.innerHTML='<div class="sheet"><div class="sheethd">What’s new</div><div class="chglog">'+updatesHTML(CHANGELOG)+'</div><button class="mrow ctr" data-c="ok">Got it</button></div>';
+  const done=()=>{ov.remove();S.settings=S.settings||{};if(S.settings.seenUpdate!==LATEST_UPDATE){S.settings.seenUpdate=LATEST_UPDATE;save();}};
+  ov.onclick=(e)=>{if(e.target===ov)done();};
+  document.body.appendChild(ov);
+  ov.querySelector('[data-c="ok"]').onclick=done;
+}
+function maybeShowUpdates(){if(!LATEST_UPDATE)return;S.settings=S.settings||{};if(S.settings.seenUpdate!==LATEST_UPDATE)showUpdates();}
 function openMenu(){
   const email=Cloud.user&&Cloud.user.email;
   const html='<div class="sheet"><div class="sheethd">Menu</div>'
     +(email?'<div class="mrow acctrow"><span class="acctlbl">Signed in</span><span class="acctml">'+escHTML(email)+'</span></div>':'')
+    +'<button class="mrow" data-m="updates">What’s new</button>'
     +'<button class="mrow" data-m="theme">'+(Theme.current()==="dark"?"Switch to light theme":"Switch to dark theme")+'</button>'
     +'<button class="mrow danger" data-m="reset">Reset all progress</button>'
     +'<button class="mrow" data-m="signout">Sign out</button>'
@@ -2249,7 +2283,8 @@ function openMenu(){
 }
 function menuAct(m){
   if(m==="close")return;
-  if(m==="theme"){Theme.toggle();}
+  if(m==="updates"){showUpdates();}
+  else if(m==="theme"){Theme.toggle();}
   else if(m==="signout"){confirmSignOut();}
   else if(m==="reset"){modalSheet({title:"Reset everything?",danger:true,okLabel:"Erase & start over",msg:"This erases EVERYTHING across both hubs — every checkmark, Anki check, note, self-assessment score, UWorld block, review flag, your streak, AND your saved plans (exam dates, systems, settings), here and in your synced account.\n\nYou’ll be taken back to the start to build a fresh plan. You’ll get one chance to undo.",onOk:doResetAll});}
 }
