@@ -100,7 +100,7 @@ b{color:var(--ink)}
 .iconbtn{background:none;border:0;font-size:21px;color:var(--muted);cursor:pointer;padding:11px 12px;margin:-9px -6px;line-height:1;border-radius:10px;transition:color .15s}
 .iconbtn:hover{color:var(--phos)}
 .nav{order:2;flex:0 0 100%;display:flex;gap:5px;margin:11px -16px 0;padding:8px 16px;border-top:1px solid var(--line)}
-.navb{flex:1;background:none;border:0;color:var(--faint);font-weight:600;font-size:13px;letter-spacing:.01em;font-family:var(--sans);padding:10px 6px;cursor:pointer;transition:color .18s,box-shadow .18s}
+.navb{flex:1;background:none;border:0;color:var(--faint);font-weight:600;font-size:14px;letter-spacing:.01em;font-family:var(--sans);padding:12px 8px;cursor:pointer;transition:color .18s,box-shadow .18s}
 .navb:hover{color:var(--muted)}
 .navb.on{color:var(--phos);box-shadow:inset 0 -2px 0 var(--phos)}
 
@@ -497,9 +497,16 @@ b{color:var(--ink)}
   /* 4 app frame: content becomes an elevated glassy panel on the aurora */
   .wrap:not(.welcomewrap):not(.onb){background:color-mix(in srgb,var(--surface) 52%,transparent);border:1px solid var(--border);border-radius:18px;box-shadow:inset 0 1px 0 color-mix(in srgb,#fff 5%,transparent),0 34px 90px -46px rgba(0,0,0,.7);padding:30px 30px 44px;margin-top:22px;margin-bottom:40px;-webkit-backdrop-filter:blur(7px);backdrop-filter:blur(7px)}
 
-  /* 5-6 dashboard grid: sticky left rail + fluid main, rebalanced widths */
-  .cols{grid-template-columns:minmax(300px,360px) 1fr;gap:0 30px}
-  .cols>div:first-child{position:sticky;top:82px;align-self:start}
+  /* 5-6 dashboard grid: symmetrical equal-height columns */
+  .cols{grid-template-columns:1fr 1fr;gap:0 26px;align-items:stretch}
+  /* Study view: left column is a flex stack; the calendar fills to balance the checklist */
+  .colstudy{display:flex;flex-direction:column;gap:18px}
+  .colstudy>*{margin:0!important}
+  .colstudy .studycal{flex:1;display:flex;flex-direction:column;margin:0}
+  .colstudy .studycal .calgrid{flex:1;grid-auto-rows:minmax(42px,1fr)}
+  .colwork>*{margin-top:0}
+  /* larger header tabs */
+  .navb{padding:13px 26px;font-size:15px}
 
   /* 10-11 material: cards a step lighter than the panel, gold top edge on the hero, hover lift */
   .card{background:color-mix(in srgb,var(--surface) 92%,var(--bg));transition:transform .18s ease,border-color .18s ease,box-shadow .2s ease}
@@ -1018,7 +1025,7 @@ function chrome(active){
   let tabs;
   if(S.active==="m1"){tabs=[["browse","Browse"],["daily","Daily"],["grades","Grades"],["progress","Progress"]];}
   else if(S.active==="stepd"){tabs=[];}
-  else{tabs=[["today","Today"],["plan","Planner"],["stats","Stats"],["adjust","Plan"]];}
+  else{tabs=[["today","Study"],["stats","Stats"],["adjust","Plan"]];}
   const nm=(S.active==="nbme"||S.active==="m1"||S.active==="stepd")?"Home":hubName(S.active||"step1");
   return '<div class="topbar'+(tabs.length?'':' solo')+'">'+'<button class="brandbtn" id="brandBtn" title="Switch hub">‹ <span class="brandnm">'+escHTML(nm)+'</span></button>'
    +(tabs.length?'<div class="nav">'+tabs.map(t=>'<button class="navb '+(active===t[0]?"on":"")+'" data-view="'+t[0]+'">'+t[1]+'</button>').join('')+'</div>':'')
@@ -1042,9 +1049,8 @@ function render(){
   if(!S.cfg){renderWelcome();return;}
   reflow();
   if(VIEW==="ready"||VIEW==="progress")VIEW="stats"; // legacy views merged into Stats
-  if(VIEW==="step")VIEW="today"; // Step is now its own hub
+  if(VIEW==="step"||VIEW==="plan")VIEW="today"; // Step is its own hub; Planner folded into Study
   if(VIEW==="today")renderToday();
-  else if(VIEW==="plan")renderPlan();
   else if(VIEW==="stats")renderStats();
   else if(VIEW==="adjust")renderAdjust();
   else renderToday();
@@ -1124,7 +1130,7 @@ function readinessChip(){
 /* Today chip — block-phase UWorld progress (Brody is school-block focused) */
 function uworldChip(){
   const r=uworldRollup();
-  if(!r.done)return '<button class="rchip rchip-info" data-gouworld="1">Log your first UWorld block →</button>';
+  if(!r.done)return '<button class="rchip rchip-info" data-gouworld="1">Log practice questions →</button>';
   const cls=r.pct>=70?"ok":(r.pct>=60?"warn":"bad");
   return '<button class="rchip rchip-'+cls+'" data-gouworld="1"><span class="rchip-n">'+r.pct+'%</span><span class="rchip-t">UWorld · '+r.done+(r.total?(" / "+r.total):"")+' Qs correct</span></button>';
 }
@@ -1489,8 +1495,21 @@ function miniCalendar(){
   return '<div class="card deskonly"><div class="cardhd">'+CAL_MONTHS[+ym.slice(5)-1]+'</div>'+g
     +'<div class="mcleg"><span><i class="mcd load"></i>study</span><span><i class="mcd review"></i>review</span><span><i class="mcd rest"></i>rest</span></div></div>';
 }
+function studyCalendar(){
+  if(!CAL_YM||!/^\d{4}-\d{2}$/.test(CAL_YM))CAL_YM=todayISO().slice(0,7);
+  const p=CAL_YM.split("-").map(Number);
+  let h='<div class="card studycal"><div class="calbar"><button class="calnav" id="calPrev" aria-label="previous month">‹</button>'
+    +'<div class="calmon">'+CAL_MONTHS[p[1]-1]+' '+p[0]+'</div>'
+    +'<button class="calnav" id="calNext" aria-label="next month">›</button>'
+    +'<button class="caltoday" id="calToday">Today</button></div>';
+  h+='<div class="calwk">'+["Su","Mo","Tu","We","Th","Fr","Sa"].map(d=>'<div>'+d+'</div>').join('')+'</div>';
+  h+='<div class="calgrid">'+monthMatrix(CAL_YM).map(calCell).join('')+'</div>';
+  h+='<div class="callegend"><span><i class="lg load"></i>study</span><span><i class="lg alldone"></i>done</span><span><i class="lg rest"></i>rest</span><span><i class="lg review"></i>review</span><span><i class="lg off"></i>off</span></div></div>';
+  return h;
+}
 function renderToday(){
   const st=SCHED.stats; const cs=currentStreak();
+  if(!CAL_SEL)CAL_SEL=todayISO();
   // today's assignment = the content day whose iso === today (or the first upcoming content day)
   let row=SCHED.dayMap[todayISO()];
   let heading="Today · "+fmtLong(todayISO());
@@ -1502,16 +1521,18 @@ function renderToday(){
   const todayRow=SCHED.dayMap[todayISO()];
   const isOffToday=todayRow&&(todayRow.off||todayRow.rest);
   const examLeft=st.examDaysLeft;
+  const focusISO=(CAL_SEL&&SCHED.dayMap[CAL_SEL])?CAL_SEL:todayISO();
+  const isFocusToday=(focusISO===todayISO());
   let colA='',colB='';
-  colA+=encouragement(todayRow,isOffToday,cs);
+  // LEFT — countdown, log practice questions, quote, then the calendar (fills to balance)
   colA+='<div class="hero">'
     +'<div class="big">'+examLeft+' <span>days to '+escHTML(S.cfg.examLabel||(S.cfg.examType==="step1"?"Step 1":"your exam"))+'</span></div>'
     +'<div class="sub">'+overall().done+' / '+overall().total+' videos'+(cs>0?' · '+cs+'-day streak':' · '+overall().pct+'% complete')+'</div>'
     +paceHero()+'</div>';
   colA+='<div class="hchips">'+uworldChip()+'</div>'+loadCaveat();
-  colA+=streakHeatmap()+miniCalendar();
-  const focusISO=(TODAY_SEL&&SCHED.dayMap[TODAY_SEL])?TODAY_SEL:todayISO();
-  const isFocusToday=(focusISO===todayISO());
+  colA+=encouragement(todayRow,isOffToday,cs);
+  colA+=studyCalendar();
+  // RIGHT — the checklist for the selected day
   if(!isFocusToday){
     colB+='<div class="focusbar"><span>Studying ahead — <b>'+escHTML(fmtLong(focusISO))+'</b></span><button class="link" id="backToday">‹ Back to today</button></div>';
     colB+=dayDetail(focusISO);
@@ -1526,17 +1547,20 @@ function renderToday(){
         +ankiBlock(row.iso,true)
         +'<div class="rowtools">'+(todayRow&&!isOffToday?'<button class="btn ghost" id="offToday">Take today off</button>':'')+'</div></div>';
     } else if(!isOffToday){
-      colB+='<div class="card"><div class="cardhd">Nothing scheduled today</div><p class="muted">Study ahead by tapping a day on the calendar in the sidebar, or open the <b>Planner</b> tab.</p></div>';
+      colB+='<div class="card"><div class="cardhd">Nothing scheduled today</div><p class="muted">Tap a day on the calendar to study ahead, or enjoy the breather.</p></div>';
     }
   }
-  app.innerHTML=chrome("today")+'<div class="wrap"><div class="cols"><div>'+colA+'</div><div>'+colB+'</div></div></div>';
+  app.innerHTML=chrome("today")+'<div class="wrap"><div class="cols"><div class="colstudy">'+colA+'</div><div class="colwork">'+colB+'</div></div></div>';
   bindVlist();bindExtras();
   const o1=document.getElementById("offToday");if(o1)o1.onclick=()=>dayOffToggle(todayISO(),true);
   const o2=document.getElementById("unoff");if(o2)o2.onclick=()=>dayOffToggle(todayISO(),false);
-  const bt=document.getElementById("backToday");if(bt)bt.onclick=()=>{TODAY_SEL=null;render();};
+  const bt=document.getElementById("backToday");if(bt)bt.onclick=()=>{CAL_SEL=todayISO();render();};
   const df=document.getElementById("d_off");if(df)df.onclick=()=>dayOffToggle(focusISO,true);
   const du=document.getElementById("d_unoff");if(du)du.onclick=()=>dayOffToggle(focusISO,false);
-  document.querySelectorAll("[data-mcsel]").forEach(b=>b.onclick=()=>{const iso=b.dataset.mcsel;TODAY_SEL=(iso===todayISO())?null:iso;render();});
+  const pv=document.getElementById("calPrev");if(pv)pv.onclick=()=>{CAL_YM=ymShift(CAL_YM,-1);render();};
+  const nx=document.getElementById("calNext");if(nx)nx.onclick=()=>{CAL_YM=ymShift(CAL_YM,1);render();};
+  const ct=document.getElementById("calToday");if(ct)ct.onclick=()=>{CAL_YM=todayISO().slice(0,7);CAL_SEL=todayISO();render();};
+  document.querySelectorAll("[data-cal]").forEach(b=>b.onclick=()=>{CAL_SEL=b.dataset.cal;render();});
 }
 function toggleShakyItems(ids){const all=ids.every(isShaky);S.vshaky=S.vshaky||{};ids.forEach(id=>{if(all)delete S.vshaky[id];else S.vshaky[id]=true;});save();}
 function bindVlist(){document.querySelectorAll(".chk[data-ids]").forEach(b=>b.onclick=()=>toggleItems(b.dataset.ids.split(","),b.dataset.day));
@@ -2211,7 +2235,7 @@ function doResetAll(){
     S.cfgs=snap.cfgs;S.active=snap.active;S.cfg=S.active?S.cfgs[S.active]:null;_prevSig=progressSig();save();
     if(S.cfg){reflow();render();}else renderWelcome();toast("Restored ✓");});
 }
-const BUILD="2026-07-16k";
+const BUILD="2026-07-16l";
 function openMenu(){
   const email=Cloud.user&&Cloud.user.email;
   const html='<div class="sheet"><div class="sheethd">Menu</div>'
