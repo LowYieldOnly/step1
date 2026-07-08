@@ -150,11 +150,12 @@ b{color:var(--ink)}
 .m1brick.done .m1title{color:var(--muted);text-decoration:line-through}
 .m1crumb{font-size:11px;color:var(--faint);text-decoration:none}
 .m1det{padding:2px 0 14px 35px}
-.m1chips{display:flex;flex-direction:column;gap:6px;margin-bottom:10px}
-.m1chip{display:flex;gap:10px;align-items:baseline;text-align:left;background:var(--soft);border:1px solid var(--line);border-radius:9px;padding:8px 11px;cursor:pointer;font-family:inherit;transition:border-color .15s;width:100%}
-.m1chip:hover{border-color:var(--phos-dim)}
-.m1chip-k{flex:0 0 auto;font-family:var(--mono);font-size:10px;font-weight:800;letter-spacing:.05em;color:var(--phos);text-transform:uppercase;min-width:34px}
-.m1chip-v{font-size:13px;color:var(--ink);line-height:1.45;word-break:break-word}
+.m1reslist{display:flex;flex-direction:column;gap:11px;margin-bottom:12px}
+.m1res{display:flex;gap:11px}
+.m1res-k{flex:0 0 38px;font-family:var(--mono);font-size:10px;font-weight:800;letter-spacing:.05em;color:var(--phos);text-transform:uppercase;padding-top:9px}
+.m1refs{flex:1;display:flex;flex-direction:column;gap:5px;min-width:0}
+.m1ref{text-align:left;background:var(--soft);border:1px solid var(--line);border-radius:8px;padding:7px 10px;font-size:12.5px;color:var(--ink);line-height:1.4;cursor:pointer;font-family:inherit;transition:border-color .15s;word-break:break-word}
+.m1ref:hover{border-color:var(--phos-dim)}
 .m1acts{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:8px}
 .m1act{display:inline-block;background:var(--phos-soft);border:1px solid var(--phos-dim);color:var(--phos);border-radius:9px;padding:7px 12px;font-size:12.5px;font-weight:700;font-family:inherit;cursor:pointer;text-decoration:none;transition:all .15s}
 .m1act:hover{background:var(--phos);color:var(--on-accent)}
@@ -1658,7 +1659,10 @@ function toggleM1(id){S.vdone=S.vdone||{};if(S.vdone[id]){delete S.vdone[id];if(
   save();render();}
 function m1Brick(b,courseName){
   const done=!!S.vdone[b.id];let det="";
-  if(b.refs){det+='<div class="m1chips">';M1RES.forEach(r=>{if(b.refs[r[0]])det+='<button class="m1chip" data-copyref="'+escAttr(b.refs[r[0]])+'" title="Copy this reference"><span class="m1chip-k">'+r[1]+'</span><span class="m1chip-v">'+escHTML(b.refs[r[0]])+'</span></button>';});det+='</div>';}
+  if(b.refs){det+='<div class="m1reslist">';M1RES.forEach(r=>{const raw=b.refs[r[0]];const arr=Array.isArray(raw)?raw:(raw?[raw]:[]);
+    if(arr.length){det+='<div class="m1res"><div class="m1res-k">'+r[1]+'</div><div class="m1refs">';
+      arr.forEach(x=>{det+='<button class="m1ref" data-copyref="'+escAttr(x)+'" title="Copy this reference">'+escHTML(x)+'</button>';});
+      det+='</div></div>';}});det+='</div>';}
   let acts="";
   if(b.rx)acts+='<a class="m1act" href="'+escAttr(b.rx)+'" target="_blank" rel="noopener">Open ScholarRx ↗</a>';
   if(b.tag)acts+='<button class="m1act" data-copytag="'+escAttr(b.tag)+'">Copy AnKing tags</button>';
@@ -2026,7 +2030,7 @@ function doResetAll(){
     S.cfgs=snap.cfgs;S.active=snap.active;S.cfg=S.active?S.cfgs[S.active]:null;_prevSig=progressSig();save();
     if(S.cfg){reflow();render();}else renderWelcome();toast("Restored ✓");});
 }
-const BUILD="2026-07-16a";
+const BUILD="2026-07-16b";
 function openMenu(){
   const email=Cloud.user&&Cloud.user.email;
   const html='<div class="sheet"><div class="sheethd">Menu</div>'
