@@ -158,7 +158,9 @@ b{color:var(--ink)}
 .m1det{padding:2px 0 14px 35px}
 .m1reslist{display:flex;flex-direction:column;gap:14px;margin-bottom:12px}
 .m1res-k{font-family:var(--mono);font-size:10px;font-weight:800;letter-spacing:.08em;color:var(--phos);text-transform:uppercase;margin-bottom:6px}
-.m1refs{display:flex;flex-direction:column;gap:5px;min-width:0}
+.m1refs{display:flex;flex-direction:column;gap:9px;min-width:0}
+.m1grp-h{font-size:12px;color:var(--muted);font-weight:600;margin:0 0 5px;line-height:1.35;word-break:break-word}
+.m1grpitems{display:flex;flex-direction:column;gap:5px;padding-left:11px;border-left:2px solid var(--line)}
 .m1ref{text-align:left;background:var(--soft);border:1px solid var(--line);border-radius:8px;padding:7px 10px;font-size:12.5px;color:var(--ink);line-height:1.4;cursor:pointer;font-family:inherit;transition:border-color .15s;word-break:break-word}
 .m1ref:hover{border-color:var(--phos-dim)}
 .m1acts{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:8px}
@@ -1662,11 +1664,19 @@ function m1Overall(){let t=0,d=0;if(M1DATA)M1DATA.courses.forEach(c=>c.collectio
 function toggleM1(id){S.vdone=S.vdone||{};if(S.vdone[id]){delete S.vdone[id];if(S.vdoneDate)delete S.vdoneDate[id];}
   else{S.vdone[id]=true;S.vdoneDate=S.vdoneDate||{};S.vdoneDate[id]=todayISO();markStudiedToday();}
   save();render();}
+function m1RefRow(disp,full){return '<button class="m1ref" data-copyref="'+escAttr(full)+'" title="Copy this reference">'+escHTML(disp)+'</button>';}
 function m1Brick(b,courseName){
   const done=!!S.vdone[b.id];let det="";
-  if(b.refs){det+='<div class="m1reslist">';M1RES.forEach(r=>{const raw=b.refs[r[0]];const arr=Array.isArray(raw)?raw:(raw?[raw]:[]);
-    if(arr.length){det+='<div class="m1res"><div class="m1res-k">'+r[1]+'</div><div class="m1refs">';
-      arr.forEach(x=>{det+='<button class="m1ref" data-copyref="'+escAttr(x)+'" title="Copy this reference">'+escHTML(x)+'</button>';});
+  if(b.refs){det+='<div class="m1reslist">';M1RES.forEach(r=>{const raw=b.refs[r[0]];const groups=Array.isArray(raw)?raw:(raw?[raw]:[]);
+    if(groups.length){det+='<div class="m1res"><div class="m1res-k">'+r[1]+'</div><div class="m1refs">';
+      groups.forEach(gr=>{
+        if(typeof gr==="string"){det+=m1RefRow(gr,gr);return;}
+        const p=gr.p||"",items=gr.i||[];
+        if(!p){items.forEach(x=>{det+=m1RefRow(x,x);});}
+        else if(items.length===1){const full=p+" > "+items[0];det+=m1RefRow(full,full);}
+        else{det+='<div class="m1grp"><div class="m1grp-h">'+escHTML(p)+'</div><div class="m1grpitems">';
+          items.forEach(x=>{det+=m1RefRow(x,p+" > "+x);});det+='</div></div>';}
+      });
       det+='</div></div>';}});det+='</div>';}
   let acts="";
   if(b.rx)acts+='<a class="m1act" href="'+escAttr(b.rx)+'" target="_blank" rel="noopener">Open ScholarRx ↗</a>';
@@ -2038,7 +2048,7 @@ function doResetAll(){
     S.cfgs=snap.cfgs;S.active=snap.active;S.cfg=S.active?S.cfgs[S.active]:null;_prevSig=progressSig();save();
     if(S.cfg){reflow();render();}else renderWelcome();toast("Restored ✓");});
 }
-const BUILD="2026-07-16c";
+const BUILD="2026-07-16d";
 function openMenu(){
   const email=Cloud.user&&Cloud.user.email;
   const html='<div class="sheet"><div class="sheethd">Menu</div>'
