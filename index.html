@@ -271,6 +271,7 @@ b{color:var(--ink)}
 .badge{display:inline-block;font-size:9px;font-weight:800;padding:2px 5px;border-radius:5px;color:var(--on-accent)}
 .badge.bnb{background:var(--phos)}.badge.pa{background:var(--violet)}.badge.sk{background:var(--amber)}
 .anki{display:flex;align-items:center;gap:12px;margin-top:14px;padding-top:14px;border-top:1px solid var(--line)}
+.ankicard .anki{margin-top:0;padding-top:0;border-top:0}
 .akmeta{display:flex;flex-direction:column;min-width:0;flex:1}
 .aklab{font-size:13.5px;font-weight:700}
 .akcount{font-family:var(--mono);font-size:11px;color:var(--faint);overflow:hidden;text-overflow:ellipsis;letter-spacing:.02em}
@@ -989,6 +990,7 @@ function ankiBlock(iso,openTags){if(!hasRes("anking"))return "";const pairs=dayT
       + '</div></details>';
   }
   return h;}
+function ankiCardBlock(iso){if(!hasRes("anking"))return "";return '<div class="card ankicard">'+ankiBlock(iso,true)+'</div>';}
 function bindExtras(){
   document.querySelectorAll("[data-copy]").forEach(b=>b.onclick=(e)=>{e.stopPropagation();copyText(ankiSearch([b.getAttribute("data-copy")]),"Copied — paste into Anki’s Browse search");});
   document.querySelectorAll("[data-cpyall]").forEach(b=>b.onclick=(e)=>{e.stopPropagation();const t=dayTags(b.dataset.cpyall);if(!t.length){toast("No tags here");return;}copyText(ankiSearch(t),"Copied "+t.length+" AnKing tag"+(t.length>1?"s":"")+" — paste into Anki’s Browse search");});
@@ -1534,6 +1536,7 @@ function renderToday(){
     +paceHero()+'</div>';
   colA+='<div class="hchips">'+uworldChip()+'</div>'+loadCaveat();
   colA+=encouragement(todayRow,isOffToday,cs);
+  colA+=ankiCardBlock(focusISO);
   // UPPER-RIGHT — the checklist for the selected day
   if(!isFocusToday){
     colB+='<div class="focusbar"><span>Studying ahead — <b>'+escHTML(fmtLong(focusISO))+'</b></span><button class="link" id="backToday">‹ Back to today</button></div>';
@@ -1546,7 +1549,6 @@ function renderToday(){
       const anyDone=row.items.some(it=>isDone(it.id));
       colB+='<div class="card"><div class="cardhd">'+escHTML(heading)+' <span class="pill">'+row.min+' min</span>'+(anyDone?'<button class="hdreset" data-dayreset="'+row.iso+'" title="Uncheck everything on this day">Uncheck all</button>':'')+'</div>'
         +'<div class="vlist">'+itemRows(row.items,{iso:row.iso})+'</div>'
-        +ankiBlock(row.iso,true)
         +'<div class="rowtools">'+(todayRow&&!isOffToday?'<button class="btn ghost" id="offToday">Take today off</button>':'')+'</div></div>';
     } else if(!isOffToday){
       colB+='<div class="card"><div class="cardhd">Nothing scheduled today</div><p class="muted">Tap a day on the calendar to study ahead, or enjoy the breather.</p></div>';
@@ -1608,7 +1610,7 @@ function dayDetail(iso){
   else if(row.off)h+='<p class="muted">Day off — no videos scheduled. <button class="link" id="d_unoff">Cancel day off</button></p>';
   else if(row.rest)h+='<p class="muted small">Weekly rest day. Enjoy the breather.</p>';
   else if(row.review)h+='<p class="muted small">Review window — timed UWorld blocks + Anki. No new videos.</p>';
-  else if(row.items.length)h+='<div class="vlist">'+itemRows(row.items,{iso:iso})+'</div>'+ankiBlock(iso)+'<div class="rowtools"><button class="btn ghost" id="d_off">Take this day off</button></div>';
+  else if(row.items.length)h+='<div class="vlist">'+itemRows(row.items,{iso:iso})+'</div>'+'<div class="rowtools"><button class="btn ghost" id="d_off">Take this day off</button></div>';
   else h+='<p class="muted small">Nothing scheduled this day.</p>';
   return h+'</div>';
 }
@@ -2237,7 +2239,7 @@ function doResetAll(){
     S.cfgs=snap.cfgs;S.active=snap.active;S.cfg=S.active?S.cfgs[S.active]:null;_prevSig=progressSig();save();
     if(S.cfg){reflow();render();}else renderWelcome();toast("Restored ✓");});
 }
-const BUILD="2026-07-16m";
+const BUILD="2026-07-16n";
 function openMenu(){
   const email=Cloud.user&&Cloud.user.email;
   const html='<div class="sheet"><div class="sheethd">Menu</div>'
