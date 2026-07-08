@@ -129,6 +129,38 @@ b{color:var(--ink)}
 .cheer-tx b{color:var(--ink);font-weight:700}
 .cheer-by{color:var(--text-2);font-style:italic;white-space:nowrap}
 
+/* M1 Command Center */
+.m1wrap{margin-top:4px}
+.m1search{margin:14px 0}
+.m1search input{width:100%;background:var(--bg2);border:1px solid var(--line2);color:var(--ink);border-radius:11px;padding:12px 14px;font-size:15px;font-family:inherit}
+.m1search input:focus{outline:none;border-color:var(--phos);box-shadow:0 0 0 3px var(--phos-soft)}
+.m1courses{display:flex;flex-direction:column;gap:10px}
+.m1course{display:block;width:100%;text-align:left;background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:15px 16px;cursor:pointer;transition:border-color .15s}
+.m1course:hover{border-color:var(--phos-dim)}
+.m1course-n{font-family:var(--font-display);font-size:19px;font-weight:600;color:var(--ink)}
+.m1course-m{font-size:12.5px;color:var(--muted);margin:3px 0 10px}
+.m1coursebar{height:7px}
+.m1course-p{font-size:12px;color:var(--muted);margin-top:7px;font-variant-numeric:tabular-nums}
+.m1back{background:none;border:none;color:var(--phos);font-family:inherit;font-size:14px;cursor:pointer;padding:10px 0 4px}
+.m1cnt{color:var(--muted);font-weight:600;font-size:12px;font-variant-numeric:tabular-nums}
+.m1set{font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--faint);margin:12px 0 4px}
+.m1brick{border-top:1px solid var(--line)}
+.m1bh{display:flex;align-items:center;gap:11px;padding:8px 0}
+.m1title{flex:1;text-align:left;background:none;border:none;color:var(--ink);font-family:inherit;font-size:14.5px;line-height:1.35;cursor:pointer;padding:2px 0;display:flex;flex-direction:column;gap:2px}
+.m1brick.done .m1title{color:var(--muted);text-decoration:line-through}
+.m1crumb{font-size:11px;color:var(--faint);text-decoration:none}
+.m1det{padding:2px 0 14px 35px}
+.m1chips{display:flex;flex-direction:column;gap:6px;margin-bottom:10px}
+.m1chip{display:flex;gap:10px;align-items:baseline;text-align:left;background:var(--soft);border:1px solid var(--line);border-radius:9px;padding:8px 11px;cursor:pointer;font-family:inherit;transition:border-color .15s;width:100%}
+.m1chip:hover{border-color:var(--phos-dim)}
+.m1chip-k{flex:0 0 auto;font-family:var(--mono);font-size:10px;font-weight:800;letter-spacing:.05em;color:var(--phos);text-transform:uppercase;min-width:34px}
+.m1chip-v{font-size:13px;color:var(--ink);line-height:1.45;word-break:break-word}
+.m1acts{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:8px}
+.m1act{display:inline-block;background:var(--phos-soft);border:1px solid var(--phos-dim);color:var(--phos);border-radius:9px;padding:7px 12px;font-size:12.5px;font-weight:700;font-family:inherit;cursor:pointer;text-decoration:none;transition:all .15s}
+.m1act:hover{background:var(--phos);color:var(--on-accent)}
+.m1lec{font-size:12.5px;color:var(--muted);font-style:italic}
+.m1loading,.m1offline{text-align:center;padding:54px 18px}
+
 /* ring (analog gauge) */
 .ring{display:block}
 .statpct{display:flex;flex-direction:column;align-items:center;gap:3px;min-width:64px}
@@ -749,7 +781,8 @@ function enterAccount(u){
   SKEY="cc_state:"+u.uid;            // isolate this account's cache on shared devices
   loadState(SKEY);
   _prevSig=progressSig();
-  if(S.cfg){reflow();render();}else renderWelcome();
+  if(S.active==="m1"){loadM1();render();}
+  else if(S.cfg){reflow();render();}else renderWelcome();
   Cloud.subscribe();                 // pull this account's cloud data + offer import if new
 }
 Cloud.ref=function(){return Cloud.db.collection("users").doc(Cloud.user.uid);};
@@ -888,15 +921,16 @@ function uncheckDay(iso){const row=SCHED&&SCHED.dayMap[iso];if(!row||!row.items.
 
 /* ---------- top bar + nav ---------- */
 function chrome(active){
-  const tabs=[["today","Today"],["plan","Calendar"],["stats","Stats"],["adjust","Plan"]];
-  if(S.active==="nbme")tabs.push(["step","Step"]);
-  const nm=(S.active==="nbme")?"Home":hubName(S.active||"step1");
+  let tabs;
+  if(S.active==="m1"){tabs=[["browse","Browse"],["progress","Progress"]];}
+  else{tabs=[["today","Today"],["plan","Calendar"],["stats","Stats"],["adjust","Plan"]];if(S.active==="nbme")tabs.push(["step","Step"]);}
+  const nm=(S.active==="nbme"||S.active==="m1")?"Home":hubName(S.active||"step1");
   return '<div class="topbar">'+'<button class="brandbtn" id="brandBtn" title="Switch hub">‹ <span class="brandnm">'+escHTML(nm)+'</span></button>'
    +'<div class="topright"><span class="led" title="online"></span><button class="iconbtn" id="menuBtn" aria-label="menu">⋮</button></div></div>'
    +'<div class="nav">'+tabs.map(t=>'<button class="navb '+(active===t[0]?"on":"")+'" data-view="'+t[0]+'">'+t[1]+'</button>').join('')+'</div>';}
 
 function wireChrome(){
-  document.querySelectorAll(".navb").forEach(b=>b.onclick=()=>{VIEW=b.dataset.view;render();});
+  document.querySelectorAll(".navb").forEach(b=>b.onclick=()=>{if(S.active==="m1"){M1VIEW=b.dataset.view;}else{VIEW=b.dataset.view;}render();});
   const mb=document.getElementById("menuBtn");if(mb)mb.onclick=openMenu;
   const bb=document.getElementById("brandBtn");if(bb)bb.onclick=renderWelcome;
   document.querySelectorAll("[data-goready]").forEach(b=>b.onclick=()=>{VIEW="stats";render();});
@@ -907,6 +941,7 @@ function wireChrome(){
 
 /* ---------- TODAY ---------- */
 function render(){
+  if(S.active==="m1"){renderM1();return;}
   if(!S.cfg){renderWelcome();return;}
   reflow();
   if(VIEW==="ready"||VIEW==="progress")VIEW="stats"; // legacy views merged into Stats
@@ -1587,6 +1622,129 @@ function hubCardSoon(name,desc){
   return '<div class="hubcard soon" aria-disabled="true"><div class="hubtop"><div class="hubname">'+escHTML(name)+'</div><span class="soontag">Coming soon</span></div>'
     +'<div class="hubsub">'+escHTML(desc)+'</div></div>';
 }
+/* ============================================================
+   M1 COMMAND CENTER — first-year resource browser + progress.
+   The Brody mastersheet is a resource cross-reference (no video
+   durations), so M1 is a browser + light tracking, NOT a paced
+   scheduler. Progress rides the shared id-keyed S.vdone map with
+   an "m1:" prefix, so cloud sync needs zero schema change. Data
+   lives in an external m1data.json (lazy-fetched, SW-cached).
+   ============================================================ */
+let M1DATA=null,M1LOADING=false,M1ERR=false,M1FLAT=[];
+let M1VIEW="browse",M1COURSE=null,M1Q="",M1OPEN={},M1REFOCUS=false;
+const M1RES=[["bnb","B&B"],["pathoma","Path"],["osmosis","Osm"],["sketchy","Sk"],["bootcamp","BC"],["dm","DM"],["fa","FA"]];
+function loadM1(cb){
+  if(M1DATA){cb&&cb();return;}
+  if(M1LOADING)return;
+  M1LOADING=true;M1ERR=false;
+  fetch("m1data.json").then(r=>{if(!r.ok)throw 0;return r.json();})
+    .then(d=>{M1DATA=d;M1LOADING=false;buildM1Index();cb&&cb();if(S.active==="m1")render();})
+    .catch(()=>{M1LOADING=false;M1ERR=true;if(S.active==="m1")render();});
+}
+function buildM1Index(){M1FLAT=[];if(!M1DATA)return;M1DATA.courses.forEach(c=>c.collections.forEach(C=>C.sets.forEach(s=>s.bricks.forEach(b=>{
+  M1FLAT.push({b:b,cn:c.name,hay:(b.t+" "+c.name+" "+C.name).toLowerCase()});}))));}
+function enterM1(){S.active="m1";S.cfg=null;M1VIEW="browse";M1COURSE=null;M1Q="";save();loadM1();render();}
+function m1StudiedCount(){let n=0;for(const k in (S.vdone||{}))if(k.indexOf("m1:")===0)n++;return n;}
+function m1HubCard(){
+  const n=m1StudiedCount();
+  const sub=n>0?(n+" topics in progress · resources & Anki tags"):"First-year resources & Anki tags across 11 courses";
+  return '<button class="hubcard set" data-m1enter="1"><div class="hubname">M1 Command Center</div>'
+    +'<div class="hubsub">'+sub+'</div><div class="hubgo">Enter →</div></button>';
+}
+function m1CourseStat(c){let t=0,d=0;c.collections.forEach(C=>C.sets.forEach(s=>s.bricks.forEach(b=>{t++;if(S.vdone[b.id])d++;})));return {total:t,done:d,pct:t?Math.round(d/t*100):0};}
+function m1Overall(){let t=0,d=0;if(M1DATA)M1DATA.courses.forEach(c=>c.collections.forEach(C=>C.sets.forEach(s=>s.bricks.forEach(b=>{t++;if(S.vdone[b.id])d++;}))));return {total:t,done:d,pct:t?Math.round(d/t*100):0};}
+function toggleM1(id){S.vdone=S.vdone||{};if(S.vdone[id]){delete S.vdone[id];if(S.vdoneDate)delete S.vdoneDate[id];}
+  else{S.vdone[id]=true;S.vdoneDate=S.vdoneDate||{};S.vdoneDate[id]=todayISO();markStudiedToday();}
+  save();render();}
+function m1Brick(b,courseName){
+  const done=!!S.vdone[b.id];let det="";
+  if(b.refs){det+='<div class="m1chips">';M1RES.forEach(r=>{if(b.refs[r[0]])det+='<button class="m1chip" data-copyref="'+escAttr(b.refs[r[0]])+'" title="Copy this reference"><span class="m1chip-k">'+r[1]+'</span><span class="m1chip-v">'+escHTML(b.refs[r[0]])+'</span></button>';});det+='</div>';}
+  let acts="";
+  if(b.rx)acts+='<a class="m1act" href="'+escAttr(b.rx)+'" target="_blank" rel="noopener">Open ScholarRx ↗</a>';
+  if(b.tag)acts+='<button class="m1act" data-copytag="'+escAttr(b.tag)+'">Copy AnKing tags</button>';
+  if(acts)det+='<div class="m1acts">'+acts+'</div>';
+  if(b.lec)det+='<div class="m1lec">Lecture: '+escHTML(b.lec)+'</div>';
+  if(!det)det='<div class="muted small">No mapped resources for this topic yet.</div>';
+  return '<div class="m1brick'+(done?" done":"")+'">'
+    +'<div class="m1bh"><button class="chk '+(done?"on":"")+'" data-m1chk="'+escAttr(b.id)+'" aria-label="mark studied">'+(done?"✓":"")+'</button>'
+    +'<button class="m1title" data-m1open="'+escAttr(b.id)+'">'+escHTML(b.t)+(courseName?'<span class="m1crumb">'+escHTML(courseName)+'</span>':"")+'</button></div>'
+    +'<div class="m1det" data-det="'+escAttr(b.id)+'"'+(M1OPEN[b.id]?"":" hidden")+'>'+det+'</div></div>';
+}
+function m1SearchBox(){return '<div class="m1search"><input type="search" id="m1q" placeholder="Search all topics…" value="'+escAttr(M1Q)+'"></div>';}
+function m1CourseList(){
+  let h=m1SearchBox()+'<div class="cardhd">M1 courses</div><div class="m1courses">';
+  M1DATA.courses.forEach(c=>{const st=m1CourseStat(c);
+    h+='<button class="m1course" data-m1course="'+c.key+'"><div class="m1course-n">'+escHTML(c.name)+'</div>'
+      +'<div class="m1course-m">'+c.n+' topics · '+c.collections.length+' collections</div>'
+      +'<div class="bartrack m1coursebar"><div class="barfill" style="width:'+st.pct+'%"></div></div>'
+      +'<div class="m1course-p">'+st.done+' / '+st.total+' studied</div></button>';});
+  return '<div class="m1wrap">'+h+'</div></div>';
+}
+function m1CourseView(key){
+  const c=M1DATA.courses.find(x=>x.key===key);if(!c)return m1CourseList();
+  const st=m1CourseStat(c);
+  let h='<button class="m1back" data-m1back="1">‹ All courses</button>'
+    +'<div class="cardhd">'+escHTML(c.name)+' <span class="pill">'+st.done+' / '+st.total+'</span></div>';
+  c.collections.forEach(C=>{let inner="";
+    C.sets.forEach(s=>{if(s.name&&s.name!=="—")inner+='<div class="m1set">'+escHTML(s.name)+'</div>';
+      s.bricks.forEach(b=>{inner+=m1Brick(b,"");});});
+    let t=0,d=0;C.sets.forEach(s=>s.bricks.forEach(b=>{t++;if(S.vdone[b.id])d++;}));
+    h+=fold("m1c:"+key+":"+C.name,escHTML(C.name)+' <span class="m1cnt">'+d+' / '+t+'</span>',inner,false);});
+  return '<div class="m1wrap">'+h+'</div>';
+}
+function m1SearchResults(){
+  const q=M1Q.toLowerCase();let out=[];
+  for(let i=0;i<M1FLAT.length;i++){if(M1FLAT[i].hay.indexOf(q)>=0){out.push(M1FLAT[i]);if(out.length>=80)break;}}
+  let h=m1SearchBox()+'<div class="cardhd">Results <span class="pill">'+out.length+(out.length>=80?"+":"")+'</span></div>';
+  if(!out.length)h+='<p class="muted">No topics match “'+escHTML(M1Q)+'”.</p>';
+  out.forEach(f=>{h+=m1Brick(f.b,f.cn);});
+  return '<div class="m1wrap">'+h+'</div>';
+}
+function m1TargetLine(o){
+  S.settings=S.settings||{};const iso=S.settings.m1TargetISO;const rem=o.total-o.done;
+  if(!iso)return '<div class="herostat ok"><span class="hsdot"></span><span>No target set. <button class="link" id="m1settarget">Set a target date</button> for a suggested daily pace.</span></div>';
+  const days=Math.max(1,daysBetween(todayISO(),iso));const per=Math.ceil(rem/days);
+  if(rem<=0)return '<div class="herostat ok"><span class="hsdot"></span><span>All topics studied. <button class="link" id="m1cleartarget">Clear target</button></span></div>';
+  return '<div class="herostat '+(per>25?"warn":"ok")+'"><span class="hsdot"></span><span>~'+per+' topics/day to finish '+rem+' by '+escHTML(fmtDate(iso))+'. <button class="link" id="m1cleartarget">Clear</button></span></div>';
+}
+function m1PickTarget(){openDatePicker({value:S.settings&&S.settings.m1TargetISO||"",min:todayISO(),title:"M1 target date",onPick:iso=>{S.settings=S.settings||{};S.settings.m1TargetISO=iso;save();render();}});}
+function m1Progress(){
+  const o=m1Overall();const cs=currentStreak();
+  let h='<div class="hero"><div class="big">'+o.pct+'<span>% of M1 topics studied</span></div>'
+    +'<div class="sub">'+o.done+' / '+o.total+' topics'+(cs>0?" · "+cs+"-day streak":"")+'</div>'+m1TargetLine(o)+'</div>';
+  const qq=QUOTES[daySeed()%QUOTES.length];h+=cheerHTML(qq.t,qq.a);
+  h+='<div class="card"><div class="cardhd">By course</div><div class="bars">';
+  M1DATA.courses.forEach(c=>{const st=m1CourseStat(c);const pct=st.total?Math.round(st.done/st.total*100):0;
+    h+='<div class="bar"><div class="barlab">'+escHTML(c.name)+'</div><div class="bartrack"><div class="barfill" style="width:'+pct+'%"></div></div><div class="barpct">'+pct+'%</div></div>';});
+  h+='</div></div>';
+  return '<div class="m1wrap">'+h+'</div>';
+}
+function renderM1(){
+  if(!M1DATA){loadM1();
+    const inner=M1ERR?'<div class="m1offline"><div class="cardhd" style="justify-content:center">Connect once to load M1</div><p class="muted">The M1 resource library needs one online visit to download. Reconnect and reopen this hub.</p></div>'
+      :'<div class="m1loading"><p class="muted">Loading the M1 library…</p></div>';
+    app.innerHTML=chrome("browse")+'<div class="wrap">'+inner+'</div>';wireChrome();return;}
+  let body;
+  if(M1VIEW==="progress")body=m1Progress();
+  else body=M1Q?m1SearchResults():(M1COURSE?m1CourseView(M1COURSE):m1CourseList());
+  app.innerHTML=chrome(M1VIEW)+'<div class="wrap">'+body+'</div>';
+  wireChrome();wireM1();
+}
+function wireM1(){
+  const q=document.getElementById("m1q");
+  if(q)q.oninput=()=>{M1Q=q.value.trim();M1REFOCUS=true;render();};
+  if(M1REFOCUS){M1REFOCUS=false;const el=document.getElementById("m1q");if(el){el.focus();const v=el.value;el.value="";el.value=v;}}
+  document.querySelectorAll("[data-m1course]").forEach(b=>b.onclick=()=>{M1COURSE=b.dataset.m1course;M1Q="";render();});
+  document.querySelectorAll("[data-m1back]").forEach(b=>b.onclick=()=>{M1COURSE=null;render();});
+  document.querySelectorAll("[data-m1open]").forEach(b=>b.onclick=()=>{const id=b.dataset.m1open;M1OPEN[id]=!M1OPEN[id];
+    const d=document.querySelector('[data-det="'+(window.CSS&&CSS.escape?CSS.escape(id):id)+'"]');if(d)d.hidden=!M1OPEN[id];});
+  document.querySelectorAll("[data-m1chk]").forEach(b=>b.onclick=e=>{e.stopPropagation();toggleM1(b.dataset.m1chk);});
+  document.querySelectorAll("[data-copyref]").forEach(b=>b.onclick=e=>{e.stopPropagation();copyText(b.getAttribute("data-copyref"),"Reference copied — paste into that app’s search");});
+  document.querySelectorAll("[data-copytag]").forEach(b=>b.onclick=e=>{e.stopPropagation();copyText(b.getAttribute("data-copytag"),"AnKing tags copied — paste into Anki’s Browse search");});
+  const stt=document.getElementById("m1settarget");if(stt)stt.onclick=m1PickTarget;
+  const clt=document.getElementById("m1cleartarget");if(clt)clt.onclick=()=>{if(S.settings)delete S.settings.m1TargetISO;save();render();};
+}
+
 /* ---------- custom date picker (calendar popover; fast month + year nav) ---------- */
 let PICK_YM=null,PICK_SEL="",PICK_MIN=null,PICK_CB=null,PICK_TITLE="";
 function fmtDate(iso){if(!iso)return"";const d=isoToDate(iso);return MON[d.getMonth()]+" "+d.getDate()+", "+d.getFullYear();}
@@ -1704,12 +1862,13 @@ function renderWelcome(){
   if(S.active){S.active=null;S.cfg=null;save();}
   let body='<div class="welcome"><div class="wbrand">Low Yield Only</div>'
     +'<div class="wservire"><span>SERVIRE</span></div>'
-    +'<div class="hubs">'+hubCard("nbme")+hubCardSoon("M1 Scheduler","First-year block scheduling \u2014 in the works.")+'</div>'
+    +'<div class="hubs">'+hubCard("nbme")+m1HubCard()+'</div>'
     +'<div class="wfoot">'+((Cloud.user&&Cloud.user.email)?('<div class="acct">Signed in as '+escHTML(Cloud.user.email)+'</div>'):'')+'<button class="wfootlink" id="w_step1">Step 1 Command Center (legacy)</button><button class="wfootlink" id="w_restore">Restore a backup</button>'+((Cloud.user&&Cloud.user.email)?'<button class="wfootlink" id="w_signout">Sign out</button>':'')+'</div>'
     +'</div>';
   app.innerHTML='<div class="wrap welcomewrap">'+body+'</div>';
   document.querySelectorAll("[data-enter]").forEach(b=>b.onclick=()=>enterHub(b.dataset.enter));
   document.querySelectorAll("[data-setup]").forEach(b=>b.onclick=()=>startOnboard(b.dataset.setup));
+  document.querySelectorAll("[data-m1enter]").forEach(b=>b.onclick=enterM1);
   const wso=document.getElementById("w_signout");if(wso)wso.onclick=confirmSignOut;
   const ws=document.getElementById("w_step1");if(ws)ws.onclick=()=>enterHub("step1");
   const wr=document.getElementById("w_restore");if(wr)wr.onclick=()=>{const inp=document.getElementById("fileIn");if(inp){inp.value="";inp.click();}};
@@ -1867,7 +2026,7 @@ function doResetAll(){
     S.cfgs=snap.cfgs;S.active=snap.active;S.cfg=S.active?S.cfgs[S.active]:null;_prevSig=progressSig();save();
     if(S.cfg){reflow();render();}else renderWelcome();toast("Restored ✓");});
 }
-const BUILD="2026-07-15g";
+const BUILD="2026-07-16a";
 function openMenu(){
   const email=Cloud.user&&Cloud.user.email;
   const html='<div class="sheet"><div class="sheethd">Menu</div>'
