@@ -90,6 +90,8 @@ b{color:var(--ink)}
 
 /* top bar + nav */
 .topbar{position:sticky;top:0;z-index:20;display:flex;flex-wrap:wrap;align-items:center;gap:10px;padding:13px 16px 0;background:color-mix(in srgb,var(--surface-raised) 82%,transparent);backdrop-filter:blur(16px) saturate(1.2);-webkit-backdrop-filter:blur(16px) saturate(1.2);border-bottom:1px solid var(--line)}
+.topbar.solo{padding-bottom:13px}
+.topbar.solo .topright{margin-left:auto}
 .brandbtn{background:none;border:0;color:var(--muted);font-weight:800;font-size:13px;cursor:pointer;padding:12px 10px;margin:-12px -10px;display:flex;align-items:center;gap:7px;min-width:0;overflow:hidden;border-radius:10px}
 .brandbtn .brandnm{color:var(--ink);font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-family:var(--mono);font-size:12.5px;text-transform:uppercase;letter-spacing:.1em}
 .brandbtn:hover{color:var(--phos)} .brandbtn:hover .brandnm{color:var(--phos)}
@@ -810,6 +812,7 @@ function enterAccount(u){
   loadState(SKEY);
   _prevSig=progressSig();
   if(S.active==="m1"){loadM1();render();}
+  else if(S.active==="stepd"){render();}
   else if(S.cfg){reflow();render();}else renderWelcome();
   Cloud.subscribe();                 // pull this account's cloud data + offer import if new
 }
@@ -952,10 +955,11 @@ function uncheckDay(iso){const row=SCHED&&SCHED.dayMap[iso];if(!row||!row.items.
 function chrome(active){
   let tabs;
   if(S.active==="m1"){tabs=[["browse","Browse"],["daily","Daily"],["grades","Grades"],["progress","Progress"]];}
-  else{tabs=[["today","Today"],["plan","Calendar"],["stats","Stats"],["adjust","Plan"]];if(S.active==="nbme")tabs.push(["step","Step"]);}
-  const nm=(S.active==="nbme"||S.active==="m1")?"Home":hubName(S.active||"step1");
-  return '<div class="topbar">'+'<button class="brandbtn" id="brandBtn" title="Switch hub">‹ <span class="brandnm">'+escHTML(nm)+'</span></button>'
-   +'<div class="nav">'+tabs.map(t=>'<button class="navb '+(active===t[0]?"on":"")+'" data-view="'+t[0]+'">'+t[1]+'</button>').join('')+'</div>'
+  else if(S.active==="stepd"){tabs=[];}
+  else{tabs=[["today","Today"],["plan","Calendar"],["stats","Stats"],["adjust","Plan"]];}
+  const nm=(S.active==="nbme"||S.active==="m1"||S.active==="stepd")?"Home":hubName(S.active||"step1");
+  return '<div class="topbar'+(tabs.length?'':' solo')+'">'+'<button class="brandbtn" id="brandBtn" title="Switch hub">‹ <span class="brandnm">'+escHTML(nm)+'</span></button>'
+   +(tabs.length?'<div class="nav">'+tabs.map(t=>'<button class="navb '+(active===t[0]?"on":"")+'" data-view="'+t[0]+'">'+t[1]+'</button>').join('')+'</div>':'')
    +'<div class="topright"><span class="led" title="online"></span><button class="iconbtn" id="menuBtn" aria-label="menu">⋮</button></div>'
    +'</div>';}
 
@@ -972,15 +976,15 @@ function wireChrome(){
 /* ---------- TODAY ---------- */
 function render(){
   if(S.active==="m1"){renderM1();return;}
+  if(S.active==="stepd"){renderStepHub();return;}
   if(!S.cfg){renderWelcome();return;}
   reflow();
   if(VIEW==="ready"||VIEW==="progress")VIEW="stats"; // legacy views merged into Stats
-  if(VIEW==="step"&&S.active!=="nbme")VIEW="today"; // STEP tab is Brody-only
+  if(VIEW==="step")VIEW="today"; // Step is now its own hub
   if(VIEW==="today")renderToday();
   else if(VIEW==="plan")renderPlan();
   else if(VIEW==="stats")renderStats();
   else if(VIEW==="adjust")renderAdjust();
-  else if(VIEW==="step")renderStep();
   else renderToday();
   wireChrome();
 }
@@ -1218,10 +1222,13 @@ function qbankCard(title,pfx,roll,resetId){
     +(bars?('<div class="uwhd">By system — accuracy</div><div class="bars">'+bars+'</div>'):'<p class="muted small">Log a block to start tracking per-system accuracy.</p>')
     +'</div>';
 }
-function renderStep(){
+function renderStepHub(){
+  S.settings=S.settings||{};const iso=S.settings.stepExamISO;
+  const left=iso?Math.max(0,daysBetween(todayISO(),iso)):null;
   const list=assessList(DSCOPE);const la=list.length?list[list.length-1]:null;const v=readinessVerdict(la?la.pct:null);
+  const hero='<div class="hero"><div class="big">'+(left!=null?left:"—")+' <span>days to Step 1</span></div>'
+    +'<div class="sub">'+(iso?('Exam '+escHTML(fmtDate(iso))+' · <button class="link" id="sd_date">Change date</button>'):'<button class="link" id="sd_date">Set your exam date</button>')+'</div></div>';
   let colA='';
-  colA+='<div class="card soft"><div class="cardhd">STEP dedicated</div><p class="muted small" style="margin-top:0">Your dedicated Step 1 prep — NBME self-assessments, UWorld, and AMBOSS — tracked separately from your block work.</p></div>';
   colA+='<div class="card"><div class="cardhd">NBME self-assessments'+(list.length?'<button class="hdreset" id="sst_scores">Reset</button>':'')+'</div>'
     +'<div class="status '+v.cls+'">'+(la?('Latest: <b>'+la.pct+'%</b> on '+escHTML(la.form)+' ('+fmtShort(la.dateISO)+') — '+v.text+'.'):'No self-assessment logged yet. Your NBME forms are the single best predictor of your Step score.')+'</div>'
     +(list.length>=2?scoreTrend(list)+'<div class="placeleg"><span class="pl pl-a">Your scores</span></div>':'')
@@ -1231,9 +1238,9 @@ function renderStep(){
   let colB='';
   colB+=qbankCard("UWorld — dedicated","su",uworldRollup(DSCOPE),"sst_uw");
   colB+=qbankCard("AMBOSS","sa",ambossRollup(DSCOPE),"sst_am");
-  colB+='<div class="card soft"><div class="cardhd">Dedicated video plan <span class="pill">WIP</span></div><p class="muted small" style="margin-top:0">A structured video list for your dedicated period is coming — still mapping out what dedicated actually looks like. For now, use your block plan for content.</p></div>';
-  app.innerHTML=chrome("step")+'<div class="wrap"><div class="cols"><div>'+colA+'</div><div>'+colB+'</div></div></div>';
+  app.innerHTML=chrome("")+'<div class="wrap">'+hero+'<div class="cols"><div>'+colA+'</div><div>'+colB+'</div></div></div>';
   bindStep();
+  const sd=document.getElementById("sd_date");if(sd)sd.onclick=()=>openDatePicker({value:iso||"",min:todayISO(),title:"Step 1 exam date",onPick:(d)=>{S.settings.stepExamISO=d;save();render();}});
 }
 function bindQbank(pfx,draft,addFn,totalFn){
   const sy=document.getElementById(pfx+"_sys");if(sy)sy.onchange=()=>{draft.sys=sy.value;};
@@ -1681,6 +1688,15 @@ function m1HubCard(){
   return '<button class="hubcard set" data-m1enter="1"><div class="hubname">M1 Resource Hub</div>'
     +'<div class="hubsub">'+sub+'</div><div class="hubgo">Enter →</div></button>';
 }
+function enterStepD(){S.active="stepd";S.cfg=null;save();render();}
+function stepDHubCard(){
+  S.settings=S.settings||{};const iso=S.settings.stepExamISO;
+  const left=iso?Math.max(0,daysBetween(todayISO(),iso)):null;
+  const list=assessList(DSCOPE);const la=list.length?list[list.length-1]:null;
+  const sub=(left!=null)?(left+" days to Step 1"):(la?("Latest NBME "+la.pct+"%"):"Dedicated NBME · UWorld · AMBOSS tracking");
+  return '<button class="hubcard set" data-stepd="1"><div class="hubname">Step 1 Dedicated</div>'
+    +'<div class="hubsub">'+escHTML(sub)+'</div><div class="hubgo">Enter →</div></button>';
+}
 function m1CourseStat(c){let t=0,d=0;c.collections.forEach(C=>C.sets.forEach(s=>s.bricks.forEach(b=>{t++;if(S.vdone[b.id])d++;})));return {total:t,done:d,pct:t?Math.round(d/t*100):0};}
 function m1Overall(){let t=0,d=0;if(M1DATA)M1DATA.courses.forEach(c=>c.collections.forEach(C=>C.sets.forEach(s=>s.bricks.forEach(b=>{t++;if(S.vdone[b.id])d++;}))));return {total:t,done:d,pct:t?Math.round(d/t*100):0};}
 function toggleM1(id){S.vdone=S.vdone||{};if(S.vdone[id]){delete S.vdone[id];if(S.vdoneDate)delete S.vdoneDate[id];}
@@ -1912,13 +1928,14 @@ function renderWelcome(){
   if(S.active){S.active=null;S.cfg=null;save();}
   let body='<div class="welcome"><div class="wbrand">Low Yield Only</div>'
     +'<div class="wservire"><span>SERVIRE</span></div>'
-    +'<div class="hubs">'+hubCard("nbme")+m1HubCard()+'</div>'
+    +'<div class="hubs">'+hubCard("nbme")+m1HubCard()+stepDHubCard()+'</div>'
     +'<div class="wfoot">'+((Cloud.user&&Cloud.user.email)?('<div class="acct">Signed in as '+escHTML(Cloud.user.email)+'</div>'):'')+'<button class="wfootlink" id="w_about">About</button><button class="wfootlink" id="w_step1">Step 1 Command Center (legacy)</button><button class="wfootlink" id="w_restore">Restore a backup</button>'+((Cloud.user&&Cloud.user.email)?'<button class="wfootlink" id="w_signout">Sign out</button>':'')+'</div>'
     +'</div>';
   app.innerHTML='<div class="wrap welcomewrap">'+body+'</div>';
   document.querySelectorAll("[data-enter]").forEach(b=>b.onclick=()=>enterHub(b.dataset.enter));
   document.querySelectorAll("[data-setup]").forEach(b=>b.onclick=()=>startOnboard(b.dataset.setup));
   document.querySelectorAll("[data-m1enter]").forEach(b=>b.onclick=enterM1);
+  document.querySelectorAll("[data-stepd]").forEach(b=>b.onclick=enterStepD);
   const wso=document.getElementById("w_signout");if(wso)wso.onclick=confirmSignOut;
   const ws=document.getElementById("w_step1");if(ws)ws.onclick=()=>enterHub("step1");
   const wr=document.getElementById("w_restore");if(wr)wr.onclick=()=>{const inp=document.getElementById("fileIn");if(inp){inp.value="";inp.click();}};
@@ -2094,7 +2111,7 @@ function doResetAll(){
     S.cfgs=snap.cfgs;S.active=snap.active;S.cfg=S.active?S.cfgs[S.active]:null;_prevSig=progressSig();save();
     if(S.cfg){reflow();render();}else renderWelcome();toast("Restored ✓");});
 }
-const BUILD="2026-07-16h";
+const BUILD="2026-07-16i";
 function openMenu(){
   const email=Cloud.user&&Cloud.user.email;
   const html='<div class="sheet"><div class="sheethd">Menu</div>'
