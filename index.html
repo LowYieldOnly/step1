@@ -89,15 +89,15 @@ button{font-family:inherit;color:inherit}
 b{color:var(--ink)}
 
 /* top bar + nav */
-.topbar{position:sticky;top:0;z-index:20;display:flex;align-items:center;justify-content:space-between;gap:10px;padding:13px 16px;background:color-mix(in srgb,var(--surface-raised) 82%,transparent);backdrop-filter:blur(16px) saturate(1.2);-webkit-backdrop-filter:blur(16px) saturate(1.2);border-bottom:1px solid var(--line)}
+.topbar{position:sticky;top:0;z-index:20;display:flex;flex-wrap:wrap;align-items:center;gap:10px;padding:13px 16px 0;background:color-mix(in srgb,var(--surface-raised) 82%,transparent);backdrop-filter:blur(16px) saturate(1.2);-webkit-backdrop-filter:blur(16px) saturate(1.2);border-bottom:1px solid var(--line)}
 .brandbtn{background:none;border:0;color:var(--muted);font-weight:800;font-size:13px;cursor:pointer;padding:12px 10px;margin:-12px -10px;display:flex;align-items:center;gap:7px;min-width:0;overflow:hidden;border-radius:10px}
 .brandbtn .brandnm{color:var(--ink);font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-family:var(--mono);font-size:12.5px;text-transform:uppercase;letter-spacing:.1em}
 .brandbtn:hover{color:var(--phos)} .brandbtn:hover .brandnm{color:var(--phos)}
-.topright{display:flex;align-items:center;gap:11px;flex:0 0 auto}
+.topright{display:flex;align-items:center;gap:11px;flex:0 0 auto;order:1;margin-left:auto}
 .led{width:8px;height:8px;border-radius:50%;background:var(--phos-dim)}
 .iconbtn{background:none;border:0;font-size:21px;color:var(--muted);cursor:pointer;padding:11px 12px;margin:-9px -6px;line-height:1;border-radius:10px;transition:color .15s}
 .iconbtn:hover{color:var(--phos)}
-.nav{position:sticky;top:50px;z-index:19;display:flex;gap:5px;padding:9px 12px;background:color-mix(in srgb,var(--surface-raised) 82%,transparent);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border-bottom:1px solid var(--line);max-width:680px;margin:0 auto}
+.nav{order:2;flex:0 0 100%;display:flex;gap:5px;margin:11px -16px 0;padding:8px 16px;border-top:1px solid var(--line)}
 .navb{flex:1;background:none;border:0;color:var(--faint);font-weight:600;font-size:13px;letter-spacing:.01em;font-family:var(--sans);padding:10px 6px;cursor:pointer;transition:color .18s,box-shadow .18s}
 .navb:hover{color:var(--muted)}
 .navb.on{color:var(--phos);box-shadow:inset 0 -2px 0 var(--phos)}
@@ -460,7 +460,10 @@ b{color:var(--ink)}
 .cols>div{min-width:0}
 @media (min-width:960px){
   .wrap{max-width:1072px}
-  .nav{max-width:1072px}
+  .topbar{flex-wrap:nowrap;padding:9px max(16px,calc((100% - 1072px)/2))}
+  .nav{order:1;flex:1 1 auto;justify-content:center;margin:0;padding:0;border-top:0}
+  .navb{flex:0 0 auto;padding:10px 18px}
+  .topright{order:2;margin-left:0}
   .cols{display:grid;grid-template-columns:1fr 1fr;gap:0 16px;align-items:start}
   .cols .daydetail{margin-top:0}
 }
@@ -567,7 +570,7 @@ let AUTHED=false;             // required sign-in gate
    Client gate for honest users; real enforcement lives in firestore.rules.
    Edit these lists to manage access. */
 const ACCESS_DOMAINS=["students.ecu.edu"];
-const ACCESS_EMAILS=["dylanwlewis@protonmail.com"]; // admins / exceptions
+const ACCESS_EMAILS=["dylanwlewis@protonmail.com","trial@lowyieldonly.com"]; // admins / exceptions + shared trial account
 function emailAllowed(email){email=(email||"").trim().toLowerCase();if(!email)return false;
   if(ACCESS_EMAILS.indexOf(email)>=0)return true;
   const d=email.split("@")[1]||"";return ACCESS_DOMAINS.indexOf(d)>=0;}
@@ -877,12 +880,13 @@ function vName(it){let n=it.name;if(it.res==="pathoma")n=n.replace(/^\d+\.\d+(-\
 /* merge consecutive chunk items of the same label into one row */
 function mergeItems(items){const out=[],idx={};items.forEach(it=>{const k=it.res+"|"+it.name;if(idx[k]==null){idx[k]=out.length;out.push({res:it.res,name:it.name,min:it.min,ids:[it.id],sys:it.sys,fa:it.fa,tag:it.tag});}else{const m=out[idx[k]];m.min+=it.min;m.ids.push(it.id);}});return out;}
 function itemRows(items,opts){opts=opts||{};if(!items.length)return '<div class="muted small">Nothing scheduled.</div>';
+  const dayAttr=opts.iso?' data-day="'+escAttr(opts.iso)+'"':"";
   const order=["bnb","pathoma","skmicro","skpharm"];const merged=mergeItems(items);const groups={};merged.forEach(it=>{(groups[it.res]=groups[it.res]||[]).push(it);});
   const keys=order.filter(k=>groups[k]).concat(Object.keys(groups).filter(k=>order.indexOf(k)<0));
   return keys.map(k=>'<div class="vgrp"><div class="vghdr">'+resLabel(k)+'</div>'+groups[k].map(it=>{
     const done=it.ids.every(isDone);const shaky=it.ids.some(isShaky);const idsAttr=escAttr(it.ids.join(","));
     return '<div class="vrow '+(done?"done":"")+(shaky?" shaky":"")+'">'
-      +'<button class="chk '+(done?"on":"")+'" data-ids="'+idsAttr+'" aria-label="watched">'+(done?"✓":"")+'</button>'
+      +'<button class="chk '+(done?"on":"")+'" data-ids="'+idsAttr+'"'+dayAttr+' aria-label="watched">'+(done?"✓":"")+'</button>'
       +'<div class="vmeta"><span class="vn">'+escHTML(vName(it))+'</span>'
       +'<span class="vmin">'+it.min+'m</span></div>'
       +'<button class="flagb '+(shaky?"on":"")+'" data-flag="'+idsAttr+'" aria-label="flag for review" title="Flag as shaky — collects in your review queue">⚑</button>'
@@ -912,7 +916,7 @@ function bindExtras(){
   document.querySelectorAll("[data-akiso]").forEach(b=>b.onclick=(e)=>{e.stopPropagation();const iso=b.dataset.akiso;S.akdone=S.akdone||{};if(S.akdone[iso])delete S.akdone[iso];else S.akdone[iso]=true;save();const on=!!S.akdone[iso];b.classList.toggle("on",on);b.textContent=on?"✓":"";});
 }
 
-function toggleItems(ids){const all=ids.every(isDone);S.vdoneDate=S.vdoneDate||{};ids.forEach(id=>{if(all){delete S.vdone[id];delete S.vdoneDate[id];}else{S.vdone[id]=true;delete S.vskip[id];S.vdoneDate[id]=todayISO();}});if(!all)markStudiedToday();save();reflow();render();}
+function toggleItems(ids,pinISO){const all=ids.every(isDone);const pin=pinISO||todayISO();S.vdoneDate=S.vdoneDate||{};ids.forEach(id=>{if(all){delete S.vdone[id];delete S.vdoneDate[id];}else{S.vdone[id]=true;delete S.vskip[id];S.vdoneDate[id]=pin;}});if(!all)markStudiedToday();save();reflow();render();}
 
 /* ---------- collapsible sections (state survives re-renders) ---------- */
 const FOLDS={};
@@ -947,8 +951,9 @@ function chrome(active){
   else{tabs=[["today","Today"],["plan","Calendar"],["stats","Stats"],["adjust","Plan"]];if(S.active==="nbme")tabs.push(["step","Step"]);}
   const nm=(S.active==="nbme"||S.active==="m1")?"Home":hubName(S.active||"step1");
   return '<div class="topbar">'+'<button class="brandbtn" id="brandBtn" title="Switch hub">‹ <span class="brandnm">'+escHTML(nm)+'</span></button>'
-   +'<div class="topright"><span class="led" title="online"></span><button class="iconbtn" id="menuBtn" aria-label="menu">⋮</button></div></div>'
-   +'<div class="nav">'+tabs.map(t=>'<button class="navb '+(active===t[0]?"on":"")+'" data-view="'+t[0]+'">'+t[1]+'</button>').join('')+'</div>';}
+   +'<div class="nav">'+tabs.map(t=>'<button class="navb '+(active===t[0]?"on":"")+'" data-view="'+t[0]+'">'+t[1]+'</button>').join('')+'</div>'
+   +'<div class="topright"><span class="led" title="online"></span><button class="iconbtn" id="menuBtn" aria-label="menu">⋮</button></div>'
+   +'</div>';}
 
 function wireChrome(){
   document.querySelectorAll(".navb").forEach(b=>b.onclick=()=>{if(S.active==="m1"){M1VIEW=b.dataset.view;}else{VIEW=b.dataset.view;}render();});
@@ -1411,7 +1416,7 @@ function renderToday(){
   if(row && row.items.length){
     const anyDone=row.items.some(it=>isDone(it.id));
     colB+='<div class="card"><div class="cardhd">'+escHTML(heading)+' <span class="pill">'+row.min+' min</span>'+(anyDone?'<button class="hdreset" data-dayreset="'+row.iso+'" title="Uncheck everything on this day">Uncheck all</button>':'')+'</div>'
-      +'<div class="vlist">'+itemRows(row.items)+'</div>'
+      +'<div class="vlist">'+itemRows(row.items,{iso:row.iso})+'</div>'
       +ankiBlock(row.iso,true)
       +'<div class="rowtools">'+(todayRow&&!isOffToday?'<button class="btn ghost" id="offToday">Take today off</button>':'')+'</div></div>';
   } else if(!isOffToday){
@@ -1423,7 +1428,7 @@ function renderToday(){
   const o2=document.getElementById("unoff");if(o2)o2.onclick=()=>dayOffToggle(todayISO(),false);
 }
 function toggleShakyItems(ids){const all=ids.every(isShaky);S.vshaky=S.vshaky||{};ids.forEach(id=>{if(all)delete S.vshaky[id];else S.vshaky[id]=true;});save();}
-function bindVlist(){document.querySelectorAll(".chk[data-ids]").forEach(b=>b.onclick=()=>toggleItems(b.dataset.ids.split(",")));
+function bindVlist(){document.querySelectorAll(".chk[data-ids]").forEach(b=>b.onclick=()=>toggleItems(b.dataset.ids.split(","),b.dataset.day));
   document.querySelectorAll(".flagb[data-flag]").forEach(b=>b.onclick=()=>{toggleShakyItems(b.dataset.flag.split(","));render();});
   document.querySelectorAll("[data-dayreset]").forEach(b=>b.onclick=()=>uncheckDay(b.dataset.dayreset));}
 
@@ -1466,7 +1471,7 @@ function dayDetail(iso){
   else if(row.off)h+='<p class="muted">Day off — no videos scheduled. <button class="link" id="d_unoff">Cancel day off</button></p>';
   else if(row.rest)h+='<p class="muted small">Weekly rest day. Enjoy the breather.</p>';
   else if(row.review)h+='<p class="muted small">Review window — timed UWorld blocks + Anki. No new videos.</p>';
-  else if(row.items.length)h+='<div class="vlist">'+itemRows(row.items)+'</div>'+ankiBlock(iso)+'<div class="rowtools"><button class="btn ghost" id="d_off">Take this day off</button></div>';
+  else if(row.items.length)h+='<div class="vlist">'+itemRows(row.items,{iso:iso})+'</div>'+ankiBlock(iso)+'<div class="rowtools"><button class="btn ghost" id="d_off">Take this day off</button></div>';
   else h+='<p class="muted small">Nothing scheduled this day.</p>';
   return h+'</div>';
 }
@@ -1971,6 +1976,7 @@ function renderOnboard(){
     +'<div class="flab">Weekly rest days</div><div class="togrow">'+dows+'</div>'
     +'<label class="mt">UWorld / review buffer — finish content this many study days before your exam<input type="number" id="o_rev" min="0" step="1" value="'+ob.reviewDays+'"></label>'
     +'</div></div>';
+  body+='<div class="card soft" id="o_reco"><div class="cardhd">Recommended pace</div>'+obPreview()+'</div>';
   body+='<div class="card"><div class="cardhd">Resources</div><div class="togrow">'
     +resBtn("bnb","Boards &amp; Beyond")+resBtn("pathoma","Pathoma")+resBtn("sketchy","Sketchy")+resBtn("fa","First Aid")+resBtn("anking","AnKing")+resBtn("uworld","UWorld")
     +'</div><p class="muted small">Turn on the video resources you use \u2014 they interleave into the plan.</p></div>';
@@ -1981,7 +1987,6 @@ function renderOnboard(){
     + '<button class="link" id="sordReset">\u21ba Reset to recommended order</button>';
   body+='<div class="card"><div class="cardhd">'+(obIsNbme()?'Units &amp; study order':'Study order &amp; systems')+'</div>'
     + fold("ob_sys",ob.systems.length+' of '+SYS.length+' systems selected \u2014 edit / reorder',obSysInner,obIsNbme())+'</div>';}
-  body+='<div class="card soft" id="o_reco"><div class="cardhd">Recommended pace</div>'+obPreview()+'</div>';
   body+='<button class="btn big" id="o_go">'+goLbl+'</button>';
   body+='</div>';
   app.innerHTML='<div class="wrap onb">'+body+'</div>';
@@ -2079,7 +2084,7 @@ function doResetAll(){
     S.cfgs=snap.cfgs;S.active=snap.active;S.cfg=S.active?S.cfgs[S.active]:null;_prevSig=progressSig();save();
     if(S.cfg){reflow();render();}else renderWelcome();toast("Restored ✓");});
 }
-const BUILD="2026-07-16f";
+const BUILD="2026-07-16g";
 function openMenu(){
   const email=Cloud.user&&Cloud.user.email;
   const html='<div class="sheet"><div class="sheethd">Menu</div>'
