@@ -492,7 +492,10 @@ b{color:var(--ink)}
   :root[data-theme="dark"] body::before{background:radial-gradient(1150px 660px at 50% -10%, color-mix(in srgb,var(--accent) 26%,transparent), transparent 60%),
       radial-gradient(760px 520px at 90% 4%, color-mix(in srgb,var(--accent-soft) 16%,transparent), transparent 58%),
       radial-gradient(ellipse 130% 120% at 50% 38%, transparent 52%, rgba(0,0,0,.32) 100%);}
-  body::after{content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;opacity:.04;mix-blend-mode:soft-light;
+  /* fine grain — no mix-blend-mode: soft-light re-blends the entire viewport
+     whenever a hovered card is promoted to its own layer, which reads as the
+     background flashing shades on hover. Plain low-opacity overlay is static. */
+  body::after{content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;opacity:.025;
     background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");background-size:150px 150px}
 
   /* 4 app frame: content becomes an elevated glassy panel on the aurora */
@@ -517,8 +520,11 @@ b{color:var(--ink)}
   .navb{padding:13px 26px;font-size:15px}
 
   /* 10-11 material: cards a step lighter than the panel, gold top edge on the hero, hover lift */
-  .card{background:color-mix(in srgb,var(--surface) 92%,var(--bg));transition:transform .18s ease,border-color .18s ease,box-shadow .2s ease}
-  .card:hover{transform:translateY(-2px);border-color:var(--border-strong);box-shadow:0 20px 44px -30px rgba(0,0,0,.75)}
+  /* hover = border tint only. A transform lift promotes the card to its own
+     compositing layer and forces backdrop/blend layers to recompute, which
+     flickered the whole screen on hover. Border-color is a cheap repaint. */
+  .card{background:color-mix(in srgb,var(--surface) 92%,var(--bg));transition:border-color .18s ease}
+  .card:hover{border-color:var(--border-strong)}
   .hero{overflow:visible}
   .hero::before{content:"";position:absolute;top:-1px;left:14px;right:14px;height:2px;border-radius:2px;background:linear-gradient(90deg,transparent,color-mix(in srgb,var(--gold) 70%,transparent),transparent)}
 
@@ -2245,7 +2251,7 @@ function doResetAll(){
     S.cfgs=snap.cfgs;S.active=snap.active;S.cfg=S.active?S.cfgs[S.active]:null;_prevSig=progressSig();save();
     if(S.cfg){reflow();render();}else renderWelcome();toast("Restored ✓");});
 }
-const BUILD="2026-07-16q";
+const BUILD="2026-07-16r";
 function openMenu(){
   const email=Cloud.user&&Cloud.user.email;
   const html='<div class="sheet"><div class="sheethd">Menu</div>'
