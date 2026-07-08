@@ -168,6 +168,10 @@ b{color:var(--ink)}
 .m1act:hover{background:var(--phos);color:var(--on-accent)}
 .m1lec{font-size:12.5px;color:var(--muted);font-style:italic}
 .m1loading,.m1offline{text-align:center;padding:54px 18px}
+.m1soon{text-align:center;max-width:30em;margin:44px auto;padding:34px 26px;background:var(--panel);border:1px solid var(--line);border-radius:var(--r)}
+.m1soon-tag{display:inline-block;font-family:var(--mono);font-size:10px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:var(--phos);background:var(--phos-soft);border:1px solid var(--phos-dim);border-radius:999px;padding:4px 11px;margin-bottom:15px}
+.m1soon-t{font-family:var(--font-display);font-size:22px;font-weight:600;color:var(--ink);margin-bottom:9px}
+.m1soon-d{font-size:14px;color:var(--text-2);line-height:1.6}
 
 /* ring (analog gauge) */
 .ring{display:block}
@@ -947,7 +951,7 @@ function uncheckDay(iso){const row=SCHED&&SCHED.dayMap[iso];if(!row||!row.items.
 /* ---------- top bar + nav ---------- */
 function chrome(active){
   let tabs;
-  if(S.active==="m1"){tabs=[["browse","Browse"],["progress","Progress"]];}
+  if(S.active==="m1"){tabs=[["browse","Browse"],["daily","Daily"],["grades","Grades"],["progress","Progress"]];}
   else{tabs=[["today","Today"],["plan","Calendar"],["stats","Stats"],["adjust","Plan"]];if(S.active==="nbme")tabs.push(["step","Step"]);}
   const nm=(S.active==="nbme"||S.active==="m1")?"Home":hubName(S.active||"step1");
   return '<div class="topbar">'+'<button class="brandbtn" id="brandBtn" title="Switch hub">‹ <span class="brandnm">'+escHTML(nm)+'</span></button>'
@@ -1765,9 +1769,15 @@ function renderM1(){
     app.innerHTML=chrome("browse")+'<div class="wrap">'+inner+'</div>';wireChrome();return;}
   let body;
   if(M1VIEW==="progress")body=m1Progress();
+  else if(M1VIEW==="daily")body=m1Soon("Daily flow checklist","A day-by-day rhythm: preview each lecture, watch it, run your Anki, repeat — with practice-problem days you schedule however you like across the unit. Tailored to your class lecture calendar, coming once it's added.");
+  else if(M1VIEW==="grades")body=m1Soon("Grade calculator","Keep a running tally of where you stand in each course as scores come in — your class grade spreadsheet, built right into the app.");
   else body=M1Q?m1SearchResults():(M1COURSE?m1CourseView(M1COURSE):m1CourseList());
   app.innerHTML=chrome(M1VIEW)+'<div class="wrap">'+body+'</div>';
   wireChrome();wireM1();
+}
+function m1Soon(title,desc){
+  return '<div class="m1wrap"><div class="m1soon"><div class="m1soon-tag">Coming soon</div>'
+    +'<div class="m1soon-t">'+escHTML(title)+'</div><p class="m1soon-d">'+escHTML(desc)+'</p></div></div>';
 }
 function wireM1(){
   const q=document.getElementById("m1q");
@@ -2084,7 +2094,7 @@ function doResetAll(){
     S.cfgs=snap.cfgs;S.active=snap.active;S.cfg=S.active?S.cfgs[S.active]:null;_prevSig=progressSig();save();
     if(S.cfg){reflow();render();}else renderWelcome();toast("Restored ✓");});
 }
-const BUILD="2026-07-16g";
+const BUILD="2026-07-16h";
 function openMenu(){
   const email=Cloud.user&&Cloud.user.email;
   const html='<div class="sheet"><div class="sheethd">Menu</div>'
