@@ -497,14 +497,17 @@ b{color:var(--ink)}
   /* 4 app frame: content becomes an elevated glassy panel on the aurora */
   .wrap:not(.welcomewrap):not(.onb){background:color-mix(in srgb,var(--surface) 52%,transparent);border:1px solid var(--border);border-radius:18px;box-shadow:inset 0 1px 0 color-mix(in srgb,#fff 5%,transparent),0 34px 90px -46px rgba(0,0,0,.7);padding:30px 30px 44px;margin-top:22px;margin-bottom:40px;-webkit-backdrop-filter:blur(7px);backdrop-filter:blur(7px)}
 
-  /* 5-6 dashboard grid: symmetrical equal-height columns */
-  .cols{grid-template-columns:1fr 1fr;gap:0 26px;align-items:stretch}
-  /* Study view: left column is a flex stack; the calendar fills to balance the checklist */
-  .colstudy{display:flex;flex-direction:column;gap:18px}
-  .colstudy>*{margin:0!important}
-  .colstudy .studycal{flex:1;display:flex;flex-direction:column;margin:0}
-  .colstudy .studycal .calgrid{flex:1;grid-auto-rows:minmax(42px,1fr)}
-  .colwork>*{margin-top:0}
+  /* 5-6 dashboard grid: symmetrical columns (Stats / Plan) */
+  .cols{grid-template-columns:1fr 1fr;gap:0 26px;align-items:start}
+  /* Study view quadrants: 3 blocks top-left, checklist top-right, calendar across the bottom */
+  .studygrid{display:grid;grid-template-columns:1fr 1fr;grid-template-areas:"blocks work" "cal cal";gap:20px 26px;align-items:start}
+  .studyblocks{grid-area:blocks;display:flex;flex-direction:column;gap:18px}
+  .studyblocks>*{margin:0!important}
+  .studywork{grid-area:work}
+  .studywork>*{margin:0!important}
+  .studycalz{grid-area:cal}
+  .studycalz>*{margin:0!important}
+  .studycalz .calgrid{grid-auto-rows:minmax(58px,auto)}
   /* larger header tabs */
   .navb{padding:13px 26px;font-size:15px}
 
@@ -1524,15 +1527,14 @@ function renderToday(){
   const focusISO=(CAL_SEL&&SCHED.dayMap[CAL_SEL])?CAL_SEL:todayISO();
   const isFocusToday=(focusISO===todayISO());
   let colA='',colB='';
-  // LEFT — countdown, log practice questions, quote, then the calendar (fills to balance)
+  // UPPER-LEFT — three stacked blocks: countdown, log practice questions, quote
   colA+='<div class="hero">'
     +'<div class="big">'+examLeft+' <span>days to '+escHTML(S.cfg.examLabel||(S.cfg.examType==="step1"?"Step 1":"your exam"))+'</span></div>'
     +'<div class="sub">'+overall().done+' / '+overall().total+' videos'+(cs>0?' · '+cs+'-day streak':' · '+overall().pct+'% complete')+'</div>'
     +paceHero()+'</div>';
   colA+='<div class="hchips">'+uworldChip()+'</div>'+loadCaveat();
   colA+=encouragement(todayRow,isOffToday,cs);
-  colA+=studyCalendar();
-  // RIGHT — the checklist for the selected day
+  // UPPER-RIGHT — the checklist for the selected day
   if(!isFocusToday){
     colB+='<div class="focusbar"><span>Studying ahead — <b>'+escHTML(fmtLong(focusISO))+'</b></span><button class="link" id="backToday">‹ Back to today</button></div>';
     colB+=dayDetail(focusISO);
@@ -1550,7 +1552,7 @@ function renderToday(){
       colB+='<div class="card"><div class="cardhd">Nothing scheduled today</div><p class="muted">Tap a day on the calendar to study ahead, or enjoy the breather.</p></div>';
     }
   }
-  app.innerHTML=chrome("today")+'<div class="wrap"><div class="cols"><div class="colstudy">'+colA+'</div><div class="colwork">'+colB+'</div></div></div>';
+  app.innerHTML=chrome("today")+'<div class="wrap"><div class="studygrid"><div class="studyblocks">'+colA+'</div><div class="studywork">'+colB+'</div><div class="studycalz">'+studyCalendar()+'</div></div></div>';
   bindVlist();bindExtras();
   const o1=document.getElementById("offToday");if(o1)o1.onclick=()=>dayOffToggle(todayISO(),true);
   const o2=document.getElementById("unoff");if(o2)o2.onclick=()=>dayOffToggle(todayISO(),false);
@@ -2235,7 +2237,7 @@ function doResetAll(){
     S.cfgs=snap.cfgs;S.active=snap.active;S.cfg=S.active?S.cfgs[S.active]:null;_prevSig=progressSig();save();
     if(S.cfg){reflow();render();}else renderWelcome();toast("Restored ✓");});
 }
-const BUILD="2026-07-16l";
+const BUILD="2026-07-16m";
 function openMenu(){
   const email=Cloud.user&&Cloud.user.email;
   const html='<div class="sheet"><div class="sheethd">Menu</div>'
