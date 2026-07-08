@@ -474,6 +474,63 @@ b{color:var(--ink)}
   .cols .daydetail{margin-top:0}
 }
 
+/* ============================================================
+   DESKTOP REFINEMENT (>=960px only — mobile is left untouched).
+   Atmosphere (aurora + grain + vignette), dashboard architecture
+   (framed panel + sticky rail), material depth, typographic scale.
+   ============================================================ */
+.deskonly{display:none}
+@media (min-width:960px){
+  /* 1-3 atmosphere: soft aurora, fine grain, gentle vignette behind all */
+  body::before{content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;
+    background:radial-gradient(1150px 660px at 50% -10%, color-mix(in srgb,var(--accent) 20%,transparent), transparent 60%),
+      radial-gradient(760px 520px at 90% 4%, color-mix(in srgb,var(--accent-soft) 12%,transparent), transparent 58%);}
+  :root[data-theme="dark"] body::before{background:radial-gradient(1150px 660px at 50% -10%, color-mix(in srgb,var(--accent) 26%,transparent), transparent 60%),
+      radial-gradient(760px 520px at 90% 4%, color-mix(in srgb,var(--accent-soft) 16%,transparent), transparent 58%),
+      radial-gradient(ellipse 130% 120% at 50% 38%, transparent 52%, rgba(0,0,0,.32) 100%);}
+  body::after{content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;opacity:.04;mix-blend-mode:soft-light;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");background-size:150px 150px}
+
+  /* 4 app frame: content becomes an elevated glassy panel on the aurora */
+  .wrap:not(.welcomewrap):not(.onb){background:color-mix(in srgb,var(--surface) 52%,transparent);border:1px solid var(--border);border-radius:18px;box-shadow:inset 0 1px 0 color-mix(in srgb,#fff 5%,transparent),0 34px 90px -46px rgba(0,0,0,.7);padding:30px 30px 44px;margin-top:22px;margin-bottom:40px;-webkit-backdrop-filter:blur(7px);backdrop-filter:blur(7px)}
+
+  /* 5-6 dashboard grid: sticky left rail + fluid main, rebalanced widths */
+  .cols{grid-template-columns:minmax(300px,360px) 1fr;gap:0 30px}
+  .cols>div:first-child{position:sticky;top:82px;align-self:start}
+
+  /* 10-11 material: cards a step lighter than the panel, gold top edge on the hero, hover lift */
+  .card{background:color-mix(in srgb,var(--surface) 92%,var(--bg));transition:transform .18s ease,border-color .18s ease,box-shadow .2s ease}
+  .card:hover{transform:translateY(-2px);border-color:var(--border-strong);box-shadow:0 20px 44px -30px rgba(0,0,0,.75)}
+  .hero{overflow:visible}
+  .hero::before{content:"";position:absolute;top:-1px;left:14px;right:14px;height:2px;border-radius:2px;background:linear-gradient(90deg,transparent,color-mix(in srgb,var(--gold) 70%,transparent),transparent)}
+
+  /* 9 grander hero + 12 typographic scale */
+  .hero .big{font-size:52px}
+  .hero .sub{font-size:14.5px}
+  .cardhd{font-size:19px}
+  .wrap:not(.welcomewrap):not(.onb) .cardhd{letter-spacing:-.01em}
+
+  /* 7-8 desktop-only rail widgets */
+  .deskonly{display:block}
+  .hmgrid{display:grid;grid-template-rows:repeat(7,1fr);grid-auto-flow:column;grid-auto-columns:1fr;gap:3px;margin-bottom:12px}
+  .hmcell{aspect-ratio:1;border-radius:2px;background:var(--ring-track)}
+  .hmcell.on{background:var(--accent)}
+  .hmcell.today{outline:1.5px solid var(--gold);outline-offset:1px}
+  .hmleg{display:flex;justify-content:space-between;font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums}
+  .mcgrid{display:grid;grid-template-columns:repeat(7,1fr);gap:3px;margin-bottom:12px}
+  .mcdow{font-size:9px;font-weight:700;letter-spacing:.05em;color:var(--faint);text-align:center;padding-bottom:2px}
+  .mccell{aspect-ratio:1;display:flex;align-items:center;justify-content:center;font-size:11px;color:var(--text-2);border-radius:6px;background:var(--surface-2);font-variant-numeric:tabular-nums}
+  .mccell.empty{background:none}
+  .mccell.load{background:var(--accent-bg);color:var(--accent-soft);font-weight:700}
+  .mccell.done{background:color-mix(in srgb,var(--success) 22%,transparent);color:var(--success)}
+  .mccell.review{background:color-mix(in srgb,var(--gold) 20%,transparent);color:var(--gold)}
+  .mccell.rest{opacity:.5}
+  .mccell.today{outline:1.5px solid var(--accent);outline-offset:-1px}
+  .mcleg{display:flex;gap:12px;font-size:11px;color:var(--muted)}
+  .mcleg i{display:inline-block;width:9px;height:9px;border-radius:2px;margin-right:4px;vertical-align:middle}
+  .mcd.load{background:var(--accent-bg)} .mcd.review{background:color-mix(in srgb,var(--gold) 40%,transparent)} .mcd.rest{background:var(--surface-2)}
+}
+
 /* collapsible sections */
 .fold>summary{list-style:none;cursor:pointer;font-family:var(--mono);font-size:11.5px;font-weight:700;color:var(--phos);padding:7px 0;text-transform:uppercase;letter-spacing:.05em}
 .fold>summary::-webkit-details-marker{display:none}
@@ -1401,6 +1458,31 @@ function encouragement(todayRow,isOff,streak){
   const q=QUOTES[daySeed()%QUOTES.length];
   return cheerHTML(q.t,q.a);
 }
+/* desktop rail widgets (hidden on mobile via .deskonly) */
+function streakHeatmap(){
+  const days=(S.streak&&S.streak.days)||{};const WEEKS=16;
+  let end=new Date();end.setHours(0,0,0,0);
+  let s=addDays(end,-(WEEKS*7-1));while(s.getDay()!==0)s=addDays(s,-1);
+  let cellsHTML="";let d=new Date(s);const endISO=isoFromDate(end);
+  while(isoFromDate(d)<=endISO){const iso=isoFromDate(d);const on=!!days[iso];
+    cellsHTML+='<div class="hmcell'+(on?" on":"")+(iso===endISO?" today":"")+'" title="'+iso+'"></div>';d=addDays(d,1);}
+  const total=Object.keys(days).filter(k=>days[k]).length;
+  return '<div class="card deskonly"><div class="cardhd">Study streak</div>'
+    +'<div class="hmgrid">'+cellsHTML+'</div>'
+    +'<div class="hmleg"><span>'+currentStreak()+'-day streak</span><span>'+total+' day'+(total===1?"":"s")+' studied</span></div></div>';
+}
+function miniCalendar(){
+  if(!SCHED)return "";const ym=todayISO().slice(0,7);const tISO=todayISO();
+  let g='<div class="mcgrid">'+["S","M","T","W","T","F","S"].map(x=>'<div class="mcdow">'+x+'</div>').join('');
+  monthMatrix(ym).forEach(iso=>{if(!iso){g+='<div class="mccell empty"></div>';return;}
+    const row=SCHED.dayMap[iso];let cls="";
+    if(row){if(row.off)cls="off";else if(row.rest)cls="rest";else if(row.review)cls="review";
+      else if(row.items.length){cls=row.items.every(it=>isDone(it.id))?"done":"load";}}
+    g+='<div class="mccell '+cls+(iso===tISO?" today":"")+'">'+(+iso.slice(8))+'</div>';});
+  g+='</div>';
+  return '<div class="card deskonly"><div class="cardhd">'+CAL_MONTHS[+ym.slice(5)-1]+'</div>'+g
+    +'<div class="mcleg"><span><i class="mcd load"></i>study</span><span><i class="mcd review"></i>review</span><span><i class="mcd rest"></i>rest</span></div></div>';
+}
 function renderToday(){
   const st=SCHED.stats; const cs=currentStreak();
   // today's assignment = the content day whose iso === today (or the first upcoming content day)
@@ -1421,6 +1503,7 @@ function renderToday(){
     +'<div class="sub">'+overall().done+' / '+overall().total+' videos'+(cs>0?' · '+cs+'-day streak':' · '+overall().pct+'% complete')+'</div>'
     +paceHero()+'</div>';
   colA+='<div class="hchips">'+uworldChip()+'</div>'+loadCaveat();
+  colA+=streakHeatmap()+miniCalendar();
   if(isOffToday){
     colB+='<div class="card"><div class="cardhd">'+(todayRow.off?'Day off':'Rest day')+' · '+fmtLong(todayISO())+'</div><p class="muted">No videos scheduled today.'+(todayRow.off?' <button class="link" id="unoff">Cancel day off</button>':'')+'</p></div>';
   }
@@ -2111,7 +2194,7 @@ function doResetAll(){
     S.cfgs=snap.cfgs;S.active=snap.active;S.cfg=S.active?S.cfgs[S.active]:null;_prevSig=progressSig();save();
     if(S.cfg){reflow();render();}else renderWelcome();toast("Restored ✓");});
 }
-const BUILD="2026-07-16i";
+const BUILD="2026-07-16j";
 function openMenu(){
   const email=Cloud.user&&Cloud.user.email;
   const html='<div class="sheet"><div class="sheethd">Menu</div>'
