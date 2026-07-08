@@ -137,7 +137,10 @@ b{color:var(--ink)}
 .m1courses{display:flex;flex-direction:column;gap:10px}
 .m1course{display:block;width:100%;text-align:left;background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:15px 16px;cursor:pointer;transition:border-color .15s}
 .m1course:hover{border-color:var(--phos-dim)}
+.m1course-t{display:flex;align-items:flex-start;justify-content:space-between;gap:10px}
 .m1course-n{font-family:var(--font-display);font-size:19px;font-weight:600;color:var(--ink)}
+.m1course-go{flex:0 0 auto;color:var(--faint);font-size:22px;line-height:1.1;font-weight:400}
+.m1course:hover .m1course-go{color:var(--phos)}
 .m1course-m{font-size:12.5px;color:var(--muted);margin:3px 0 10px}
 .m1coursebar{height:7px}
 .m1course-p{font-size:12px;color:var(--muted);margin-top:7px;font-variant-numeric:tabular-nums}
@@ -146,15 +149,20 @@ b{color:var(--ink)}
 .m1set{font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--faint);margin:12px 0 4px}
 .m1brick{border-top:1px solid var(--line)}
 .m1bh{display:flex;align-items:center;gap:11px;padding:8px 0}
-.m1title{flex:1;text-align:left;background:none;border:none;color:var(--ink);font-family:inherit;font-size:14.5px;line-height:1.35;cursor:pointer;padding:2px 0;display:flex;flex-direction:column;gap:2px}
-.m1brick.done .m1title{color:var(--muted);text-decoration:line-through}
+.m1title{flex:1;text-align:left;background:none;border:none;color:var(--ink);font-family:inherit;font-size:14.5px;line-height:1.35;cursor:pointer;padding:2px 0;display:flex;align-items:center;justify-content:space-between;gap:10px;min-width:0}
+.m1t-main{display:flex;flex-direction:column;gap:2px;min-width:0}
+.m1chev{flex:0 0 auto;color:var(--faint);font-size:11px;line-height:1;transition:transform .18s ease,color .18s ease}
+.m1brick.open .m1chev{transform:rotate(180deg);color:var(--phos)}
+.m1brick.done .m1title .m1t-main{color:var(--muted);text-decoration:line-through}
 .m1crumb{font-size:11px;color:var(--faint);text-decoration:none}
 .m1det{padding:2px 0 14px 35px}
-.m1chips{display:flex;flex-direction:column;gap:6px;margin-bottom:10px}
-.m1chip{display:flex;gap:10px;align-items:baseline;text-align:left;background:var(--soft);border:1px solid var(--line);border-radius:9px;padding:8px 11px;cursor:pointer;font-family:inherit;transition:border-color .15s;width:100%}
-.m1chip:hover{border-color:var(--phos-dim)}
-.m1chip-k{flex:0 0 auto;font-family:var(--mono);font-size:10px;font-weight:800;letter-spacing:.05em;color:var(--phos);text-transform:uppercase;min-width:34px}
-.m1chip-v{font-size:13px;color:var(--ink);line-height:1.45;word-break:break-word}
+.m1reslist{display:flex;flex-direction:column;gap:14px;margin-bottom:12px}
+.m1res-k{font-family:var(--mono);font-size:10px;font-weight:800;letter-spacing:.08em;color:var(--phos);text-transform:uppercase;margin-bottom:6px}
+.m1refs{display:flex;flex-direction:column;gap:9px;min-width:0}
+.m1grp-h{font-size:12px;color:var(--muted);font-weight:600;margin:0 0 5px;line-height:1.35;word-break:break-word}
+.m1grpitems{display:flex;flex-direction:column;gap:5px;padding-left:11px;border-left:2px solid var(--line)}
+.m1ref{text-align:left;background:var(--soft);border:1px solid var(--line);border-radius:8px;padding:7px 10px;font-size:12.5px;color:var(--ink);line-height:1.4;cursor:pointer;font-family:inherit;transition:border-color .15s;word-break:break-word}
+.m1ref:hover{border-color:var(--phos-dim)}
 .m1acts{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:8px}
 .m1act{display:inline-block;background:var(--phos-soft);border:1px solid var(--phos-dim);color:var(--phos);border-radius:9px;padding:7px 12px;font-size:12.5px;font-weight:700;font-family:inherit;cursor:pointer;text-decoration:none;transition:all .15s}
 .m1act:hover{background:var(--phos);color:var(--on-accent)}
@@ -1632,7 +1640,7 @@ function hubCardSoon(name,desc){
    ============================================================ */
 let M1DATA=null,M1LOADING=false,M1ERR=false,M1FLAT=[];
 let M1VIEW="browse",M1COURSE=null,M1Q="",M1OPEN={},M1REFOCUS=false;
-const M1RES=[["bnb","B&B"],["pathoma","Path"],["osmosis","Osm"],["sketchy","Sk"],["bootcamp","BC"],["dm","DM"],["fa","FA"]];
+const M1RES=[["bnb","Boards & Beyond"],["pathoma","Pathoma"],["osmosis","Osmosis"],["sketchy","Sketchy"],["bootcamp","Bootcamp"],["dm","Dirty Medicine"],["fa","First Aid"]];
 function loadM1(cb){
   if(M1DATA){cb&&cb();return;}
   if(M1LOADING)return;
@@ -1656,25 +1664,38 @@ function m1Overall(){let t=0,d=0;if(M1DATA)M1DATA.courses.forEach(c=>c.collectio
 function toggleM1(id){S.vdone=S.vdone||{};if(S.vdone[id]){delete S.vdone[id];if(S.vdoneDate)delete S.vdoneDate[id];}
   else{S.vdone[id]=true;S.vdoneDate=S.vdoneDate||{};S.vdoneDate[id]=todayISO();markStudiedToday();}
   save();render();}
+function m1RefRow(disp,full){return '<button class="m1ref" data-copyref="'+escAttr(full)+'" title="Copy this reference">'+escHTML(disp)+'</button>';}
 function m1Brick(b,courseName){
   const done=!!S.vdone[b.id];let det="";
-  if(b.refs){det+='<div class="m1chips">';M1RES.forEach(r=>{if(b.refs[r[0]])det+='<button class="m1chip" data-copyref="'+escAttr(b.refs[r[0]])+'" title="Copy this reference"><span class="m1chip-k">'+r[1]+'</span><span class="m1chip-v">'+escHTML(b.refs[r[0]])+'</span></button>';});det+='</div>';}
+  if(b.refs){det+='<div class="m1reslist">';M1RES.forEach(r=>{const raw=b.refs[r[0]];const groups=Array.isArray(raw)?raw:(raw?[raw]:[]);
+    if(groups.length){det+='<div class="m1res"><div class="m1res-k">'+r[1]+'</div><div class="m1refs">';
+      groups.forEach(gr=>{
+        if(typeof gr==="string"){det+=m1RefRow(gr,gr);return;}
+        const p=gr.p||"",items=gr.i||[];
+        if(!p){items.forEach(x=>{det+=m1RefRow(x,x);});}
+        else if(items.length===1){const full=p+" > "+items[0];det+=m1RefRow(full,full);}
+        else{det+='<div class="m1grp"><div class="m1grp-h">'+escHTML(p)+'</div><div class="m1grpitems">';
+          items.forEach(x=>{det+=m1RefRow(x,p+" > "+x);});det+='</div></div>';}
+      });
+      det+='</div></div>';}});det+='</div>';}
   let acts="";
   if(b.rx)acts+='<a class="m1act" href="'+escAttr(b.rx)+'" target="_blank" rel="noopener">Open ScholarRx ↗</a>';
   if(b.tag)acts+='<button class="m1act" data-copytag="'+escAttr(b.tag)+'">Copy AnKing tags</button>';
   if(acts)det+='<div class="m1acts">'+acts+'</div>';
   if(b.lec)det+='<div class="m1lec">Lecture: '+escHTML(b.lec)+'</div>';
   if(!det)det='<div class="muted small">No mapped resources for this topic yet.</div>';
-  return '<div class="m1brick'+(done?" done":"")+'">'
+  return '<div class="m1brick'+(done?" done":"")+(M1OPEN[b.id]?" open":"")+'">'
     +'<div class="m1bh"><button class="chk '+(done?"on":"")+'" data-m1chk="'+escAttr(b.id)+'" aria-label="mark studied">'+(done?"✓":"")+'</button>'
-    +'<button class="m1title" data-m1open="'+escAttr(b.id)+'">'+escHTML(b.t)+(courseName?'<span class="m1crumb">'+escHTML(courseName)+'</span>':"")+'</button></div>'
+    +'<button class="m1title" data-m1open="'+escAttr(b.id)+'" aria-label="show resources">'
+      +'<span class="m1t-main">'+escHTML(b.t)+(courseName?'<span class="m1crumb">'+escHTML(courseName)+'</span>':"")+'</span>'
+      +'<span class="m1chev" aria-hidden="true">▾</span></button></div>'
     +'<div class="m1det" data-det="'+escAttr(b.id)+'"'+(M1OPEN[b.id]?"":" hidden")+'>'+det+'</div></div>';
 }
 function m1SearchBox(){return '<div class="m1search"><input type="search" id="m1q" placeholder="Search all topics…" value="'+escAttr(M1Q)+'"></div>';}
 function m1CourseList(){
   let h=m1SearchBox()+'<div class="cardhd">M1 courses</div><div class="m1courses">';
   M1DATA.courses.forEach(c=>{const st=m1CourseStat(c);
-    h+='<button class="m1course" data-m1course="'+c.key+'"><div class="m1course-n">'+escHTML(c.name)+'</div>'
+    h+='<button class="m1course" data-m1course="'+c.key+'"><div class="m1course-t"><div class="m1course-n">'+escHTML(c.name)+'</div><span class="m1course-go" aria-hidden="true">›</span></div>'
       +'<div class="m1course-m">'+c.n+' topics · '+c.collections.length+' collections</div>'
       +'<div class="bartrack m1coursebar"><div class="barfill" style="width:'+st.pct+'%"></div></div>'
       +'<div class="m1course-p">'+st.done+' / '+st.total+' studied</div></button>';});
@@ -1737,7 +1758,8 @@ function wireM1(){
   document.querySelectorAll("[data-m1course]").forEach(b=>b.onclick=()=>{M1COURSE=b.dataset.m1course;M1Q="";render();});
   document.querySelectorAll("[data-m1back]").forEach(b=>b.onclick=()=>{M1COURSE=null;render();});
   document.querySelectorAll("[data-m1open]").forEach(b=>b.onclick=()=>{const id=b.dataset.m1open;M1OPEN[id]=!M1OPEN[id];
-    const d=document.querySelector('[data-det="'+(window.CSS&&CSS.escape?CSS.escape(id):id)+'"]');if(d)d.hidden=!M1OPEN[id];});
+    const d=document.querySelector('[data-det="'+(window.CSS&&CSS.escape?CSS.escape(id):id)+'"]');if(d)d.hidden=!M1OPEN[id];
+    const brick=b.closest(".m1brick");if(brick)brick.classList.toggle("open",!!M1OPEN[id]);});
   document.querySelectorAll("[data-m1chk]").forEach(b=>b.onclick=e=>{e.stopPropagation();toggleM1(b.dataset.m1chk);});
   document.querySelectorAll("[data-copyref]").forEach(b=>b.onclick=e=>{e.stopPropagation();copyText(b.getAttribute("data-copyref"),"Reference copied — paste into that app’s search");});
   document.querySelectorAll("[data-copytag]").forEach(b=>b.onclick=e=>{e.stopPropagation();copyText(b.getAttribute("data-copytag"),"AnKing tags copied — paste into Anki’s Browse search");});
@@ -2026,7 +2048,7 @@ function doResetAll(){
     S.cfgs=snap.cfgs;S.active=snap.active;S.cfg=S.active?S.cfgs[S.active]:null;_prevSig=progressSig();save();
     if(S.cfg){reflow();render();}else renderWelcome();toast("Restored ✓");});
 }
-const BUILD="2026-07-16a";
+const BUILD="2026-07-16d";
 function openMenu(){
   const email=Cloud.user&&Cloud.user.email;
   const html='<div class="sheet"><div class="sheethd">Menu</div>'
