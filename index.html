@@ -129,7 +129,7 @@ b{color:var(--ink)}
 .cheer-tx b{color:var(--ink);font-weight:700}
 .cheer-by{color:var(--text-2);font-style:italic;white-space:nowrap}
 
-/* M1 Command Center */
+/* M1 Resource Hub */
 .m1wrap{margin-top:4px}
 .m1search{margin:14px 0}
 .m1search input{width:100%;background:var(--bg2);border:1px solid var(--line2);color:var(--ink);border-radius:11px;padding:12px 14px;font-size:15px;font-family:inherit}
@@ -403,8 +403,10 @@ b{color:var(--ink)}
 .about{max-width:520px;margin:0 auto;text-align:center;padding-bottom:44px}
 .about .m1back{display:block;text-align:left;margin-bottom:16px}
 .about-brand{font-size:clamp(28px,7.5vw,40px);margin-top:4px}
-.about-lead{font-family:var(--font-display);font-style:italic;font-size:clamp(17px,4.4vw,21px);color:var(--text-2);line-height:1.5;margin:8px auto 28px;max-width:24em}
-.about-credits{display:flex;flex-direction:column;gap:16px;text-align:left;margin:0 auto 26px;max-width:27em}
+.about-lead{font-family:var(--font-display);font-style:italic;font-size:clamp(17px,4.4vw,21px);color:var(--text-2);line-height:1.5;margin:8px auto 18px;max-width:24em}
+.about-intro{font-size:14.5px;color:var(--text-2);line-height:1.65;margin:0 auto 30px;max-width:27em}
+.about-sec{font-family:var(--mono);font-size:10px;font-weight:800;letter-spacing:.16em;text-transform:uppercase;color:var(--faint);margin-bottom:14px}
+.about-credits{display:flex;flex-direction:column;gap:16px;text-align:left;margin:0 auto 30px;max-width:27em}
 .credit{border-left:2px solid var(--gold);padding-left:14px}
 .credit-role{font-family:var(--mono);font-size:10px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:var(--phos);margin-bottom:5px}
 .credit-name{font-size:14.5px;color:var(--ink);line-height:1.5}
@@ -1667,7 +1669,7 @@ function m1StudiedCount(){let n=0;for(const k in (S.vdone||{}))if(k.indexOf("m1:
 function m1HubCard(){
   const n=m1StudiedCount();
   const sub=n>0?(n+" topics in progress · resources & Anki tags"):"First-year resources & Anki tags across 11 courses";
-  return '<button class="hubcard set" data-m1enter="1"><div class="hubname">M1 Command Center</div>'
+  return '<button class="hubcard set" data-m1enter="1"><div class="hubname">M1 Resource Hub</div>'
     +'<div class="hubsub">'+sub+'</div><div class="hubgo">Enter →</div></button>';
 }
 function m1CourseStat(c){let t=0,d=0;c.collections.forEach(C=>C.sets.forEach(s=>s.bricks.forEach(b=>{t++;if(S.vdone[b.id])d++;})));return {total:t,done:d,pct:t?Math.round(d/t*100):0};}
@@ -1912,12 +1914,14 @@ function renderAbout(){
     +'<button class="m1back" id="a_back">‹ Back</button>'
     +'<div class="wbrand about-brand">Low Yield Only</div>'
     +'<div class="wservire"><span>SERVIRE</span></div>'
-    +'<p class="about-lead">Built by Brody medical students, for Brody medical students.</p>'
+    +'<p class="about-lead">By Brody medical students, for Brody medical students.</p>'
+    +'<p class="about-intro">Low Yield Only brings the study schedules and curated resources of the preclinical years together in one place — built to remain useful long after its creators have moved on.</p>'
+    +'<div class="about-sec">Credits</div>'
     +'<div class="about-credits">'
-      +'<div class="credit"><div class="credit-role">M2 Scheduler</div><div class="credit-name">Envisioned and organized by <b>Dylan Lewis</b> <span class="credit-cls">Class of 2029</span></div></div>'
-      +'<div class="credit"><div class="credit-role">M1 Resource Hub</div><div class="credit-name">Masterfully crafted by <b>Ash Beach</b> and <b>Caleb Dixon</b>, with implementation assistance by <b>Dylan Lewis</b> <span class="credit-cls">all Class of 2029</span></div></div>'
+      +'<div class="credit"><div class="credit-role">M2 Scheduler</div><div class="credit-name">Conceived and organized by <b>Dylan Lewis</b>.</div><div class="credit-cls">Class of 2029</div></div>'
+      +'<div class="credit"><div class="credit-role">M1 Resource Hub</div><div class="credit-name">Designed and built by <b>Ash Beach</b> and <b>Caleb Dixon</b>, with implementation support from <b>Dylan Lewis</b>.</div><div class="credit-cls">Class of 2029</div></div>'
     +'</div>'
-    +'<p class="about-goal">Our hope is that Low Yield Only endures as a shared resource for every Brody student in the years to come.</p>'
+    +'<p class="about-goal">Offered freely, in the hope that Low Yield Only endures as a shared resource for every Brody student in the years to come.</p>'
     +'</div>';
   app.innerHTML='<div class="wrap welcomewrap">'+body+'</div>';
   const ab=document.getElementById("a_back");if(ab)ab.onclick=renderWelcome;
@@ -2075,7 +2079,7 @@ function doResetAll(){
     S.cfgs=snap.cfgs;S.active=snap.active;S.cfg=S.active?S.cfgs[S.active]:null;_prevSig=progressSig();save();
     if(S.cfg){reflow();render();}else renderWelcome();toast("Restored ✓");});
 }
-const BUILD="2026-07-16e";
+const BUILD="2026-07-16f";
 function openMenu(){
   const email=Cloud.user&&Cloud.user.email;
   const html='<div class="sheet"><div class="sheethd">Menu</div>'
