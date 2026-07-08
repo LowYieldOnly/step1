@@ -1765,19 +1765,16 @@ function doResetAll(){
     S.cfgs=snap.cfgs;S.active=snap.active;S.cfg=S.active?S.cfgs[S.active]:null;_prevSig=progressSig();save();
     if(S.cfg){reflow();render();}else renderWelcome();toast("Restored ✓");});
 }
-const BUILD="2026-07-15c";
+const BUILD="2026-07-15d";
 function openMenu(){
   const email=Cloud.user&&Cloud.user.email;
   const inHub=!!S.active;
   const html='<div class="sheet"><div class="sheethd">Menu</div>'
     +(email?'<div class="mrow acctrow"><span class="acctlbl">Signed in</span><span class="acctml">'+escHTML(email)+'</span></div>':'')
-    +(inHub?'<button class="mrow" data-m="adjust">Edit this plan</button>':'')
-    +(S.active==="nbme"?'<button class="mrow" data-m="newunit">Start a new block</button>':'')
     +(inHub?'<button class="mrow" data-m="switch">'+(S.active==="nbme"?"Open Step 1 Command Center":"Back to M2 Scheduler")+'</button>':'')
     +'<button class="mrow" data-m="backup">Download a backup</button>'
     +'<button class="mrow" data-m="restore">Restore from a backup</button>'
     +'<button class="mrow" data-m="theme">'+(Theme.current()==="dark"?"Switch to light theme":"Switch to dark theme")+'</button>'
-    +'<button class="mrow" data-m="help">How this works</button>'
     +'<button class="mrow danger" data-m="reset">Reset all progress</button>'
     +'<button class="mrow" data-m="signout">Sign out</button>'
     +'<button class="mrow close" data-m="close">Close</button>'
@@ -1791,12 +1788,9 @@ function menuAct(m){
   if(m==="close")return;
   if(m==="theme"){Theme.toggle();}
   else if(m==="switch"){enterHub(S.active==="nbme"?"step1":"nbme");}
-  else if(m==="adjust"){VIEW="adjust";render();}
-  else if(m==="newunit"){startOnboard("nbme",true);}
   else if(m==="signout"){confirmSignOut();}
   else if(m==="backup"){const blob=new Blob([JSON.stringify(persistObj(),null,2)],{type:"application/json"});const u=URL.createObjectURL(blob);const a=document.createElement("a");a.href=u;a.download="lowyieldonly-backup-"+todayISO()+".json";a.click();URL.revokeObjectURL(u);toast("Backup downloaded");}
   else if(m==="restore"){const inp=document.getElementById("fileIn");inp.value="";inp.click();}
-  else if(m==="help"){modalSheet({title:"How this works",okLabel:"Got it",cancel:false,msg:"M2 Scheduler is your daily home for school blocks and NBME exams. Your plan is the remaining videos repacked from today to your exam date — check off what you watch and the rest re-distributes.\n\nDedicated Step 1 prep (NBME self-assessments, UWorld, AMBOSS) lives in the STEP tab. Log a UWorld block from Today or Stats to track block accuracy.\n\nReset all wipes everything and returns you to setup. The legacy Step 1 Command Center is still available from this menu. Progress syncs across your devices."});}
   else if(m==="reset"){modalSheet({title:"Reset everything?",danger:true,okLabel:"Erase & start over",msg:"This erases EVERYTHING across both hubs — every checkmark, Anki check, note, self-assessment score, UWorld block, review flag, your streak, AND your saved plans (exam dates, systems, settings), here and in your synced account.\n\nYou’ll be taken back to the start to build a fresh plan. You’ll get one chance to undo.",onOk:doResetAll});}
 }
 
