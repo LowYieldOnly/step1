@@ -3,11 +3,11 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="theme-color" content="#EDF1F6">
-<script>(function(){try{var s=localStorage.getItem('lyo_theme');var m=(s==='light'||s==='dark')?s:((window.matchMedia&&matchMedia('(prefers-color-scheme: dark)').matches)?'dark':'light');document.documentElement.setAttribute('data-theme',m);var mt=document.querySelector('meta[name="theme-color"]');if(mt)mt.setAttribute('content',m==='dark'?'#15111C':'#EDF1F6');}catch(e){}})();</script>
+<meta name="theme-color" content="#FAF7FC">
+<script>(function(){try{var s=localStorage.getItem('lyo_theme');var m=(s==='light'||s==='dark')?s:((window.matchMedia&&matchMedia('(prefers-color-scheme: dark)').matches)?'dark':'light');document.documentElement.setAttribute('data-theme',m);var mt=document.querySelector('meta[name="theme-color"]');if(mt)mt.setAttribute('content',m==='dark'?'#0C0912':'#FAF7FC');}catch(e){}})();</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Mulish:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Mulish:wght@400;500;600;700;800&family=Newsreader:ital,wght@0,400;0,500;0,600;1,400;1,500&display=swap" rel="stylesheet">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="icon-192.png">
 <title>LOW YIELD ONLY</title>
@@ -15,23 +15,25 @@
 :root{
   color-scheme:light dark;
   /* ============================================================
-     THEME — light (azure, Boards & Beyond feel). Canonical tokens
-     use the handoff's names; legacy aliases below keep existing
-     rules working. Flat: hairline borders, no gradients/glass/glow.
+     THEME — light (white with a whisper of lavender; deep royal
+     purple accent, antique-gold hairline accents). Canonical
+     tokens use the handoff's names; legacy aliases below keep
+     existing rules working. Flat: hairlines, no glass/glow.
      ============================================================ */
-  --bg:#EDF1F6; --surface:#FFFFFF; --surface-2:#F1F5FA;
-  --text:#16202B; --text-2:#566575; --text-muted:#8595A4;
-  --accent:#1160C8; --accent-hover:#0E52AC; --accent-soft:#0F5DC4; --accent-bg:#E4EEFB; --accent-contrast:#FFFFFF;
-  --border:#D8DFE8; --border-strong:#BFC9D5; --ring-track:#DBE2EC;
-  --success:#1E8E4E; --success-bg:#E2F3E9;
-  --warning:#B4690E; --warning-bg:#FBEEDB;
-  --danger:#CC3340;  --danger-bg:#FBE7E9;
-  --info:#0B6BCB;    --info-bg:#E2EEFB;
-  /* subject / category coding (6 distinguishable hues) */
+  --bg:#FAF7FC; --surface:#FFFFFF; --surface-2:#F1EBF7;
+  --text:#171320; --text-2:#544B62; --text-muted:#8B8298;
+  --accent:#6A2C9B; --accent-hover:#54217B; --accent-soft:#7E3AB4; --accent-bg:#F0E6F9; --accent-contrast:#FFFFFF;
+  --border:#E7DEF0; --border-strong:#D0C3E0; --ring-track:#E7DEF0;
+  --gold:#9C7A22; --gold-soft:#F4ECD8;
+  --success:#2E6B45; --success-bg:#E7EEE7;
+  --warning:#8A5A16; --warning-bg:#F4ECD8;
+  --danger:#992D30;  --danger-bg:#F5E4E4;
+  --info:#6A2C9B;    --info-bg:#F0E6F9;
+  /* subject / category coding (kept for scheduler accents) */
   --cat-blue:#2F6FE0; --cat-teal:#0E9384; --cat-violet:#7C5CFC; --cat-amber:#B45309; --cat-rose:#D6336C; --cat-green:#2C9A5A;
-  --scrim:rgba(22,32,43,.42); --toast-bg:#1B2530; --toast-ink:#FFFFFF;
-  --shadow:0 1px 2px rgba(20,30,45,.06),0 8px 24px -16px rgba(20,30,45,.18);
-  --radius-sm:6px; --radius:8px; --radius-lg:12px;
+  --scrim:rgba(20,14,28,.5); --toast-bg:#1A1322; --toast-ink:#FFFFFF;
+  --shadow:0 1px 2px rgba(30,20,45,.05),0 6px 20px -14px rgba(30,20,45,.16);
+  --radius-sm:3px; --radius:5px; --radius-lg:8px;
 
   /* ---- Legacy aliases → canonical tokens (keeps existing rules working) ---- */
   --surface-base:var(--bg); --surface-raised:var(--surface); --surface-overlay:var(--surface); --surface-sunken:var(--surface-2);
@@ -50,23 +52,26 @@
   --r:var(--radius-lg);
   /* ---- Typography (Mulish — warm humanist sans; mono kept for data) ---- */
   --font-ui:"Mulish",system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  --font-display:"Newsreader",Georgia,"Times New Roman",serif;  /* scholarly serif for big titles */
   --font-read:"Source Serif 4",Georgia,"Times New Roman",serif;  /* long-form only */
   --font-mono:var(--font-ui);  /* full Mulish — mono role folded into the UI font */
   --mono:var(--font-mono); --sans:var(--font-ui);
 }
 :root[data-theme="dark"]{
   color-scheme:dark;
-  /* dark — flat deep-plum surfaces, restrained lavender accent */
-  --bg:#15111C; --surface:#1E1826; --surface-2:#282034;
-  --text:#ECE6F3; --text-2:#ABA0B9; --text-muted:#776D84;
-  --accent:#BCACF2; --accent-hover:#CBBEF6; --accent-soft:#C6B7F5; --accent-bg:#282142; --accent-contrast:#1A1326;
-  --border:#2E2739; --border-strong:#3E3449; --ring-track:#2C2539;
-  --success:#46C46A; --success-bg:#132417;
-  --warning:#E0A93B; --warning-bg:#2A2110;
-  --danger:#EE6A63;  --danger-bg:#2C1519;
-  --info:#8FB6F2;    --info-bg:#141F30;
-  --cat-blue:#6AA5FF; --cat-teal:#4FD1C5; --cat-violet:#A78BFA; --cat-amber:#F0B24B; --cat-rose:#F472A0; --cat-green:#63C88B;
-  --scrim:rgba(8,5,14,.62); --toast-bg:#282034; --toast-ink:#F3EEF8;
+  /* dark — near-black with a purple undertone, luminous purple
+     accent, antique gold. The signature look (Leferi-inspired). */
+  --bg:#0C0912; --surface:#161320; --surface-2:#201A2E;
+  --text:#F6F3FA; --text-2:#B4ABC4; --text-muted:#7E7590;
+  --accent:#A879E6; --accent-hover:#BB93EE; --accent-soft:#B98FEC; --accent-bg:#1E1730; --accent-contrast:#120A1E;
+  --border:#282136; --border-strong:#3B3150; --ring-track:#282136;
+  --gold:#CBA24E; --gold-soft:#231C12;
+  --success:#5FB07C; --success-bg:#16241B;
+  --warning:#D2A24E; --warning-bg:#241C10;
+  --danger:#DE7A73;  --danger-bg:#2A171A;
+  --info:#B98FEC;    --info-bg:#1E1730;
+  --cat-blue:#6AA5FF; --cat-teal:#4FD1C5; --cat-violet:#B98FEC; --cat-amber:#F0B24B; --cat-rose:#F472A0; --cat-green:#63C88B;
+  --scrim:rgba(4,2,8,.66); --toast-bg:#201A2E; --toast-ink:#F6F3FA;
   --shadow:none;
 }
 :root[data-theme="light"]{color-scheme:light}
@@ -79,7 +84,7 @@ body{padding-bottom:40px;position:relative;min-height:100vh;background:var(--bg)
 /* schedule numbers — times, dates, counts, timers: align + disambiguate */
 .tabular{font-variant-numeric:tabular-nums slashed-zero;font-feature-settings:"tnum" 1,"zero" 1}
 button{font-family:inherit;color:inherit}
-.wrap{max-width:680px;margin:0 auto;padding:14px 16px 64px}
+.wrap{max-width:680px;margin:0 auto;padding:24px 20px 96px}
 .muted{color:var(--muted)} .small{font-size:13px} .center{text-align:center}
 b{color:var(--ink)}
 
@@ -93,23 +98,29 @@ b{color:var(--ink)}
 .iconbtn{background:none;border:0;font-size:21px;color:var(--muted);cursor:pointer;padding:11px 12px;margin:-9px -6px;line-height:1;border-radius:10px;transition:color .15s}
 .iconbtn:hover{color:var(--phos)}
 .nav{position:sticky;top:50px;z-index:19;display:flex;gap:5px;padding:9px 12px;background:color-mix(in srgb,var(--surface-raised) 82%,transparent);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border-bottom:1px solid var(--line);max-width:680px;margin:0 auto}
-.navb{flex:1;background:none;border:0;color:var(--faint);font-weight:700;font-size:11px;text-transform:uppercase;letter-spacing:.09em;font-family:var(--mono);padding:9px 6px;border-radius:10px;cursor:pointer;transition:color .18s,background .18s,box-shadow .18s}
+.navb{flex:1;background:none;border:0;color:var(--faint);font-weight:600;font-size:13px;letter-spacing:.01em;font-family:var(--sans);padding:10px 6px;cursor:pointer;transition:color .18s,box-shadow .18s}
 .navb:hover{color:var(--muted)}
-.navb.on{background:var(--phos-soft);color:var(--phos);box-shadow:inset 0 0 0 1px var(--line2)}
+.navb.on{color:var(--phos);box-shadow:inset 0 -2px 0 var(--phos)}
 
 /* cards */
-.card{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:16px;margin:12px 0}
-.card.soft{background:var(--soft);border-color:var(--line)}
-.cardhd{font-family:var(--mono);font-weight:700;font-size:11.5px;margin-bottom:12px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;text-transform:uppercase;letter-spacing:.12em;color:var(--muted)}
-.pill{font-family:var(--mono);font-size:11.5px;font-weight:700;color:var(--phos);background:var(--phos-soft);border:1px solid var(--line2);padding:3px 9px;border-radius:999px;letter-spacing:.02em}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:22px;margin:18px 0}
+.card.soft{background:var(--soft);border-color:transparent}
+.cardhd{position:relative;font-family:var(--font-display);font-weight:600;font-size:18px;margin-bottom:15px;padding-bottom:11px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;letter-spacing:-.005em;color:var(--ink);line-height:1.25}
+.cardhd::after{content:"";position:absolute;left:0;bottom:0;width:26px;height:2px;border-radius:1px;background:var(--gold);opacity:.9}
+.pill{font-family:var(--mono);font-size:11px;font-weight:700;color:var(--phos);letter-spacing:.09em;text-transform:uppercase}
 
 /* hero */
-.hero{position:relative;display:flex;align-items:center;gap:18px;background:var(--accent-bg);border:1px solid var(--border-strong);border-radius:var(--r);padding:20px;margin:12px 0;overflow:hidden}
+.hero{position:relative;display:flex;flex-direction:column;background:var(--accent-bg);border:1px solid var(--border);border-radius:var(--r);padding:24px;margin:18px 0;overflow:hidden}
+.herorow{display:flex;align-items:center;gap:24px}
+.herostat{display:flex;align-items:center;gap:9px;margin-top:18px;padding-top:16px;border-top:1px solid color-mix(in srgb,var(--gold) 45%,transparent);font-size:13px;line-height:1.4;color:var(--text-2)}
+.herostat.warn{color:var(--warning)}
+.hsdot{flex:0 0 auto;width:8px;height:8px;border-radius:50%;background:var(--success)}
+.herostat.warn .hsdot{background:var(--warning)}
 .hero::after{content:"";position:absolute;inset:0;pointer-events:none}
 .hero-l,.hero-r{position:relative}
-.hero-r .big{font-family:var(--mono);font-size:34px;font-weight:700;letter-spacing:-.01em;line-height:1;color:var(--ink)}
-.hero-r .big span{font-family:var(--sans);font-size:13px;font-weight:600;color:var(--muted);letter-spacing:0;text-shadow:none}
-.hero-r .sub{color:var(--muted);font-size:13px;margin-top:7px}
+.hero .big{font-family:var(--font-display);font-size:40px;font-weight:600;letter-spacing:-.01em;line-height:1.05;color:var(--ink)}
+.hero .big span{font-family:var(--sans);font-size:13px;font-weight:600;color:var(--muted);letter-spacing:0;text-shadow:none}
+.hero .sub{color:var(--muted);font-size:13.5px;margin-top:10px}
 
 /* daily encouragement / wellness nudge (top of Today) */
 .cheer{display:flex;align-items:flex-start;gap:11px;background:var(--panel);border:1px solid var(--line);border-left:3px solid var(--accent);border-radius:var(--r);padding:12px 14px;margin:12px 0}
@@ -119,6 +130,10 @@ b{color:var(--ink)}
 
 /* ring (analog gauge) */
 .ring{display:block}
+.statpct{display:flex;flex-direction:column;align-items:center;gap:3px;min-width:64px}
+.statpct-n{font-family:var(--font-display);font-weight:600;color:var(--ink);line-height:1;letter-spacing:-.01em}
+.statpct-n span{font-size:.46em;color:var(--muted);font-weight:500;margin-left:1px}
+.statpct-l{font-family:var(--sans);font-size:9px;font-weight:600;text-transform:uppercase;letter-spacing:.16em;color:var(--faint)}
 .ring .rbg{fill:none;stroke:var(--ring-track);stroke-width:6;stroke-dasharray:1.4 5;stroke-linecap:round}
 .ring .rfg{fill:none;stroke:var(--phos);stroke-width:6;stroke-linecap:round;transition:stroke-dashoffset .8s cubic-bezier(.5,1.4,.4,1)}
 .ring .rdot{fill:var(--phos)}
@@ -199,7 +214,7 @@ b{color:var(--ink)}
 .chk:hover{border-color:var(--phos-dim)}
 .chk.on{background:var(--phos);border-color:var(--phos)}
 .vmeta{display:flex;align-items:center;gap:8px;flex:1;min-width:0}
-.vn{font-size:14px;border-left:3px solid;padding-left:9px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0;flex:0 1 auto}
+.vn{font-size:14px;border-left:3px solid var(--border-strong);padding-left:9px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0;flex:0 1 auto}
 .cpy{flex:0 0 auto;background:var(--panel2);border:1px solid var(--line2);color:var(--muted);border-radius:8px;padding:3px 8px;font-size:11.5px;font-weight:700;cursor:pointer;white-space:nowrap}
 .cpy:hover{color:var(--phos);border-color:var(--phos-dim)}
 .vmin{margin-left:auto;font-family:var(--mono);font-size:11px;color:var(--faint);flex:0 0 auto;padding-left:6px}
@@ -264,7 +279,7 @@ b{color:var(--ink)}
 .bar{display:flex;align-items:center;gap:10px}
 .barlab{flex:0 0 42%;font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .bartrack{flex:1;height:8px;background:var(--bg2);border-radius:999px;overflow:hidden}
-.barfill{height:100%;border-radius:999px;transition:width .5s cubic-bezier(.5,1.2,.4,1)}
+.barfill{height:100%;border-radius:999px;background:var(--accent);transition:width .5s cubic-bezier(.5,1.2,.4,1)}
 .barpct{flex:0 0 auto;font-family:var(--mono);font-size:12px;color:var(--muted);width:38px;text-align:right}
 
 /* forms / toggles */
@@ -316,31 +331,33 @@ b{color:var(--ink)}
 /* onboarding */
 .onb{max-width:560px}
 .onboard{animation:fadeUp .45s ease both}
-.onboard h1{font-size:24px;font-weight:800;letter-spacing:-.01em;margin:10px 0 2px}
+.onboard h1{font-family:var(--font-display);font-size:28px;font-weight:700;letter-spacing:0;margin:10px 0 2px;line-height:1.1}
 
 /* welcome / hub chooser */
 .welcomewrap{max-width:560px;padding-top:46px}
 .welcome{text-align:center;animation:fadeUp .5s ease both}
-.wbrand{font-family:var(--font-ui);font-weight:800;font-size:clamp(28px,8.8vw,42px);letter-spacing:.12em;line-height:1.02;color:var(--accent-soft);text-transform:uppercase;text-indent:.12em}
-.topekg{position:absolute;top:3px;left:0;width:100%;height:11px;opacity:.6;pointer-events:none}
-.topekg polyline{fill:none;stroke:var(--accent-soft);stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round;vector-effect:non-scaling-stroke}
+.wbrand{font-family:var(--font-display);font-weight:500;font-size:clamp(30px,8.6vw,44px);letter-spacing:0;line-height:1.04;color:var(--accent-soft);text-transform:none}
 .wtag{color:var(--muted);margin:13px 0 28px;font-size:13px;font-family:var(--mono);letter-spacing:.02em}
 .wservire{display:flex;align-items:center;justify-content:center;gap:15px;margin:8px 0 30px}
-.wservire span{font-family:var(--font-read);font-style:italic;font-weight:500;font-size:24px;color:var(--text-2);letter-spacing:.07em}
-.wservire::before,.wservire::after{content:"";height:1px;width:42px;background:var(--border-strong)}
+.wservire span{font-family:var(--font-display);font-style:italic;font-weight:500;font-size:24px;color:var(--text-2);letter-spacing:.05em}
+.wservire::before,.wservire::after{content:"";height:1px;width:42px;background:linear-gradient(to var(--_d,right),transparent,var(--gold))}
+.wservire::after{--_d:left}
 .hubs{display:flex;flex-direction:column;gap:16px}
 .hubcard{position:relative;display:block;width:100%;text-align:left;background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:20px;cursor:pointer;overflow:hidden;transition:transform .14s,border-color .2s}
 .hubcard:hover{border-color:var(--phos-dim)}
 @media (hover:hover){.hubcard:hover{transform:translateY(-2px)}.calcell:not(.empty):hover{transform:translateY(-1px)}}
 .hubcard:active{transform:translateY(0)}
-.hubcard::before,.hubcard::after{content:"";position:absolute;width:13px;height:13px;border:2px solid var(--phos-dim);opacity:.6;pointer-events:none}
-.hubcard::before{top:11px;left:11px;border-right:0;border-bottom:0;border-top-left-radius:4px}
-.hubcard::after{bottom:11px;right:11px;border-left:0;border-top:0;border-bottom-right-radius:4px}
 .hubtop{display:flex;align-items:center;justify-content:space-between;gap:12px}
-.hubname{font-size:18px;font-weight:800;letter-spacing:.01em}
+.hubname{font-family:var(--font-display);font-size:23px;font-weight:600;letter-spacing:0;color:var(--ink)}
+.hubcard.soon{cursor:default;opacity:.62}
+.hubcard.soon:hover{border-color:var(--line);transform:none}
+.soontag{font-family:var(--sans);font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.13em;color:var(--faint);border:1px solid var(--border-strong);border-radius:4px;padding:3px 8px;white-space:nowrap}
 .hubsub{color:var(--muted);font-size:12px;margin-top:10px;font-family:var(--mono);letter-spacing:.01em}
 .hubgo{margin-top:14px;font-size:11px;font-weight:700;color:var(--phos);text-transform:uppercase;letter-spacing:.11em;font-family:var(--mono)}
-.wfoot{margin-top:26px;color:var(--faint);font-size:12px;line-height:1.9}
+.wfoot{margin-top:34px;display:flex;flex-direction:column;align-items:center;gap:9px}
+.wfoot .acct{color:var(--faint);font-size:12px;font-family:var(--sans);letter-spacing:.01em}
+.wfootlink{background:none;border:0;padding:2px 4px;color:var(--text-2);font-family:var(--sans);font-size:12.5px;font-weight:500;letter-spacing:.01em;cursor:pointer;transition:color .15s}
+.wfootlink:hover{color:var(--accent-soft)}
 
 /* ordered systems (reorderable) */
 .sysord{display:flex;flex-direction:column;gap:6px;margin:10px 0 8px}
@@ -562,7 +579,7 @@ function normalizeCfg(c,key){
   if(Array.isArray(c.systems))c.systems=c.systems.filter(s=>SYS.indexOf(s)>=0);
 }
 function activate(key){S.active=key;S.cfg=S.cfgs[key]||null;}
-function hubName(key){return key==="step1"?"STEP 1 Command Center":"M2 SCHEDULER";}
+function hubName(key){return key==="step1"?"STEP 1 Command Center":"M2 Scheduler";}
 let _prevSig=null;
 
 function persistObj(){return {active:S.active,cfgs:S.cfgs,vdone:S.vdone,vskip:S.vskip,vdoneDate:S.vdoneDate,akdone:S.akdone,notes:S.notes,streak:S.streak,assessments:S.assessments,uworld:S.uworld,amboss:S.amboss,vshaky:S.vshaky,settings:S.settings,_updatedAt:S._updatedAt,_resetAt:S._resetAt||0};}
@@ -793,10 +810,10 @@ const toEl=document.getElementById("toast");let toT=null;
 function toast(m){toEl.textContent=m;toEl.classList.add("show");clearTimeout(toT);toT=setTimeout(()=>toEl.classList.remove("show"),2400);}
 function toastUndo(m,fn){toEl.innerHTML=escHTML(m)+' <button id="tu">Undo</button>';toEl.classList.add("show");clearTimeout(toT);const b=document.getElementById("tu");if(b)b.onclick=()=>{fn();toEl.classList.remove("show");};toT=setTimeout(()=>toEl.classList.remove("show"),6500);}
 
-function ring(pct,size){size=size||64;const r=(size-8)/2,c=2*Math.PI*r,off=c*(1-pct/100);const cx=size/2,cy=size/2;
-  const ang=(-90+pct/100*360)*Math.PI/180;const dx=cx+r*Math.cos(ang),dy=cy+r*Math.sin(ang);
-  const dot=(pct>0)?'<circle cx="'+dx.toFixed(1)+'" cy="'+dy.toFixed(1)+'" r="'+(size>=64?3:2.4)+'" class="rdot"/>':'';
-  return '<svg width="'+size+'" height="'+size+'" viewBox="0 0 '+size+' '+size+'" class="ring"><circle cx="'+cx+'" cy="'+cy+'" r="'+r+'" class="rbg"/><circle cx="'+cx+'" cy="'+cy+'" r="'+r+'" class="rfg" stroke-dasharray="'+c+'" stroke-dashoffset="'+off+'" transform="rotate(-90 '+cx+' '+cy+')"/>'+dot+'<text x="50%" y="52%" class="rtxt">'+pct+'%</text></svg>';}
+/* progress shown as a quiet serif figure (retired the dashed gauge for a
+   calmer, editorial read) */
+function ring(pct,size){size=size||64;const fs=Math.round(size*0.62);
+  return '<div class="statpct"><div class="statpct-n" style="font-size:'+fs+'px">'+pct+'<span>%</span></div><div class="statpct-l">complete</div></div>';}
 
 function resBadge(res){const m={bnb:["B&B","bnb"],pathoma:["Pa","pa"],skmicro:["Sk","sk"],skpharm:["Sk","sk"]};const x=m[res]||["·","bnb"];return '<span class="badge '+x[1]+'">'+x[0]+'</span>';}
 function resLabel(res){return {bnb:"Boards & Beyond",pathoma:"Pathoma",skmicro:"Sketchy Micro",skpharm:"Sketchy Pharm"}[res]||"Videos";}
@@ -811,7 +828,7 @@ function itemRows(items,opts){opts=opts||{};if(!items.length)return '<div class=
     const done=it.ids.every(isDone);const shaky=it.ids.some(isShaky);const idsAttr=escAttr(it.ids.join(","));
     return '<div class="vrow '+(done?"done":"")+(shaky?" shaky":"")+'">'
       +'<button class="chk '+(done?"on":"")+'" data-ids="'+idsAttr+'" aria-label="watched">'+(done?"✓":"")+'</button>'
-      +'<div class="vmeta"><span class="vn" style="border-color:'+(SYS_COLOR[it.sys]||"#999")+'">'+escHTML(vName(it))+'</span>'
+      +'<div class="vmeta"><span class="vn">'+escHTML(vName(it))+'</span>'
       +'<span class="vmin">'+it.min+'m</span></div>'
       +'<button class="flagb '+(shaky?"on":"")+'" data-flag="'+idsAttr+'" aria-label="flag for review" title="Flag as shaky — collects in your review queue">⚑</button>'
       +'</div>';}).join('')+'</div>').join('');}
@@ -869,10 +886,9 @@ function uncheckDay(iso){const row=SCHED&&SCHED.dayMap[iso];if(!row||!row.items.
 /* ---------- top bar + nav ---------- */
 function chrome(active){
   const tabs=[["today","Today"],["plan","Calendar"],["stats","Stats"],["adjust","Plan"]];
-  if(S.active==="nbme")tabs.push(["step","STEP"]);
+  if(S.active==="nbme")tabs.push(["step","Step"]);
   const nm=(S.active==="nbme")?"Home":hubName(S.active||"step1");
-  const ekg='<svg class="topekg" viewBox="0 0 1200 24" preserveAspectRatio="none" aria-hidden="true"><polyline points="0,12 540,12 552,12 562,8 572,16 582,3 592,21 602,13 616,12 1200,12"/></svg>';
-  return '<div class="topbar">'+ekg+'<button class="brandbtn" id="brandBtn" title="Switch hub">‹ <span class="brandnm">'+escHTML(nm)+'</span></button>'
+  return '<div class="topbar">'+'<button class="brandbtn" id="brandBtn" title="Switch hub">‹ <span class="brandnm">'+escHTML(nm)+'</span></button>'
    +'<div class="topright"><span class="led" title="online"></span><button class="iconbtn" id="menuBtn" aria-label="menu">⋮</button></div></div>'
    +'<div class="nav">'+tabs.map(t=>'<button class="navb '+(active===t[0]?"on":"")+'" data-view="'+t[0]+'">'+t[1]+'</button>').join('')+'</div>';}
 
@@ -901,8 +917,15 @@ function render(){
   wireChrome();
 }
 
+/* concise pacing summary woven into the Today hero (full version stays in Plan) */
+function paceHero(){const st=SCHED.stats;const hpd=Math.round(st.reqPerDay/60*10)/10;let cls,txt;
+  if(st.remItems===0){cls="ok";txt="All videos done \u2014 UWorld & review from here.";}
+  else if(st.feasible){cls="ok";txt="On pace at ~"+hpd+" h/day"+(st.reviewDaysLeft>0?(" \u00b7 "+st.reviewDaysLeft+" review day"+(st.reviewDaysLeft===1?"":"s")+" to spare"):" \u00b7 right to the wire");}
+  else{cls="warn";txt="Behind \u2014 ~"+hpd+" h/day needed \u00b7 "+SCHED.atRisk.length+" video"+(SCHED.atRisk.length===1?"":"s")+" don\u2019t fit yet";}
+  return '<div class="herostat '+cls+'"><span class="hsdot"></span><span>'+txt+'</span></div>';
+}
 function statusLine(){const st=SCHED.stats;
-  if(st.remItems===0)return '<div class="status ok">🎉 You\'ve finished every scheduled video. Spend your remaining days on UWorld and review.</div>';
+  if(st.remItems===0)return '<div class="status ok">You\'ve finished every scheduled video. Spend your remaining days on UWorld and review.</div>';
   if(st.feasible)return '<div class="status ok">On track — about '+Math.round(st.reqPerDay/60*10)/10+' h/day of videos keeps you finishing '+(st.reviewDaysLeft>0?('with '+st.reviewDaysLeft+' review day'+(st.reviewDaysLeft===1?'':'s')+' to spare'):'right at your exam')+'.</div>';
   return '<div class="status warn">⚠ Behind pace. To finish before your review window you\'d need ~'+Math.round(st.reqPerDay/60*10)/10+' h/day (you\'ve planned less). Move your exam date, add hours, or trim resources in <b>Plan</b>. '+SCHED.atRisk.length+' videos don\'t currently fit.</div>';}
 
@@ -1055,13 +1078,13 @@ function stepReadinessCards(){
 }
 function videoCards(){
   const by=sysProgress();const o=overall();
-  let body='<div class="hero"><div class="hero-l">'+ring(o.pct,72)+'</div><div class="hero-r"><div class="big">'+o.done+' <span>/ '+o.total+' videos</span></div><div class="sub">'+SCHED.stats.remItems+' remaining · 🔥 '+currentStreak()+'-day streak</div></div></div>';
+  let body='<div class="hero"><div class="hero-l">'+ring(o.pct,72)+'</div><div class="hero-r"><div class="big">'+o.done+' <span>/ '+o.total+' videos</span></div><div class="sub">'+SCHED.stats.remItems+' remaining · '+currentStreak()+'-day streak</div></div></div>';
   body+=pacingChart();
   body+='<div class="card"><div class="cardhd">By subject'+(o.done?'<button class="hdreset" id="rst_vid" title="Clear every video checkmark">Reset</button>':'')+'</div><div class="bars">';
   const rows=[]; if(by["General Pathology"]&&by["General Pathology"].t)rows.push("General Pathology");
   planSystems().forEach(s=>{if(by[s]&&by[s].t)rows.push(s);});
   rows.forEach(s=>{const x=by[s];const pct=Math.round(x.d/x.t*100);
-    body+='<div class="bar"><div class="barlab"><span style="color:'+(SYS_COLOR[s]||"#999")+'">●</span> '+escHTML(s)+'</div><div class="bartrack"><div class="barfill" style="width:'+pct+'%;background:'+(SYS_COLOR[s]||"#999")+'"></div></div><div class="barpct">'+pct+'%</div></div>';});
+    body+='<div class="bar"><div class="barlab">'+escHTML(s)+'</div><div class="bartrack"><div class="barfill" style="width:'+pct+'%"></div></div><div class="barpct">'+pct+'%</div></div>';});
   body+='</div></div>';
   return body;
 }
@@ -1174,33 +1197,33 @@ function clearAmboss(){const snap=JSON.parse(JSON.stringify(S.amboss||{total:nul
    wellness on rest days, and otherwise rotates daily through a mixed pool so
    it stays fresh. Seeded by the date so it's stable across re-renders. */
 const CHEER=[
-  {ic:"🌱",tx:"Small, steady reps beat cramming every time — you're doing it the right way."},
-  {ic:"🧠",tx:"You don't have to know everything today. Just a little more than yesterday."},
-  {ic:"⭐",tx:"Progress over perfection. Showing up is most of the battle."},
-  {ic:"🧭",tx:"Trust the plan. One block at a time is how you get there."},
-  {ic:"💧",tx:"Quick check — have you had water recently? Hydrate before the next block."},
-  {ic:"🌤️",tx:"Step outside for five minutes today. Your brain consolidates better after a break."},
-  {ic:"😴",tx:"Sleep is a study tool. Protect your 7–8 hours tonight — memory is built while you rest."},
-  {ic:"🧘",tx:"Take one slow breath before you start. In for four, out for four."},
-  {ic:"🚶",tx:"Feeling stiff? Stand up and stretch. Focus resets when your body does."},
-  {ic:"🍎",tx:"Fuel matters — grab a real meal between blocks, not just caffeine."},
-  {ic:"👏",tx:"You showed up again today. That consistency is exactly what passing takes."},
-  {ic:"💪",tx:"This is hard, and you're still here. That says something about you."},
-  {ic:"🌟",tx:"Be as kind to yourself as you'd be to a friend studying this hard."},
-  {ic:"🎯",tx:"You're closer than you were yesterday. Keep chipping away."},
-  {ic:"❤️",tx:"Your worth isn't a score. Do your best, and let that be enough today."},
-  {ic:"📈",tx:"Every video you finish is a concept that can show up on test day. It adds up."}
+  "Small, steady reps beat cramming — you're doing it the right way.",
+  "You needn't know everything today. Only a little more than yesterday.",
+  "Progress over perfection; consistency compounds.",
+  "Trust the plan. One block at a time is how you get there.",
+  "A brief note: have some water before your next block.",
+  "Step outside for five minutes today — the mind consolidates on the walk back.",
+  "Sleep is a study tool. Protect your seven to eight hours tonight.",
+  "One slow breath before you begin: in for four, out for four.",
+  "Stand and stretch between blocks; focus resets with the body.",
+  "Fuel matters — a real meal between blocks, not only coffee.",
+  "Showing up, again, is precisely what this exam rewards.",
+  "This is hard, and you are still here. That counts for something.",
+  "Be as generous with yourself as you would be with a friend studying this hard.",
+  "You are closer than you were yesterday. Keep at it.",
+  "Your worth is not a score. Do your best, and let that be enough today.",
+  "Every video finished is a concept that may appear on test day. It adds up."
 ];
 function daySeed(){const s=todayISO();let h=0;for(let i=0;i<s.length;i++)h=(h*31+s.charCodeAt(i))|0;return Math.abs(h);}
 function greeting(){const h=new Date().getHours();return h<12?"Good morning":(h<18?"Good afternoon":"Good evening");}
 function encouragement(todayRow,isOff,streak){
-  let ic="✦",tx;
+  let tx;
   const allDone=todayRow&&!isOff&&todayRow.items.length&&todayRow.items.every(it=>isDone(it.id));
-  if(allDone){ic="🎉";tx="Today's plan is done — that's a real win. Rest easy tonight.";}
-  else if(isOff){ic="🌿";tx="Rest is part of the plan. Recharge today so tomorrow's you is sharper.";}
-  else if(streak>=3&&daySeed()%3===0){ic="🔥";tx=streak+" days in a row — consistency is the whole game. Keep the chain alive.";}
-  else{const p=CHEER[daySeed()%CHEER.length];ic=p.ic;tx=p.tx;}
-  return '<div class="cheer"><span class="cheer-ic">'+ic+'</span><div class="cheer-tx"><b>'+greeting()+'.</b> '+escHTML(tx)+'</div></div>';
+  if(allDone)tx="Today's plan is complete. Rest easy tonight.";
+  else if(isOff)tx="Rest is part of the plan. Recover today; the work goes better for it tomorrow.";
+  else if(streak>=3&&daySeed()%3===0)tx=streak+" days running. Consistency is the whole of it — keep the thread going.";
+  else tx=CHEER[daySeed()%CHEER.length];
+  return '<div class="cheer"><div class="cheer-tx"><b>'+greeting()+'.</b> '+escHTML(tx)+'</div></div>';
 }
 function renderToday(){
   const st=SCHED.stats; const cs=currentStreak();
@@ -1218,11 +1241,10 @@ function renderToday(){
   let colA='',colB='';
   colA+=encouragement(todayRow,isOffToday,cs);
   colA+='<div class="hero">'
-    +'<div class="hero-l">'+ring(overall().pct,72)+'</div>'
-    +'<div class="hero-r"><div class="big">'+examLeft+' <span>days to '+escHTML(S.cfg.examLabel||(S.cfg.examType==="step1"?"Step 1":"your exam"))+'</span></div>'
-      +'<div class="sub">'+overall().done+' / '+overall().total+' videos done'+(cs>0?' · 🔥 '+cs+'-day streak':'')+'</div></div></div>';
+    +'<div class="big">'+examLeft+' <span>days to '+escHTML(S.cfg.examLabel||(S.cfg.examType==="step1"?"Step 1":"your exam"))+'</span></div>'
+    +'<div class="sub">'+overall().done+' / '+overall().total+' videos'+(cs>0?' · '+cs+'-day streak':' · '+overall().pct+'% complete')+'</div>'
+    +paceHero()+'</div>';
   colA+='<div class="hchips">'+uworldChip()+'</div>'+loadCaveat();
-  colA+=statusLine();
   if(isOffToday){
     colB+='<div class="card"><div class="cardhd">'+(todayRow.off?'Day off':'Rest day')+' · '+fmtLong(todayISO())+'</div><p class="muted">No videos scheduled today.'+(todayRow.off?' <button class="link" id="unoff">Cancel day off</button>':'')+'</p></div>';
   }
@@ -1448,12 +1470,18 @@ function hubCard(key){
   const cfg=S.cfgs[key];const nm=hubName(key);
   const desc=key==="step1"?"Comprehensive USMLE Step 1 prep across every system.":"A focused plan for an M2 block or shelf exam.";
   if(cfg){const s=hubStat(cfg);const dleft=cfg.examISO?Math.max(0,daysBetween(todayISO(),cfg.examISO)):null;
-    return '<button class="hubcard set" data-enter="'+key+'"><div class="hubtop"><div class="hubname">'+escHTML(nm)+'</div>'+ring(s.pct,52)+'</div>'
-      +'<div class="hubsub">'+s.done+' / '+s.total+' videos'+(dleft!=null?(' \u00b7 '+dleft+' days to '+escHTML(cfg.examLabel||"exam")):'')+'</div>'
+    const sub=(dleft!=null)?(dleft+' days to '+escHTML(cfg.examLabel||"exam")):(s.done+' / '+s.total+' videos');
+    return '<button class="hubcard set" data-enter="'+key+'"><div class="hubname">'+escHTML(nm)+'</div>'
+      +'<div class="hubsub">'+sub+'</div>'
       +'<div class="hubgo">Enter \u2192</div></button>';
   }
-  return '<button class="hubcard new" data-setup="'+key+'"><div class="hubtop"><div class="hubname">'+escHTML(nm)+'</div></div>'
+  return '<button class="hubcard new" data-setup="'+key+'"><div class="hubname">'+escHTML(nm)+'</div>'
     +'<div class="hubsub">'+desc+'</div><div class="hubgo">Set up \u2192</div></button>';
+}
+/* non-clickable "coming soon" hub */
+function hubCardSoon(name,desc){
+  return '<div class="hubcard soon" aria-disabled="true"><div class="hubtop"><div class="hubname">'+escHTML(name)+'</div><span class="soontag">Coming soon</span></div>'
+    +'<div class="hubsub">'+escHTML(desc)+'</div></div>';
 }
 /* ---------- custom date picker (calendar popover; fast month + year nav) ---------- */
 let PICK_YM=null,PICK_SEL="",PICK_MIN=null,PICK_CB=null,PICK_TITLE="";
@@ -1492,11 +1520,11 @@ function renderDatePicker(){const ov=document.getElementById("dpov");if(!ov)retu
 /* ---------- AUTH GATE (email + password, required) ---------- */
 let AUTH_MODE="signin";
 function renderAuthChecking(){
-  app.innerHTML='<div class="wrap welcomewrap"><div class="welcome"><div class="wbrand">LOW YIELD ONLY</div><p class="wtag">Connecting\u2026</p><div class="authspin"></div></div></div>';
+  app.innerHTML='<div class="wrap welcomewrap"><div class="welcome"><div class="wbrand">Low Yield Only</div><p class="wtag">Connecting\u2026</p><div class="authspin"></div></div></div>';
 }
 function renderAuthGate(opts){opts=opts||{};AUTHED=false;
   if(opts.offline){
-    app.innerHTML='<div class="wrap welcomewrap"><div class="welcome"><div class="wbrand">LOW YIELD ONLY</div>'
+    app.innerHTML='<div class="wrap welcomewrap"><div class="welcome"><div class="wbrand">Low Yield Only</div>'
       +'<p class="wtag">Couldn\u2019t reach the server.</p>'
       +'<div class="authcard"><p class="muted small" style="margin:0 0 14px">Check your internet connection and try again.</p>'
       +'<button class="btn" id="auth_retry">Retry</button></div></div></div>';
@@ -1504,7 +1532,7 @@ function renderAuthGate(opts){opts=opts||{};AUTHED=false;
     return;
   }
   if(opts.denied){
-    app.innerHTML='<div class="wrap welcomewrap"><div class="welcome"><div class="wbrand">LOW YIELD ONLY</div>'
+    app.innerHTML='<div class="wrap welcomewrap"><div class="welcome"><div class="wbrand">Low Yield Only</div>'
       +'<p class="wtag">This account isn\u2019t eligible.</p>'
       +'<div class="authcard"><p class="muted small" style="margin:0 0 14px">'+escHTML(ACCESS_MSG)+'</p>'
       +'<button class="btn" id="auth_back">Back to sign in</button></div></div></div>';
@@ -1513,7 +1541,7 @@ function renderAuthGate(opts){opts=opts||{};AUTHED=false;
   }
   const signup=AUTH_MODE==="signup";
   app.innerHTML='<div class="wrap welcomewrap"><div class="welcome">'
-    +'<div class="wbrand">LOW YIELD ONLY</div>'
+    +'<div class="wbrand">Low Yield Only</div>'
     +'<p class="wtag">'+(signup?"Create your ECU profile to begin.":"Sign in to your profile.")+'</p>'
     +'<p class="muted small" style="margin:-6px 0 14px">ECU students only \u2014 use your <b>@students.ecu.edu</b> email.</p>'
     +'<div class="authtabs"><button class="atab '+(!signup?"on":"")+'" data-mode="signin">Sign in</button><button class="atab '+(signup?"on":"")+'" data-mode="signup">Create account</button></div>'
@@ -1570,10 +1598,10 @@ function renderWelcome(){
   // leaving a hub = no active hub; persist so a sync merge arriving while the
   // chooser is open can't re-activate the hub and pull the user back inside
   if(S.active){S.active=null;S.cfg=null;save();}
-  let body='<div class="welcome"><div class="wbrand">LOW YIELD ONLY</div>'
+  let body='<div class="welcome"><div class="wbrand">Low Yield Only</div>'
     +'<div class="wservire"><span>SERVIRE</span></div>'
-    +'<div class="hubs">'+hubCard("nbme")+'</div>'
-    +'<div class="wfoot"><button class="link" id="w_step1">Step 1 Command Center (legacy)</button> \u00b7 '+((Cloud.user&&Cloud.user.email)?('Signed in as '+escHTML(Cloud.user.email)+' \u00b7 <button class="link" id="w_signout">Sign out</button> \u00b7 '):'')+'<button class="link" id="w_restore">Restore a backup</button></div>'
+    +'<div class="hubs">'+hubCard("nbme")+hubCardSoon("M1 Scheduler","First-year block scheduling \u2014 in the works.")+'</div>'
+    +'<div class="wfoot">'+((Cloud.user&&Cloud.user.email)?('<div class="acct">Signed in as '+escHTML(Cloud.user.email)+'</div>'):'')+'<button class="wfootlink" id="w_step1">Step 1 Command Center (legacy)</button><button class="wfootlink" id="w_restore">Restore a backup</button>'+((Cloud.user&&Cloud.user.email)?'<button class="wfootlink" id="w_signout">Sign out</button>':'')+'</div>'
     +'</div>';
   app.innerHTML='<div class="wrap welcomewrap">'+body+'</div>';
   document.querySelectorAll("[data-enter]").forEach(b=>b.onclick=()=>enterHub(b.dataset.enter));
@@ -1616,7 +1644,7 @@ function renderOnboard(){
   const goLbl=ob.fresh?"Start this unit":(editing?"Save changes":"Build my hub");
   const dows=DOW.map((d,i)=>'<button type="button" class="tog '+(ob.restDays.includes(i)?"on":"")+'" data-odow="'+i+'">'+d+'</button>').join('');
   const resBtn=(k,lab)=>'<button type="button" class="tog '+(ob.resources[k]?"on":"")+'" data-ores="'+k+'">'+lab+'</button>';
-  let body='<div class="onboard"><button class="link" id="o_back">'+closeLbl+'</button><h1>'+headVerb+escHTML(ob.fresh?"M2 SCHEDULER":hubName(ob.hub))+'</h1><p class="muted">A plan that paces itself to your exam date and re-flows whenever life happens.</p>';
+  let body='<div class="onboard"><button class="link" id="o_back">'+closeLbl+'</button><h1>'+headVerb+escHTML(ob.fresh?"M2 Scheduler":hubName(ob.hub))+'</h1><p class="muted">A plan that paces itself to your exam date and re-flows whenever life happens.</p>';
   if(obIsNbme())body+='<div class="card"><div class="cardhd">Which exam?</div><div class="form"><label>Name this exam<input type="text" id="o_label" value="'+escAttr(ob.examLabel)+'" placeholder="e.g. Cardiology shelf"></label></div></div>';
   body+='<div class="card"><div class="cardhd">Dates</div><div class="form">'
     +'<label>Exam date'+dateTriggerHTML("o_exam",ob.examISO,"Pick your exam date")+'</label>'
@@ -1735,7 +1763,7 @@ function doResetAll(){
     S.cfgs=snap.cfgs;S.active=snap.active;S.cfg=S.active?S.cfgs[S.active]:null;_prevSig=progressSig();save();
     if(S.cfg){reflow();render();}else renderWelcome();toast("Restored ✓");});
 }
-const BUILD="2026-07-13a";
+const BUILD="2026-07-15b";
 function openMenu(){
   const email=Cloud.user&&Cloud.user.email;
   const inHub=!!S.active;
@@ -1743,7 +1771,7 @@ function openMenu(){
     +(email?'<div class="mrow acctrow"><span class="acctlbl">Signed in</span><span class="acctml">'+escHTML(email)+'</span></div>':'')
     +(inHub?'<button class="mrow" data-m="adjust">Edit this plan</button>':'')
     +(S.active==="nbme"?'<button class="mrow" data-m="newunit">Start a new block</button>':'')
-    +(inHub?'<button class="mrow" data-m="switch">'+(S.active==="nbme"?"Open Step 1 Command Center":"Back to M2 SCHEDULER")+'</button>':'')
+    +(inHub?'<button class="mrow" data-m="switch">'+(S.active==="nbme"?"Open Step 1 Command Center":"Back to M2 Scheduler")+'</button>':'')
     +'<button class="mrow" data-m="backup">Download a backup</button>'
     +'<button class="mrow" data-m="restore">Restore from a backup</button>'
     +'<button class="mrow" data-m="theme">'+(Theme.current()==="dark"?"Switch to light theme":"Switch to dark theme")+'</button>'
@@ -1766,13 +1794,13 @@ function menuAct(m){
   else if(m==="signout"){confirmSignOut();}
   else if(m==="backup"){const blob=new Blob([JSON.stringify(persistObj(),null,2)],{type:"application/json"});const u=URL.createObjectURL(blob);const a=document.createElement("a");a.href=u;a.download="lowyieldonly-backup-"+todayISO()+".json";a.click();URL.revokeObjectURL(u);toast("Backup downloaded");}
   else if(m==="restore"){const inp=document.getElementById("fileIn");inp.value="";inp.click();}
-  else if(m==="help"){modalSheet({title:"How this works",okLabel:"Got it",cancel:false,msg:"M2 SCHEDULER is your daily home for school blocks and NBME exams. Your plan is the remaining videos repacked from today to your exam date — check off what you watch and the rest re-distributes.\n\nDedicated Step 1 prep (NBME self-assessments, UWorld, AMBOSS) lives in the STEP tab. Log a UWorld block from Today or Stats to track block accuracy.\n\nReset all wipes everything and returns you to setup. The legacy Step 1 Command Center is still available from this menu. Progress syncs across your devices."});}
+  else if(m==="help"){modalSheet({title:"How this works",okLabel:"Got it",cancel:false,msg:"M2 Scheduler is your daily home for school blocks and NBME exams. Your plan is the remaining videos repacked from today to your exam date — check off what you watch and the rest re-distributes.\n\nDedicated Step 1 prep (NBME self-assessments, UWorld, AMBOSS) lives in the STEP tab. Log a UWorld block from Today or Stats to track block accuracy.\n\nReset all wipes everything and returns you to setup. The legacy Step 1 Command Center is still available from this menu. Progress syncs across your devices."});}
   else if(m==="reset"){modalSheet({title:"Reset everything?",danger:true,okLabel:"Erase & start over",msg:"This erases EVERYTHING across both hubs — every checkmark, Anki check, note, self-assessment score, UWorld block, review flag, your streak, AND your saved plans (exam dates, systems, settings), here and in your synced account.\n\nYou’ll be taken back to the start to build a fresh plan. You’ll get one chance to undo.",onOk:doResetAll});}
 }
 
 /* ---------- boot ---------- */
 /* ---------- theme (light / dark, follows OS until the user overrides) ---------- */
-const Theme={KEY:"lyo_theme",META:{light:"#EDF1F6",dark:"#15111C"},
+const Theme={KEY:"lyo_theme",META:{light:"#FAF7FC",dark:"#0C0912"},
   system(){try{return matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light";}catch(e){return "dark";}},
   saved(){const v=store.get(this.KEY);return (v==="light"||v==="dark")?v:null;},
   current(){return this.saved()||this.system();},
@@ -1790,7 +1818,7 @@ function boot(){
   wireFileInput();
   registerSW();
   if(!fbEnabled()){
-    app.innerHTML='<div class="wrap welcomewrap"><div class="welcome"><div class="wbrand">LOW YIELD ONLY</div><p class="wtag">Accounts aren\u2019t configured on this copy.</p></div></div>';
+    app.innerHTML='<div class="wrap welcomewrap"><div class="welcome"><div class="wbrand">Low Yield Only</div><p class="wtag">Accounts aren\u2019t configured on this copy.</p></div></div>';
     return;
   }
   renderAuthChecking();
