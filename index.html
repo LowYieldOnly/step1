@@ -130,6 +130,9 @@ b{color:var(--ink)}
 .cheer-tx{font-size:14px;color:var(--ink);line-height:1.5;min-width:0}
 .cheer-tx b{color:var(--ink);font-weight:700}
 .cheer-by{color:var(--text-2);font-style:italic;white-space:nowrap}
+.focusbar{display:flex;align-items:center;justify-content:space-between;gap:12px;background:var(--accent-bg);border:1px solid var(--border);border-radius:var(--r);padding:10px 14px;margin-bottom:16px;font-size:13.5px;color:var(--text-2)}
+.focusbar b{color:var(--ink)}
+.focusbar .link{white-space:nowrap}
 
 /* M1 Resource Hub */
 .m1wrap{margin-top:4px}
@@ -519,8 +522,10 @@ b{color:var(--ink)}
   .hmleg{display:flex;justify-content:space-between;font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums}
   .mcgrid{display:grid;grid-template-columns:repeat(7,1fr);gap:3px;margin-bottom:12px}
   .mcdow{font-size:9px;font-weight:700;letter-spacing:.05em;color:var(--faint);text-align:center;padding-bottom:2px}
-  .mccell{aspect-ratio:1;display:flex;align-items:center;justify-content:center;font-size:11px;color:var(--text-2);border-radius:6px;background:var(--surface-2);font-variant-numeric:tabular-nums}
-  .mccell.empty{background:none}
+  .mccell{aspect-ratio:1;display:flex;align-items:center;justify-content:center;font-size:11px;color:var(--text-2);border-radius:6px;background:var(--surface-2);font-variant-numeric:tabular-nums;cursor:pointer;transition:filter .12s,outline-color .12s}
+  .mccell:hover:not(.empty){filter:brightness(1.18)}
+  .mccell.sel{outline:1.5px solid var(--gold);outline-offset:-1px}
+  .mccell.empty{background:none;cursor:default}
   .mccell.load{background:var(--accent-bg);color:var(--accent-soft);font-weight:700}
   .mccell.done{background:color-mix(in srgb,var(--success) 22%,transparent);color:var(--success)}
   .mccell.review{background:color-mix(in srgb,var(--gold) 20%,transparent);color:var(--gold)}
@@ -1013,7 +1018,7 @@ function chrome(active){
   let tabs;
   if(S.active==="m1"){tabs=[["browse","Browse"],["daily","Daily"],["grades","Grades"],["progress","Progress"]];}
   else if(S.active==="stepd"){tabs=[];}
-  else{tabs=[["today","Today"],["plan","Calendar"],["stats","Stats"],["adjust","Plan"]];}
+  else{tabs=[["today","Today"],["plan","Planner"],["stats","Stats"],["adjust","Plan"]];}
   const nm=(S.active==="nbme"||S.active==="m1"||S.active==="stepd")?"Home":hubName(S.active||"step1");
   return '<div class="topbar'+(tabs.length?'':' solo')+'">'+'<button class="brandbtn" id="brandBtn" title="Switch hub">‹ <span class="brandnm">'+escHTML(nm)+'</span></button>'
    +(tabs.length?'<div class="nav">'+tabs.map(t=>'<button class="navb '+(active===t[0]?"on":"")+'" data-view="'+t[0]+'">'+t[1]+'</button>').join('')+'</div>':'')
@@ -1459,6 +1464,7 @@ function encouragement(todayRow,isOff,streak){
   return cheerHTML(q.t,q.a);
 }
 /* desktop rail widgets (hidden on mobile via .deskonly) */
+let TODAY_SEL=null;  // focus day for the Today panel (set by the rail mini-calendar; null = today)
 function streakHeatmap(){
   const days=(S.streak&&S.streak.days)||{};const WEEKS=16;
   let end=new Date();end.setHours(0,0,0,0);
@@ -1478,7 +1484,7 @@ function miniCalendar(){
     const row=SCHED.dayMap[iso];let cls="";
     if(row){if(row.off)cls="off";else if(row.rest)cls="rest";else if(row.review)cls="review";
       else if(row.items.length){cls=row.items.every(it=>isDone(it.id))?"done":"load";}}
-    g+='<div class="mccell '+cls+(iso===tISO?" today":"")+'">'+(+iso.slice(8))+'</div>';});
+    g+='<div class="mccell '+cls+(iso===tISO?" today":"")+(iso===TODAY_SEL?" sel":"")+'" data-mcsel="'+iso+'">'+(+iso.slice(8))+'</div>';});
   g+='</div>';
   return '<div class="card deskonly"><div class="cardhd">'+CAL_MONTHS[+ym.slice(5)-1]+'</div>'+g
     +'<div class="mcleg"><span><i class="mcd load"></i>study</span><span><i class="mcd review"></i>review</span><span><i class="mcd rest"></i>rest</span></div></div>';
@@ -1504,22 +1510,33 @@ function renderToday(){
     +paceHero()+'</div>';
   colA+='<div class="hchips">'+uworldChip()+'</div>'+loadCaveat();
   colA+=streakHeatmap()+miniCalendar();
-  if(isOffToday){
-    colB+='<div class="card"><div class="cardhd">'+(todayRow.off?'Day off':'Rest day')+' · '+fmtLong(todayISO())+'</div><p class="muted">No videos scheduled today.'+(todayRow.off?' <button class="link" id="unoff">Cancel day off</button>':'')+'</p></div>';
-  }
-  if(row && row.items.length){
-    const anyDone=row.items.some(it=>isDone(it.id));
-    colB+='<div class="card"><div class="cardhd">'+escHTML(heading)+' <span class="pill">'+row.min+' min</span>'+(anyDone?'<button class="hdreset" data-dayreset="'+row.iso+'" title="Uncheck everything on this day">Uncheck all</button>':'')+'</div>'
-      +'<div class="vlist">'+itemRows(row.items,{iso:row.iso})+'</div>'
-      +ankiBlock(row.iso,true)
-      +'<div class="rowtools">'+(todayRow&&!isOffToday?'<button class="btn ghost" id="offToday">Take today off</button>':'')+'</div></div>';
-  } else if(!isOffToday){
-    colB+='<div class="card"><div class="cardhd">Nothing scheduled today</div><p class="muted">Get ahead from the <b>Calendar</b> tab, or enjoy the breather.</p></div>';
+  const focusISO=(TODAY_SEL&&SCHED.dayMap[TODAY_SEL])?TODAY_SEL:todayISO();
+  const isFocusToday=(focusISO===todayISO());
+  if(!isFocusToday){
+    colB+='<div class="focusbar"><span>Studying ahead — <b>'+escHTML(fmtLong(focusISO))+'</b></span><button class="link" id="backToday">‹ Back to today</button></div>';
+    colB+=dayDetail(focusISO);
+  } else {
+    if(isOffToday){
+      colB+='<div class="card"><div class="cardhd">'+(todayRow.off?'Day off':'Rest day')+' · '+fmtLong(todayISO())+'</div><p class="muted">No videos scheduled today.'+(todayRow.off?' <button class="link" id="unoff">Cancel day off</button>':'')+'</p></div>';
+    }
+    if(row && row.items.length){
+      const anyDone=row.items.some(it=>isDone(it.id));
+      colB+='<div class="card"><div class="cardhd">'+escHTML(heading)+' <span class="pill">'+row.min+' min</span>'+(anyDone?'<button class="hdreset" data-dayreset="'+row.iso+'" title="Uncheck everything on this day">Uncheck all</button>':'')+'</div>'
+        +'<div class="vlist">'+itemRows(row.items,{iso:row.iso})+'</div>'
+        +ankiBlock(row.iso,true)
+        +'<div class="rowtools">'+(todayRow&&!isOffToday?'<button class="btn ghost" id="offToday">Take today off</button>':'')+'</div></div>';
+    } else if(!isOffToday){
+      colB+='<div class="card"><div class="cardhd">Nothing scheduled today</div><p class="muted">Study ahead by tapping a day on the calendar in the sidebar, or open the <b>Planner</b> tab.</p></div>';
+    }
   }
   app.innerHTML=chrome("today")+'<div class="wrap"><div class="cols"><div>'+colA+'</div><div>'+colB+'</div></div></div>';
   bindVlist();bindExtras();
   const o1=document.getElementById("offToday");if(o1)o1.onclick=()=>dayOffToggle(todayISO(),true);
   const o2=document.getElementById("unoff");if(o2)o2.onclick=()=>dayOffToggle(todayISO(),false);
+  const bt=document.getElementById("backToday");if(bt)bt.onclick=()=>{TODAY_SEL=null;render();};
+  const df=document.getElementById("d_off");if(df)df.onclick=()=>dayOffToggle(focusISO,true);
+  const du=document.getElementById("d_unoff");if(du)du.onclick=()=>dayOffToggle(focusISO,false);
+  document.querySelectorAll("[data-mcsel]").forEach(b=>b.onclick=()=>{const iso=b.dataset.mcsel;TODAY_SEL=(iso===todayISO())?null:iso;render();});
 }
 function toggleShakyItems(ids){const all=ids.every(isShaky);S.vshaky=S.vshaky||{};ids.forEach(id=>{if(all)delete S.vshaky[id];else S.vshaky[id]=true;});save();}
 function bindVlist(){document.querySelectorAll(".chk[data-ids]").forEach(b=>b.onclick=()=>toggleItems(b.dataset.ids.split(","),b.dataset.day));
@@ -2194,7 +2211,7 @@ function doResetAll(){
     S.cfgs=snap.cfgs;S.active=snap.active;S.cfg=S.active?S.cfgs[S.active]:null;_prevSig=progressSig();save();
     if(S.cfg){reflow();render();}else renderWelcome();toast("Restored ✓");});
 }
-const BUILD="2026-07-16j";
+const BUILD="2026-07-16k";
 function openMenu(){
   const email=Cloud.user&&Cloud.user.email;
   const html='<div class="sheet"><div class="sheethd">Menu</div>'
