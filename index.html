@@ -127,6 +127,7 @@ b{color:var(--ink)}
 .cheer-ic{font-size:19px;line-height:1.45;flex:0 0 auto}
 .cheer-tx{font-size:14px;color:var(--ink);line-height:1.5;min-width:0}
 .cheer-tx b{color:var(--ink);font-weight:700}
+.cheer-by{color:var(--text-2);font-style:italic;white-space:nowrap}
 
 /* ring (analog gauge) */
 .ring{display:block}
@@ -1198,34 +1199,76 @@ function clearAmboss(){const snap=JSON.parse(JSON.stringify(S.amboss||{total:nul
    A warm one-liner: celebrates finishing the day, honors a streak, nudges
    wellness on rest days, and otherwise rotates daily through a mixed pool so
    it stays fresh. Seeded by the date so it's stable across re-renders. */
-const CHEER=[
-  "Small, steady reps beat cramming — you're doing it the right way.",
-  "You needn't know everything today. Only a little more than yesterday.",
-  "Progress over perfection; consistency compounds.",
-  "Trust the plan. One block at a time is how you get there.",
-  "A brief note: have some water before your next block.",
-  "Step outside for five minutes today — the mind consolidates on the walk back.",
-  "Sleep is a study tool. Protect your seven to eight hours tonight.",
-  "One slow breath before you begin: in for four, out for four.",
-  "Stand and stretch between blocks; focus resets with the body.",
-  "Fuel matters — a real meal between blocks, not only coffee.",
-  "Showing up, again, is precisely what this exam rewards.",
-  "This is hard, and you are still here. That counts for something.",
-  "Be as generous with yourself as you would be with a friend studying this hard.",
-  "You are closer than you were yesterday. Keep at it.",
-  "Your worth is not a score. Do your best, and let that be enough today.",
-  "Every video finished is a concept that may appear on test day. It adds up."
+const QUOTES=[
+  {t:"If you get tired, learn to rest, not to quit.",a:"Banksy",th:"rest"},
+  {t:"Sometimes the most productive thing you can do is rest.",a:"Mark Black",th:"rest"},
+  {t:"Almost everything will work again if you unplug it for a few minutes — including you.",a:"Anne Lamott",th:"rest"},
+  {t:"Nature does not hurry, yet everything is accomplished.",a:"Lao Tzu",th:"rest"},
+  {t:"Exhaustion is not a status symbol.",a:"Brené Brown",th:"rest"},
+  {t:"You do not have to set yourself on fire to keep others warm.",a:"Anonymous",th:"rest"},
+  {t:"Beware the barrenness of a busy life.",a:"Socrates",th:"rest"},
+  {t:"Take rest; a field that has rested gives a bountiful crop.",a:"Ovid",th:"rest"},
+  {t:"Just because you take breaks doesn't mean you're broken.",a:"Curtis Tyrone Jones",th:"rest"},
+  {t:"Rest is not idleness.",a:"John Lubbock",th:"rest"},
+  {t:"Burn bright, not out.",a:"Hamza Khan",th:"rest"},
+  {t:"Eat when you're hungry, sleep when you're tired.",a:"Zen proverb",th:"rest"},
+  {t:"It does not matter how slowly you go as long as you do not stop.",a:"Confucius",th:"perseverance"},
+  {t:"The best way out is always through.",a:"Robert Frost",th:"perseverance"},
+  {t:"Success is not final, failure is not fatal: it is the courage to continue that counts.",a:"Winston Churchill",th:"perseverance"},
+  {t:"It always seems impossible until it's done.",a:"Nelson Mandela",th:"perseverance"},
+  {t:"Fall seven times, stand up eight.",a:"Japanese proverb",th:"perseverance"},
+  {t:"Perseverance is not a long race; it is many short races one after another.",a:"Walter Elliot",th:"perseverance"},
+  {t:"A river cuts through rock not because of its power, but its persistence.",a:"Jim Watkins",th:"perseverance"},
+  {t:"When you feel like quitting, think about why you started.",a:"Anonymous",th:"perseverance"},
+  {t:"If you can't fly, run; if you can't run, walk; if you can't walk, crawl — but keep moving.",a:"Martin Luther King Jr.",th:"perseverance"},
+  {t:"Perseverance is failing nineteen times and succeeding the twentieth.",a:"Julie Andrews",th:"perseverance"},
+  {t:"Our greatest glory is not in never falling, but in rising every time we fall.",a:"Confucius",th:"perseverance"},
+  {t:"I shall either find a way or make one.",a:"Hannibal",th:"perseverance"},
+  {t:"Many of life's failures are people who didn't realize how close they were to success when they gave up.",a:"Thomas Edison",th:"perseverance"},
+  {t:"The journey of a thousand miles begins with a single step.",a:"Lao Tzu",th:"progress"},
+  {t:"Great things are done by a series of small things brought together.",a:"Vincent van Gogh",th:"progress"},
+  {t:"Little by little, a little becomes a lot.",a:"Proverb",th:"progress"},
+  {t:"Progress, not perfection.",a:"Anonymous",th:"progress"},
+  {t:"Small progress is still progress.",a:"Anonymous",th:"progress"},
+  {t:"The secret of getting ahead is getting started.",a:"Mark Twain",th:"progress"},
+  {t:"Success is the sum of small efforts repeated day in and day out.",a:"Robert Collier",th:"progress"},
+  {t:"Slow, steady progress beats daily excuses.",a:"Robin Sharma",th:"progress"},
+  {t:"Little by little does the trick.",a:"Aesop",th:"progress"},
+  {t:"Most growth happens through many small steps — the key is to keep taking them.",a:"Dan Sullivan",th:"progress"},
+  {t:"Chew off a little every day; it's hard to swallow a whole pie at once.",a:"Richelle E. Goodrich",th:"progress"},
+  {t:"Don't compare your progress to others; we each need our own time to travel our own distance.",a:"Anonymous",th:"progress"},
+  {t:"You may encounter many defeats, but you must not be defeated.",a:"Maya Angelou",th:"resilience"},
+  {t:"What defines us is how well we rise after falling.",a:"Anonymous",th:"resilience"},
+  {t:"Failure is simply the opportunity to begin again, this time more intelligently.",a:"Henry Ford",th:"resilience"},
+  {t:"Tough times never last. Tough people do.",a:"Robert Schuller",th:"resilience"},
+  {t:"The brick walls are there to show us how badly we want something.",a:"Randy Pausch",th:"resilience"},
+  {t:"We must accept finite disappointment, but never lose infinite hope.",a:"Martin Luther King Jr.",th:"resilience"},
+  {t:"Every stumble is a step forward.",a:"Anonymous",th:"resilience"},
+  {t:"The chapter you're learning today could save a life tomorrow. Pay attention.",a:"Anonymous",th:"medicine"},
+  {t:"The life so short, the craft so long to learn.",a:"Hippocrates",th:"medicine"},
+  {t:"Not all heroes wear capes; some wear stethoscopes.",a:"Anonymous",th:"medicine"},
+  {t:"The good physician treats the disease; the great physician treats the patient.",a:"William Osler",th:"medicine"},
+  {t:"The day you stop learning is the day you stop healing.",a:"Anonymous",th:"medicine"},
+  {t:"To cure sometimes, to relieve often, to comfort always.",a:"Traditional medical maxim",th:"medicine"},
+  {t:"Wherever the art of medicine is loved, there is also a love of humanity.",a:"Hippocrates",th:"medicine"},
+  {t:"The most essential factor is persistence.",a:"William Osler",th:"medicine"},
+  {t:"You can't save everyone at once — but you can help the person in front of you.",a:"Anonymous",th:"medicine"}
 ];
 function daySeed(){const s=todayISO();let h=0;for(let i=0;i<s.length;i++)h=(h*31+s.charCodeAt(i))|0;return Math.abs(h);}
 function greeting(){const h=new Date().getHours();return h<12?"Good morning":(h<18?"Good afternoon":"Good evening");}
+function cheerHTML(text,author){
+  const body=author
+    ?'“'+escHTML(text)+'” <span class="cheer-by">— '+escHTML(author)+'</span>'
+    :escHTML(text);
+  return '<div class="cheer"><div class="cheer-tx"><b>'+greeting()+'.</b> '+body+'</div></div>';
+}
 function encouragement(todayRow,isOff,streak){
-  let tx;
   const allDone=todayRow&&!isOff&&todayRow.items.length&&todayRow.items.every(it=>isDone(it.id));
-  if(allDone)tx="Today's plan is complete. Rest easy tonight.";
-  else if(isOff)tx="Rest is part of the plan. Recover today; the work goes better for it tomorrow.";
-  else if(streak>=3&&daySeed()%3===0)tx=streak+" days running. Consistency is the whole of it — keep the thread going.";
-  else tx=CHEER[daySeed()%CHEER.length];
-  return '<div class="cheer"><div class="cheer-tx"><b>'+greeting()+'.</b> '+escHTML(tx)+'</div></div>';
+  if(allDone)return cheerHTML("Today's plan is complete. Rest easy tonight.",null);
+  if(isOff){const rest=QUOTES.filter(q=>q.th==="rest");const q=rest[daySeed()%rest.length];return cheerHTML(q.t,q.a);}
+  if(streak>=3&&daySeed()%4===0)return cheerHTML(streak+" days running. Consistency is the whole of it — keep the thread going.",null);
+  const q=QUOTES[daySeed()%QUOTES.length];
+  return cheerHTML(q.t,q.a);
 }
 function renderToday(){
   const st=SCHED.stats; const cs=currentStreak();
@@ -1765,7 +1808,7 @@ function doResetAll(){
     S.cfgs=snap.cfgs;S.active=snap.active;S.cfg=S.active?S.cfgs[S.active]:null;_prevSig=progressSig();save();
     if(S.cfg){reflow();render();}else renderWelcome();toast("Restored ✓");});
 }
-const BUILD="2026-07-15e";
+const BUILD="2026-07-15f";
 function openMenu(){
   const email=Cloud.user&&Cloud.user.email;
   const html='<div class="sheet"><div class="sheethd">Menu</div>'
