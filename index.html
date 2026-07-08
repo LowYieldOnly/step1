@@ -501,10 +501,10 @@ b{color:var(--ink)}
   /* 5-6 dashboard grid: symmetrical columns (Stats / Plan) */
   .cols{grid-template-columns:1fr 1fr;gap:0 26px;align-items:start}
   /* Study view quadrants: 3 blocks top-left, checklist top-right, calendar across the bottom */
-  .studygrid{display:grid;grid-template-columns:1fr 1fr;grid-template-areas:"blocks work" "cal cal";gap:20px 26px;align-items:start}
+  .studygrid{display:grid;grid-template-columns:1fr 1fr;grid-template-areas:"blocks work" "cal cal";gap:18px 26px;align-items:start}
   .studyblocks{grid-area:blocks;display:flex;flex-direction:column;gap:18px}
   .studyblocks>*{margin:0!important}
-  .studywork{grid-area:work}
+  .studywork{grid-area:work;display:flex;flex-direction:column;gap:18px}
   .studywork>*{margin:0!important}
   .studycalz{grid-area:cal}
   .studycalz>*{margin:0!important}
@@ -1534,7 +1534,7 @@ function renderToday(){
     +'<div class="big">'+examLeft+' <span>days to '+escHTML(S.cfg.examLabel||(S.cfg.examType==="step1"?"Step 1":"your exam"))+'</span></div>'
     +'<div class="sub">'+overall().done+' / '+overall().total+' videos'+(cs>0?' · '+cs+'-day streak':' · '+overall().pct+'% complete')+'</div>'
     +paceHero()+'</div>';
-  colA+='<div class="hchips">'+uworldChip()+'</div>'+loadCaveat();
+  colA+=loadCaveat();
   colA+=encouragement(todayRow,isOffToday,cs);
   colA+=ankiCardBlock(focusISO);
   // UPPER-RIGHT — the checklist for the selected day
@@ -1554,6 +1554,8 @@ function renderToday(){
       colB+='<div class="card"><div class="cardhd">Nothing scheduled today</div><p class="muted">Tap a day on the calendar to study ahead, or enjoy the breather.</p></div>';
     }
   }
+  // "Log practice questions" sits directly beneath the day box
+  colB+='<div class="hchips">'+uworldChip()+'</div>';
   app.innerHTML=chrome("today")+'<div class="wrap"><div class="studygrid"><div class="studyblocks">'+colA+'</div><div class="studywork">'+colB+'</div><div class="studycalz">'+studyCalendar()+'</div></div></div>';
   bindVlist();bindExtras();
   const o1=document.getElementById("offToday");if(o1)o1.onclick=()=>dayOffToggle(todayISO(),true);
@@ -2239,7 +2241,7 @@ function doResetAll(){
     S.cfgs=snap.cfgs;S.active=snap.active;S.cfg=S.active?S.cfgs[S.active]:null;_prevSig=progressSig();save();
     if(S.cfg){reflow();render();}else renderWelcome();toast("Restored ✓");});
 }
-const BUILD="2026-07-16o";
+const BUILD="2026-07-16p";
 function openMenu(){
   const email=Cloud.user&&Cloud.user.email;
   const html='<div class="sheet"><div class="sheethd">Menu</div>'
