@@ -834,24 +834,26 @@ function itemRows(items,opts){opts=opts||{};if(!items.length)return '<div class=
       +'</div>';}).join('')+'</div>').join('');}
 
 /* ---------- copy helpers + per-day Anki block ---------- */
-function fallbackCopy(t){try{const ta=document.createElement("textarea");ta.value=t;ta.style.position="fixed";ta.style.opacity="0";document.body.appendChild(ta);ta.focus();ta.select();document.execCommand("copy");document.body.removeChild(ta);toast("Copied");}catch(e){toast("Copy failed — long-press to copy");}}
-function copyText(t){t=t||"";if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(t).then(()=>toast("Copied"),()=>fallbackCopy(t));}else fallbackCopy(t);}
+function fallbackCopy(t,msg){try{const ta=document.createElement("textarea");ta.value=t;ta.style.position="fixed";ta.style.opacity="0";document.body.appendChild(ta);ta.focus();ta.select();document.execCommand("copy");document.body.removeChild(ta);toast(msg||"Copied");}catch(e){toast("Copy failed — long-press to copy");}}
+function copyText(t,msg){t=t||"";if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(t).then(()=>toast(msg||"Copied"),()=>fallbackCopy(t,msg));}else fallbackCopy(t,msg);}
 function dayTagPairs(iso){const row=SCHED&&SCHED.dayMap[iso];if(!row)return [];const seen={},out=[];row.items.forEach(it=>{if(it.res==="bnb"&&it.tag&&!seen[it.tag]){seen[it.tag]=1;out.push([vName(it),it.tag]);}});return out;}
 function dayTags(iso){return dayTagPairs(iso).map(p=>p[1]);}
+/* Format AnKing tags as a single Anki Browse search: "tag:X" OR "tag:Y" … */
+function ankiSearch(tags){return (tags||[]).filter(Boolean).map(t=>'"tag:'+t+'"').join(" OR ");}
 function ankiBlock(iso,openTags){if(!hasRes("anking"))return "";const pairs=dayTagPairs(iso);const on=!!(S.akdone&&S.akdone[iso]);
   let h='<div class="anki"><button class="chk akchk '+(on?"on":"")+'" data-akiso="'+iso+'" aria-label="anki reviews done">'+(on?"✓":"")+'</button>'
     +'<div class="akmeta"><span class="aklab">Anki reviews — AnKing</span>'
     +'<span class="akcount">'+(pairs.length?(pairs.length+' AnKing tag'+(pairs.length>1?"s":"")+' for today'):'Today\u2019s spaced-repetition reviews')+'</span></div>'
-    +(pairs.length?'<button class="cpyall" data-cpyall="'+iso+'">Copy all</button>':'')+'</div>';
+    +(pairs.length?'<button class="cpyall" data-cpyall="'+iso+'" title="Copy an Anki Browse search for this day’s AnKing tags">Copy tags</button>':'')+'</div>';
   if(pairs.length){
     h+='<details class="aktags"'+(openTags?' open':'')+'><summary>Show AnKing tags</summary><div class="aktaglist">'
-      + pairs.map(p=>'<button class="aktagrow" data-copy="'+escAttr(p[1])+'" title="Copy tag"><span class="aktagname">'+escHTML(p[0])+'</span><span class="aktagcopy">⧉</span></button>').join('')
+      + pairs.map(p=>'<button class="aktagrow" data-copy="'+escAttr(p[1])+'" title="Copy Anki search for this tag"><span class="aktagname">'+escHTML(p[0])+'</span><span class="aktagcopy">⧉</span></button>').join('')
       + '</div></details>';
   }
   return h;}
 function bindExtras(){
-  document.querySelectorAll("[data-copy]").forEach(b=>b.onclick=(e)=>{e.stopPropagation();copyText(b.getAttribute("data-copy"));});
-  document.querySelectorAll("[data-cpyall]").forEach(b=>b.onclick=(e)=>{e.stopPropagation();const t=dayTags(b.dataset.cpyall);if(!t.length){toast("No tags here");return;}copyText(t.join("\n"));});
+  document.querySelectorAll("[data-copy]").forEach(b=>b.onclick=(e)=>{e.stopPropagation();copyText(ankiSearch([b.getAttribute("data-copy")]),"Copied — paste into Anki’s Browse search");});
+  document.querySelectorAll("[data-cpyall]").forEach(b=>b.onclick=(e)=>{e.stopPropagation();const t=dayTags(b.dataset.cpyall);if(!t.length){toast("No tags here");return;}copyText(ankiSearch(t),"Copied "+t.length+" AnKing tag"+(t.length>1?"s":"")+" — paste into Anki’s Browse search");});
   document.querySelectorAll("[data-akiso]").forEach(b=>b.onclick=(e)=>{e.stopPropagation();const iso=b.dataset.akiso;S.akdone=S.akdone||{};if(S.akdone[iso])delete S.akdone[iso];else S.akdone[iso]=true;save();const on=!!S.akdone[iso];b.classList.toggle("on",on);b.textContent=on?"✓":"";});
 }
 
@@ -1763,7 +1765,7 @@ function doResetAll(){
     S.cfgs=snap.cfgs;S.active=snap.active;S.cfg=S.active?S.cfgs[S.active]:null;_prevSig=progressSig();save();
     if(S.cfg){reflow();render();}else renderWelcome();toast("Restored ✓");});
 }
-const BUILD="2026-07-15b";
+const BUILD="2026-07-15c";
 function openMenu(){
   const email=Cloud.user&&Cloud.user.email;
   const inHub=!!S.active;
