@@ -1765,15 +1765,11 @@ function doResetAll(){
     S.cfgs=snap.cfgs;S.active=snap.active;S.cfg=S.active?S.cfgs[S.active]:null;_prevSig=progressSig();save();
     if(S.cfg){reflow();render();}else renderWelcome();toast("Restored ✓");});
 }
-const BUILD="2026-07-15d";
+const BUILD="2026-07-15e";
 function openMenu(){
   const email=Cloud.user&&Cloud.user.email;
-  const inHub=!!S.active;
   const html='<div class="sheet"><div class="sheethd">Menu</div>'
     +(email?'<div class="mrow acctrow"><span class="acctlbl">Signed in</span><span class="acctml">'+escHTML(email)+'</span></div>':'')
-    +(inHub?'<button class="mrow" data-m="switch">'+(S.active==="nbme"?"Open Step 1 Command Center":"Back to M2 Scheduler")+'</button>':'')
-    +'<button class="mrow" data-m="backup">Download a backup</button>'
-    +'<button class="mrow" data-m="restore">Restore from a backup</button>'
     +'<button class="mrow" data-m="theme">'+(Theme.current()==="dark"?"Switch to light theme":"Switch to dark theme")+'</button>'
     +'<button class="mrow danger" data-m="reset">Reset all progress</button>'
     +'<button class="mrow" data-m="signout">Sign out</button>'
@@ -1782,15 +1778,12 @@ function openMenu(){
   const ov=document.createElement("div");ov.className="overlay";ov.id="overlay";ov.innerHTML=html;
   ov.onclick=(e)=>{if(e.target===ov)ov.remove();};
   document.body.appendChild(ov);
-  ov.querySelectorAll(".mrow").forEach(b=>{if(!b.dataset.m)return;b.onclick=()=>{const m=b.dataset.m;if(m!=="restore")ov.remove();menuAct(m);};});
+  ov.querySelectorAll(".mrow").forEach(b=>{if(!b.dataset.m)return;b.onclick=()=>{const m=b.dataset.m;ov.remove();menuAct(m);};});
 }
 function menuAct(m){
   if(m==="close")return;
   if(m==="theme"){Theme.toggle();}
-  else if(m==="switch"){enterHub(S.active==="nbme"?"step1":"nbme");}
   else if(m==="signout"){confirmSignOut();}
-  else if(m==="backup"){const blob=new Blob([JSON.stringify(persistObj(),null,2)],{type:"application/json"});const u=URL.createObjectURL(blob);const a=document.createElement("a");a.href=u;a.download="lowyieldonly-backup-"+todayISO()+".json";a.click();URL.revokeObjectURL(u);toast("Backup downloaded");}
-  else if(m==="restore"){const inp=document.getElementById("fileIn");inp.value="";inp.click();}
   else if(m==="reset"){modalSheet({title:"Reset everything?",danger:true,okLabel:"Erase & start over",msg:"This erases EVERYTHING across both hubs — every checkmark, Anki check, note, self-assessment score, UWorld block, review flag, your streak, AND your saved plans (exam dates, systems, settings), here and in your synced account.\n\nYou’ll be taken back to the start to build a fresh plan. You’ll get one chance to undo.",onOk:doResetAll});}
 }
 
