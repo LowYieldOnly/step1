@@ -129,7 +129,7 @@ b{color:var(--ink)}
 .cheer-tx b{color:var(--ink);font-weight:700}
 .cheer-by{color:var(--text-2);font-style:italic;white-space:nowrap}
 
-/* M1 Command Center */
+/* M1 Resource Hub */
 .m1wrap{margin-top:4px}
 .m1search{margin:14px 0}
 .m1search input{width:100%;background:var(--bg2);border:1px solid var(--line2);color:var(--ink);border-radius:11px;padding:12px 14px;font-size:15px;font-family:inherit}
@@ -399,6 +399,19 @@ b{color:var(--ink)}
 .wfoot .acct{color:var(--faint);font-size:12px;font-family:var(--sans);letter-spacing:.01em}
 .wfootlink{background:none;border:0;padding:2px 4px;color:var(--text-2);font-family:var(--sans);font-size:12.5px;font-weight:500;letter-spacing:.01em;cursor:pointer;transition:color .15s}
 .wfootlink:hover{color:var(--accent-soft)}
+/* About page */
+.about{max-width:520px;margin:0 auto;text-align:center;padding-bottom:44px}
+.about .m1back{display:block;text-align:left;margin-bottom:16px}
+.about-brand{font-size:clamp(28px,7.5vw,40px);margin-top:4px}
+.about-lead{font-family:var(--font-display);font-style:italic;font-size:clamp(17px,4.4vw,21px);color:var(--text-2);line-height:1.5;margin:8px auto 18px;max-width:24em}
+.about-intro{font-size:14.5px;color:var(--text-2);line-height:1.65;margin:0 auto 30px;max-width:27em}
+.about-sec{font-family:var(--mono);font-size:10px;font-weight:800;letter-spacing:.16em;text-transform:uppercase;color:var(--faint);margin-bottom:14px}
+.about-credits{display:flex;flex-direction:column;gap:16px;text-align:left;margin:0 auto 30px;max-width:27em}
+.credit{border-left:2px solid var(--gold);padding-left:14px}
+.credit-role{font-family:var(--mono);font-size:10px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:var(--phos);margin-bottom:5px}
+.credit-name{font-size:14.5px;color:var(--ink);line-height:1.5}
+.credit-cls{display:block;font-size:12px;color:var(--muted);margin-top:2px}
+.about-goal{font-size:14.5px;color:var(--text-2);line-height:1.65;max-width:27em;margin:0 auto}
 
 /* ordered systems (reorderable) */
 .sysord{display:flex;flex-direction:column;gap:6px;margin:10px 0 8px}
@@ -1656,7 +1669,7 @@ function m1StudiedCount(){let n=0;for(const k in (S.vdone||{}))if(k.indexOf("m1:
 function m1HubCard(){
   const n=m1StudiedCount();
   const sub=n>0?(n+" topics in progress · resources & Anki tags"):"First-year resources & Anki tags across 11 courses";
-  return '<button class="hubcard set" data-m1enter="1"><div class="hubname">M1 Command Center</div>'
+  return '<button class="hubcard set" data-m1enter="1"><div class="hubname">M1 Resource Hub</div>'
     +'<div class="hubsub">'+sub+'</div><div class="hubgo">Enter →</div></button>';
 }
 function m1CourseStat(c){let t=0,d=0;c.collections.forEach(C=>C.sets.forEach(s=>s.bricks.forEach(b=>{t++;if(S.vdone[b.id])d++;})));return {total:t,done:d,pct:t?Math.round(d/t*100):0};}
@@ -1885,7 +1898,7 @@ function renderWelcome(){
   let body='<div class="welcome"><div class="wbrand">Low Yield Only</div>'
     +'<div class="wservire"><span>SERVIRE</span></div>'
     +'<div class="hubs">'+hubCard("nbme")+m1HubCard()+'</div>'
-    +'<div class="wfoot">'+((Cloud.user&&Cloud.user.email)?('<div class="acct">Signed in as '+escHTML(Cloud.user.email)+'</div>'):'')+'<button class="wfootlink" id="w_step1">Step 1 Command Center (legacy)</button><button class="wfootlink" id="w_restore">Restore a backup</button>'+((Cloud.user&&Cloud.user.email)?'<button class="wfootlink" id="w_signout">Sign out</button>':'')+'</div>'
+    +'<div class="wfoot">'+((Cloud.user&&Cloud.user.email)?('<div class="acct">Signed in as '+escHTML(Cloud.user.email)+'</div>'):'')+'<button class="wfootlink" id="w_about">About</button><button class="wfootlink" id="w_step1">Step 1 Command Center (legacy)</button><button class="wfootlink" id="w_restore">Restore a backup</button>'+((Cloud.user&&Cloud.user.email)?'<button class="wfootlink" id="w_signout">Sign out</button>':'')+'</div>'
     +'</div>';
   app.innerHTML='<div class="wrap welcomewrap">'+body+'</div>';
   document.querySelectorAll("[data-enter]").forEach(b=>b.onclick=()=>enterHub(b.dataset.enter));
@@ -1894,6 +1907,24 @@ function renderWelcome(){
   const wso=document.getElementById("w_signout");if(wso)wso.onclick=confirmSignOut;
   const ws=document.getElementById("w_step1");if(ws)ws.onclick=()=>enterHub("step1");
   const wr=document.getElementById("w_restore");if(wr)wr.onclick=()=>{const inp=document.getElementById("fileIn");if(inp){inp.value="";inp.click();}};
+  const wa=document.getElementById("w_about");if(wa)wa.onclick=renderAbout;
+}
+function renderAbout(){
+  const body='<div class="about">'
+    +'<button class="m1back" id="a_back">‹ Back</button>'
+    +'<div class="wbrand about-brand">Low Yield Only</div>'
+    +'<div class="wservire"><span>SERVIRE</span></div>'
+    +'<p class="about-lead">By Brody medical students, for Brody medical students.</p>'
+    +'<p class="about-intro">Low Yield Only brings the study schedules and curated resources of the preclinical years together in one place — built to remain useful long after its creators have moved on.</p>'
+    +'<div class="about-sec">Credits</div>'
+    +'<div class="about-credits">'
+      +'<div class="credit"><div class="credit-role">M2 Scheduler</div><div class="credit-name">Conceived and organized by <b>Dylan Lewis</b>.</div><div class="credit-cls">Class of 2029</div></div>'
+      +'<div class="credit"><div class="credit-role">M1 Resource Hub</div><div class="credit-name">Designed and built by <b>Ash Beach</b> and <b>Caleb Dixon</b>, with implementation support from <b>Dylan Lewis</b>.</div><div class="credit-cls">Class of 2029</div></div>'
+    +'</div>'
+    +'<p class="about-goal">Offered freely, in the hope that Low Yield Only endures as a shared resource for every Brody student in the years to come.</p>'
+    +'</div>';
+  app.innerHTML='<div class="wrap welcomewrap">'+body+'</div>';
+  const ab=document.getElementById("a_back");if(ab)ab.onclick=renderWelcome;
 }
 function enterHub(key){if(!S.cfgs[key]){startOnboard(key);return;}activate(key);S.active=key;VIEW="today";reflow();render();}
 
@@ -2048,7 +2079,7 @@ function doResetAll(){
     S.cfgs=snap.cfgs;S.active=snap.active;S.cfg=S.active?S.cfgs[S.active]:null;_prevSig=progressSig();save();
     if(S.cfg){reflow();render();}else renderWelcome();toast("Restored ✓");});
 }
-const BUILD="2026-07-16d";
+const BUILD="2026-07-16f";
 function openMenu(){
   const email=Cloud.user&&Cloud.user.email;
   const html='<div class="sheet"><div class="sheethd">Menu</div>'
