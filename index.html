@@ -633,15 +633,16 @@ store.init();
 let SKEY="cc_state";          // active local-cache key (becomes per-account after sign-in)
 const LEGACY_KEY="cc_state";  // pre-account local data lives here (offered for one-time import)
 let AUTHED=false;             // required sign-in gate
-/* ---------- access control: ECU students only (+ admin allowlist) ----------
+/* ---------- access control: anyone with an ECU email (+ admin allowlist) ----
    Client gate for honest users; real enforcement lives in firestore.rules.
-   Edit these lists to manage access. */
-const ACCESS_DOMAINS=["students.ecu.edu"];
+   Each domain matches itself and any subdomain (ecu.edu, students.ecu.edu,
+   med.ecu.edu, …). Edit these lists to manage access. */
+const ACCESS_DOMAINS=["ecu.edu"];
 const ACCESS_EMAILS=["dylanwlewis@protonmail.com","trial@lowyieldonly.com"]; // admins / exceptions + shared trial account
 function emailAllowed(email){email=(email||"").trim().toLowerCase();if(!email)return false;
   if(ACCESS_EMAILS.indexOf(email)>=0)return true;
-  const d=email.split("@")[1]||"";return ACCESS_DOMAINS.indexOf(d)>=0;}
-const ACCESS_MSG="Access is limited to ECU students. Sign in with your @students.ecu.edu email.";
+  const d=email.split("@")[1]||"";return ACCESS_DOMAINS.some(dom=>d===dom||d.endsWith("."+dom));}
+const ACCESS_MSG="Access is limited to ECU. Sign in with your ECU email address (ending in ecu.edu).";
 
 /* ---------- NBME exam blocks (your school's combined units) ----------
    Each block maps to a set of systems; B&B/Pathoma/Sketchy follow per system. */
@@ -2000,7 +2001,7 @@ function renderAuthGate(opts){opts=opts||{};AUTHED=false;
   app.innerHTML='<div class="wrap welcomewrap"><div class="welcome">'
     +'<div class="wbrand">Low Yield Only</div>'
     +'<p class="wtag">'+(signup?"Create your ECU profile to begin.":"Sign in to your profile.")+'</p>'
-    +'<p class="muted small" style="margin:-6px 0 14px">ECU students only \u2014 use your <b>@students.ecu.edu</b> email.</p>'
+    +'<p class="muted small" style="margin:-6px 0 14px">ECU only \u2014 use your <b>ecu.edu</b> email address.</p>'
     +'<div class="authtabs"><button class="atab '+(!signup?"on":"")+'" data-mode="signin">Sign in</button><button class="atab '+(signup?"on":"")+'" data-mode="signup">Create account</button></div>'
     +'<div class="authcard"><div class="form">'
     +'<label>Email<input type="email" id="auth_email" autocomplete="email" inputmode="email" autocapitalize="none" spellcheck="false" placeholder="you@school.edu"></label>'
@@ -2243,7 +2244,7 @@ function doResetAll(){
     S.cfgs=snap.cfgs;S.active=snap.active;S.cfg=S.active?S.cfgs[S.active]:null;_prevSig=progressSig();save();
     if(S.cfg){reflow();render();}else renderWelcome();toast("Restored ✓");});
 }
-const BUILD="2026-07-16v";
+const BUILD="2026-07-16w";
 /* ---------- What's new (changelog) ----------
    Newest entry first. Bump the top entry's id whenever you add one and the
    pop-up shows once per person (tracked in synced settings.seenUpdate). */
