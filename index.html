@@ -463,6 +463,13 @@ b{color:var(--ink)}
 .atab.on{background:var(--accent);color:var(--on-accent)}
 .autherr{color:var(--red);font-size:12.5px;margin:11px 2px 0;line-height:1.45;display:none}
 .authforgot{display:block;text-align:center;margin:14px auto 0;font-size:13px}
+.demolink{display:block;text-align:center;margin:18px auto 0;font-size:12.5px;color:var(--muted)}
+.demolink:hover{color:var(--phos)}
+.demobar{position:fixed;left:50%;bottom:16px;transform:translateX(-50%);z-index:70;display:flex;align-items:center;gap:12px;background:var(--surface-overlay);border:1px solid var(--gold);border-radius:999px;padding:8px 8px 8px 17px;box-shadow:var(--shadow);font-size:13px;color:var(--ink);max-width:calc(100vw - 24px)}
+.demobar-t{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.demobar-t b{color:var(--gold);font-weight:800}
+.demobar-x{flex:0 0 auto;background:var(--gold);color:#1a1206;border:0;border-radius:999px;padding:7px 15px;font-weight:800;font-size:12.5px;cursor:pointer;font-family:inherit}
+.demobar-x:hover{filter:brightness(1.08)}
 .authspin{width:26px;height:26px;margin:24px auto 0;border:3px solid var(--line2);border-top-color:var(--phos);border-radius:50%;animation:aspin .8s linear infinite}
 @keyframes aspin{to{transform:rotate(360deg)}}
 .cfmsg{padding:4px 16px 14px;margin:0;color:var(--text-secondary);font-family:var(--font-read);font-size:15px;line-height:1.6;white-space:pre-line}
@@ -633,6 +640,7 @@ store.init();
 let SKEY="cc_state";          // active local-cache key (becomes per-account after sign-in)
 const LEGACY_KEY="cc_state";  // pre-account local data lives here (offered for one-time import)
 let AUTHED=false;             // required sign-in gate
+let DEMO=false;               // read-only preview: no save, no cloud sync
 /* ---------- access control: anyone with an ECU email (+ admin allowlist) ----
    Client gate for honest users; real enforcement lives in firestore.rules.
    Each domain matches itself and any subdomain (ecu.edu, students.ecu.edu,
@@ -708,7 +716,7 @@ function hubName(key){return key==="step1"?"STEP 1 Command Center":"M2 Scheduler
 let _prevSig=null;
 
 function persistObj(){return {active:S.active,cfgs:S.cfgs,vdone:S.vdone,vskip:S.vskip,vdoneDate:S.vdoneDate,akdone:S.akdone,notes:S.notes,streak:S.streak,assessments:S.assessments,uworld:S.uworld,amboss:S.amboss,vshaky:S.vshaky,settings:S.settings,_updatedAt:S._updatedAt,_resetAt:S._resetAt||0};}
-function save(){S._updatedAt=Date.now();markStreakIfProgress();store.set(SKEY,JSON.stringify(persistObj()));Cloud.schedulePush();}
+function save(){if(DEMO)return;S._updatedAt=Date.now();markStreakIfProgress();store.set(SKEY,JSON.stringify(persistObj()));Cloud.schedulePush();}
 
 /* ---------- streak (set of studied dates; merge-safe) ---------- */
 function progressSig(){let n=0;for(const k in S.vdone)if(S.vdone[k])n++;return n;}
@@ -862,6 +870,7 @@ Cloud.init=async function(){if(Cloud.inited||!fbEnabled())return;Cloud.inited=tr
     // no anonymous fallback — onAuthStateChanged(null) shows the sign-in gate
   }catch(e){Cloud.inited=false;if(!AUTHED)renderAuthGate({offline:true});}};
 Cloud.onAuth=function(u){
+  if(DEMO)return;               // in preview mode, ignore auth events (no sign-in gate)
   // ignore leftover anonymous sessions from older versions
   if(u&&u.isAnonymous){try{firebase.auth().signOut();}catch(e){}return;}
   if(u&&!emailAllowed(u.email)){try{firebase.auth().signOut();}catch(e){}Cloud.user=null;AUTHED=false;renderAuthGate({denied:true});return;}
@@ -1980,7 +1989,37 @@ let AUTH_MODE="signin";
 function renderAuthChecking(){
   app.innerHTML='<div class="wrap welcomewrap"><div class="welcome"><div class="wbrand">Low Yield Only</div><p class="wtag">Connecting\u2026</p><div class="authspin"></div></div></div>';
 }
-function renderAuthGate(opts){opts=opts||{};AUTHED=false;
+/* ---------- read-only preview / demo ----------
+   Lets an instructor (or anyone) tour a fully-populated sample plan without an
+   account. save() is a no-op and cloud sync never starts, so nothing persists;
+   "Exit" reloads back to the sign-in gate. */
+function demoISO(n){return isoFromDate(addDays(isoToDate(todayISO()),n));}
+function enterDemo(){
+  DEMO=true;AUTHED=true;SKEY="cc_demo";
+  resetStateToEmpty();
+  S.cfgs.nbme={examType:"nbme",examLabel:"Cardiology shelf",examISO:demoISO(45),startISO:demoISO(-12),wkdayHrs:4,wkendHrs:3,restDays:[0],reviewDays:7,resources:{bnb:true,bootcamp:false,pathoma:true,sketchy:true,fa:true,anking:true,uworld:true},systems:["Cardiology","Pulmonary","Renal"],sysOrder:SYS_ORDER_DEFAULT.slice()};
+  normalizeCfg(S.cfgs.nbme,"nbme");
+  [0,1,2,3].forEach(d=>{S.streak.days[demoISO(-d)]=true;});   // a lived-in streak
+  S.active=null;S.cfg=null;
+  showDemoBanner();
+  renderWelcome();
+  loadCatalog(()=>{seedDemoProgress();_prevSig=progressSig();renderWelcome();});
+}
+function seedDemoProgress(){
+  const prev=S.active;activate("nbme");
+  const bl=buildBacklog();
+  for(let i=0;i<Math.min(16,bl.length);i++){S.vdone[bl[i].id]=true;S.vdoneDate[bl[i].id]=demoISO(-(i%4));}
+  [5,9].forEach(i=>{if(bl[i])S.vshaky[bl[i].id]=true;});
+  S.active=prev;S.cfg=prev?S.cfgs[prev]:null;
+}
+function showDemoBanner(){
+  if(document.getElementById("demobar"))return;
+  const bar=document.createElement("div");bar.id="demobar";bar.className="demobar";
+  bar.innerHTML='<span class="demobar-t"><b>Preview</b> — nothing you do here is saved</span><button class="demobar-x" id="demoexit">Exit</button>';
+  document.body.appendChild(bar);
+  document.getElementById("demoexit").onclick=()=>{DEMO=false;location.reload();};
+}
+function renderAuthGate(opts){if(DEMO)return;opts=opts||{};AUTHED=false;   // preview overrides the gate
   if(opts.offline){
     app.innerHTML='<div class="wrap welcomewrap"><div class="welcome"><div class="wbrand">Low Yield Only</div>'
       +'<p class="wtag">Couldn\u2019t reach the server.</p>'
@@ -2010,12 +2049,14 @@ function renderAuthGate(opts){opts=opts||{};AUTHED=false;
     +'<button class="btn big" id="auth_go">'+(signup?"Create account":"Sign in")+'</button>'
     +(signup?'':'<button class="link authforgot" id="auth_forgot">Forgot password?</button>')
     +'</div>'
+    +'<button class="link demolink" id="auth_demo">Just looking? Preview the demo →</button>'
     +'</div></div>';
   document.querySelectorAll("[data-mode]").forEach(b=>b.onclick=()=>{AUTH_MODE=b.dataset.mode;renderAuthGate();});
   const go=document.getElementById("auth_go");if(go)go.onclick=authSubmit;
   const em=document.getElementById("auth_email");if(em)em.onkeydown=(e)=>{if(e.key==="Enter"){const p=document.getElementById("auth_pw");if(p)p.focus();}};
   const pw=document.getElementById("auth_pw");if(pw)pw.onkeydown=(e)=>{if(e.key==="Enter")authSubmit();};
   const fg=document.getElementById("auth_forgot");if(fg)fg.onclick=authForgot;
+  const dm=document.getElementById("auth_demo");if(dm)dm.onclick=enterDemo;
 }
 function authErr(msg){const e=document.getElementById("auth_err");if(e){e.textContent=msg||"";e.style.display=msg?"block":"none";}}
 function authBusy(b){const g=document.getElementById("auth_go");if(g){g.disabled=b;g.textContent=b?"Please wait\u2026":(AUTH_MODE==="signup"?"Create account":"Sign in");}}
@@ -2244,7 +2285,7 @@ function doResetAll(){
     S.cfgs=snap.cfgs;S.active=snap.active;S.cfg=S.active?S.cfgs[S.active]:null;_prevSig=progressSig();save();
     if(S.cfg){reflow();render();}else renderWelcome();toast("Restored ✓");});
 }
-const BUILD="2026-07-16w";
+const BUILD="2026-07-16x";
 /* ---------- What's new (changelog) ----------
    Newest entry first. Bump the top entry's id whenever you add one and the
    pop-up shows once per person (tracked in synced settings.seenUpdate). */
