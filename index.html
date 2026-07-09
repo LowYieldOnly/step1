@@ -1908,7 +1908,42 @@ function bufferHint(){
   if(bufDays>0)return base+', leaving '+bufDays+' study day'+(bufDays===1?'':'s')+' for UWorld &amp; review before your exam ('+fmtShort(c.examISO)+').';
   return base+' — no buffer set, so content runs right up to your exam.';
 }
+function renderAdjustBrody(c){
+  const blk=BRODY_TRIAL;const st=SCHED.stats;
+  const dows=DOW.map((d,i)=>'<button type="button" class="tog '+((c.restDays||[]).includes(i)?"on":"")+'" data-dow="'+i+'">'+d+'</button>').join('');
+  const resBtn=(k,lab)=>'<button type="button" class="tog '+(hasRes(k)?"on":"")+'" data-res="'+k+'">'+lab+'</button>';
+  const pace=brodyPace(c);const heavy=(SCHED.weekLoad||[]).filter(w=>w.heavy);
+  let body='',colB='';
+  body+='<div class="card"><div class="cardhd">This block</div>'
+    +'<p class="muted small" style="margin:0"><b>'+escHTML(blk.name)+'</b> <span class="pill">Brody calendar</span> — weeks of '+fmtShort(blk.weeks[0].start)+' → shelf '+fmtShort(blk.shelf)+'.</p>'
+    +'<div class="grid2" style="margin-top:12px"><div><div class="kv">'+st.remItems+'</div><div class="kvl">videos left</div></div>'
+    +'<div><div class="kv">'+Math.round(st.remMin/60)+'h</div><div class="kvl">video time left</div></div>'
+    +'<div><div class="kv">'+pace+'h</div><div class="kvl">daily pace</div></div>'
+    +'<div><div class="kv">'+heavy.length+'</div><div class="kvl">heavy week'+(heavy.length===1?'':'s')+'</div></div></div></div>';
+  body+='<div class="card"><div class="cardhd">Study days &amp; pace</div><div class="form">'
+    +'<div class="flab">No-video / rest days</div><div class="togrow">'+dows+'</div>'
+    +'<div class="flab mt">Daily pace</div>'
+    +'<div class="pacerow"><button type="button" class="pacebtn" data-fpace="dec" aria-label="less">−</button>'
+    +'<div class="paceval"><b>'+pace+' h</b><span>per study day</span></div>'
+    +'<button type="button" class="pacebtn" data-fpace="inc" aria-label="more">+</button></div>'
+    +'<p class="muted small" style="margin:9px 0 0">'+(heavy.length?(heavy.length+' week'+(heavy.length>1?'s':'')+' need more than '+pace+' h/day — raise the pace or free a day.'):('At '+pace+' h/day every week is covered before its quiz.'))+'</p>'
+    +'</div></div>';
+  body+='<div class="card soft"><div class="cardhd">Weekly plan</div>'+brodyPreview(c)+'</div>';
+  colB+='<div class="card"><div class="cardhd">Resources</div><div class="togrow">'
+    +resBtn("bnb","Boards &amp; Beyond")+resBtn("bootcamp","Bootcamp")+resBtn("pathoma","Pathoma")+resBtn("sketchy","Sketchy")+resBtn("fa","First Aid")+resBtn("anking","AnKing")+resBtn("uworld","UWorld")
+    +'</div><p class="muted small">Turn on the resources you use — the plan re-flows live.</p></div>';
+  colB+='<div class="card soft"><div class="cardhd">Different plan?</div><p class="muted small">Switch to an exam countdown or start a fresh unit.</p><button class="btn" id="newUnit">Start a new plan…</button></div>';
+  colB+='<div class="card soft"><button class="btn" id="saveDone">Done — back to Study</button><p class="muted small center" style="margin-top:10px">Every change here saves and re-flows your plan instantly.</p></div>';
+  app.innerHTML=chrome("adjust")+'<div class="wrap"><div class="cols"><div>'+body+'</div><div>'+colB+'</div></div></div>';
+  const apply=()=>{save();reflow();renderAdjust();};
+  document.querySelectorAll("[data-dow]").forEach(b=>b.onclick=()=>{const i=+b.dataset.dow;c.restDays=c.restDays||[];const k=c.restDays.indexOf(i);if(k>=0)c.restDays.splice(k,1);else c.restDays.push(i);apply();});
+  document.querySelectorAll("[data-res]").forEach(b=>b.onclick=()=>{c.resources=c.resources||{};c.resources[b.dataset.res]=!hasRes(b.dataset.res);apply();});
+  document.querySelectorAll("[data-fpace]").forEach(b=>b.onclick=()=>{const cur=brodyPace(c);c.brodyPace=Math.max(0.5,cur+(b.dataset.fpace==="inc"?0.5:-0.5));apply();});
+  const nu=document.getElementById("newUnit");if(nu)nu.onclick=()=>{startOnboard("nbme",true);};
+  const sd=document.getElementById("saveDone");if(sd)sd.onclick=()=>{VIEW="today";render();};
+}
 function renderAdjust(){
+  if(S.cfg&&S.cfg.brody){renderAdjustBrody(S.cfg);return;}
   const c=S.cfg;const st=SCHED.stats;
   const dows=DOW.map((d,i)=>'<button type="button" class="tog '+((c.restDays||[]).includes(i)?"on":"")+'" data-dow="'+i+'">'+d+'</button>').join('');
   const resBtn=(k,lab)=>'<button type="button" class="tog '+(hasRes(k)?"on":"")+'" data-res="'+k+'">'+lab+'</button>';
@@ -2557,7 +2592,7 @@ function doResetAll(){
     S.cfgs=snap.cfgs;S.active=snap.active;S.cfg=S.active?S.cfgs[S.active]:null;_prevSig=progressSig();save();
     if(S.cfg){reflow();render();}else renderWelcome();toast("Restored ✓");});
 }
-const BUILD="2026-07-17c";
+const BUILD="2026-07-17d";
 /* ---------- What's new (changelog) ----------
    Newest entry first. Bump the top entry's id whenever you add one and the
    pop-up shows once per person (tracked in synced settings.seenUpdate). */
