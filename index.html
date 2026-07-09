@@ -476,6 +476,7 @@ b{color:var(--ink)}
 .paceval{flex:1;text-align:center;display:flex;flex-direction:column;gap:1px}
 .paceval b{font-family:var(--font-display);font-size:24px;color:var(--ink);line-height:1}
 .paceval span{font-family:var(--mono);font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--faint)}
+.catchuphd{font-family:var(--mono);font-size:10.5px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--gold);margin:14px 0 6px;padding-top:12px;border-top:1px dashed color-mix(in srgb,var(--gold) 40%,transparent)}
 .ordbtn[disabled]{opacity:.25;cursor:default}
 
 /* overlay sheet (menu) */
@@ -860,10 +861,13 @@ function brodyWeekLoads(c,blk){
   catVideos().forEach(v=>{if(blk.systems.indexOf(v.sys)<0)return;if(!en[v.res])return;if(v.res==="pathoma"&&!pathSel.has(pathChapterOf(v)))return;
     const w=blk.videoWeek[v.res+"|"+v.name]||blk.weeks.length;load[w]+=v.min;cnt[w]++;});
   const rest=c.restDays||[0];const off=c.off||{};
-  return blk.weeks.map(w=>{let days=0,dd=isoToDate(w.start);for(let i=0;i<7;i++){const iso=isoFromDate(dd);if(!rest.includes(dd.getDay())&&!off[iso])days++;dd=addDays(dd,1);}
-    return {n:w.n,label:w.label,loadMin:load[w.n],count:cnt[w.n],days:Math.max(1,days)};});
+  const cursor=(todayISO()>blk.weeks[0].start)?todayISO():blk.weeks[0].start;
+  const wkStart=blk.weeks.map(w=>w.start);
+  return blk.weeks.map((w,i)=>{const end=(i+1<blk.weeks.length)?wkStart[i+1]:blk.shelf;
+    let days=0,dd=isoToDate(w.start);for(let k=0;k<10;k++){const iso=isoFromDate(dd);if(iso>=end)break;if(iso>=cursor&&!rest.includes(dd.getDay())&&!off[iso])days++;dd=addDays(dd,1);}
+    return {n:w.n,label:w.label,loadMin:load[w.n],count:cnt[w.n],days:days,past:days===0};});
 }
-function brodyRecommendedPace(loads){let m=0;loads.forEach(w=>{m=Math.max(m,w.loadMin/w.days);});return Math.max(0.5,Math.ceil(m/60/0.5)*0.5);}
+function brodyRecommendedPace(loads){let m=0;loads.forEach(w=>{if(w.days>0)m=Math.max(m,w.loadMin/w.days);});return Math.max(0.5,Math.ceil(m/60/0.5)*0.5);}
 function brodyPace(c){return (c&&c.brodyPace)?c.brodyPace:brodyRecommendedPace(brodyWeekLoads(c,BRODY_TRIAL));}
 function reflowBrody(c,blk){
   const en=resEnabled();const pathSel=en.pathoma?effectivePathChapters(c):new Set();
@@ -893,11 +897,13 @@ function reflowBrody(c,blk){
   const dayItems={};
   const reserved=(c.ankiMinPerDay||0)+(c.uworldMinPerDay||0);
   const paceMin=Math.max(15,Math.round(brodyPace(c)*60)-reserved);   // recommended (or user-set) h/day
-  const firstOpen=()=>{for(let i=0;i<blk.weeks.length;i++){if(weekDays[blk.weeks[i].n].length)return weekDays[blk.weeks[i].n][0];}return null;};
+  const currentWk=weekOf(cursorISO);
+  // FORWARD weeks (this week + upcoming): pack into their own days at the pace,
+  // so you're immediately in sync with what Brody is teaching now.
   blk.weeks.forEach(w=>{
+    if(w.n<currentWk)return;                      // earlier weeks are catch-up, below
     const wv=vids.filter(v=>v.wk===w.n&&!doneOrSkip(v.id));if(!wv.length)return;
-    let dys=weekDays[w.n];if(!dys.length){const f=firstOpen();dys=f?[f]:[];}
-    if(!dys.length)return;
+    const dys=weekDays[w.n];if(!dys.length)return;
     dys.forEach(iso=>{dayItems[iso]=dayItems[iso]||[];});
     let ci=0;
     wv.forEach(it=>{
@@ -909,20 +915,33 @@ function reflowBrody(c,blk){
       dayItems[iso]=dayItems[iso]||[];dayItems[iso].push(it);
     });
   });
+  // CATCH-UP: if you joined mid-block, videos from weeks already passed are
+  // spread EVENLY under the forward content across every remaining study day —
+  // never dumped on day one. You stay synced going forward and close the gap
+  // gradually; some may not fit, which is fine (it's secondary to staying current).
+  const allDays=[];blk.weeks.forEach(w=>{if(w.n>=currentWk)allDays.push.apply(allDays,weekDays[w.n]);});allDays.sort();
+  const missed=vids.filter(v=>v.wk<currentWk&&!doneOrSkip(v.id));
+  let catchupMin=missed.reduce((a,v)=>a+v.min,0),catchupCount=missed.length;
+  if(missed.length&&allDays.length){
+    const N=allDays.length;let mi=0,acc=0;
+    allDays.forEach((iso,idx)=>{const target=catchupMin*(idx+1)/N;
+      while(mi<missed.length&&acc<target){const it=missed[mi];(dayItems[iso]=dayItems[iso]||[]).push(Object.assign({},it,{catchup:true}));acc+=it.min;mi++;}});
+    while(mi<missed.length){const iso=allDays[N-1];(dayItems[iso]=dayItems[iso]||[]).push(Object.assign({},missed[mi],{catchup:true}));mi++;}
+  }
   const donePins={};const vdd=S.vdoneDate||{};
   for(const id in vdd){const it=byId[id];if(it){(donePins[vdd[id]]=donePins[vdd[id]]||[]).push(it);}}
   const days=[];const dayMap={};
   {let dd=isoToDate(cursorISO),g=0;while(isoFromDate(dd)<shelf&&g++<400){const iso=isoFromDate(dd),wd=dd.getDay();
     const isRest=rest.includes(wd),isOff=!!off[iso];
     const packed=dayItems[iso]||[];const pinned=donePins[iso]||[];
-    const items=packed.concat(pinned).sort((a,b)=>(orderIndex[a.id]!=null?orderIndex[a.id]:1e9)-(orderIndex[b.id]!=null?orderIndex[b.id]:1e9));
+    const items=packed.concat(pinned).sort((a,b)=>((a.catchup?1:0)-(b.catchup?1:0))||((orderIndex[a.id]!=null?orderIndex[a.id]:1e9)-(orderIndex[b.id]!=null?orderIndex[b.id]:1e9)));
     const row={iso,off:isOff,rest:isRest&&!isOff,review:false,items,brodyWeek:weekOf(iso),
       min:items.reduce((a,b)=>a+b.min,0),todo:packed.reduce((a,b)=>a+b.min,0)};
     days.push(row);dayMap[iso]=row;dd=addDays(dd,1);}}
-  const weekLoad=blk.weeks.map(w=>{const dl=weekDays[w.n];const cap=dl.length*paceMin;
-    const load=vids.filter(v=>v.wk===w.n).reduce((a,v)=>a+v.min,0);return {n:w.n,label:w.label,start:w.start,load,cap,heavy:load>cap+10,days:dl.length};});
+  const weekLoad=blk.weeks.map(w=>{const dl=weekDays[w.n];const cap=dl.length*paceMin;const past=w.n<currentWk;
+    const load=vids.filter(v=>v.wk===w.n).reduce((a,v)=>a+v.min,0);return {n:w.n,label:w.label,start:w.start,load,cap,heavy:(!past&&load>cap+10),past,days:dl.length};});
   const remaining=vids.filter(v=>!doneOrSkip(v.id));const remMin=remaining.reduce((a,b)=>a+b.min,0);
-  SCHED={days,dayMap,atRisk:[],byId,reviewDates:[],contentDates:days.filter(d=>!d.rest&&!d.off).map(d=>d.iso),brody:blk,weekLoad,brodyPace:brodyPace(c),
+  SCHED={days,dayMap,atRisk:[],byId,reviewDates:[],contentDates:days.filter(d=>!d.rest&&!d.off).map(d=>d.iso),brody:blk,weekLoad,brodyPace:brodyPace(c),currentWeek:currentWk,catchup:{count:catchupCount,min:catchupMin},
     stats:{remMin,availMin:0,examDaysLeft:Math.max(0,daysBetween(todayISO(),shelf)),reqPerDay:0,feasible:!weekLoad.some(w=>w.heavy),
       contentDaysLeft:days.filter(d=>!d.rest&&!d.off).length,reviewDaysLeft:0,
       totalItems:vids.length,doneItems:vids.filter(v=>isDone(v.id)).length,remItems:remaining.length}};
@@ -1163,6 +1182,15 @@ function ankiBlock(iso,openTags){if(!hasRes("anking"))return "";const pairs=dayT
   }
   return h;}
 function ankiCardBlock(iso){if(!hasRes("anking"))return "";return '<div class="card ankicard">'+ankiBlock(iso,true)+'</div>';}
+/* day checklist, splitting current-week videos from mid-join catch-up */
+function dayVlist(row){
+  const cur=row.items.filter(i=>!i.catchup),cat=row.items.filter(i=>i.catchup);
+  if(!cur.length&&!cat.length)return '<div class="vlist">'+itemRows([],{iso:row.iso})+'</div>';
+  let h='';
+  if(cur.length)h+='<div class="vlist">'+itemRows(cur,{iso:row.iso})+'</div>';
+  if(cat.length)h+='<div class="catchuphd">↩ Catch-up · earlier weeks</div><div class="vlist">'+itemRows(cat,{iso:row.iso})+'</div>';
+  return h;
+}
 function brodyChip(iso){
   if(!(SCHED&&SCHED.brody))return "";
   const row=SCHED.dayMap[iso];const wn=row&&row.brodyWeek;if(!wn)return "";
@@ -1254,9 +1282,11 @@ function render(){
 /* concise pacing summary woven into the Today hero (full version stays in Plan) */
 function paceHero(){const st=SCHED.stats;
   if(SCHED.brody){const heavy=(SCHED.weekLoad||[]).filter(w=>w.heavy).length;
+    const cu=(SCHED.catchup&&SCHED.catchup.count)||0;
+    const cuTxt=cu?(" \u00b7 catching up on "+cu+" earlier video"+(cu===1?"":"s")):"";
     if(st.remItems===0)return '<div class="herostat ok"><span class="hsdot"></span><span>All videos done \u2014 you\u2019re fully caught up to Brody.</span></div>';
     const cls=heavy?"warn":"ok";
-    const txt=heavy?("~"+SCHED.brodyPace+" h/day \u00b7 "+heavy+" heavy week"+(heavy===1?"":"s")+" \u2014 raise your pace or free a day"):("On pace at ~"+SCHED.brodyPace+" h/day \u00b7 covered before each quiz");
+    const txt=heavy?("~"+SCHED.brodyPace+" h/day \u00b7 "+heavy+" heavy week"+(heavy===1?"":"s")+" \u2014 raise your pace or free a day"):("On pace at ~"+SCHED.brodyPace+" h/day \u00b7 covered before each quiz"+cuTxt);
     return '<div class="herostat '+cls+'"><span class="hsdot"></span><span>'+txt+'</span></div>';}
   const hpd=Math.round(st.reqPerDay/60*10)/10;let cls,txt;
   if(st.remItems===0){cls="ok";txt="All videos done \u2014 UWorld & review from here.";}
@@ -1743,7 +1773,7 @@ function renderToday(){
     if(row && row.items.length){
       const anyDone=row.items.some(it=>isDone(it.id));
       colB+='<div class="card"><div class="cardhd">'+escHTML(heading)+' <span class="pill">'+row.min+' min</span>'+(anyDone?'<button class="hdreset" data-dayreset="'+row.iso+'" title="Uncheck everything on this day">Uncheck all</button>':'')+'</div>'
-        +'<div class="vlist">'+itemRows(row.items,{iso:row.iso})+'</div>'
+        +dayVlist(row)
         +'<div class="rowtools">'+(todayRow&&!isOffToday?'<button class="btn ghost" id="offToday">Take today off</button>':'')+'</div></div>';
     } else if(!isOffToday){
       colB+='<div class="card"><div class="cardhd">Nothing scheduled today</div><p class="muted">Tap a day on the calendar to study ahead, or enjoy the breather.</p></div>';
@@ -1807,7 +1837,7 @@ function dayDetail(iso){
   else if(row.off)h+='<p class="muted">Day off — no videos scheduled. <button class="link" id="d_unoff">Cancel day off</button></p>';
   else if(row.rest)h+='<p class="muted small">Weekly rest day. Enjoy the breather.</p>';
   else if(row.review)h+='<p class="muted small">Review window — timed UWorld blocks + Anki. No new videos.</p>';
-  else if(row.items.length)h+='<div class="vlist">'+itemRows(row.items,{iso:iso})+'</div>'+'<div class="rowtools"><button class="btn ghost" id="d_off">Take this day off</button></div>';
+  else if(row.items.length)h+=dayVlist(row)+'<div class="rowtools"><button class="btn ghost" id="d_off">Take this day off</button></div>';
   else h+='<p class="muted small">Nothing scheduled this day.</p>';
   return h+'</div>';
 }
@@ -2528,9 +2558,11 @@ function brodyPreview(ob){
   const total=loads.reduce((a,w)=>a+w.loadMin,0);
   if(!total)return '<p class="muted small" style="margin:0">Turn on at least one video resource to see the weekly plan.</p>';
   const pace=brodyPace(ob);const paceMin=pace*60;
-  const rows=loads.map(w=>{const h=w.loadMin/60;const heavy=w.loadMin>w.days*paceMin+10;
-    return '<div class="brodywk'+(heavy?' heavy':'')+'"><span class="bw-n">Wk '+w.n+'</span><span class="bw-l">'+escHTML(w.label)+'</span><span class="bw-h">'+(Math.round(h*10)/10)+' h'+(heavy?' ⚠':'')+'</span></div>';}).join('');
-  let h='<p class="muted small" style="margin:0 0 10px">'+Math.round(total/60)+' h of video across '+blk.weeks.length+' Brody weeks → shelf '+fmtShort(blk.shelf)+'. At <b>'+pace+' h/day</b> each week is covered before its quiz; ⚠ marks a week that needs more than that.</p>';
+  const rows=loads.map(w=>{const h=w.loadMin/60;const heavy=!w.past&&w.loadMin>w.days*paceMin+10;
+    const tag=w.past?'<span class="bw-h" style="color:var(--gold)">catch-up</span>':('<span class="bw-h">'+(Math.round(h*10)/10)+' h'+(heavy?' ⚠':'')+'</span>');
+    return '<div class="brodywk'+(heavy?' heavy':'')+(w.past?' past':'')+'"><span class="bw-n">Wk '+w.n+'</span><span class="bw-l">'+escHTML(w.label)+'</span>'+tag+'</div>';}).join('');
+  const missedH=loads.filter(w=>w.past).reduce((a,w)=>a+w.loadMin,0)/60;
+  let h='<p class="muted small" style="margin:0 0 10px">'+Math.round(total/60)+' h of video across '+blk.weeks.length+' Brody weeks → shelf '+fmtShort(blk.shelf)+'. At <b>'+pace+' h/day</b> each upcoming week is covered before its quiz; ⚠ marks a week that needs more.'+(missedH>0?(' You joined mid-block — the ~'+Math.round(missedH)+' h from earlier weeks spreads in as catch-up under your current work.'):'')+'</p>';
   h+='<div class="brodywks">'+rows+'</div>';
   return h;
 }
@@ -2592,7 +2624,7 @@ function doResetAll(){
     S.cfgs=snap.cfgs;S.active=snap.active;S.cfg=S.active?S.cfgs[S.active]:null;_prevSig=progressSig();save();
     if(S.cfg){reflow();render();}else renderWelcome();toast("Restored ✓");});
 }
-const BUILD="2026-07-17d";
+const BUILD="2026-07-17e";
 /* ---------- What's new (changelog) ----------
    Newest entry first. Bump the top entry's id whenever you add one and the
    pop-up shows once per person (tracked in synced settings.seenUpdate). */
