@@ -470,6 +470,12 @@ b{color:var(--ink)}
 .brodychip .bc-wk{flex:0 0 auto;font-family:var(--mono);font-size:10px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--phos);background:var(--phos-soft);border:1px solid var(--phos-dim);border-radius:999px;padding:3px 9px}
 .brodychip.heavy{border-color:color-mix(in srgb,var(--gold) 50%,transparent)}
 .brodychip .bc-heavy{flex:0 0 auto;margin-left:auto;font-size:11px;font-weight:800;color:var(--gold)}
+.pacerow{display:flex;align-items:center;gap:12px;margin-top:6px}
+.pacebtn{flex:0 0 auto;width:42px;height:42px;border-radius:12px;border:1px solid var(--line2);background:var(--bg2);color:var(--phos);font-size:22px;font-weight:700;line-height:1;cursor:pointer;transition:all .14s}
+.pacebtn:hover{border-color:var(--phos-dim);background:var(--phos-soft)}
+.paceval{flex:1;text-align:center;display:flex;flex-direction:column;gap:1px}
+.paceval b{font-family:var(--font-display);font-size:24px;color:var(--ink);line-height:1}
+.paceval span{font-family:var(--mono);font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--faint)}
 .ordbtn[disabled]{opacity:.25;cursor:default}
 
 /* overlay sheet (menu) */
@@ -843,6 +849,22 @@ function isSkip(id){return !!S.vskip[id];}
    SCHED shape the Study/Stats/calendar views already consume.
    ============================================================ */
 function brodyBlock(c){return (c&&c.brody==="heme-renal")?BRODY_TRIAL:null;}
+/* Brody plan paces itself: the recommended h/day is whatever covers the
+   heaviest week across its non-rest days. The student nudges it up/down; the
+   week loads and the "heavy" flags follow. No manual weekday/weekend hours. */
+function brodyWeekLoads(c,blk){
+  const R=c.resources||{};
+  const en={bnb:R.bnb,bootcamp:R.bootcamp,pathoma:R.pathoma,skmicro:R.sketchy,skpharm:R.sketchy};
+  const pathSel=en.pathoma?effectivePathChapters(c):new Set();
+  const load={},cnt={};blk.weeks.forEach(w=>{load[w.n]=0;cnt[w.n]=0;});
+  catVideos().forEach(v=>{if(blk.systems.indexOf(v.sys)<0)return;if(!en[v.res])return;if(v.res==="pathoma"&&!pathSel.has(pathChapterOf(v)))return;
+    const w=blk.videoWeek[v.res+"|"+v.name]||blk.weeks.length;load[w]+=v.min;cnt[w]++;});
+  const rest=c.restDays||[0];const off=c.off||{};
+  return blk.weeks.map(w=>{let days=0,dd=isoToDate(w.start);for(let i=0;i<7;i++){const iso=isoFromDate(dd);if(!rest.includes(dd.getDay())&&!off[iso])days++;dd=addDays(dd,1);}
+    return {n:w.n,label:w.label,loadMin:load[w.n],count:cnt[w.n],days:Math.max(1,days)};});
+}
+function brodyRecommendedPace(loads){let m=0;loads.forEach(w=>{m=Math.max(m,w.loadMin/w.days);});return Math.max(0.5,Math.ceil(m/60/0.5)*0.5);}
+function brodyPace(c){return (c&&c.brodyPace)?c.brodyPace:brodyRecommendedPace(brodyWeekLoads(c,BRODY_TRIAL));}
 function reflowBrody(c,blk){
   const en=resEnabled();const pathSel=en.pathoma?effectivePathChapters(c):new Set();
   const lastWk=blk.weeks.length;
@@ -869,6 +891,8 @@ function reflowBrody(c,blk){
   const todayISO_=todayISO();let doneTodayMin=0;
   for(const id in (S.vdoneDate||{})){if(S.vdoneDate[id]===todayISO_&&byId[id])doneTodayMin+=byId[id].min;}
   const dayItems={};
+  const reserved=(c.ankiMinPerDay||0)+(c.uworldMinPerDay||0);
+  const paceMin=Math.max(15,Math.round(brodyPace(c)*60)-reserved);   // recommended (or user-set) h/day
   const firstOpen=()=>{for(let i=0;i<blk.weeks.length;i++){if(weekDays[blk.weeks[i].n].length)return weekDays[blk.weeks[i].n][0];}return null;};
   blk.weeks.forEach(w=>{
     const wv=vids.filter(v=>v.wk===w.n&&!doneOrSkip(v.id));if(!wv.length)return;
@@ -878,7 +902,7 @@ function reflowBrody(c,blk){
     let ci=0;
     wv.forEach(it=>{
       if(ci>dys.length-1)ci=dys.length-1;
-      let iso=dys[ci];const budget=dayBudgetMin(isoToDate(iso));
+      let iso=dys[ci];const budget=paceMin;
       const base=(iso===todayISO_?doneTodayMin:0);
       const used=(dayItems[iso]||[]).reduce((a,x)=>a+x.min,0)+base;
       if(used>0&&used+it.min>budget+10&&ci<dys.length-1){ci++;iso=dys[ci];}
@@ -895,10 +919,10 @@ function reflowBrody(c,blk){
     const row={iso,off:isOff,rest:isRest&&!isOff,review:false,items,brodyWeek:weekOf(iso),
       min:items.reduce((a,b)=>a+b.min,0),todo:packed.reduce((a,b)=>a+b.min,0)};
     days.push(row);dayMap[iso]=row;dd=addDays(dd,1);}}
-  const weekLoad=blk.weeks.map(w=>{const dl=weekDays[w.n];const cap=dl.reduce((a,iso)=>a+dayBudgetMin(isoToDate(iso)),0);
+  const weekLoad=blk.weeks.map(w=>{const dl=weekDays[w.n];const cap=dl.length*paceMin;
     const load=vids.filter(v=>v.wk===w.n).reduce((a,v)=>a+v.min,0);return {n:w.n,label:w.label,start:w.start,load,cap,heavy:load>cap+10,days:dl.length};});
   const remaining=vids.filter(v=>!doneOrSkip(v.id));const remMin=remaining.reduce((a,b)=>a+b.min,0);
-  SCHED={days,dayMap,atRisk:[],byId,reviewDates:[],contentDates:days.filter(d=>!d.rest&&!d.off).map(d=>d.iso),brody:blk,weekLoad,
+  SCHED={days,dayMap,atRisk:[],byId,reviewDates:[],contentDates:days.filter(d=>!d.rest&&!d.off).map(d=>d.iso),brody:blk,weekLoad,brodyPace:brodyPace(c),
     stats:{remMin,availMin:0,examDaysLeft:Math.max(0,daysBetween(todayISO(),shelf)),reqPerDay:0,feasible:!weekLoad.some(w=>w.heavy),
       contentDaysLeft:days.filter(d=>!d.rest&&!d.off).length,reviewDaysLeft:0,
       totalItems:vids.length,doneItems:vids.filter(v=>isDone(v.id)).length,remItems:remaining.length}};
@@ -1228,7 +1252,13 @@ function render(){
 }
 
 /* concise pacing summary woven into the Today hero (full version stays in Plan) */
-function paceHero(){const st=SCHED.stats;const hpd=Math.round(st.reqPerDay/60*10)/10;let cls,txt;
+function paceHero(){const st=SCHED.stats;
+  if(SCHED.brody){const heavy=(SCHED.weekLoad||[]).filter(w=>w.heavy).length;
+    if(st.remItems===0)return '<div class="herostat ok"><span class="hsdot"></span><span>All videos done \u2014 you\u2019re fully caught up to Brody.</span></div>';
+    const cls=heavy?"warn":"ok";
+    const txt=heavy?("~"+SCHED.brodyPace+" h/day \u00b7 "+heavy+" heavy week"+(heavy===1?"":"s")+" \u2014 raise your pace or free a day"):("On pace at ~"+SCHED.brodyPace+" h/day \u00b7 covered before each quiz");
+    return '<div class="herostat '+cls+'"><span class="hsdot"></span><span>'+txt+'</span></div>';}
+  const hpd=Math.round(st.reqPerDay/60*10)/10;let cls,txt;
   if(st.remItems===0){cls="ok";txt="All videos done \u2014 UWorld & review from here.";}
   else if(st.feasible){cls="ok";txt="On pace at ~"+hpd+" h/day"+(st.reviewDaysLeft>0?(" \u00b7 "+st.reviewDaysLeft+" review day"+(st.reviewDaysLeft===1?"":"s")+" to spare"):" \u00b7 right to the wire");}
   else{cls="warn";txt="Behind \u2014 ~"+hpd+" h/day needed \u00b7 "+SCHED.atRisk.length+" video"+(SCHED.atRisk.length===1?"":"s")+" don\u2019t fit yet";}
@@ -2321,7 +2351,7 @@ function enterHub(key){if(!S.cfgs[key]){startOnboard(key);return;}activate(key);
 let _ob=null;
 function defaultsForHub(key,fresh){const ex=fresh?null:S.cfgs[key];
   let o;
-  if(ex)o={hub:key,fresh:false,brody:ex.brody||null,examLabel:ex.examLabel||"",examISO:ex.examISO||"",startISO:ex.startISO||todayISO(),wkdayHrs:ex.wkdayHrs,wkendHrs:ex.wkendHrs,restDays:(ex.restDays||[0]).slice(),reviewDays:ex.reviewDays,resources:Object.assign({bnb:true,bootcamp:false,pathoma:true,sketchy:true,fa:true,anking:true,uworld:true},ex.resources||{}),systems:(ex.systems||SYS).slice(),sysOrder:(ex.sysOrder&&ex.sysOrder.length===SYS.length?ex.sysOrder:SYS_ORDER_DEFAULT).slice(),pathChapters:(Array.isArray(ex.pathChapters)?ex.pathChapters.slice():undefined)};
+  if(ex)o={hub:key,fresh:false,brody:ex.brody||null,brodyPace:ex.brodyPace||null,examLabel:ex.examLabel||"",examISO:ex.examISO||"",startISO:ex.startISO||todayISO(),wkdayHrs:ex.wkdayHrs,wkendHrs:ex.wkendHrs,restDays:(ex.restDays||[0]).slice(),reviewDays:ex.reviewDays,resources:Object.assign({bnb:true,bootcamp:false,pathoma:true,sketchy:true,fa:true,anking:true,uworld:true},ex.resources||{}),systems:(ex.systems||SYS).slice(),sysOrder:(ex.sysOrder&&ex.sysOrder.length===SYS.length?ex.sysOrder:SYS_ORDER_DEFAULT).slice(),pathChapters:(Array.isArray(ex.pathChapters)?ex.pathChapters.slice():undefined)};
   // a brand-new plan starts with every resource unchecked — the student picks
   else o={hub:key,fresh:!!fresh,examLabel:key==="step1"?"Step 1":"",examISO:"",startISO:todayISO(),wkdayHrs:6,wkendHrs:4,restDays:[0],reviewDays:14,resources:{bnb:false,bootcamp:false,pathoma:false,sketchy:false,fa:false,anking:false,uworld:false},systems:(key==="nbme"?[]:SYS.slice()),sysOrder:SYS_ORDER_DEFAULT.slice()};
   // NBME hub now selects individual systems (like Step 1); migrate any legacy block selection
@@ -2376,12 +2406,23 @@ function renderOnboard(){
   if(!ob.brody)body+='<div class="card"><div class="cardhd">Dates</div><div class="form">'
     +'<label>Exam date'+dateTriggerHTML("o_exam",ob.examISO,"Pick your exam date")+'</label>'
     +'<label>Start date'+dateTriggerHTML("o_start",ob.startISO,"Pick a start date")+'</label></div></div>';
-  body+='<div class="card"><div class="cardhd">How much can you study?</div><div class="form">'
-    +'<label>Weekday hours/day<input type="number" id="o_wk" min="0" step="0.5" value="'+ob.wkdayHrs+'"></label>'
-    +'<label>Weekend hours/day<input type="number" id="o_we" min="0" step="0.5" value="'+ob.wkendHrs+'"></label>'
-    +'<div class="flab">Weekly rest days</div><div class="togrow">'+dows+'</div>'
-    +(ob.brody?'':'<label class="mt">UWorld / review buffer — finish content this many study days before your exam<input type="number" id="o_rev" min="0" step="1" value="'+ob.reviewDays+'"></label>')
-    +'</div></div>';
+  if(ob.brody){const pace=brodyPace(ob),rec=brodyRecommendedPace(brodyWeekLoads(ob,BRODY_TRIAL));
+    body+='<div class="card"><div class="cardhd">Study days &amp; pace</div><div class="form">'
+      +'<div class="flab">No-video / rest days</div><div class="togrow">'+dows+'</div>'
+      +'<div class="flab mt">Daily pace</div>'
+      +'<div class="pacerow"><button type="button" class="pacebtn" data-opace="dec" aria-label="less">−</button>'
+      +'<div class="paceval"><b>'+pace+' h</b><span>per study day</span></div>'
+      +'<button type="button" class="pacebtn" data-opace="inc" aria-label="more">+</button></div>'
+      +'<p class="muted small" style="margin:9px 0 0">'+(ob.brodyPace?('Set to '+pace+' h/day.'+(pace<rec?' Below the ~'+rec+' h/day your heaviest week needs — that week will run heavy.':' You’ll finish weeks with room to spare.')):('Recommended ~'+rec+' h/day keeps you covered before each quiz — nudge it to fit your schedule.'))+'</p>'
+      +'</div></div>';
+  } else {
+    body+='<div class="card"><div class="cardhd">How much can you study?</div><div class="form">'
+      +'<label>Weekday hours/day<input type="number" id="o_wk" min="0" step="0.5" value="'+ob.wkdayHrs+'"></label>'
+      +'<label>Weekend hours/day<input type="number" id="o_we" min="0" step="0.5" value="'+ob.wkendHrs+'"></label>'
+      +'<div class="flab">Weekly rest days</div><div class="togrow">'+dows+'</div>'
+      +'<label class="mt">UWorld / review buffer — finish content this many study days before your exam<input type="number" id="o_rev" min="0" step="1" value="'+ob.reviewDays+'"></label>'
+      +'</div></div>';
+  }
   body+='<div class="card soft" id="o_reco"><div class="cardhd">Recommended pace</div>'+obPreview()+'</div>';
   body+='<div class="card"><div class="cardhd">Resources</div><div class="togrow">'
     +resBtn("bnb","Boards &amp; Beyond")+resBtn("bootcamp","Bootcamp")+resBtn("pathoma","Pathoma")+resBtn("sketchy","Sketchy")+resBtn("fa","First Aid")+resBtn("anking","AnKing")+resBtn("uworld","UWorld")
@@ -2393,7 +2434,7 @@ function renderOnboard(){
     + '<button class="link" id="sordReset">\u21ba Reset to recommended order</button>';
   body+='<div class="card"><div class="cardhd">'+(obIsNbme()?'Units &amp; study order':'Study order &amp; systems')+'</div>'
     + fold("ob_sys",ob.systems.length+' of '+SYS.length+' systems selected \u2014 edit / reorder',obSysInner,obIsNbme())+'</div>';}
-  body+=pathChaptersHTML(ob,"ob_path");
+  if(!ob.brody)body+=pathChaptersHTML(ob,"ob_path");
   body+='<button class="btn big" id="o_go">'+goLbl+'</button>';
   body+='</div>';
   app.innerHTML='<div class="wrap onb">'+body+'</div>';
@@ -2406,6 +2447,7 @@ function renderOnboard(){
   document.querySelectorAll("[data-odow]").forEach(b=>b.onclick=()=>{const i=+b.dataset.odow;const k=ob.restDays.indexOf(i);if(k>=0)ob.restDays.splice(k,1);else ob.restDays.push(i);renderObTogs();});
   document.querySelectorAll("[data-ores]").forEach(b=>b.onclick=()=>{ob.resources[b.dataset.ores]=!ob.resources[b.dataset.ores];renderObTogs();obLive();});
   document.querySelectorAll("[data-oplan]").forEach(b=>b.onclick=()=>{if(b.dataset.oplan==="brody"){ob.brody="heme-renal";ob.systems=BRODY_TRIAL.systems.slice();ob.examLabel=BRODY_TRIAL.name;}else ob.brody=null;renderOnboard();});
+  document.querySelectorAll("[data-opace]").forEach(b=>b.onclick=()=>{const cur=brodyPace(ob);ob.brodyPace=Math.max(0.5,cur+(b.dataset.opace==="inc"?0.5:-0.5));renderOnboard();});
   document.querySelectorAll("[data-sinc]").forEach(b=>b.onclick=()=>{const s=b.dataset.sinc;const k=ob.systems.indexOf(s);if(k>=0){if(ob.systems.length>1)ob.systems.splice(k,1);}else ob.systems.push(s);renderOnboard();});
   document.querySelectorAll("[data-pathch]").forEach(b=>b.onclick=()=>{togglePathCh(ob,+b.dataset.pathch);renderOnboard();});
   document.querySelectorAll("[data-sup]").forEach(b=>b.onclick=()=>{const i=+b.dataset.sup;if(i>0){const a=ob.sysOrder;const t=a[i-1];a[i-1]=a[i];a[i]=t;renderOnboard();}});
@@ -2447,19 +2489,14 @@ function obReco(){const ob=_ob;
 }
 function brodyPreview(ob){
   if(!catReady())return '<p class="muted small" style="margin:0">Loading the video catalog…</p>';
-  const blk=BRODY_TRIAL;const R=ob.resources||{};
-  const en={bnb:R.bnb,bootcamp:R.bootcamp,pathoma:R.pathoma,skmicro:R.sketchy,skpharm:R.sketchy};
-  const pathSel=en.pathoma?effectivePathChapters(ob):new Set();
-  const load={};blk.weeks.forEach(w=>load[w.n]=0);let total=0;
-  catVideos().forEach(v=>{if(blk.systems.indexOf(v.sys)<0)return;if(!en[v.res])return;if(v.res==="pathoma"&&!pathSel.has(pathChapterOf(v)))return;
-    const w=blk.videoWeek[v.res+"|"+v.name]||blk.weeks.length;load[w]+=v.min;total+=v.min;});
+  const blk=BRODY_TRIAL;const loads=brodyWeekLoads(ob,blk);
+  const total=loads.reduce((a,w)=>a+w.loadMin,0);
   if(!total)return '<p class="muted small" style="margin:0">Turn on at least one video resource to see the weekly plan.</p>';
-  const sdw=Math.max(1,7-(ob.restDays||[]).length);const capH=(ob.wkdayHrs||0)*sdw;
-  const rows=blk.weeks.map(w=>{const h=load[w.n]/60;const heavy=h>capH+0.2;
+  const pace=brodyPace(ob);const paceMin=pace*60;
+  const rows=loads.map(w=>{const h=w.loadMin/60;const heavy=w.loadMin>w.days*paceMin+10;
     return '<div class="brodywk'+(heavy?' heavy':'')+'"><span class="bw-n">Wk '+w.n+'</span><span class="bw-l">'+escHTML(w.label)+'</span><span class="bw-h">'+(Math.round(h*10)/10)+' h'+(heavy?' ⚠':'')+'</span></div>';}).join('');
-  let h='<p class="muted small" style="margin:0 0 10px">'+Math.round(total/60)+' h of video across '+blk.weeks.length+' Brody weeks → shelf '+fmtShort(blk.shelf)+'. Each week matches what Brody teaches; ⚠ marks a week heavier than your hours.</p>';
+  let h='<p class="muted small" style="margin:0 0 10px">'+Math.round(total/60)+' h of video across '+blk.weeks.length+' Brody weeks → shelf '+fmtShort(blk.shelf)+'. At <b>'+pace+' h/day</b> each week is covered before its quiz; ⚠ marks a week that needs more than that.</p>';
   h+='<div class="brodywks">'+rows+'</div>';
-  h+='<p class="small" style="margin:10px 0 0;color:var(--text-2)">At ~'+(ob.wkdayHrs||0)+' h on each of ~'+sdw+' study days you cover about '+Math.round(capH)+' h/week.</p>';
   return h;
 }
 function obPreview(){const ob=_ob;
@@ -2482,7 +2519,7 @@ function commitOnboard(){const ob=_ob;
   const prev=S.cfgs[key]?JSON.parse(JSON.stringify(S.cfgs[key])):null;
   const c=S.cfgs[key]||{};
   Object.assign(c,{examType:key,examLabel:key==="step1"?"Step 1":(brody?brody.name:(ob.examLabel||"Shelf exam")),
-    brody:(brody?brody.id:undefined),
+    brody:(brody?brody.id:undefined),brodyPace:(brody?(ob.brodyPace||undefined):undefined),
     examISO:(brody?brody.shelf:ob.examISO),startISO:(brody?brody.weeks[0].start:ob.startISO),wkdayHrs:ob.wkdayHrs,wkendHrs:ob.wkendHrs,restDays:ob.restDays.slice(),
     reviewDays:(brody?0:ob.reviewDays),resources:Object.assign({},ob.resources),systems:(brody?brody.systems.slice():ob.systems.slice()),sysOrder:(ob.sysOrder||SYS_ORDER_DEFAULT).slice(),pathChapters:(Array.isArray(ob.pathChapters)?ob.pathChapters.slice():undefined)});
   c.off=c.off||{};
@@ -2520,7 +2557,7 @@ function doResetAll(){
     S.cfgs=snap.cfgs;S.active=snap.active;S.cfg=S.active?S.cfgs[S.active]:null;_prevSig=progressSig();save();
     if(S.cfg){reflow();render();}else renderWelcome();toast("Restored ✓");});
 }
-const BUILD="2026-07-17b";
+const BUILD="2026-07-17c";
 /* ---------- What's new (changelog) ----------
    Newest entry first. Bump the top entry's id whenever you add one and the
    pop-up shows once per person (tracked in synced settings.seenUpdate). */
