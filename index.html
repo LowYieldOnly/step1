@@ -2039,12 +2039,13 @@ function enterDemo(){
   S.cfgs.nbme={examType:"nbme",examLabel:"Cardiology shelf",examISO:demoISO(45),startISO:demoISO(-12),wkdayHrs:4,wkendHrs:3,restDays:[0],reviewDays:7,resources:{bnb:true,bootcamp:false,pathoma:true,sketchy:true,fa:true,anking:true,uworld:true},systems:["Cardiology","Pulmonary","Renal"],sysOrder:SYS_ORDER_DEFAULT.slice()};
   normalizeCfg(S.cfgs.nbme,"nbme");
   [0,1,2,3].forEach(d=>{S.streak.days[demoISO(-d)]=true;});   // a lived-in streak
-  // drop them straight into the working app, not a "set up a plan" screen —
-  // they can tour it now and build their own plan later via the Plan tab
-  activate("nbme");S.active="nbme";VIEW="today";
+  // land on the home page so the explorer starts at the beginning and picks a
+  // hub; the sample plan is pre-built so entering M2 shows a populated plan
+  // (no forced setup), and they can still build their own via the Plan tab
+  S.active=null;S.cfg=null;
   showDemoBanner();
-  loadCatalog(()=>{seedDemoProgress();_prevSig=progressSig();render();});
-  render();
+  renderWelcome();
+  loadCatalog(()=>{seedDemoProgress();_prevSig=progressSig();renderWelcome();});
 }
 function seedDemoProgress(){
   const prev=S.active;activate("nbme");
@@ -2326,7 +2327,7 @@ function doResetAll(){
     S.cfgs=snap.cfgs;S.active=snap.active;S.cfg=S.active?S.cfgs[S.active]:null;_prevSig=progressSig();save();
     if(S.cfg){reflow();render();}else renderWelcome();toast("Restored ✓");});
 }
-const BUILD="2026-07-16y";
+const BUILD="2026-07-16z";
 /* ---------- What's new (changelog) ----------
    Newest entry first. Bump the top entry's id whenever you add one and the
    pop-up shows once per person (tracked in synced settings.seenUpdate). */
