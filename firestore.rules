@@ -1,5 +1,5 @@
 rules_version = '2';
-// Access control: ECU students (@students.ecu.edu) + an admin allowlist.
+// Access control: any ECU email (@ecu.edu or any subdomain) + an admin allowlist.
 // Deploy with:  firebase deploy --only firestore:rules
 // (or paste into Firebase console → Firestore → Rules). Keep the allowlist in
 // sync with ACCESS_EMAILS / ACCESS_DOMAINS in index.html.
@@ -9,8 +9,8 @@ service cloud.firestore {
       return request.auth != null
         && request.auth.token.email != null
         && (
-          request.auth.token.email.matches('.*@students[.]ecu[.]edu$')
-          || request.auth.token.email in ['dylanwlewis@protonmail.com']
+          request.auth.token.email.matches('.*@([a-z0-9-]+[.])*ecu[.]edu')
+          || request.auth.token.email in ['dylanwlewis@protonmail.com', 'trial@lowyieldonly.com']
         );
     }
     // Each user can read/write only their own profile document, and only if
