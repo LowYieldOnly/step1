@@ -177,6 +177,20 @@ b{color:var(--ink)}
 .m1soon-tag{display:inline-block;font-family:var(--mono);font-size:10px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:var(--phos);background:var(--phos-soft);border:1px solid var(--phos-dim);border-radius:999px;padding:4px 11px;margin-bottom:15px}
 .m1soon-t{font-family:var(--font-display);font-size:22px;font-weight:600;color:var(--ink);margin-bottom:9px}
 .m1soon-d{font-size:14px;color:var(--text-2);line-height:1.6}
+/* M1 disclaimer — full-page gate on entry */
+.m1disc{max-width:40em;margin:30px auto;background:var(--panel);border:1px solid var(--line);border-left:3px solid var(--gold);border-radius:var(--r);padding:34px 30px 30px}
+.m1disc-eyebrow{font-family:var(--mono);font-size:11px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:var(--gold);margin-bottom:12px}
+.m1disc-h{font-family:var(--font-display);font-weight:600;font-size:clamp(26px,5vw,34px);line-height:1.12;color:var(--ink);margin:0 0 18px}
+.m1disc-body p{font-size:15.5px;line-height:1.68;color:var(--text-2);margin:0 0 15px}
+.m1disc-body p b{color:var(--ink)}
+.m1disc .btn.big{margin-top:10px}
+.m1disc-home{display:block;text-align:center;margin:14px auto 0;font-size:13px}
+/* M1 persistent notice — apparent on every hub view */
+.m1notice{display:flex;align-items:flex-start;gap:11px;background:var(--gold-soft,color-mix(in srgb,var(--gold) 12%,transparent));border:1px solid color-mix(in srgb,var(--gold) 42%,transparent);border-radius:13px;padding:12px 14px;margin:0 0 18px}
+.m1notice-i{flex:0 0 auto;width:20px;height:20px;border-radius:50%;background:var(--gold);color:#1a1206;font-weight:900;font-size:13px;display:flex;align-items:center;justify-content:center;margin-top:1px}
+.m1notice-t{flex:1;min-width:0;font-size:13px;line-height:1.5;color:var(--text-2)}
+.m1notice-t b{color:var(--ink)}
+.m1notice-x{flex:0 0 auto;align-self:center;background:none;border:0;color:var(--gold);font-family:inherit;font-size:12.5px;font-weight:700;cursor:pointer;white-space:nowrap;padding:4px 2px;text-decoration:underline}
 
 /* ring (analog gauge) */
 .ring{display:block}
@@ -1917,7 +1931,31 @@ function m1Progress(){
   h+='</div></div>';
   return '<div class="m1wrap">'+h+'</div>';
 }
+function m1Acked(){return !!(S.settings&&S.settings.m1Ack);}
+function renderM1Disclaimer(){
+  loadM1();  // warm the library in the background while they read
+  app.innerHTML='<div class="wrap"><div class="m1disc">'
+    +'<div class="m1disc-eyebrow">For Brody M1s</div>'
+    +'<h1 class="m1disc-h">Welcome — and congratulations.</h1>'
+    +'<div class="m1disc-body">'
+    +'<p>You worked hard to get here. Congratulations on earning your seat at Brody, and welcome to medicine.</p>'
+    +'<p>One thing to be clear about before you start: this hub is a <b>supplement</b>. It is here to help you find another explanation when a topic isn’t clicking — it is <b>not</b> a replacement for anything your Brody faculty say, teach, or provide.</p>'
+    +'<p>Your faculty build your curriculum deliberately, and what they teach is what you are responsible for. Trying to learn from third-party resources alone does not fit the Brody curriculum and will steer you wrong. <b>Learn what your faculty teach first</b> — then use this site as a guide to the outside resources students have found genuinely helpful.</p>'
+    +'<p>Think of it as a map to good resources: a companion to your coursework, never a substitute for it.</p>'
+    +'</div>'
+    +'<button class="btn big" id="m1_ack">I understand — enter the hub</button>'
+    +'<button class="link m1disc-home" id="m1_home">← Back to home</button>'
+    +'</div></div>';
+  const a=document.getElementById("m1_ack");if(a)a.onclick=()=>{S.settings=S.settings||{};S.settings.m1Ack=true;save();render();};
+  const h=document.getElementById("m1_home");if(h)h.onclick=()=>{S.active=null;S.cfg=null;renderWelcome();};
+}
+function m1Notice(){
+  return '<div class="m1notice"><span class="m1notice-i">!</span>'
+    +'<div class="m1notice-t"><b>A supplement, not a substitute.</b> Learn what your Brody faculty teach first — use this hub only to point you toward extra resources, never to replace your coursework.</div>'
+    +'<button class="m1notice-x" id="m1_reread">Read the note</button></div>';
+}
 function renderM1(){
+  if(!m1Acked()){renderM1Disclaimer();return;}
   if(!M1DATA){loadM1();
     const inner=M1ERR?'<div class="m1offline"><div class="cardhd" style="justify-content:center">Connect once to load M1</div><p class="muted">The M1 resource library needs one online visit to download. Reconnect and reopen this hub.</p></div>'
       :'<div class="m1loading"><p class="muted">Loading the M1 library…</p></div>';
@@ -1927,7 +1965,7 @@ function renderM1(){
   else if(M1VIEW==="daily")body=m1Soon("Daily flow checklist","A day-by-day rhythm: preview each lecture, watch it, run your Anki, repeat — with practice-problem days you schedule however you like across the unit. Tailored to your class lecture calendar, coming once it's added.");
   else if(M1VIEW==="grades")body=m1Soon("Grade calculator","Keep a running tally of where you stand in each course as scores come in — your class grade spreadsheet, built right into the app.");
   else body=M1Q?m1SearchResults():(M1COURSE?m1CourseView(M1COURSE):m1CourseList());
-  app.innerHTML=chrome(M1VIEW)+'<div class="wrap">'+body+'</div>';
+  app.innerHTML=chrome(M1VIEW)+'<div class="wrap">'+m1Notice()+body+'</div>';
   wireChrome();wireM1();
 }
 function m1Soon(title,desc){
@@ -1946,6 +1984,7 @@ function wireM1(){
   document.querySelectorAll("[data-m1chk]").forEach(b=>b.onclick=e=>{e.stopPropagation();toggleM1(b.dataset.m1chk);});
   document.querySelectorAll("[data-copyref]").forEach(b=>b.onclick=e=>{e.stopPropagation();copyText(b.getAttribute("data-copyref"),"Reference copied — paste into that app’s search");});
   document.querySelectorAll("[data-copytag]").forEach(b=>b.onclick=e=>{e.stopPropagation();copyText(b.getAttribute("data-copytag"),"AnKing tags copied — paste into Anki’s Browse search");});
+  const rr=document.getElementById("m1_reread");if(rr)rr.onclick=renderM1Disclaimer;
   const stt=document.getElementById("m1settarget");if(stt)stt.onclick=m1PickTarget;
   const clt=document.getElementById("m1cleartarget");if(clt)clt.onclick=()=>{if(S.settings)delete S.settings.m1TargetISO;save();render();};
 }
@@ -2000,10 +2039,12 @@ function enterDemo(){
   S.cfgs.nbme={examType:"nbme",examLabel:"Cardiology shelf",examISO:demoISO(45),startISO:demoISO(-12),wkdayHrs:4,wkendHrs:3,restDays:[0],reviewDays:7,resources:{bnb:true,bootcamp:false,pathoma:true,sketchy:true,fa:true,anking:true,uworld:true},systems:["Cardiology","Pulmonary","Renal"],sysOrder:SYS_ORDER_DEFAULT.slice()};
   normalizeCfg(S.cfgs.nbme,"nbme");
   [0,1,2,3].forEach(d=>{S.streak.days[demoISO(-d)]=true;});   // a lived-in streak
-  S.active=null;S.cfg=null;
+  // drop them straight into the working app, not a "set up a plan" screen —
+  // they can tour it now and build their own plan later via the Plan tab
+  activate("nbme");S.active="nbme";VIEW="today";
   showDemoBanner();
-  renderWelcome();
-  loadCatalog(()=>{seedDemoProgress();_prevSig=progressSig();renderWelcome();});
+  loadCatalog(()=>{seedDemoProgress();_prevSig=progressSig();render();});
+  render();
 }
 function seedDemoProgress(){
   const prev=S.active;activate("nbme");
@@ -2285,7 +2326,7 @@ function doResetAll(){
     S.cfgs=snap.cfgs;S.active=snap.active;S.cfg=S.active?S.cfgs[S.active]:null;_prevSig=progressSig();save();
     if(S.cfg){reflow();render();}else renderWelcome();toast("Restored ✓");});
 }
-const BUILD="2026-07-16x";
+const BUILD="2026-07-16y";
 /* ---------- What's new (changelog) ----------
    Newest entry first. Bump the top entry's id whenever you add one and the
    pop-up shows once per person (tracked in synced settings.seenUpdate). */
