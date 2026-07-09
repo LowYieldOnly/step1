@@ -458,6 +458,18 @@ b{color:var(--ink)}
 .pathrow.on .pathinc{background:var(--phos);border-color:var(--phos)}
 .pathnm{flex:1;min-width:0;font-size:13px;color:var(--ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .pathsys{flex:0 0 auto;font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:.03em;color:var(--faint);white-space:nowrap}
+/* Brody weekly plan preview + Study-view week chip */
+.brodywks{display:flex;flex-direction:column;gap:6px}
+.brodywk{display:flex;align-items:center;gap:10px;background:var(--bg2);border:1px solid var(--line);border-radius:10px;padding:8px 11px}
+.brodywk.heavy{border-color:color-mix(in srgb,var(--gold) 50%,transparent);background:color-mix(in srgb,var(--gold) 9%,transparent)}
+.bw-n{flex:0 0 auto;font-family:var(--mono);font-size:11px;font-weight:800;color:var(--phos)}
+.bw-l{flex:1;min-width:0;font-size:12.5px;color:var(--text-2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.bw-h{flex:0 0 auto;font-family:var(--mono);font-size:11.5px;font-weight:700;color:var(--ink)}
+.brodychip{display:flex;align-items:center;gap:10px;background:var(--accent-bg);border:1px solid var(--border);border-radius:12px;padding:10px 13px;font-size:13px;color:var(--text-2)}
+.brodychip b{color:var(--ink)}
+.brodychip .bc-wk{flex:0 0 auto;font-family:var(--mono);font-size:10px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--phos);background:var(--phos-soft);border:1px solid var(--phos-dim);border-radius:999px;padding:3px 9px}
+.brodychip.heavy{border-color:color-mix(in srgb,var(--gold) 50%,transparent)}
+.brodychip .bc-heavy{flex:0 0 auto;margin-left:auto;font-size:11px;font-weight:800;color:var(--gold)}
 .ordbtn[disabled]{opacity:.25;cursor:default}
 
 /* overlay sheet (menu) */
@@ -784,6 +796,7 @@ const PATHOMA_CH=[
   [18,"Musculoskeletal Pathology","Musculoskeletal"],
   [19,"Skin Pathology","Dermatology"]
 ];
+const BRODY_TRIAL={"id":"heme-renal","name":"Hematology & Renal","systems":["Hematology","Renal"],"weeks":[{"n":1,"start":"2026-07-27","label":"RBC & WBC"},{"n":2,"start":"2026-08-03","label":"Hemostasis, Transfusion & Anticoagulants"},{"n":3,"start":"2026-08-10","label":"Renal — Physiology, Glomerular & Tubular"},{"n":4,"start":"2026-08-17","label":"Renal — GU, Stones & Neoplasia"}],"shelf":"2026-08-21","videoWeek":{"bootcamp|Embryology - Overview":1,"bootcamp|Hemolytic Disease of the Newborn":2,"bootcamp|Thrombocyte":1,"bootcamp|Erythrocyte":1,"bootcamp|Mast Cell":1,"bootcamp|Basophil":1,"bootcamp|Neutrophil":1,"bootcamp|Eosinophil":1,"bootcamp|Monocyte and Macrophage":1,"bootcamp|Overview of Anemia":1,"bootcamp|Iron Homostasis":1,"bootcamp|Iron Deficiency Anemia":1,"bootcamp|Anemia of Chronic Disease":1,"bootcamp|Lead Toxicity":1,"bootcamp|Sideroblastic Anemia":1,"bootcamp|Hemoglobin":1,"bootcamp|α-Thalassemia":1,"bootcamp|β-Thalassemia":1,"bootcamp|Principles of Normocytic Anemia":1,"bootcamp|Hemolysis":1,"bootcamp|Sickle Cell Anemia":1,"bootcamp|Paroxysmal Nocturnal Hemoglobinuria":1,"bootcamp|Hereditary Spherocytosis":1,"bootcamp|G6PD Deficiency":1,"bootcamp|Pyruvate Kinase Deficiency":1,"bootcamp|Autoimmune Hemolytic Anemia":1,"bootcamp|Aplastic Anemia":1,"bootcamp|Additional Normocytic Anemias":1,"bootcamp|Folate (B9) Deficiency":1,"bootcamp|Cobalmin (B12) Deficiency":1,"bootcamp|Orotic Aciduria":1,"bootcamp|Non-megaloblastic Anemia":1,"bootcamp|Platelet Overview":2,"bootcamp|Primary Hemostasis":2,"bootcamp|Platelet Disorders":2,"bootcamp|Thrombotic Microangiopathies":2,"bootcamp|Antiplatelet Medications":2,"bootcamp|Coagulation Cascade":2,"bootcamp|Bleeding Time, Prothrombin Time, INR, and Partial Thromboplastin Time":2,"bootcamp|Mixing Studies, Ristocetin, and D-dimer":2,"bootcamp|Fibrinolysis and Inhibitors of Hemostasis":2,"bootcamp|Thrombophilias":2,"bootcamp|Von Willebrand Disease":2,"bootcamp|Hemophilia":2,"bootcamp|Disseminated Intravascular Coagulation":2,"bootcamp|Vitamin K Dependent Coagulation Factors":2,"bootcamp|Anticoagulation":2,"bootcamp|Summary of Disorders of Platelets and Coagulation":1,"bootcamp|Cellular Adaptations":1,"bootcamp|Metaplasia":1,"bootcamp|Dysplasia and Neoplasia":1,"bootcamp|Cellular Injury":1,"bootcamp|Necrosis":1,"bootcamp|Calcification":1,"bootcamp|Apoptotic Pathways":1,"bootcamp|Cell Growth Regulation":1,"bootcamp|Oncogenes and Tumor Supression Genes":1,"bootcamp|Cell Cycle Dependent Drug Targets":2,"bootcamp|Cell Cycle Independent Drug Targets":2,"bootcamp|Acute Myeloid Leukemia":1,"bootcamp|Chronic Myeloid Leukemia":1,"bootcamp|Acute Lymphoid Leukemia":1,"bootcamp|Chronic Lymphocytic Leukemia":1,"bootcamp|Hodgkin Lympohoma":1,"bootcamp|Burkitt Lymphoma":1,"bootcamp|Follicular Lymphoma":1,"bootcamp|Hairy Cell Leukemia":1,"bootcamp|Additional B-cell Non-Hodgkin Lymphomas":1,"bootcamp|Additional T-cell Non-Hodgkin Lymphomas":1,"bootcamp|Multiple Myeloma":1,"bootcamp|Additional Plasma Cell Dyscrasias":1,"bootcamp|Polycythemia Vera & Essential Thrombosis":1,"bootcamp|Myelofibrosis & Myelodysplastic Syndromes":1,"bootcamp|Tumor Lysis Syndrome":1,"bootcamp|Embryology":3,"bootcamp|Developmental Anomalies":3,"bootcamp|Anatomy":3,"bootcamp|Fluid Physiology":3,"bootcamp|Filtration Physiology Overview":3,"bootcamp|Clearance, Renal Plasma, Blood Flow":3,"bootcamp|Glucose Clearance":3,"bootcamp|Autoregulation":3,"bootcamp|Proximal Convoluted Tubule":3,"bootcamp|Loop of Henle":3,"bootcamp|Distal Convoluted Tubule":3,"bootcamp|Collecting Duct":3,"bootcamp|RAAS Overview":4,"bootcamp|RAAS Effects":4,"bootcamp|Natriuretic Peptides":3,"bootcamp|Sodium":3,"bootcamp|Potassium":3,"bootcamp|Calcium":3,"bootcamp|Magnesium":3,"bootcamp|Phosphate":3,"bootcamp|Acid-Base Physiology - Overview":3,"bootcamp|Practice Problems":3,"bootcamp|Metabolic Acidosios":3,"bootcamp|Mtabolic Alkalosis":3,"bootcamp|Respiratory Acidosis":3,"bootcamp|Respiratory Alkalosis":3,"bootcamp|Type 1 RTA":3,"bootcamp|Type 2 RTA":3,"bootcamp|Type 4 RTA":3,"bootcamp|Nomenclature":3,"bootcamp|Urinalysis Basics":3,"bootcamp|Urinary Casts":3,"bootcamp|Glomerular Disease Overview":3,"bootcamp|Minimal Change Disease":3,"bootcamp|Focal Segmental Glomerulosclerosis":3,"bootcamp|Membranous Nephropathy":3,"bootcamp|Amyloid Nephropathy":3,"bootcamp|Diabetic Glomerulonephropathy":3,"bootcamp|Poststreptococcal Glomerulonephritis":3,"bootcamp|Rapidly Progressive Glomerulonephritis":3,"bootcamp|Diffuse Proliferative Glomerulonephritis":3,"bootcamp|Membranoproliferative Glomerulonephritis":3,"bootcamp|IgA Nephropathy":3,"bootcamp|Alport Syndrome":3,"bootcamp|Nephrolithiasis Overview":4,"bootcamp|Ammonium Magnesium Phosphate Stones":4,"bootcamp|Calcium Stones":4,"bootcamp|Cystine Stones":4,"bootcamp|Uric Acid Stones":4,"bootcamp|Nephrolithiasis Summary":4,"bootcamp|Micturition Overview":4,"bootcamp|Overflow Incontinence":4,"bootcamp|Stress Incontinence":4,"bootcamp|Urge Incontinence":4,"bootcamp|Kideny Injury - Overview":3,"bootcamp|Prerenal AKI":3,"bootcamp|Intrarenal AKI":3,"bootcamp|Postrenal AKI":3,"bootcamp|AKI Summary":3,"bootcamp|Acute Interstitial Nephritis":3,"bootcamp|Acute Tubular Necrosis":3,"bootcamp|Diffuse Cortical Necrosis":4,"bootcamp|Renal Papillary Necrosis":3,"bootcamp|Chronic Kidney Disease":3,"bootcamp|Acute Cystitis":3,"bootcamp|Acute Pyelonephritis":3,"bootcamp|Chronic Pyelonephritis":3,"bootcamp|Renal Cell Carcinoma":4,"bootcamp|Renal Oncocytoma":4,"bootcamp|Wilm's Tumor":4,"bootcamp|Urothelial Carcinoma":4,"bootcamp|Squamous Cell Carcinoma of the Bladder":4,"bootcamp|Autosomal Dominant Polycystic Kidney Disease":4,"bootcamp|Autosomal Recessive Polycystic Kidney Disease":4,"bootcamp|Autosomal Dominant Tubulointerstitial Kidney Disease":3,"bootcamp|Carbonic Anhydrase Inhibitors":3,"bootcamp|Osmotic Diuretics":3,"bootcamp|Loop Diuretics":3,"bootcamp|Thiazide Diuretics":3,"bootcamp|Potassium-Sparing Diuretics":3,"bootcamp|ACEi, ARBs, Direct Renin Inhibitors":3,"bnb|Coagulation":2,"bnb|Platelet Activation":2,"bnb|Hypercoagulable States":2,"bnb|Coagulopathies":2,"bnb|Platelet Disorders":2,"bnb|Antiplatelet Drugs":2,"bnb|Anticoagulants":2,"bnb|Hemolysis Basics":1,"bnb|Extrinsic Hemolysis":1,"bnb|Intrinsic Hemolysis":1,"bnb|Microcytic Anemias":1,"bnb|Thalassemias":1,"bnb|Sickle Cell Anemia":1,"bnb|Other Anemias":1,"bnb|Blood Groups":1,"bnb|Acute Leukemia":1,"bnb|Chronic Leukemia":1,"bnb|Hodgkin Lymphoma":1,"bnb|Non Hodgkin Lymphoma":1,"bnb|Plasma Cell Disorders":1,"bnb|Amyloidosis":1,"bnb|Myeloproliferative Disorders":1,"bnb|Antimetabolites":2,"bnb|Alkylating Agents":2,"bnb|Antitumor Antibiotics":2,"bnb|Microtubule Inhibitors":2,"bnb|DNA Drugs":2,"bnb|Other Cancer Drugs":2,"bnb|Porphyrias":1,"bnb|Renal Embryology":3,"bnb|Renal Anatomy":3,"bnb|Renal Physiology I":3,"bnb|Renal Physiology II":3,"bnb|Nephron Physiology":3,"bnb|Renal Endocrine Function":3,"bnb|Acid Excretion":3,"bnb|Acid-Base Principles":3,"bnb|Respiratory Disorders":3,"bnb|Metabolic Alkalosis":3,"bnb|Renal Tubular Acidosis":3,"bnb|Metabolic Acidosis":3,"bnb|Acid-Base Problems":3,"bnb|Electrolyte Disorders":3,"bnb|Sodium and Water Balance":3,"bnb|Sodium Disorders":3,"bnb|Glomerulonephritis Principles":3,"bnb|Nephritic Syndrome":3,"bnb|Nephrotic Syndrome":3,"bnb|MPGN":3,"bnb|Tubulointerstitial Disease":3,"bnb|Renal Failure":3,"bnb|Urinary Tract Infections":3,"bnb|Cystic Kidney Disease":4,"bnb|Diuretics":3,"bnb|Kidney Stones":4,"bnb|Renal and Bladder Tumors":4,"bnb|Rhabdomyolysis":3,"skpharm|Methotrexate, Leucovorin, 5-Fluorouracil, Hydroxyurea":2,"skpharm|Azathioprine, 6-Mercaptopurine, Mycophenolate Mofetil":2,"skpharm|Cladribine, Cytarabine, Gemcitabine":2,"skpharm|Cyclophosphamide, Ifosfamide, Busulifan, Nitrosoureas, Carmustine, Lomustine, Streptozocin":2,"skpharm|Cisplatin, Carboplatin, Oxaliplatin, Amifostine":2,"skpharm|Bleomycin, Doxorubicin, Daunorubicin, Actinomycin D":2,"skpharm|Etoposide, Teniposide, Topotecan, Irinotecan":2,"skpharm|Vincristine, Vinblastine, Paclitaxel":2,"skpharm|Imatinib, Erlotinib, Sorafenib, Sunitinib, Vemurafenib":2,"skpharm|Rituximab, Cetuximab, Bevacizumab, Alemtuzumab, Trastuzumab":2,"skpharm|Interferons":2,"skpharm|Heparin, LMWH, Fondaparinux, direct thrombin inhibitors, Xa inhibitors":2,"skpharm|Warfarin":2,"skpharm|Antiplatelet agents":2,"skpharm|Thrombolytics":2,"skpharm|Statins":2,"skpharm|Cholestyramine, ezetimibe":1,"skpharm|Fibrates, niacin":2,"skpharm|PCSK9 Inhibitors":2,"skpharm|NSAIDs":2,"skpharm|Gout Drugs":2,"skpharm|Immunosuppressants":2,"skpharm|TNF Inhibitors":2,"skpharm|Acetazolamide, mannitol":3,"skpharm|Loop Diuretics":3,"skpharm|Thiazides":3,"skpharm|K+-sparing Diuretics":3,"pathoma|4.1 Primary Hemostasis and Related Bleeding Disorders":2,"pathoma|4.2 Secondary Hemostasis and Related Disorders":2,"pathoma|4.3 Other Disorders of Hemostasis":2,"pathoma|4.4 Thrombosis":2,"pathoma|4.5 Embolism":2,"pathoma|5.1 Anemia":1,"pathoma|5.2 Microcytic Anemia (Parts 1, 2, & 3)":1,"pathoma|5.3 Macrocytic Anemia":1,"pathoma|5.4 Normocytic Anemia":1,"pathoma|5.5 Normocytic Anemias w/ Extravascular Hemolysis":1,"pathoma|5.6 Normocytic Anemias w/ Intravascular Hemolysis":1,"pathoma|5.7 Anemia Due to Underproduction":1,"pathoma|6.1 Leukopenia and Leukocytosis":1,"pathoma|6.2 Acute Leukemia":1,"pathoma|6.3 Chronic Leukemia":1,"pathoma|6.4 Myeloproliferative Disorders":1,"pathoma|6.5 Lymphadenopathy":1,"pathoma|6.6 Lymphoma":1,"pathoma|6.7 Hodgkin's Lymphoma":1,"pathoma|6.8 Plasma Cell Disorders (Dyscrasias)":1,"pathoma|6.9 Langerhans Cell Histiocytosis":2,"pathoma|12.1 Congenital":4,"pathoma|12.2 Acute Renal Failure":3,"pathoma|12.3 Nephrotic Syndrome":3,"pathoma|12.4 Nephritic Syndrome":3,"pathoma|12.5 Urinary Tract Infection":3,"pathoma|12.6 Nephrolithiasis":4,"pathoma|12.7 Chronic Renal Failure":3,"pathoma|12.8 Renal Neoplasia":4,"pathoma|12.9 Lower Urinary Tract Carcinoma":4}};
 function pathChapterOf(v){const m=/^(\d+)\./.exec(v.name||"");return m?+m[1]:0;}
 /* selected Pathoma chapters for a cfg. Once the user picks in the chapter list
    it is an explicit array; until then it defaults to the chapters whose system
@@ -822,9 +835,78 @@ let SCHED=null;   // {days:[{iso,off,rest,review,items,min}], atRisk:[items], st
 function dayBudgetMin(d){const we=(d.getDay()===0||d.getDay()===6);const total=Math.max(15,Math.round((we?S.cfg.wkendHrs:S.cfg.wkdayHrs)*60));const reserved=(S.cfg.ankiMinPerDay||0)+(S.cfg.uworldMinPerDay||0);return Math.max(15,total-reserved);}
 function isDone(id){return !!S.vdone[id];}
 function isSkip(id){return !!S.vskip[id];}
+/* ============================================================
+   BRODY-CALENDAR SCHEDULER (optional plan type). Videos are bucketed into
+   the Brody week their topic is taught (each resource in its own order within
+   a week), packed across that week's study days; heavy weeks stay heavy rather
+   than spilling. Everything is done by the block shelf. Produces the same
+   SCHED shape the Study/Stats/calendar views already consume.
+   ============================================================ */
+function brodyBlock(c){return (c&&c.brody==="heme-renal")?BRODY_TRIAL:null;}
+function reflowBrody(c,blk){
+  const en=resEnabled();const pathSel=en.pathoma?effectivePathChapters(c):new Set();
+  const lastWk=blk.weeks.length;
+  const vids=[];
+  catVideos().forEach(v=>{
+    if(blk.systems.indexOf(v.sys)<0)return;
+    if(!en[v.res])return;
+    if(v.res==="pathoma"&&!pathSel.has(pathChapterOf(v)))return;
+    const wk=blk.videoWeek[v.res+"|"+v.name]||lastWk;
+    vids.push({sys:v.sys,name:v.name,min:v.min,fa:v.cat||"",tag:v.tag||"",res:v.res,label:v.name,id:itemId(v),wk});
+  });
+  // order: week asc → resource → native (catalog) order (stable sort keeps native)
+  const ri=r=>{const i=RES_ORDER.indexOf(r);return i<0?99:i;};
+  vids.sort((a,b)=>(a.wk-b.wk)||(ri(a.res)-ri(b.res)));
+  const byId={};const orderIndex={};vids.forEach((v,i)=>{byId[v.id]=v;orderIndex[v.id]=i;});
+  const wkStart=blk.weeks.map(w=>w.start);const shelf=blk.shelf;
+  const cursorISO=(todayISO()>wkStart[0])?todayISO():wkStart[0];
+  const rest=c.restDays||[0];const off=c.off||{};
+  const weekOf=iso=>{let n=0;for(let i=0;i<blk.weeks.length;i++){if(iso>=wkStart[i])n=blk.weeks[i].n;}return n;};
+  const weekDays={};blk.weeks.forEach(w=>weekDays[w.n]=[]);
+  {let dd=isoToDate(cursorISO),g=0;while(isoFromDate(dd)<shelf&&g++<400){const iso=isoFromDate(dd),wd=dd.getDay(),wn=weekOf(iso);
+    if(wn&&!rest.includes(wd)&&!off[iso])weekDays[wn].push(iso);dd=addDays(dd,1);}}
+  const doneOrSkip=id=>isDone(id)||isSkip(id);
+  const todayISO_=todayISO();let doneTodayMin=0;
+  for(const id in (S.vdoneDate||{})){if(S.vdoneDate[id]===todayISO_&&byId[id])doneTodayMin+=byId[id].min;}
+  const dayItems={};
+  const firstOpen=()=>{for(let i=0;i<blk.weeks.length;i++){if(weekDays[blk.weeks[i].n].length)return weekDays[blk.weeks[i].n][0];}return null;};
+  blk.weeks.forEach(w=>{
+    const wv=vids.filter(v=>v.wk===w.n&&!doneOrSkip(v.id));if(!wv.length)return;
+    let dys=weekDays[w.n];if(!dys.length){const f=firstOpen();dys=f?[f]:[];}
+    if(!dys.length)return;
+    dys.forEach(iso=>{dayItems[iso]=dayItems[iso]||[];});
+    let ci=0;
+    wv.forEach(it=>{
+      if(ci>dys.length-1)ci=dys.length-1;
+      let iso=dys[ci];const budget=dayBudgetMin(isoToDate(iso));
+      const base=(iso===todayISO_?doneTodayMin:0);
+      const used=(dayItems[iso]||[]).reduce((a,x)=>a+x.min,0)+base;
+      if(used>0&&used+it.min>budget+10&&ci<dys.length-1){ci++;iso=dys[ci];}
+      dayItems[iso]=dayItems[iso]||[];dayItems[iso].push(it);
+    });
+  });
+  const donePins={};const vdd=S.vdoneDate||{};
+  for(const id in vdd){const it=byId[id];if(it){(donePins[vdd[id]]=donePins[vdd[id]]||[]).push(it);}}
+  const days=[];const dayMap={};
+  {let dd=isoToDate(cursorISO),g=0;while(isoFromDate(dd)<shelf&&g++<400){const iso=isoFromDate(dd),wd=dd.getDay();
+    const isRest=rest.includes(wd),isOff=!!off[iso];
+    const packed=dayItems[iso]||[];const pinned=donePins[iso]||[];
+    const items=packed.concat(pinned).sort((a,b)=>(orderIndex[a.id]!=null?orderIndex[a.id]:1e9)-(orderIndex[b.id]!=null?orderIndex[b.id]:1e9));
+    const row={iso,off:isOff,rest:isRest&&!isOff,review:false,items,brodyWeek:weekOf(iso),
+      min:items.reduce((a,b)=>a+b.min,0),todo:packed.reduce((a,b)=>a+b.min,0)};
+    days.push(row);dayMap[iso]=row;dd=addDays(dd,1);}}
+  const weekLoad=blk.weeks.map(w=>{const dl=weekDays[w.n];const cap=dl.reduce((a,iso)=>a+dayBudgetMin(isoToDate(iso)),0);
+    const load=vids.filter(v=>v.wk===w.n).reduce((a,v)=>a+v.min,0);return {n:w.n,label:w.label,start:w.start,load,cap,heavy:load>cap+10,days:dl.length};});
+  const remaining=vids.filter(v=>!doneOrSkip(v.id));const remMin=remaining.reduce((a,b)=>a+b.min,0);
+  SCHED={days,dayMap,atRisk:[],byId,reviewDates:[],contentDates:days.filter(d=>!d.rest&&!d.off).map(d=>d.iso),brody:blk,weekLoad,
+    stats:{remMin,availMin:0,examDaysLeft:Math.max(0,daysBetween(todayISO(),shelf)),reqPerDay:0,feasible:!weekLoad.some(w=>w.heavy),
+      contentDaysLeft:days.filter(d=>!d.rest&&!d.off).length,reviewDaysLeft:0,
+      totalItems:vids.length,doneItems:vids.filter(v=>isDone(v.id)).length,remItems:remaining.length}};
+}
 function reflow(){
   const c=S.cfg; if(!c){SCHED=null;return;}
   if(!catReady()){SCHED=null;return;}   // catalog still loading — render() shows a loading state
+  const _blk=brodyBlock(c); if(_blk){reflowBrody(c,_blk);return;}
   const backlog=buildBacklog();
   const byId={};const orderIndex={};backlog.forEach((it,i)=>{byId[it.id]=it;orderIndex[it.id]=i;});
   const remaining=backlog.filter(it=>!isDone(it.id)&&!isSkip(it.id));
@@ -1057,6 +1139,14 @@ function ankiBlock(iso,openTags){if(!hasRes("anking"))return "";const pairs=dayT
   }
   return h;}
 function ankiCardBlock(iso){if(!hasRes("anking"))return "";return '<div class="card ankicard">'+ankiBlock(iso,true)+'</div>';}
+function brodyChip(iso){
+  if(!(SCHED&&SCHED.brody))return "";
+  const row=SCHED.dayMap[iso];const wn=row&&row.brodyWeek;if(!wn)return "";
+  const wl=(SCHED.weekLoad||[]).find(w=>w.n===wn);if(!wl)return "";
+  return '<div class="brodychip'+(wl.heavy?' heavy':'')+'"><span class="bc-wk">Brody Wk '+wn+'</span>'
+    +'<span><b>'+escHTML(wl.label)+'</b></span>'
+    +(wl.heavy?'<span class="bc-heavy">Heavy ⚠</span>':'')+'</div>';
+}
 function bindExtras(){
   document.querySelectorAll("[data-copy]").forEach(b=>b.onclick=(e)=>{e.stopPropagation();copyText(ankiSearch([b.getAttribute("data-copy")]),"Copied — paste into Anki’s Browse search");});
   document.querySelectorAll("[data-cpyall]").forEach(b=>b.onclick=(e)=>{e.stopPropagation();const t=dayTags(b.dataset.cpyall);if(!t.length){toast("No tags here");return;}copyText(ankiSearch(t),"Copied "+t.length+" AnKing tag"+(t.length>1?"s":"")+" — paste into Anki’s Browse search");});
@@ -1600,7 +1690,7 @@ function renderToday(){
   const todayRow=SCHED.dayMap[todayISO()];
   const isOffToday=todayRow&&(todayRow.off||todayRow.rest);
   const examLeft=st.examDaysLeft;
-  const focusISO=(CAL_SEL&&SCHED.dayMap[CAL_SEL])?CAL_SEL:todayISO();
+  const focusISO=(CAL_SEL&&SCHED.dayMap[CAL_SEL])?CAL_SEL:(SCHED.dayMap[todayISO()]?todayISO():((SCHED.days[0]&&SCHED.days[0].iso)||todayISO()));
   const isFocusToday=(focusISO===todayISO());
   let colA='',colB='';
   // UPPER-LEFT — three stacked blocks: countdown, log practice questions, quote
@@ -1609,6 +1699,7 @@ function renderToday(){
     +'<div class="sub">'+overall().done+' / '+overall().total+' videos'+(cs>0?' · '+cs+'-day streak':' · '+overall().pct+'% complete')+'</div>'
     +paceHero()+'</div>';
   colA+=loadCaveat();
+  colA+=brodyChip(focusISO);
   colA+=encouragement(todayRow,isOffToday,cs);
   colA+=ankiCardBlock(focusISO);
   // UPPER-RIGHT — the checklist for the selected day
@@ -2230,7 +2321,7 @@ function enterHub(key){if(!S.cfgs[key]){startOnboard(key);return;}activate(key);
 let _ob=null;
 function defaultsForHub(key,fresh){const ex=fresh?null:S.cfgs[key];
   let o;
-  if(ex)o={hub:key,fresh:false,examLabel:ex.examLabel||"",examISO:ex.examISO||"",startISO:ex.startISO||todayISO(),wkdayHrs:ex.wkdayHrs,wkendHrs:ex.wkendHrs,restDays:(ex.restDays||[0]).slice(),reviewDays:ex.reviewDays,resources:Object.assign({bnb:true,bootcamp:false,pathoma:true,sketchy:true,fa:true,anking:true,uworld:true},ex.resources||{}),systems:(ex.systems||SYS).slice(),sysOrder:(ex.sysOrder&&ex.sysOrder.length===SYS.length?ex.sysOrder:SYS_ORDER_DEFAULT).slice(),pathChapters:(Array.isArray(ex.pathChapters)?ex.pathChapters.slice():undefined)};
+  if(ex)o={hub:key,fresh:false,brody:ex.brody||null,examLabel:ex.examLabel||"",examISO:ex.examISO||"",startISO:ex.startISO||todayISO(),wkdayHrs:ex.wkdayHrs,wkendHrs:ex.wkendHrs,restDays:(ex.restDays||[0]).slice(),reviewDays:ex.reviewDays,resources:Object.assign({bnb:true,bootcamp:false,pathoma:true,sketchy:true,fa:true,anking:true,uworld:true},ex.resources||{}),systems:(ex.systems||SYS).slice(),sysOrder:(ex.sysOrder&&ex.sysOrder.length===SYS.length?ex.sysOrder:SYS_ORDER_DEFAULT).slice(),pathChapters:(Array.isArray(ex.pathChapters)?ex.pathChapters.slice():undefined)};
   // a brand-new plan starts with every resource unchecked — the student picks
   else o={hub:key,fresh:!!fresh,examLabel:key==="step1"?"Step 1":"",examISO:"",startISO:todayISO(),wkdayHrs:6,wkendHrs:4,restDays:[0],reviewDays:14,resources:{bnb:false,bootcamp:false,pathoma:false,sketchy:false,fa:false,anking:false,uworld:false},systems:(key==="nbme"?[]:SYS.slice()),sysOrder:SYS_ORDER_DEFAULT.slice()};
   // NBME hub now selects individual systems (like Step 1); migrate any legacy block selection
@@ -2274,21 +2365,28 @@ function renderOnboard(){
   const dows=DOW.map((d,i)=>'<button type="button" class="tog '+(ob.restDays.includes(i)?"on":"")+'" data-odow="'+i+'">'+d+'</button>').join('');
   const resBtn=(k,lab)=>'<button type="button" class="tog '+(ob.resources[k]?"on":"")+'" data-ores="'+k+'">'+lab+'</button>';
   let body='<div class="onboard"><button class="link" id="o_back">'+closeLbl+'</button><h1>'+headVerb+escHTML(ob.fresh?"M2 Scheduler":hubName(ob.hub))+'</h1><p class="muted">A plan that paces itself to your exam date and re-flows whenever life happens.</p>';
-  if(obIsNbme())body+='<div class="card"><div class="cardhd">Which exam?</div><div class="form"><label>Name this exam<input type="text" id="o_label" value="'+escAttr(ob.examLabel)+'" placeholder="e.g. Cardiology shelf"></label></div></div>';
-  body+='<div class="card"><div class="cardhd">Dates</div><div class="form">'
+  if(obIsNbme())body+='<div class="card"><div class="cardhd">Plan type</div><div class="togrow">'
+    +'<button type="button" class="tog '+(!ob.brody?"on":"")+'" data-oplan="exam">Count down to an exam</button>'
+    +'<button type="button" class="tog '+(ob.brody?"on":"")+'" data-oplan="brody">Follow my Brody calendar</button>'
+    +'</div><p class="muted small">'+(ob.brody?'Videos line up with each week of the Brody calendar so you’re covered for every quiz.':'Set an exam date and the plan paces itself to it.')+'</p></div>';
+  if(obIsNbme()&&ob.brody){const blk=BRODY_TRIAL;
+    body+='<div class="card soft"><div class="cardhd">Brody block <span class="pill">trial</span></div><p class="muted small" style="margin:0">'
+      +'<b>'+escHTML(blk.name)+'</b> — weeks of '+fmtShort(blk.weeks[0].start)+' → shelf '+fmtShort(blk.shelf)+'. Each week’s videos match what Brody teaches that week, in each resource’s own order, all finished before the shelf.</p></div>';}
+  if(obIsNbme()&&!ob.brody)body+='<div class="card"><div class="cardhd">Which exam?</div><div class="form"><label>Name this exam<input type="text" id="o_label" value="'+escAttr(ob.examLabel)+'" placeholder="e.g. Cardiology shelf"></label></div></div>';
+  if(!ob.brody)body+='<div class="card"><div class="cardhd">Dates</div><div class="form">'
     +'<label>Exam date'+dateTriggerHTML("o_exam",ob.examISO,"Pick your exam date")+'</label>'
     +'<label>Start date'+dateTriggerHTML("o_start",ob.startISO,"Pick a start date")+'</label></div></div>';
   body+='<div class="card"><div class="cardhd">How much can you study?</div><div class="form">'
     +'<label>Weekday hours/day<input type="number" id="o_wk" min="0" step="0.5" value="'+ob.wkdayHrs+'"></label>'
     +'<label>Weekend hours/day<input type="number" id="o_we" min="0" step="0.5" value="'+ob.wkendHrs+'"></label>'
     +'<div class="flab">Weekly rest days</div><div class="togrow">'+dows+'</div>'
-    +'<label class="mt">UWorld / review buffer — finish content this many study days before your exam<input type="number" id="o_rev" min="0" step="1" value="'+ob.reviewDays+'"></label>'
+    +(ob.brody?'':'<label class="mt">UWorld / review buffer — finish content this many study days before your exam<input type="number" id="o_rev" min="0" step="1" value="'+ob.reviewDays+'"></label>')
     +'</div></div>';
   body+='<div class="card soft" id="o_reco"><div class="cardhd">Recommended pace</div>'+obPreview()+'</div>';
   body+='<div class="card"><div class="cardhd">Resources</div><div class="togrow">'
     +resBtn("bnb","Boards &amp; Beyond")+resBtn("bootcamp","Bootcamp")+resBtn("pathoma","Pathoma")+resBtn("sketchy","Sketchy")+resBtn("fa","First Aid")+resBtn("anking","AnKing")+resBtn("uworld","UWorld")
     +'</div><p class="muted small">Turn on the video resources you use \u2014 they interleave into the plan.</p></div>';
-  {const obSysInner='<p class="muted small" style="margin-top:6px">'+(obIsNbme()
+  if(!ob.brody){const obSysInner='<p class="muted small" style="margin-top:6px">'+(obIsNbme()
       ?'Tap the systems this shelf covers \u2014 immuno, micro, genetics, biochem and the rest are each selectable. The B&amp;B/Pathoma topics for each come with it. Reorder with \u25b2\u25bc to set what you study first.'
       :'This is the recommended Boards &amp; Beyond sequence. Reorder with \u25b2\u25bc, and tap a system to include or drop it.')+'</p>'
     + orderedSysHTML(ob.sysOrder,ob.systems)
@@ -2307,6 +2405,7 @@ function renderOnboard(){
   const orv=document.getElementById("o_rev");if(orv)orv.onchange=()=>{let v=parseInt(orv.value,10);if(isNaN(v)||v<0)v=0;ob.reviewDays=v;obLive();};
   document.querySelectorAll("[data-odow]").forEach(b=>b.onclick=()=>{const i=+b.dataset.odow;const k=ob.restDays.indexOf(i);if(k>=0)ob.restDays.splice(k,1);else ob.restDays.push(i);renderObTogs();});
   document.querySelectorAll("[data-ores]").forEach(b=>b.onclick=()=>{ob.resources[b.dataset.ores]=!ob.resources[b.dataset.ores];renderObTogs();obLive();});
+  document.querySelectorAll("[data-oplan]").forEach(b=>b.onclick=()=>{if(b.dataset.oplan==="brody"){ob.brody="heme-renal";ob.systems=BRODY_TRIAL.systems.slice();ob.examLabel=BRODY_TRIAL.name;}else ob.brody=null;renderOnboard();});
   document.querySelectorAll("[data-sinc]").forEach(b=>b.onclick=()=>{const s=b.dataset.sinc;const k=ob.systems.indexOf(s);if(k>=0){if(ob.systems.length>1)ob.systems.splice(k,1);}else ob.systems.push(s);renderOnboard();});
   document.querySelectorAll("[data-pathch]").forEach(b=>b.onclick=()=>{togglePathCh(ob,+b.dataset.pathch);renderOnboard();});
   document.querySelectorAll("[data-sup]").forEach(b=>b.onclick=()=>{const i=+b.dataset.sup;if(i>0){const a=ob.sysOrder;const t=a[i-1];a[i-1]=a[i];a[i]=t;renderOnboard();}});
@@ -2346,7 +2445,26 @@ function obReco(){const ob=_ob;
   const feasible=cap>=totalH-0.05;const gap=Math.max(0,totalH-cap);
   return {ok:true,totalH:Math.round(totalH),nSys:order.length,sd:sd,content:content,perDay:perDay,perWeek:perWeek,reviewDays:(ob.reviewDays||0),feasible:feasible,gap:gap,wd:ob.wkdayHrs,we:ob.wkendHrs,fromISO:cur,examISO:ob.examISO};
 }
-function obPreview(){const r=obReco();
+function brodyPreview(ob){
+  if(!catReady())return '<p class="muted small" style="margin:0">Loading the video catalog…</p>';
+  const blk=BRODY_TRIAL;const R=ob.resources||{};
+  const en={bnb:R.bnb,bootcamp:R.bootcamp,pathoma:R.pathoma,skmicro:R.sketchy,skpharm:R.sketchy};
+  const pathSel=en.pathoma?effectivePathChapters(ob):new Set();
+  const load={};blk.weeks.forEach(w=>load[w.n]=0);let total=0;
+  catVideos().forEach(v=>{if(blk.systems.indexOf(v.sys)<0)return;if(!en[v.res])return;if(v.res==="pathoma"&&!pathSel.has(pathChapterOf(v)))return;
+    const w=blk.videoWeek[v.res+"|"+v.name]||blk.weeks.length;load[w]+=v.min;total+=v.min;});
+  if(!total)return '<p class="muted small" style="margin:0">Turn on at least one video resource to see the weekly plan.</p>';
+  const sdw=Math.max(1,7-(ob.restDays||[]).length);const capH=(ob.wkdayHrs||0)*sdw;
+  const rows=blk.weeks.map(w=>{const h=load[w.n]/60;const heavy=h>capH+0.2;
+    return '<div class="brodywk'+(heavy?' heavy':'')+'"><span class="bw-n">Wk '+w.n+'</span><span class="bw-l">'+escHTML(w.label)+'</span><span class="bw-h">'+(Math.round(h*10)/10)+' h'+(heavy?' ⚠':'')+'</span></div>';}).join('');
+  let h='<p class="muted small" style="margin:0 0 10px">'+Math.round(total/60)+' h of video across '+blk.weeks.length+' Brody weeks → shelf '+fmtShort(blk.shelf)+'. Each week matches what Brody teaches; ⚠ marks a week heavier than your hours.</p>';
+  h+='<div class="brodywks">'+rows+'</div>';
+  h+='<p class="small" style="margin:10px 0 0;color:var(--text-2)">At ~'+(ob.wkdayHrs||0)+' h on each of ~'+sdw+' study days you cover about '+Math.round(capH)+' h/week.</p>';
+  return h;
+}
+function obPreview(){const ob=_ob;
+  if(ob&&ob.brody)return brodyPreview(ob);
+  const r=obReco();
   if(!r.ok)return '<p class="muted small" style="margin:0">'+r.msg+'</p>';
   const pd=Math.round(r.perDay*10)/10,pw=Math.round(r.perWeek);
   let h='<p class="muted small" style="margin:0 0 8px">'+r.totalH+' h of video across '+r.nSys+' system'+(r.nSys>1?"s":"")+', '+fmtShort(r.fromISO)+' \u2192 '+fmtShort(r.examISO)+'. To finish before your '+r.reviewDays+'-study-day question buffer, aim for about <b>'+pd+' h/day</b> on study days (\u2248 <b>'+pw+' h/week</b>).</p>';
@@ -2356,15 +2474,17 @@ function obPreview(){const r=obReco();
 }
 function bindUsePace(){const u=document.getElementById("o_usepace");if(u)u.onclick=()=>{const r=obReco();if(r.ok){const pd=Math.max(0.5,Math.ceil(r.perDay*2)/2);_ob.wkdayHrs=pd;_ob.wkendHrs=pd;renderOnboard();}};}
 function commitOnboard(){const ob=_ob;
-  if(!ob.examISO){toast("Pick an exam date first");return;}
-  if(!ob.systems.length){toast("Pick at least one system");return;}
+  const brody=ob.brody?BRODY_TRIAL:null;
+  if(!brody&&!ob.examISO){toast("Pick an exam date first");return;}
+  if(!brody&&!ob.systems.length){toast("Pick at least one system");return;}
   if(!["bnb","bootcamp","pathoma","sketchy"].some(k=>ob.resources[k])){toast("Pick at least one video resource");return;}
   const key=ob.hub;
   const prev=S.cfgs[key]?JSON.parse(JSON.stringify(S.cfgs[key])):null;
   const c=S.cfgs[key]||{};
-  Object.assign(c,{examType:key,examLabel:key==="step1"?"Step 1":(ob.examLabel||"Shelf exam"),
-    examISO:ob.examISO,startISO:ob.startISO,wkdayHrs:ob.wkdayHrs,wkendHrs:ob.wkendHrs,restDays:ob.restDays.slice(),
-    reviewDays:ob.reviewDays,resources:Object.assign({},ob.resources),systems:ob.systems.slice(),sysOrder:(ob.sysOrder||SYS_ORDER_DEFAULT).slice(),pathChapters:(Array.isArray(ob.pathChapters)?ob.pathChapters.slice():undefined)});
+  Object.assign(c,{examType:key,examLabel:key==="step1"?"Step 1":(brody?brody.name:(ob.examLabel||"Shelf exam")),
+    brody:(brody?brody.id:undefined),
+    examISO:(brody?brody.shelf:ob.examISO),startISO:(brody?brody.weeks[0].start:ob.startISO),wkdayHrs:ob.wkdayHrs,wkendHrs:ob.wkendHrs,restDays:ob.restDays.slice(),
+    reviewDays:(brody?0:ob.reviewDays),resources:Object.assign({},ob.resources),systems:(brody?brody.systems.slice():ob.systems.slice()),sysOrder:(ob.sysOrder||SYS_ORDER_DEFAULT).slice(),pathChapters:(Array.isArray(ob.pathChapters)?ob.pathChapters.slice():undefined)});
   c.off=c.off||{};
   S.cfgs[key]=c;activate(key);S.active=key;
   save();reflow();VIEW="today";render();
@@ -2400,7 +2520,7 @@ function doResetAll(){
     S.cfgs=snap.cfgs;S.active=snap.active;S.cfg=S.active?S.cfgs[S.active]:null;_prevSig=progressSig();save();
     if(S.cfg){reflow();render();}else renderWelcome();toast("Restored ✓");});
 }
-const BUILD="2026-07-17a";
+const BUILD="2026-07-17b";
 /* ---------- What's new (changelog) ----------
    Newest entry first. Bump the top entry's id whenever you add one and the
    pop-up shows once per person (tracked in synced settings.seenUpdate). */
