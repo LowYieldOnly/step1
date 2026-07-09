@@ -450,6 +450,14 @@ b{color:var(--ink)}
 .ordbtns{flex:0 0 auto;display:flex;gap:4px}
 .ordbtn{width:30px;height:28px;border-radius:8px;border:1px solid var(--line2);background:var(--panel2);color:var(--muted);font-size:12px;cursor:pointer;transition:all .14s}
 .ordbtn:hover:not([disabled]){color:var(--phos);border-color:var(--phos-dim)}
+/* Pathoma chapter picker */
+.pathlist{display:flex;flex-direction:column;gap:6px;margin:10px 0 4px}
+.pathrow{display:flex;align-items:center;gap:9px;width:100%;text-align:left;background:var(--bg2);border:1px solid var(--line);border-radius:11px;padding:8px 10px;cursor:pointer;opacity:.5;font-family:inherit;transition:opacity .14s,border-color .14s,background .14s}
+.pathrow.on{opacity:1;background:var(--surface-sunken)}
+.pathinc{flex:0 0 auto;width:22px;height:22px;border-radius:7px;border:1.5px solid var(--line2);background:transparent;color:var(--on-accent);font-size:12px;font-weight:800;display:flex;align-items:center;justify-content:center;transition:all .14s}
+.pathrow.on .pathinc{background:var(--phos);border-color:var(--phos)}
+.pathnm{flex:1;min-width:0;font-size:13px;color:var(--ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pathsys{flex:0 0 auto;font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:.03em;color:var(--faint);white-space:nowrap}
 .ordbtn[disabled]{opacity:.25;cursor:default}
 
 /* overlay sheet (menu) */
@@ -752,13 +760,56 @@ function resEnabled(){return {bnb:hasRes("bnb"),bootcamp:hasRes("bootcamp"),path
    carries over; the newer resources namespace by system to stay unique. */
 function itemId(v){if(v.res==="bnb")return "b:"+v.name;if(v.res==="pathoma")return "p:"+v.name;return v.res+":"+v.sys+":"+v.name;}
 const RES_ORDER=["bnb","bootcamp","pathoma","skmicro","skpharm"];
+/* Pathoma is chosen chapter-by-chapter rather than dumped into one system.
+   Each chapter also carries the organ system it belongs under, which sets
+   where its videos fall in the study order. */
+const PATHOMA_CH=[
+  [1,"Growth Adaptations, Cellular Injury & Death","Pathology"],
+  [2,"Inflammation & Hypersensitivity","Pathology"],
+  [3,"Neoplasia","Pathology"],
+  [4,"Hemostasis & Related Disorders","Hematology"],
+  [5,"Red Blood Cell Disorders","Hematology"],
+  [6,"White Blood Cell Disorders","Hematology"],
+  [7,"Vascular Pathology","Cardiology"],
+  [8,"Cardiac Pathology","Cardiology"],
+  [9,"Respiratory Tract Pathology","Pulmonary"],
+  [10,"Gastrointestinal Pathology","Gastroenterology"],
+  [11,"Exocrine Pancreas, Gallbladder & Liver","Gastroenterology"],
+  [12,"Kidney & Urinary Tract Pathology","Renal"],
+  [13,"Female Genital & Gestational Pathology","Reproductive"],
+  [14,"Male Genital System Pathology","Reproductive"],
+  [15,"Endocrine Pathology","Endocrinology"],
+  [16,"Breast Pathology","Reproductive"],
+  [17,"Central Nervous System Pathology","Neurology"],
+  [18,"Musculoskeletal Pathology","Musculoskeletal"],
+  [19,"Skin Pathology","Dermatology"]
+];
+function pathChapterOf(v){const m=/^(\d+)\./.exec(v.name||"");return m?+m[1]:0;}
+/* selected Pathoma chapters for a cfg. Once the user picks in the chapter list
+   it is an explicit array; until then it defaults to the chapters whose system
+   is selected (so existing plans and shelf selections are unchanged). */
+function effectivePathChapters(c){
+  if(c&&Array.isArray(c.pathChapters))return new Set(c.pathChapters);
+  const selSys=new Set((c&&c.systems&&c.systems.length)?c.systems:SYS);
+  return new Set(PATHOMA_CH.filter(ch=>selSys.has(ch[2])).map(ch=>ch[0]));
+}
+function togglePathCh(c,n){const sel=effectivePathChapters(c);if(sel.has(n))sel.delete(n);else sel.add(n);c.pathChapters=[...sel].sort((a,b)=>a-b);}
 function buildBacklog(){
-  const order=planSystems();const en=resEnabled();
+  const c=S.cfg;const order=planSystems();const en=resEnabled();
+  const pathSel=en.pathoma?effectivePathChapters(c):new Set();
   const bySys={}; // sys -> res -> [videos], catalog order preserved
-  catVideos().forEach(v=>{if(!en[v.res])return;(bySys[v.sys]=bySys[v.sys]||{});(bySys[v.sys][v.res]=bySys[v.sys][v.res]||[]).push(v);});
+  catVideos().forEach(v=>{
+    if(!en[v.res])return;
+    if(v.res==="pathoma"&&!pathSel.has(pathChapterOf(v)))return;   // chapter-level Pathoma selection
+    (bySys[v.sys]=bySys[v.sys]||{});(bySys[v.sys][v.res]=bySys[v.sys][v.res]||[]).push(v);
+  });
+  // visit selected systems, plus any system that only holds a chosen Pathoma
+  // chapter (so a picked chapter still schedules even if its system isn't selected)
+  const orderSet=new Set(order);const visit=order.slice();
+  SYS_ORDER_DEFAULT.forEach(sn=>{if(!orderSet.has(sn)&&bySys[sn]&&bySys[sn].pathoma)visit.push(sn);});
   const out=[];
-  order.forEach(sn=>{const byRes=bySys[sn];if(!byRes)return;
-    RES_ORDER.forEach(r=>{(byRes[r]||[]).forEach(v=>out.push({sys:sn,name:v.name,min:v.min,fa:v.cat||"",tag:v.tag||"",res:r,label:v.name,id:itemId(v)}));});
+  visit.forEach(sn=>{const byRes=bySys[sn];if(!byRes)return;const isSel=orderSet.has(sn);
+    RES_ORDER.forEach(r=>{if(r!=="pathoma"&&!isSel)return;(byRes[r]||[]).forEach(v=>out.push({sys:sn,name:v.name,min:v.min,fa:v.cat||"",tag:v.tag||"",res:r,label:v.name,id:itemId(v)}));});
   });
   return out;
 }
@@ -1768,6 +1819,7 @@ function renderAdjust(){
     + '<button class="link" id="sordReset">↺ Reset to recommended order</button>';
   colB+='<div class="card"><div class="cardhd">'+(S.active==="nbme"?'Units &amp; study order':'Study order &amp; systems')+'</div>'
     + fold("adj_sys",(c.systems||SYS).length+' of '+SYS.length+' systems selected — edit / reorder',sysInner,false)+'</div>';
+  colB+=pathChaptersHTML(c,"adj_path");
   if(S.active==="nbme"){
     colB+='<div class="card soft"><div class="cardhd">Finished this unit?</div><p class="muted small">Start a fresh plan for your next block or shelf — new exam, dates, and systems.</p><button class="btn" id="newUnit">Start a new unit…</button></div>';
   }
@@ -1785,6 +1837,7 @@ function renderAdjust(){
   document.querySelectorAll("[data-dow]").forEach(b=>b.onclick=()=>{const i=+b.dataset.dow;c.restDays=c.restDays||[];const k=c.restDays.indexOf(i);if(k>=0)c.restDays.splice(k,1);else c.restDays.push(i);apply();});
   document.querySelectorAll("[data-res]").forEach(b=>b.onclick=()=>{c.resources=c.resources||{};c.resources[b.dataset.res]=!hasRes(b.dataset.res);apply();});
   document.querySelectorAll("[data-sinc]").forEach(b=>b.onclick=()=>{const s=b.dataset.sinc;c.systems=c.systems||SYS.slice();const k=c.systems.indexOf(s);if(k>=0){if(c.systems.length>1)c.systems.splice(k,1);}else c.systems.push(s);apply();});
+  document.querySelectorAll("[data-pathch]").forEach(b=>b.onclick=()=>{togglePathCh(c,+b.dataset.pathch);apply();});
   document.querySelectorAll("[data-sup]").forEach(b=>b.onclick=()=>{const i=+b.dataset.sup;const a=c.sysOrder=(c.sysOrder||SYS_ORDER_DEFAULT).slice();if(i>0){const t=a[i-1];a[i-1]=a[i];a[i]=t;apply();}});
   document.querySelectorAll("[data-sdn]").forEach(b=>b.onclick=()=>{const i=+b.dataset.sdn;const a=c.sysOrder=(c.sysOrder||SYS_ORDER_DEFAULT).slice();if(i<a.length-1){const t=a[i+1];a[i+1]=a[i];a[i]=t;apply();}});
   const sr=document.getElementById("sordReset");if(sr)sr.onclick=()=>{c.sysOrder=SYS_ORDER_DEFAULT.slice();apply();};
@@ -2177,7 +2230,7 @@ function enterHub(key){if(!S.cfgs[key]){startOnboard(key);return;}activate(key);
 let _ob=null;
 function defaultsForHub(key,fresh){const ex=fresh?null:S.cfgs[key];
   let o;
-  if(ex)o={hub:key,fresh:false,examLabel:ex.examLabel||"",examISO:ex.examISO||"",startISO:ex.startISO||todayISO(),wkdayHrs:ex.wkdayHrs,wkendHrs:ex.wkendHrs,restDays:(ex.restDays||[0]).slice(),reviewDays:ex.reviewDays,resources:Object.assign({bnb:true,bootcamp:false,pathoma:true,sketchy:true,fa:true,anking:true,uworld:true},ex.resources||{}),systems:(ex.systems||SYS).slice(),sysOrder:(ex.sysOrder&&ex.sysOrder.length===SYS.length?ex.sysOrder:SYS_ORDER_DEFAULT).slice()};
+  if(ex)o={hub:key,fresh:false,examLabel:ex.examLabel||"",examISO:ex.examISO||"",startISO:ex.startISO||todayISO(),wkdayHrs:ex.wkdayHrs,wkendHrs:ex.wkendHrs,restDays:(ex.restDays||[0]).slice(),reviewDays:ex.reviewDays,resources:Object.assign({bnb:true,bootcamp:false,pathoma:true,sketchy:true,fa:true,anking:true,uworld:true},ex.resources||{}),systems:(ex.systems||SYS).slice(),sysOrder:(ex.sysOrder&&ex.sysOrder.length===SYS.length?ex.sysOrder:SYS_ORDER_DEFAULT).slice(),pathChapters:(Array.isArray(ex.pathChapters)?ex.pathChapters.slice():undefined)};
   // a brand-new plan starts with every resource unchecked — the student picks
   else o={hub:key,fresh:!!fresh,examLabel:key==="step1"?"Step 1":"",examISO:"",startISO:todayISO(),wkdayHrs:6,wkendHrs:4,restDays:[0],reviewDays:14,resources:{bnb:false,bootcamp:false,pathoma:false,sketchy:false,fa:false,anking:false,uworld:false},systems:(key==="nbme"?[]:SYS.slice()),sysOrder:SYS_ORDER_DEFAULT.slice()};
   // NBME hub now selects individual systems (like Step 1); migrate any legacy block selection
@@ -2195,6 +2248,20 @@ function orderedSysHTML(order,included){const set=new Set(included);
       +'<span class="ordbtns"><button type="button" class="ordbtn" data-sup="'+i+'"'+(i===0?' disabled':'')+' aria-label="move up">▲</button>'
       +'<button type="button" class="ordbtn" data-sdn="'+i+'"'+(i===order.length-1?' disabled':'')+' aria-label="move down">▼</button></span>'
       +'</div>';}).join('')+'</div>';}
+/* Pathoma chapter picker — each chapter individually selectable, tagged with
+   the organ system it studies under. Shown only when Pathoma is a chosen resource. */
+function pathChaptersHTML(c,foldId){
+  if(!(c&&c.resources&&c.resources.pathoma))return "";
+  const sel=effectivePathChapters(c);
+  const rows=PATHOMA_CH.map(ch=>'<button type="button" class="pathrow'+(sel.has(ch[0])?" on":"")+'" data-pathch="'+ch[0]+'">'
+    +'<span class="pathinc">'+(sel.has(ch[0])?"✓":"")+'</span>'
+    +'<span class="pathnm">'+ch[0]+'. '+escHTML(ch[1])+'</span>'
+    +'<span class="pathsys">'+escHTML(ch[2])+'</span></button>').join('');
+  const inner='<p class="muted small" style="margin-top:6px">Choose the Pathoma chapters to include — each is labeled with the system it studies under.</p>'
+    +'<div class="pathlist">'+rows+'</div>';
+  return '<div class="card"><div class="cardhd">Pathoma chapters</div>'
+    + fold(foldId,sel.size+' of '+PATHOMA_CH.length+' chapters selected — edit',inner,false)+'</div>';
+}
 /* block-level list for the NBME hub (combined units) */
 function startOnboard(key,fresh){_ob=defaultsForHub(key,fresh);loadCatalog(()=>{if(_ob)obLive();});renderOnboard();}
 function obIsNbme(){return _ob&&_ob.hub==="nbme";}
@@ -2228,6 +2295,7 @@ function renderOnboard(){
     + '<button class="link" id="sordReset">\u21ba Reset to recommended order</button>';
   body+='<div class="card"><div class="cardhd">'+(obIsNbme()?'Units &amp; study order':'Study order &amp; systems')+'</div>'
     + fold("ob_sys",ob.systems.length+' of '+SYS.length+' systems selected \u2014 edit / reorder',obSysInner,obIsNbme())+'</div>';}
+  body+=pathChaptersHTML(ob,"ob_path");
   body+='<button class="btn big" id="o_go">'+goLbl+'</button>';
   body+='</div>';
   app.innerHTML='<div class="wrap onb">'+body+'</div>';
@@ -2240,6 +2308,7 @@ function renderOnboard(){
   document.querySelectorAll("[data-odow]").forEach(b=>b.onclick=()=>{const i=+b.dataset.odow;const k=ob.restDays.indexOf(i);if(k>=0)ob.restDays.splice(k,1);else ob.restDays.push(i);renderObTogs();});
   document.querySelectorAll("[data-ores]").forEach(b=>b.onclick=()=>{ob.resources[b.dataset.ores]=!ob.resources[b.dataset.ores];renderObTogs();obLive();});
   document.querySelectorAll("[data-sinc]").forEach(b=>b.onclick=()=>{const s=b.dataset.sinc;const k=ob.systems.indexOf(s);if(k>=0){if(ob.systems.length>1)ob.systems.splice(k,1);}else ob.systems.push(s);renderOnboard();});
+  document.querySelectorAll("[data-pathch]").forEach(b=>b.onclick=()=>{togglePathCh(ob,+b.dataset.pathch);renderOnboard();});
   document.querySelectorAll("[data-sup]").forEach(b=>b.onclick=()=>{const i=+b.dataset.sup;if(i>0){const a=ob.sysOrder;const t=a[i-1];a[i-1]=a[i];a[i]=t;renderOnboard();}});
   document.querySelectorAll("[data-sdn]").forEach(b=>b.onclick=()=>{const i=+b.dataset.sdn;const a=ob.sysOrder;if(i<a.length-1){const t=a[i+1];a[i+1]=a[i];a[i]=t;renderOnboard();}});
   const sr=document.getElementById("sordReset");if(sr)sr.onclick=()=>{ob.sysOrder=SYS_ORDER_DEFAULT.slice();renderOnboard();};
@@ -2261,7 +2330,11 @@ function obReco(){const ob=_ob;
   const order=(ob.sysOrder||SYS_ORDER_DEFAULT).filter(s=>new Set(ob.systems).has(s));
   const selSys=new Set(order);const R=ob.resources||{};
   const en={bnb:R.bnb,bootcamp:R.bootcamp,pathoma:R.pathoma,skmicro:R.sketchy,skpharm:R.sketchy};
-  let total=0;catVideos().forEach(v=>{if(selSys.has(v.sys)&&en[v.res])total+=v.min;});
+  const pathSel=en.pathoma?effectivePathChapters(ob):new Set();
+  let total=0;catVideos().forEach(v=>{
+    if(!en[v.res])return;
+    if(v.res==="pathoma"){if(pathSel.has(pathChapterOf(v)))total+=v.min;return;}
+    if(selSys.has(v.sys))total+=v.min;});
   if(!total)return {ok:false,msg:"Turn on at least one video resource (B&amp;B, Bootcamp, Pathoma, or Sketchy)."};
   const cur=(ob.startISO>todayISO())?ob.startISO:todayISO();const rest=ob.restDays||[];
   let d=isoToDate(cur),g=0;const sdw=[];
@@ -2291,7 +2364,7 @@ function commitOnboard(){const ob=_ob;
   const c=S.cfgs[key]||{};
   Object.assign(c,{examType:key,examLabel:key==="step1"?"Step 1":(ob.examLabel||"Shelf exam"),
     examISO:ob.examISO,startISO:ob.startISO,wkdayHrs:ob.wkdayHrs,wkendHrs:ob.wkendHrs,restDays:ob.restDays.slice(),
-    reviewDays:ob.reviewDays,resources:Object.assign({},ob.resources),systems:ob.systems.slice(),sysOrder:(ob.sysOrder||SYS_ORDER_DEFAULT).slice()});
+    reviewDays:ob.reviewDays,resources:Object.assign({},ob.resources),systems:ob.systems.slice(),sysOrder:(ob.sysOrder||SYS_ORDER_DEFAULT).slice(),pathChapters:(Array.isArray(ob.pathChapters)?ob.pathChapters.slice():undefined)});
   c.off=c.off||{};
   S.cfgs[key]=c;activate(key);S.active=key;
   save();reflow();VIEW="today";render();
@@ -2327,7 +2400,7 @@ function doResetAll(){
     S.cfgs=snap.cfgs;S.active=snap.active;S.cfg=S.active?S.cfgs[S.active]:null;_prevSig=progressSig();save();
     if(S.cfg){reflow();render();}else renderWelcome();toast("Restored ✓");});
 }
-const BUILD="2026-07-16z";
+const BUILD="2026-07-17a";
 /* ---------- What's new (changelog) ----------
    Newest entry first. Bump the top entry's id whenever you add one and the
    pop-up shows once per person (tracked in synced settings.seenUpdate). */
