@@ -177,6 +177,20 @@ b{color:var(--ink)}
 .m1soon-tag{display:inline-block;font-family:var(--mono);font-size:10px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:var(--phos);background:var(--phos-soft);border:1px solid var(--phos-dim);border-radius:999px;padding:4px 11px;margin-bottom:15px}
 .m1soon-t{font-family:var(--font-display);font-size:22px;font-weight:600;color:var(--ink);margin-bottom:9px}
 .m1soon-d{font-size:14px;color:var(--text-2);line-height:1.6}
+/* M1 disclaimer — full-page gate on entry */
+.m1disc{max-width:40em;margin:30px auto;background:var(--panel);border:1px solid var(--line);border-left:3px solid var(--gold);border-radius:var(--r);padding:34px 30px 30px}
+.m1disc-eyebrow{font-family:var(--mono);font-size:11px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:var(--gold);margin-bottom:12px}
+.m1disc-h{font-family:var(--font-display);font-weight:600;font-size:clamp(26px,5vw,34px);line-height:1.12;color:var(--ink);margin:0 0 18px}
+.m1disc-body p{font-size:15.5px;line-height:1.68;color:var(--text-2);margin:0 0 15px}
+.m1disc-body p b{color:var(--ink)}
+.m1disc .btn.big{margin-top:10px}
+.m1disc-home{display:block;text-align:center;margin:14px auto 0;font-size:13px}
+/* M1 persistent notice — apparent on every hub view */
+.m1notice{display:flex;align-items:flex-start;gap:11px;background:var(--gold-soft,color-mix(in srgb,var(--gold) 12%,transparent));border:1px solid color-mix(in srgb,var(--gold) 42%,transparent);border-radius:13px;padding:12px 14px;margin:0 0 18px}
+.m1notice-i{flex:0 0 auto;width:20px;height:20px;border-radius:50%;background:var(--gold);color:#1a1206;font-weight:900;font-size:13px;display:flex;align-items:center;justify-content:center;margin-top:1px}
+.m1notice-t{flex:1;min-width:0;font-size:13px;line-height:1.5;color:var(--text-2)}
+.m1notice-t b{color:var(--ink)}
+.m1notice-x{flex:0 0 auto;align-self:center;background:none;border:0;color:var(--gold);font-family:inherit;font-size:12.5px;font-weight:700;cursor:pointer;white-space:nowrap;padding:4px 2px;text-decoration:underline}
 
 /* ring (analog gauge) */
 .ring{display:block}
@@ -463,6 +477,13 @@ b{color:var(--ink)}
 .atab.on{background:var(--accent);color:var(--on-accent)}
 .autherr{color:var(--red);font-size:12.5px;margin:11px 2px 0;line-height:1.45;display:none}
 .authforgot{display:block;text-align:center;margin:14px auto 0;font-size:13px}
+.demolink{display:block;text-align:center;margin:18px auto 0;font-size:12.5px;color:var(--muted)}
+.demolink:hover{color:var(--phos)}
+.demobar{position:fixed;left:50%;bottom:16px;transform:translateX(-50%);z-index:70;display:flex;align-items:center;gap:12px;background:var(--surface-overlay);border:1px solid var(--gold);border-radius:999px;padding:8px 8px 8px 17px;box-shadow:var(--shadow);font-size:13px;color:var(--ink);max-width:calc(100vw - 24px)}
+.demobar-t{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.demobar-t b{color:var(--gold);font-weight:800}
+.demobar-x{flex:0 0 auto;background:var(--gold);color:#1a1206;border:0;border-radius:999px;padding:7px 15px;font-weight:800;font-size:12.5px;cursor:pointer;font-family:inherit}
+.demobar-x:hover{filter:brightness(1.08)}
 .authspin{width:26px;height:26px;margin:24px auto 0;border:3px solid var(--line2);border-top-color:var(--phos);border-radius:50%;animation:aspin .8s linear infinite}
 @keyframes aspin{to{transform:rotate(360deg)}}
 .cfmsg{padding:4px 16px 14px;margin:0;color:var(--text-secondary);font-family:var(--font-read);font-size:15px;line-height:1.6;white-space:pre-line}
@@ -633,6 +654,7 @@ store.init();
 let SKEY="cc_state";          // active local-cache key (becomes per-account after sign-in)
 const LEGACY_KEY="cc_state";  // pre-account local data lives here (offered for one-time import)
 let AUTHED=false;             // required sign-in gate
+let DEMO=false;               // read-only preview: no save, no cloud sync
 /* ---------- access control: anyone with an ECU email (+ admin allowlist) ----
    Client gate for honest users; real enforcement lives in firestore.rules.
    Each domain matches itself and any subdomain (ecu.edu, students.ecu.edu,
@@ -708,7 +730,7 @@ function hubName(key){return key==="step1"?"STEP 1 Command Center":"M2 Scheduler
 let _prevSig=null;
 
 function persistObj(){return {active:S.active,cfgs:S.cfgs,vdone:S.vdone,vskip:S.vskip,vdoneDate:S.vdoneDate,akdone:S.akdone,notes:S.notes,streak:S.streak,assessments:S.assessments,uworld:S.uworld,amboss:S.amboss,vshaky:S.vshaky,settings:S.settings,_updatedAt:S._updatedAt,_resetAt:S._resetAt||0};}
-function save(){S._updatedAt=Date.now();markStreakIfProgress();store.set(SKEY,JSON.stringify(persistObj()));Cloud.schedulePush();}
+function save(){if(DEMO)return;S._updatedAt=Date.now();markStreakIfProgress();store.set(SKEY,JSON.stringify(persistObj()));Cloud.schedulePush();}
 
 /* ---------- streak (set of studied dates; merge-safe) ---------- */
 function progressSig(){let n=0;for(const k in S.vdone)if(S.vdone[k])n++;return n;}
@@ -862,6 +884,7 @@ Cloud.init=async function(){if(Cloud.inited||!fbEnabled())return;Cloud.inited=tr
     // no anonymous fallback — onAuthStateChanged(null) shows the sign-in gate
   }catch(e){Cloud.inited=false;if(!AUTHED)renderAuthGate({offline:true});}};
 Cloud.onAuth=function(u){
+  if(DEMO)return;               // in preview mode, ignore auth events (no sign-in gate)
   // ignore leftover anonymous sessions from older versions
   if(u&&u.isAnonymous){try{firebase.auth().signOut();}catch(e){}return;}
   if(u&&!emailAllowed(u.email)){try{firebase.auth().signOut();}catch(e){}Cloud.user=null;AUTHED=false;renderAuthGate({denied:true});return;}
@@ -1908,7 +1931,31 @@ function m1Progress(){
   h+='</div></div>';
   return '<div class="m1wrap">'+h+'</div>';
 }
+function m1Acked(){return !!(S.settings&&S.settings.m1Ack);}
+function renderM1Disclaimer(){
+  loadM1();  // warm the library in the background while they read
+  app.innerHTML='<div class="wrap"><div class="m1disc">'
+    +'<div class="m1disc-eyebrow">For Brody M1s</div>'
+    +'<h1 class="m1disc-h">Welcome — and congratulations.</h1>'
+    +'<div class="m1disc-body">'
+    +'<p>You worked hard to get here. Congratulations on earning your seat at Brody, and welcome to medicine.</p>'
+    +'<p>One thing to be clear about before you start: this hub is a <b>supplement</b>. It is here to help you find another explanation when a topic isn’t clicking — it is <b>not</b> a replacement for anything your Brody faculty say, teach, or provide.</p>'
+    +'<p>Your faculty build your curriculum deliberately, and what they teach is what you are responsible for. Trying to learn from third-party resources alone does not fit the Brody curriculum and will steer you wrong. <b>Learn what your faculty teach first</b> — then use this site as a guide to the outside resources students have found genuinely helpful.</p>'
+    +'<p>Think of it as a map to good resources: a companion to your coursework, never a substitute for it.</p>'
+    +'</div>'
+    +'<button class="btn big" id="m1_ack">I understand — enter the hub</button>'
+    +'<button class="link m1disc-home" id="m1_home">← Back to home</button>'
+    +'</div></div>';
+  const a=document.getElementById("m1_ack");if(a)a.onclick=()=>{S.settings=S.settings||{};S.settings.m1Ack=true;save();render();};
+  const h=document.getElementById("m1_home");if(h)h.onclick=()=>{S.active=null;S.cfg=null;renderWelcome();};
+}
+function m1Notice(){
+  return '<div class="m1notice"><span class="m1notice-i">!</span>'
+    +'<div class="m1notice-t"><b>A supplement, not a substitute.</b> Learn what your Brody faculty teach first — use this hub only to point you toward extra resources, never to replace your coursework.</div>'
+    +'<button class="m1notice-x" id="m1_reread">Read the note</button></div>';
+}
 function renderM1(){
+  if(!m1Acked()){renderM1Disclaimer();return;}
   if(!M1DATA){loadM1();
     const inner=M1ERR?'<div class="m1offline"><div class="cardhd" style="justify-content:center">Connect once to load M1</div><p class="muted">The M1 resource library needs one online visit to download. Reconnect and reopen this hub.</p></div>'
       :'<div class="m1loading"><p class="muted">Loading the M1 library…</p></div>';
@@ -1918,7 +1965,7 @@ function renderM1(){
   else if(M1VIEW==="daily")body=m1Soon("Daily flow checklist","A day-by-day rhythm: preview each lecture, watch it, run your Anki, repeat — with practice-problem days you schedule however you like across the unit. Tailored to your class lecture calendar, coming once it's added.");
   else if(M1VIEW==="grades")body=m1Soon("Grade calculator","Keep a running tally of where you stand in each course as scores come in — your class grade spreadsheet, built right into the app.");
   else body=M1Q?m1SearchResults():(M1COURSE?m1CourseView(M1COURSE):m1CourseList());
-  app.innerHTML=chrome(M1VIEW)+'<div class="wrap">'+body+'</div>';
+  app.innerHTML=chrome(M1VIEW)+'<div class="wrap">'+m1Notice()+body+'</div>';
   wireChrome();wireM1();
 }
 function m1Soon(title,desc){
@@ -1937,6 +1984,7 @@ function wireM1(){
   document.querySelectorAll("[data-m1chk]").forEach(b=>b.onclick=e=>{e.stopPropagation();toggleM1(b.dataset.m1chk);});
   document.querySelectorAll("[data-copyref]").forEach(b=>b.onclick=e=>{e.stopPropagation();copyText(b.getAttribute("data-copyref"),"Reference copied — paste into that app’s search");});
   document.querySelectorAll("[data-copytag]").forEach(b=>b.onclick=e=>{e.stopPropagation();copyText(b.getAttribute("data-copytag"),"AnKing tags copied — paste into Anki’s Browse search");});
+  const rr=document.getElementById("m1_reread");if(rr)rr.onclick=renderM1Disclaimer;
   const stt=document.getElementById("m1settarget");if(stt)stt.onclick=m1PickTarget;
   const clt=document.getElementById("m1cleartarget");if(clt)clt.onclick=()=>{if(S.settings)delete S.settings.m1TargetISO;save();render();};
 }
@@ -1980,7 +2028,39 @@ let AUTH_MODE="signin";
 function renderAuthChecking(){
   app.innerHTML='<div class="wrap welcomewrap"><div class="welcome"><div class="wbrand">Low Yield Only</div><p class="wtag">Connecting\u2026</p><div class="authspin"></div></div></div>';
 }
-function renderAuthGate(opts){opts=opts||{};AUTHED=false;
+/* ---------- read-only preview / demo ----------
+   Lets an instructor (or anyone) tour a fully-populated sample plan without an
+   account. save() is a no-op and cloud sync never starts, so nothing persists;
+   "Exit" reloads back to the sign-in gate. */
+function demoISO(n){return isoFromDate(addDays(isoToDate(todayISO()),n));}
+function enterDemo(){
+  DEMO=true;AUTHED=true;SKEY="cc_demo";
+  resetStateToEmpty();
+  S.cfgs.nbme={examType:"nbme",examLabel:"Cardiology shelf",examISO:demoISO(45),startISO:demoISO(-12),wkdayHrs:4,wkendHrs:3,restDays:[0],reviewDays:7,resources:{bnb:true,bootcamp:false,pathoma:true,sketchy:true,fa:true,anking:true,uworld:true},systems:["Cardiology","Pulmonary","Renal"],sysOrder:SYS_ORDER_DEFAULT.slice()};
+  normalizeCfg(S.cfgs.nbme,"nbme");
+  [0,1,2,3].forEach(d=>{S.streak.days[demoISO(-d)]=true;});   // a lived-in streak
+  // drop them straight into the working app, not a "set up a plan" screen —
+  // they can tour it now and build their own plan later via the Plan tab
+  activate("nbme");S.active="nbme";VIEW="today";
+  showDemoBanner();
+  loadCatalog(()=>{seedDemoProgress();_prevSig=progressSig();render();});
+  render();
+}
+function seedDemoProgress(){
+  const prev=S.active;activate("nbme");
+  const bl=buildBacklog();
+  for(let i=0;i<Math.min(16,bl.length);i++){S.vdone[bl[i].id]=true;S.vdoneDate[bl[i].id]=demoISO(-(i%4));}
+  [5,9].forEach(i=>{if(bl[i])S.vshaky[bl[i].id]=true;});
+  S.active=prev;S.cfg=prev?S.cfgs[prev]:null;
+}
+function showDemoBanner(){
+  if(document.getElementById("demobar"))return;
+  const bar=document.createElement("div");bar.id="demobar";bar.className="demobar";
+  bar.innerHTML='<span class="demobar-t"><b>Preview</b> — nothing you do here is saved</span><button class="demobar-x" id="demoexit">Exit</button>';
+  document.body.appendChild(bar);
+  document.getElementById("demoexit").onclick=()=>{DEMO=false;location.reload();};
+}
+function renderAuthGate(opts){if(DEMO)return;opts=opts||{};AUTHED=false;   // preview overrides the gate
   if(opts.offline){
     app.innerHTML='<div class="wrap welcomewrap"><div class="welcome"><div class="wbrand">Low Yield Only</div>'
       +'<p class="wtag">Couldn\u2019t reach the server.</p>'
@@ -2010,12 +2090,14 @@ function renderAuthGate(opts){opts=opts||{};AUTHED=false;
     +'<button class="btn big" id="auth_go">'+(signup?"Create account":"Sign in")+'</button>'
     +(signup?'':'<button class="link authforgot" id="auth_forgot">Forgot password?</button>')
     +'</div>'
+    +'<button class="link demolink" id="auth_demo">Just looking? Preview the demo →</button>'
     +'</div></div>';
   document.querySelectorAll("[data-mode]").forEach(b=>b.onclick=()=>{AUTH_MODE=b.dataset.mode;renderAuthGate();});
   const go=document.getElementById("auth_go");if(go)go.onclick=authSubmit;
   const em=document.getElementById("auth_email");if(em)em.onkeydown=(e)=>{if(e.key==="Enter"){const p=document.getElementById("auth_pw");if(p)p.focus();}};
   const pw=document.getElementById("auth_pw");if(pw)pw.onkeydown=(e)=>{if(e.key==="Enter")authSubmit();};
   const fg=document.getElementById("auth_forgot");if(fg)fg.onclick=authForgot;
+  const dm=document.getElementById("auth_demo");if(dm)dm.onclick=enterDemo;
 }
 function authErr(msg){const e=document.getElementById("auth_err");if(e){e.textContent=msg||"";e.style.display=msg?"block":"none";}}
 function authBusy(b){const g=document.getElementById("auth_go");if(g){g.disabled=b;g.textContent=b?"Please wait\u2026":(AUTH_MODE==="signup"?"Create account":"Sign in");}}
@@ -2244,7 +2326,7 @@ function doResetAll(){
     S.cfgs=snap.cfgs;S.active=snap.active;S.cfg=S.active?S.cfgs[S.active]:null;_prevSig=progressSig();save();
     if(S.cfg){reflow();render();}else renderWelcome();toast("Restored ✓");});
 }
-const BUILD="2026-07-16w";
+const BUILD="2026-07-16y";
 /* ---------- What's new (changelog) ----------
    Newest entry first. Bump the top entry's id whenever you add one and the
    pop-up shows once per person (tracked in synced settings.seenUpdate). */
