@@ -1,0 +1,8 @@
+{
+    "only_review_cards": false,
+    "tag_notes": false,
+    "tag_name": "again-tracker",
+    "practice_deck_name": "Again Practice",
+    "practice_deck_limit": 999,
+    "front_preview_chars": 300
+}

@@ -1,0 +1,4 @@
+user_files/
+*.ankiaddon
+__pycache__/
+meta.json
