@@ -911,19 +911,24 @@ function brodyWeekLoads(c,blk){
     let days=0,dd=isoToDate(w.start);for(let k=0;k<10;k++){const iso=isoFromDate(dd);if(iso>=end)break;if(iso>=cursor&&iso<cutoff&&!rest.includes(dd.getDay())&&!off[iso])days++;dd=addDays(dd,1);}
     return {n:w.n,label:w.label,loadMin:pre?0:load[w.n],count:pre?0:cnt[w.n],days:days,odbd:odbd,deadline:dl,past:days===0,pre:pre};});
 }
-/* Recommended h/day = the gentlest even pace that finishes each week by the end of
-   its own academic week (content stays phased with Brody, not bunched at the end)
-   and everything before the review buffer. Max over weeks of (cumulative minutes /
-   cumulative open days through that week). Even across every open day, weekends
-   included; recomputes with rest days + buffer.
-   The Friday quiz dates are a tighter target used only for WARNINGS (odbd) — a
-   genuinely front-loaded week (e.g. a firehose first week) can't be made fully
-   quiz-ready without an unrealistic pace, so we flag it rather than blast the whole
-   block up to that pace. */
+/* Recommended h/day = the higher of two guarantees:
+   (1) quiz-ready — clear each week's cumulative minutes before its Friday quiz
+       (odbd = open days before that quiz), for every week that CAN be met at a
+       realistic pace (≤ BRODY_QUIZ_MAX); a genuine firehose week is left out and
+       flagged instead of dragging the whole block to an 8 h/day plan;
+   (2) finish-by-week's-end — cumulative minutes across cumulative open days through
+       each week, which also guarantees everything is done before the block exam.
+   Whichever is higher makes both goals hold: Brody content done before each quiz,
+   all third-party done before the exam. Even across every open day (weekends
+   included); recomputes with rest days + buffer. */
 function brodyRecommendedPace(loads){
-  let cumMin=0,cumDays=0,pace=0;
-  loads.forEach(w=>{cumMin+=w.loadMin;cumDays+=w.days;if(cumDays>0)pace=Math.max(pace,cumMin/cumDays);});
-  return Math.max(0.5,Math.ceil(pace/60/0.5)*0.5);
+  let cumMin=0,cumDays=0,evenPace=0,quizPace=0;
+  loads.forEach(w=>{
+    cumMin+=w.loadMin;cumDays+=w.days;
+    if(cumDays>0)evenPace=Math.max(evenPace,cumMin/cumDays);
+    if(w.odbd>0){const need=cumMin/w.odbd;if(need<=BRODY_QUIZ_MAX*60)quizPace=Math.max(quizPace,need);}
+  });
+  return Math.max(0.5,Math.ceil(Math.max(evenPace,quizPace)/60/0.5)*0.5);
 }
 function brodyPace(c){if(c&&c.brodyPace)return c.brodyPace;const blk=brodyBlock(c)||BRODY_BLOCKS[0];return brodyRecommendedPace(brodyWeekLoads(c,blk));}
 function reflowBrody(c,blk){
@@ -956,25 +961,27 @@ function reflowBrody(c,blk){
   {let dd=isoToDate(cursorISO),g=0;while(isoFromDate(dd)<shelf&&g++<400){const iso=isoFromDate(dd),wd=dd.getDay(),wn=weekOf(iso);
     if(wn&&!rest.includes(wd)&&!off[iso]&&iso<reviewCutoff){weekDays[wn].push(iso);openDays.push(iso);}dd=addDays(dd,1);}}
   const doneOrSkip=id=>isDone(id)||isSkip(id);
-  const todayISO_=todayISO();let doneTodayMin=0;
-  for(const id in (S.vdoneDate||{})){if(S.vdoneDate[id]===todayISO_&&byId[id])doneTodayMin+=byId[id].min;}
+  const todayISO_=todayISO();
+  // minutes already completed on each day — they consume that day's budget, so
+  // checking a video off never frees a slot that pulls a future video forward.
+  const doneMinByDay={};const vdd=S.vdoneDate||{};
+  for(const id in vdd){const it=byId[id];if(it)doneMinByDay[vdd[id]]=(doneMinByDay[vdd[id]]||0)+it.min;}
   const dayItems={};
   const reserved=(c.ankiMinPerDay||0)+(c.uworldMinPerDay||0);
   const paceMin=Math.max(15,Math.round(brodyPace(c)*60)-reserved);   // recommended (or user-set) h/day
-  // Pour the videos (already ordered by Brody week → resource → native order) onto
+  const dayUsed=iso=>((dayItems[iso]||[]).reduce((a,x)=>a+x.min,0))+(doneMinByDay[iso]||0);
+  // Pour the remaining videos (ordered by Brody week → resource → native order) onto
   // the open days in sequence, filling each day up to the pace before moving on.
-  // Content flows across week boundaries, so a light week's leftover days get the
-  // next week's videos (studying a little ahead) instead of sitting empty — and at
-  // the recommended pace every week is still finished by its own week's end.
+  // A day's budget already counts what you've completed there, so finishing a day's
+  // videos doesn't refill it — the leftover work slides to future days, and content
+  // flows across week boundaries so light days pick up the next week (studying ahead).
   let lastFillIdx=-1;
   {let di=0;
    vids.filter(v=>!doneOrSkip(v.id)).forEach(it=>{
      if(!openDays.length)return;
-     if(di>openDays.length-1)di=openDays.length-1;
-     let iso=openDays[di];
-     const base=(iso===todayISO_?doneTodayMin:0);
-     const used=(dayItems[iso]||[]).reduce((a,x)=>a+x.min,0)+base;
-     if(used>0&&used+it.min>paceMin+10&&di<openDays.length-1){di++;iso=openDays[di];}
+     // skip past days already full (from completed work or earlier packing)
+     while(di<openDays.length-1&&dayUsed(openDays[di])>0&&dayUsed(openDays[di])+it.min>paceMin+10)di++;
+     const iso=openDays[di];
      (dayItems[iso]=dayItems[iso]||[]).push(it);lastFillIdx=Math.max(lastFillIdx,di);
    });}
   // Finishing the videos ahead of the buffer? The open days between the last video
@@ -982,7 +989,7 @@ function reflowBrody(c,blk){
   // window instead of blank days.
   const lastContentISO=lastFillIdx>=0?openDays[lastFillIdx]:null;
   const skippedWeeks=Math.max(0,currentWk-1);   // weeks that ended before you joined
-  const donePins={};const vdd=S.vdoneDate||{};
+  const donePins={};
   for(const id in vdd){const it=byId[id];if(it){(donePins[vdd[id]]=donePins[vdd[id]]||[]).push(it);}}
   const days=[];const dayMap={};
   {let dd=isoToDate(cursorISO),g=0;while(isoFromDate(dd)<shelf&&g++<400){const iso=isoFromDate(dd),wd=dd.getDay();
@@ -2763,7 +2770,7 @@ function doResetAll(){
     S.cfgs=snap.cfgs;S.active=snap.active;S.cfg=S.active?S.cfgs[S.active]:null;_prevSig=progressSig();save();
     if(S.cfg){reflow();render();}else renderWelcome();toast("Restored ✓");});
 }
-const BUILD="2026-07-17p";
+const BUILD="2026-07-17q";
 /* ---------- What's new (changelog) ----------
    Newest entry first. Bump the top entry's id whenever you add one and the
    pop-up shows once per person (tracked in synced settings.seenUpdate). */
