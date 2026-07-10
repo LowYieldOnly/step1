@@ -872,8 +872,29 @@ const BRODY_QUIZ_MAX=6;   // h/day above which "be ready for this week's quiz" i
 function brodyReviewBuf(c){return Math.max(0,(c&&c.brodyReviewDays!=null)?c.brodyReviewDays:BRODY_REVIEW_DEFAULT);}
 function brodyStudyDays(c,blk,cursorISO){const rest=c.restDays||[0],off=c.off||{};const seq=[];let dd=isoToDate(cursorISO),g=0;
   while(isoFromDate(dd)<blk.shelf&&g++<400){const iso=isoFromDate(dd);if(!rest.includes(dd.getDay())&&!off[iso])seq.push(iso);dd=addDays(dd,1);}return seq;}
-function brodyReviewCutoff(c,blk,cursorISO){const seq=brodyStudyDays(c,blk,cursorISO);const buf=brodyReviewBuf(c);
+/* The buffer is anchored to the BLOCK, not to today: the last N study days before
+   the shelf are review days no matter when you look. (Computing it from today made
+   the cutoff collapse to the shelf once you stood inside the buffer — the review
+   days lost their label and leftover videos could invade them.) */
+function brodyReviewCutoff(c,blk){const seq=brodyStudyDays(c,blk,blk.weeks[0].start);const buf=brodyReviewBuf(c);
   return (buf>0&&seq.length>buf)?seq[seq.length-buf]:blk.shelf;}
+function brodyWeekOf(blk,iso){let n=0;for(let i=0;i<blk.weeks.length;i++){if(iso>=blk.weeks[i].start)n=blk.weeks[i].n;}return n;}
+/* The week you JOINED the block — the no-catch-up anchor. Weeks before it are not
+   part of your plan (a late joiner owes nothing from before they arrived). Weeks
+   from it onward stay owed even after they pass: falling behind rolls the unwatched
+   videos forward instead of silently deleting them. Stamped once (at plan creation,
+   or lazily for plans saved before this existed) and kept for the block's life. */
+function brodyJoinWk(c,blk){
+  if(c&&c.brodyJoinWk!=null)return Math.max(1,Math.min(blk.weeks.length,c.brodyJoinWk));
+  const cursor=(todayISO()>blk.weeks[0].start)?todayISO():blk.weeks[0].start;
+  const wk=Math.max(1,brodyWeekOf(blk,cursor));
+  if(c)c.brodyJoinWk=wk;
+  return wk;
+}
+/* remaining = still owed. Videos checked off TODAY stay "owed" for pace math so the
+   recommendation (and with it today's plate) can't shrink under you as you study —
+   the pace only steps between days. */
+function brodyRemains(id){return (!(S.vdone[id]||S.vskip[id]))||((S.vdoneDate||{})[id]===todayISO());}
 /* Each academic week's real deadline is the quiz that covers it: the first Brody
    checkpoint (Extended Quiz, or the block exam for the final week) on or after that
    week's Friday. Weekends after a Friday quiz are for getting AHEAD into the next
@@ -892,42 +913,48 @@ function brodyWeekLoads(c,blk){
   const R=c.resources||{};
   const en={bnb:R.bnb,bootcamp:R.bootcamp,pathoma:R.pathoma,skmicro:R.sketchy,skpharm:R.sketchy};
   const pathSel=en.pathoma?effectivePathChapters(c):new Set();
+  // loads count only what's still OWED (undone/unskipped, plus today's check-offs
+  // for intra-day stability) — a watched video is off the books, so the pace math
+  // reflects the work ahead, not the whole unit over ever-fewer days.
   const load={},cnt={};blk.weeks.forEach(w=>{load[w.n]=0;cnt[w.n]=0;});
   catVideos().forEach(v=>{if(blk.systems.indexOf(v.sys)<0)return;if(!en[v.res])return;if(v.res==="pathoma"&&!pathSel.has(pathChapterOf(v)))return;
+    if(!brodyRemains(itemId(v)))return;
     const w=blk.videoWeek[brodyKey(v)]||blk.weeks.length;load[w]+=v.min;cnt[w]++;});
   const rest=c.restDays||[0];const off=c.off||{};
   const cursor=(todayISO()>blk.weeks[0].start)?todayISO():blk.weeks[0].start;
-  const cutoff=brodyReviewCutoff(c,blk,cursor);
+  const cutoff=brodyReviewCutoff(c,blk);
   const wkStart=blk.weeks.map(w=>w.start);
-  const weekOf=iso=>{let n=0;for(let i=0;i<blk.weeks.length;i++){if(iso>=wkStart[i])n=blk.weeks[i].n;}return n;};
-  const currentWk=weekOf(cursor);   // the plan starts here — weeks before it aren't part of it
+  const joinWk=brodyJoinWk(c,blk);   // the plan starts here — weeks before it aren't part of it
   // open study days from the cursor with iso strictly before `date` (and before the buffer)
   const openBefore=date=>{let n=0,dd=isoToDate(cursor),g=0;while(g++<400){const iso=isoFromDate(dd);if(iso>=date||iso>=cutoff)break;if(iso>=cursor&&!rest.includes(dd.getDay())&&!off[iso])n++;dd=addDays(dd,1);}return n;};
   return blk.weeks.map((w,i)=>{const end=(i+1<blk.weeks.length)?wkStart[i+1]:blk.shelf;
-    const pre=w.n<currentWk;
+    const pre=w.n<joinWk;
     const dl=brodyWeekDeadline(blk,w.start);
     const effDl=(dl>=blk.shelf)?cutoff:dl;              // the final deadline is capped by the review buffer
     const odbd=openBefore(effDl);
     let days=0,dd=isoToDate(w.start);for(let k=0;k<10;k++){const iso=isoFromDate(dd);if(iso>=end)break;if(iso>=cursor&&iso<cutoff&&!rest.includes(dd.getDay())&&!off[iso])days++;dd=addDays(dd,1);}
     return {n:w.n,label:w.label,loadMin:pre?0:load[w.n],count:pre?0:cnt[w.n],days:days,odbd:odbd,deadline:dl,past:days===0,pre:pre};});
 }
-/* Recommended h/day = the higher of two guarantees:
-   (1) quiz-ready — clear each week's cumulative minutes before its Friday quiz
-       (odbd = open days before that quiz), for every week that CAN be met at a
+/* Recommended h/day = the higher of the two real guarantees, nothing stricter:
+   (1) quiz-ready — clear the running total of remaining minutes before each week's
+       quiz (odbd = open days before that quiz), for every week that CAN be met at a
        realistic pace (≤ BRODY_QUIZ_MAX); a genuine firehose week is left out and
        flagged instead of dragging the whole block to an 8 h/day plan;
-   (2) finish-by-week's-end — cumulative minutes across cumulative open days through
-       each week, which also guarantees everything is done before the block exam.
-   Whichever is higher makes both goals hold: Brody content done before each quiz,
-   all third-party done before the exam. Even across every open day (weekends
-   included); recomputes with rest days + buffer. */
+   (2) exam-ready — everything remaining spread over every open day before the
+       review buffer.
+   There is deliberately NO "finish each week by its Sunday" floor: a week's true
+   deadline is its quiz, and holding pace to the calendar week made the number
+   balloon late in the week (10 h of week-one video over its one remaining day)
+   even for a student who was ahead. Weeks whose quiz already passed contribute
+   their leftovers to the next quiz's total instead. Loads arrive remaining-only;
+   recomputes with rest days + buffer. */
 function brodyRecommendedPace(loads){
-  let cumMin=0,cumDays=0,evenPace=0,quizPace=0;
+  let cumMin=0,cumDays=0,quizPace=0;
   loads.forEach(w=>{
     cumMin+=w.loadMin;cumDays+=w.days;
-    if(cumDays>0)evenPace=Math.max(evenPace,cumMin/cumDays);
     if(w.odbd>0){const need=cumMin/w.odbd;if(need<=BRODY_QUIZ_MAX*60)quizPace=Math.max(quizPace,need);}
   });
+  const evenPace=cumDays>0?cumMin/cumDays:0;
   return Math.max(0.5,Math.ceil(Math.max(evenPace,quizPace)/60/0.5)*0.5);
 }
 function brodyPace(c){if(c&&c.brodyPace)return c.brodyPace;const blk=brodyBlock(c)||BRODY_BLOCKS[0];return brodyRecommendedPace(brodyWeekLoads(c,blk));}
@@ -945,12 +972,14 @@ function reflowBrody(c,blk){
   const wkStart=blk.weeks.map(w=>w.start);const shelf=blk.shelf;
   const cursorISO=(todayISO()>wkStart[0])?todayISO():wkStart[0];
   const rest=c.restDays||[0];const off=c.off||{};
-  const reviewCutoff=brodyReviewCutoff(c,blk,cursorISO);   // last N study days before shelf stay video-free
+  const reviewCutoff=brodyReviewCutoff(c,blk);   // last N study days before shelf stay video-free
   const weekOf=iso=>{let n=0;for(let i=0;i<blk.weeks.length;i++){if(iso>=wkStart[i])n=blk.weeks[i].n;}return n;};
   const currentWk=weekOf(cursorISO);
-  // The plan starts at the current Brody week. If you join (or fall behind) after
-  // an earlier week, that week isn't part of your plan — no catch-up is forced.
-  const vidsAll=vids;const vids2=vidsAll.filter(v=>v.wk>=currentWk);vids.length=0;vids.push.apply(vids,vids2);
+  // The plan starts at the week you JOINED (no forced catch-up for late joiners).
+  // Weeks from your join onward stay in the plan even after they pass — falling
+  // behind rolls the unwatched videos forward, it never silently deletes them.
+  const joinWk=brodyJoinWk(c,blk);
+  const vidsAll=vids;const vids2=vidsAll.filter(v=>v.wk>=joinWk);vids.length=0;vids.push.apply(vids,vids2);
   // order: week asc → resource → native (catalog) order (stable sort keeps native)
   const ri=r=>{const i=RES_ORDER.indexOf(r);return i<0?99:i;};
   vids.sort((a,b)=>(a.wk-b.wk)||(ri(a.res)-ri(b.res)));
@@ -988,7 +1017,7 @@ function reflowBrody(c,blk){
   // and the shelf become review too, so the tail reads as one continuous review
   // window instead of blank days.
   const lastContentISO=lastFillIdx>=0?openDays[lastFillIdx]:null;
-  const skippedWeeks=Math.max(0,currentWk-1);   // weeks that ended before you joined
+  const skippedWeeks=Math.max(0,joinWk-1);   // weeks that ended before you joined
   const donePins={};
   for(const id in vdd){const it=byId[id];if(it){(donePins[vdd[id]]=donePins[vdd[id]]||[]).push(it);}}
   const days=[];const dayMap={};
@@ -1008,11 +1037,14 @@ function reflowBrody(c,blk){
   const wlLoads=brodyWeekLoads(c,blk);
   let cumLoad=0;
   const weekLoad=blk.weeks.map((w,i)=>{const past=w.n<currentWk;
-    const load=vids.filter(v=>v.wk===w.n).reduce((a,v)=>a+v.min,0);
-    cumLoad+=load;const odbd=wlLoads[i].odbd;
-    const needH=(odbd>0)?(cumLoad/odbd/60):(cumLoad>0?Infinity:0);   // no open days before the quiz → can't be quiz-ready
+    // remaining minutes only — what's watched is off the books, so needH is the
+    // real ask, not the whole week replayed over the days that are left
+    const load=vids.filter(v=>v.wk===w.n&&brodyRemains(v.id)).reduce((a,v)=>a+v.min,0);
+    cumLoad+=load;const odbd=wlLoads[i].odbd;const dl=wlLoads[i].deadline;
+    const dead=dl<=todayISO();   // this quiz already happened — leftovers roll into the next deadline via cumLoad
+    const needH=dead?0:((odbd>0)?(cumLoad/odbd/60):(cumLoad>0?Infinity:0));   // no open days left before a live quiz → can't be quiz-ready
 
-    return {n:w.n,label:w.label,start:w.start,load,deadline:wlLoads[i].deadline,needH:needH,cap:odbd*paceMin,heavy:(!past&&needH>BRODY_QUIZ_MAX),past,days:weekDays[w.n].length};});
+    return {n:w.n,label:w.label,start:w.start,load,deadline:dl,needH:needH,cap:odbd*paceMin,heavy:(!dead&&needH>BRODY_QUIZ_MAX),past,days:weekDays[w.n].length};});
   const remaining=vids.filter(v=>!doneOrSkip(v.id));const remMin=remaining.reduce((a,b)=>a+b.min,0);
   SCHED={days,dayMap,atRisk:[],byId,reviewDates:days.filter(d=>d.review).map(d=>d.iso),contentDates:days.filter(d=>!d.rest&&!d.off&&!d.review).map(d=>d.iso),brody:blk,weekLoad,brodyPace:brodyPace(c),currentWeek:currentWk,skippedWeeks:skippedWeeks,reviewBuf:brodyReviewBuf(c),reviewCutoff:reviewCutoff,
     stats:{remMin,availMin:0,examDaysLeft:Math.max(0,daysBetween(todayISO(),shelf)),reqPerDay:0,feasible:!weekLoad.some(w=>w.heavy),
@@ -1353,11 +1385,15 @@ function render(){
 function paceHero(){const st=SCHED.stats;
   if(SCHED.brody){const tight=(SCHED.weekLoad||[]).filter(w=>w.heavy);
     const sk=SCHED.skippedWeeks||0;
-    const skTxt=sk?(" \u00b7 starting at week "+SCHED.currentWeek):"";
+    const skTxt=sk?(" \u00b7 starting at week "+(sk+1)):"";
     if(st.remItems===0)return '<div class="herostat ok"><span class="hsdot"></span><span>All videos done \u2014 you\u2019re in sync with Brody.</span></div>';
-    const cls=tight.length?"warn":"ok";
-    const txt=tight.length?("~"+SCHED.brodyPace+" h/day \u00b7 week "+tight.map(w=>w.n).join(", ")+" is more than fits before its quiz \u2014 trim a resource"):("On pace at ~"+SCHED.brodyPace+" h/day \u00b7 ahead of every quiz"+skTxt);
-    return '<div class="herostat '+cls+'"><span class="hsdot"></span><span>'+txt+'</span></div>';}
+    if(tight.length)return '<div class="herostat warn"><span class="hsdot"></span><span>~'+SCHED.brodyPace+' h/day \u00b7 week '+tight.map(w=>w.n).join(", ")+' is more than fits before its quiz \u2014 trim a resource</span></div>';
+    // a hand-set pace below what the quizzes now require must say so \u2014 "ahead of
+    // every quiz" was a lie whenever the pinned pace couldn't actually get there
+    const needH=Math.max(0,...(SCHED.weekLoad||[]).filter(w=>isFinite(w.needH)).map(w=>w.needH||0));
+    if(needH>SCHED.brodyPace+0.05){const rec=Math.ceil(needH*2)/2;
+      return '<div class="herostat warn"><span class="hsdot"></span><span>Behind for a quiz at '+SCHED.brodyPace+' h/day \u2014 ~'+rec+' h/day gets you quiz-ready (raise it in Plan)</span></div>';}
+    return '<div class="herostat ok"><span class="hsdot"></span><span>On pace at ~'+SCHED.brodyPace+' h/day \u00b7 ahead of every quiz'+skTxt+'</span></div>';}
   const hpd=Math.round(st.reqPerDay/60*10)/10;let cls,txt;
   if(st.remItems===0){cls="ok";txt="All videos done \u2014 UWorld & review from here.";}
   else if(st.feasible){cls="ok";txt="On pace at ~"+hpd+" h/day"+(st.reviewDaysLeft>0?(" \u00b7 "+st.reviewDaysLeft+" review day"+(st.reviewDaysLeft===1?"":"s")+" to spare"):" \u00b7 right to the wire");}
@@ -1839,13 +1875,15 @@ function renderToday(){
   } else {
     if(isOffToday){
       colB+='<div class="card"><div class="cardhd">'+(todayRow.off?'Day off':'Rest day')+' · '+fmtLong(todayISO())+'</div><p class="muted">No videos scheduled today.'+(todayRow.off?' <button class="link" id="unoff">Cancel day off</button>':'')+'</p></div>';
+    } else if(todayRow&&todayRow.review&&!(row&&row.items.length)){
+      colB+='<div class="card"><div class="cardhd">Review day · '+fmtLong(todayISO())+'</div><p class="muted">Video-free by design — this day is reserved for practice questions, Anki, and your weak spots before the exam.</p></div>';
     }
     if(row && row.items.length){
       const anyDone=row.items.some(it=>isDone(it.id));
       colB+='<div class="card"><div class="cardhd">'+escHTML(heading)+' <span class="pill">'+row.min+' min</span>'+(anyDone?'<button class="hdreset" data-dayreset="'+row.iso+'" title="Uncheck everything on this day">Uncheck all</button>':'')+'</div>'
         +dayVlist(row)
         +'<div class="rowtools">'+(todayRow&&!isOffToday?'<button class="btn ghost" id="offToday">Take today off</button>':'')+'</div></div>';
-    } else if(!isOffToday){
+    } else if(!isOffToday&&!(todayRow&&todayRow.review)){
       colB+='<div class="card"><div class="cardhd">Nothing scheduled today</div><p class="muted">Tap a day on the calendar to study ahead, or enjoy the breather.</p></div>';
     }
   }
@@ -2073,7 +2111,7 @@ function renderAdjustBrody(c){
     +'<div class="pacerow"><button type="button" class="pacebtn" data-fpace="dec" aria-label="less">−</button>'
     +'<div class="paceval"><b>'+pace+' h</b><span>per study day</span></div>'
     +'<button type="button" class="pacebtn" data-fpace="inc" aria-label="more">+</button></div>'
-    +'<p class="muted small" style="margin:9px 0 0">'+(heavy.length?('Week '+heavy.map(w=>w.n).join(', ')+' has more third-party than fits before its Friday quiz — even at a high pace. Trim a resource or prioritize the high-yield ones there; the rest still finishes by the exam.'):('At '+pace+' h/day every week is done well before its quiz.'))+'</p>'
+    +'<p class="muted small" style="margin:9px 0 0">'+(heavy.length?('Week '+heavy.map(w=>w.n).join(', ')+' has more third-party than fits before its Friday quiz — even at a high pace. Trim a resource or prioritize the high-yield ones there; the rest still finishes by the exam.'):(function(){const nh=Math.max(0,...(SCHED.weekLoad||[]).filter(w=>isFinite(w.needH)).map(w=>w.needH||0));return nh>pace+0.05?('At '+pace+' h/day you’ll trail a quiz — ~'+(Math.ceil(nh*2)/2)+' h/day keeps you quiz-ready.'):('At '+pace+' h/day every week is done well before its quiz.');})())+'</p>'
     +'<div class="flab mt">Review buffer before the block exam</div>'
     +'<div class="pacerow"><button type="button" class="pacebtn" data-fbuf="dec" aria-label="fewer">−</button>'
     +'<div class="paceval"><b>'+brodyReviewBuf(c)+' day'+(brodyReviewBuf(c)===1?'':'s')+'</b><span>video-free for UWorld / review</span></div>'
@@ -2543,7 +2581,7 @@ function enterHub(key){if(!S.cfgs[key]){startOnboard(key);return;}activate(key);
 let _ob=null;
 function defaultsForHub(key,fresh){const ex=fresh?null:S.cfgs[key];
   let o;
-  if(ex)o={hub:key,fresh:false,brody:ex.brody||null,brodyPace:ex.brodyPace||null,brodyReviewDays:(ex.brodyReviewDays!=null?ex.brodyReviewDays:undefined),examLabel:ex.examLabel||"",examISO:ex.examISO||"",startISO:ex.startISO||todayISO(),wkdayHrs:ex.wkdayHrs,wkendHrs:ex.wkendHrs,restDays:(ex.restDays||[0]).slice(),reviewDays:ex.reviewDays,resources:Object.assign({bnb:true,bootcamp:false,pathoma:true,sketchy:true,fa:true,anking:true,uworld:true},ex.resources||{}),systems:(ex.systems||SYS).slice(),sysOrder:(ex.sysOrder&&ex.sysOrder.length===SYS.length?ex.sysOrder:SYS_ORDER_DEFAULT).slice(),pathChapters:(Array.isArray(ex.pathChapters)?ex.pathChapters.slice():undefined)};
+  if(ex)o={hub:key,fresh:false,brody:ex.brody||null,brodyPace:ex.brodyPace||null,brodyJoinWk:(ex.brodyJoinWk!=null?ex.brodyJoinWk:undefined),brodyReviewDays:(ex.brodyReviewDays!=null?ex.brodyReviewDays:undefined),examLabel:ex.examLabel||"",examISO:ex.examISO||"",startISO:ex.startISO||todayISO(),wkdayHrs:ex.wkdayHrs,wkendHrs:ex.wkendHrs,restDays:(ex.restDays||[0]).slice(),reviewDays:ex.reviewDays,resources:Object.assign({bnb:true,bootcamp:false,pathoma:true,sketchy:true,fa:true,anking:true,uworld:true},ex.resources||{}),systems:(ex.systems||SYS).slice(),sysOrder:(ex.sysOrder&&ex.sysOrder.length===SYS.length?ex.sysOrder:SYS_ORDER_DEFAULT).slice(),pathChapters:(Array.isArray(ex.pathChapters)?ex.pathChapters.slice():undefined)};
   // a brand-new plan starts with every resource unchecked — the student picks
   else o={hub:key,fresh:!!fresh,examLabel:key==="step1"?"Step 1":"",examISO:"",startISO:todayISO(),wkdayHrs:6,wkendHrs:4,restDays:[0],reviewDays:14,resources:{bnb:false,bootcamp:false,pathoma:false,sketchy:false,fa:false,anking:false,uworld:false},systems:(key==="nbme"?[]:SYS.slice()),sysOrder:SYS_ORDER_DEFAULT.slice()};
   // NBME hub now selects individual systems (like Step 1); migrate any legacy block selection
@@ -2645,8 +2683,8 @@ function renderOnboard(){
   const orv=document.getElementById("o_rev");if(orv)orv.onchange=()=>{let v=parseInt(orv.value,10);if(isNaN(v)||v<0)v=0;ob.reviewDays=v;obLive();};
   document.querySelectorAll("[data-odow]").forEach(b=>b.onclick=()=>{const i=+b.dataset.odow;const k=ob.restDays.indexOf(i);if(k>=0)ob.restDays.splice(k,1);else ob.restDays.push(i);renderObTogs();obLive();});
   document.querySelectorAll("[data-ores]").forEach(b=>b.onclick=()=>{ob.resources[b.dataset.ores]=!ob.resources[b.dataset.ores];renderObTogs();obLive();});
-  document.querySelectorAll("[data-oplan]").forEach(b=>b.onclick=()=>{if(b.dataset.oplan==="brody"){const bl=brodyBlockById(brodyCurrentBlockId());ob.brody=bl.id;ob.systems=bl.systems.slice();ob.examLabel=bl.name;}else ob.brody=null;renderOnboard();});
-  document.querySelectorAll("[data-oblk]").forEach(b=>b.onclick=()=>{const bl=brodyBlockById(b.dataset.oblk);if(bl){ob.brody=bl.id;ob.systems=bl.systems.slice();ob.examLabel=bl.name;}renderOnboard();});
+  document.querySelectorAll("[data-oplan]").forEach(b=>b.onclick=()=>{if(b.dataset.oplan==="brody"){const bl=brodyBlockById(brodyCurrentBlockId());if(ob.brody!==bl.id)ob.brodyJoinWk=null;ob.brody=bl.id;ob.systems=bl.systems.slice();ob.examLabel=bl.name;}else ob.brody=null;renderOnboard();});
+  document.querySelectorAll("[data-oblk]").forEach(b=>b.onclick=()=>{const bl=brodyBlockById(b.dataset.oblk);if(bl){if(ob.brody!==bl.id)ob.brodyJoinWk=null;ob.brody=bl.id;ob.systems=bl.systems.slice();ob.examLabel=bl.name;}renderOnboard();});
   document.querySelectorAll("[data-opace]").forEach(b=>b.onclick=()=>{const cur=brodyPace(ob);ob.brodyPace=Math.max(0.5,cur+(b.dataset.opace==="inc"?0.5:-0.5));renderOnboard();});
   document.querySelectorAll("[data-obuf]").forEach(b=>b.onclick=()=>{const cur=brodyReviewBuf(ob);ob.brodyReviewDays=Math.max(0,Math.min(14,cur+(b.dataset.obuf==="inc"?1:-1)));renderOnboard();});
   document.querySelectorAll("[data-sinc]").forEach(b=>b.onclick=()=>{const s=b.dataset.sinc;const k=ob.systems.indexOf(s);if(k>=0){if(ob.systems.length>1)ob.systems.splice(k,1);}else ob.systems.push(s);renderOnboard();});
@@ -2696,15 +2734,20 @@ function brodyPreview(ob){
   if(!catReady())return '<p class="muted small" style="margin:0">Loading the video catalog…</p>';
   const blk=brodyBlock(ob)||BRODY_BLOCKS[0];const loads=brodyWeekLoads(ob,blk);
   const total=loads.reduce((a,w)=>a+w.loadMin,0);
-  if(!total)return '<p class="muted small" style="margin:0">Turn on at least one video resource to see the weekly plan.</p>';
+  if(!['bnb','bootcamp','pathoma','sketchy'].some(k=>ob.resources&&ob.resources[k]))return '<p class="muted small" style="margin:0">Turn on at least one video resource to see the weekly plan.</p>';
+  if(!total)return '<p class="muted small" style="margin:0">Every video in this block is checked off — the days ahead are yours for questions and review.</p>';
   const pace=brodyPace(ob);
-  const shown=loads.filter(w=>!w.pre);   // a late joiner's plan starts at the current week
+  // a late joiner's plan starts at their join week; joined weeks that passed only
+  // show if they still carry unwatched videos (the rolled-forward backlog)
+  const shown=loads.filter(w=>!w.pre&&!(w.past&&!w.loadMin));
   let cum=0;const tightWks=[];
-  const rows=shown.map(w=>{cum+=w.loadMin;const h=w.loadMin/60;const needH=w.odbd>0?cum/w.odbd/60:(cum>0?Infinity:0);const heavy=needH>BRODY_QUIZ_MAX;if(heavy)tightWks.push(w.n);
-    const dueTxt=(w.deadline>=blk.shelf?'exam ':'quiz ')+fmtShort(w.deadline);
+  const rows=shown.map(w=>{cum+=w.loadMin;const h=w.loadMin/60;
+    const dead=w.deadline<=todayISO();   // that quiz already happened — leftovers just need to beat the exam
+    const needH=dead?0:(w.odbd>0?cum/w.odbd/60:(cum>0?Infinity:0));const heavy=needH>BRODY_QUIZ_MAX;if(heavy)tightWks.push(w.n);
+    const dueTxt=dead?'catch-up':((w.deadline>=blk.shelf?'exam ':'quiz ')+fmtShort(w.deadline));
     const tag='<span class="bw-h">'+(Math.round(h*10)/10)+' h'+(heavy?' ⚠':'')+'</span>';
     return '<div class="brodywk'+(heavy?' heavy':'')+'"><span class="bw-n">Wk '+w.n+'</span><span class="bw-l">'+escHTML(w.label)+' · '+dueTxt+'</span>'+tag+'</div>';}).join('');
-  const skipped=loads.length-shown.length;
+  const skipped=loads.filter(w=>w.pre).length;
   const tightMsg=tightWks.length?(' <b>⚠ Week '+tightWks.join(', ')+'</b> is a firehose — more third-party than fits before its quiz. Trim a resource or prioritize the high-yield ones there.'):' Comfortably ahead of every quiz.';
   let h='<p class="muted small" style="margin:0 0 10px">'+Math.round(total/60)+' h of video across '+shown.length+' Brody week'+(shown.length===1?'':'s')+' → block exam '+fmtShort(blk.shelf)+'. At <b>'+pace+' h/day</b>, spread evenly across your open days.'+tightMsg+(skipped>0?(' You’re starting at week '+(skipped+1)+' — earlier weeks aren’t included, so there’s no backlog to clear.'):'')+'</p>';
   h+='<div class="brodywks">'+rows+'</div>';
@@ -2730,7 +2773,7 @@ function commitOnboard(){const ob=_ob;
   const prev=S.cfgs[key]?JSON.parse(JSON.stringify(S.cfgs[key])):null;
   const c=S.cfgs[key]||{};
   Object.assign(c,{examType:key,examLabel:key==="step1"?"Step 1":(brody?brody.name:(ob.examLabel||"Shelf exam")),
-    brody:(brody?brody.id:undefined),brodyPace:(brody?(ob.brodyPace||undefined):undefined),brodyReviewDays:(brody?brodyReviewBuf(ob):undefined),
+    brody:(brody?brody.id:undefined),brodyPace:(brody?(ob.brodyPace||undefined):undefined),brodyJoinWk:(brody?(ob.brodyJoinWk!=null?ob.brodyJoinWk:undefined):undefined),brodyReviewDays:(brody?brodyReviewBuf(ob):undefined),
     examISO:(brody?brody.shelf:ob.examISO),startISO:(brody?brody.weeks[0].start:ob.startISO),wkdayHrs:ob.wkdayHrs,wkendHrs:ob.wkendHrs,restDays:ob.restDays.slice(),
     reviewDays:(brody?0:ob.reviewDays),resources:Object.assign({},ob.resources),systems:(brody?brody.systems.slice():ob.systems.slice()),sysOrder:(ob.sysOrder||SYS_ORDER_DEFAULT).slice(),pathChapters:(Array.isArray(ob.pathChapters)?ob.pathChapters.slice():undefined)});
   c.off=c.off||{};
@@ -2771,7 +2814,7 @@ function doResetAll(){
     S.cfgs=snap.cfgs;S.active=snap.active;S.cfg=S.active?S.cfgs[S.active]:null;_prevSig=progressSig();save();
     if(S.cfg){reflow();render();}else renderWelcome();toast("Restored ✓");});
 }
-const BUILD="2026-07-17s";
+const BUILD="2026-07-17t";
 /* ---------- What's new (changelog) ----------
    Newest entry first. Bump the top entry's id whenever you add one and the
    pop-up shows once per person (tracked in synced settings.seenUpdate). */
