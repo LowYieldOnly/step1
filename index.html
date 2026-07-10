@@ -1010,7 +1010,8 @@ function reflowBrody(c,blk){
   const weekLoad=blk.weeks.map((w,i)=>{const past=w.n<currentWk;
     const load=vids.filter(v=>v.wk===w.n).reduce((a,v)=>a+v.min,0);
     cumLoad+=load;const odbd=wlLoads[i].odbd;
-    const needH=(odbd>0)?(cumLoad/odbd/60):0;
+    const needH=(odbd>0)?(cumLoad/odbd/60):(cumLoad>0?Infinity:0);   // no open days before the quiz → can't be quiz-ready
+
     return {n:w.n,label:w.label,start:w.start,load,deadline:wlLoads[i].deadline,needH:needH,cap:odbd*paceMin,heavy:(!past&&needH>BRODY_QUIZ_MAX),past,days:weekDays[w.n].length};});
   const remaining=vids.filter(v=>!doneOrSkip(v.id));const remMin=remaining.reduce((a,b)=>a+b.min,0);
   SCHED={days,dayMap,atRisk:[],byId,reviewDates:days.filter(d=>d.review).map(d=>d.iso),contentDates:days.filter(d=>!d.rest&&!d.off&&!d.review).map(d=>d.iso),brody:blk,weekLoad,brodyPace:brodyPace(c),currentWeek:currentWk,skippedWeeks:skippedWeeks,reviewBuf:brodyReviewBuf(c),reviewCutoff:reviewCutoff,
@@ -2699,7 +2700,7 @@ function brodyPreview(ob){
   const pace=brodyPace(ob);
   const shown=loads.filter(w=>!w.pre);   // a late joiner's plan starts at the current week
   let cum=0;const tightWks=[];
-  const rows=shown.map(w=>{cum+=w.loadMin;const h=w.loadMin/60;const needH=w.odbd>0?cum/w.odbd/60:0;const heavy=needH>BRODY_QUIZ_MAX;if(heavy)tightWks.push(w.n);
+  const rows=shown.map(w=>{cum+=w.loadMin;const h=w.loadMin/60;const needH=w.odbd>0?cum/w.odbd/60:(cum>0?Infinity:0);const heavy=needH>BRODY_QUIZ_MAX;if(heavy)tightWks.push(w.n);
     const dueTxt=(w.deadline>=blk.shelf?'exam ':'quiz ')+fmtShort(w.deadline);
     const tag='<span class="bw-h">'+(Math.round(h*10)/10)+' h'+(heavy?' ⚠':'')+'</span>';
     return '<div class="brodywk'+(heavy?' heavy':'')+'"><span class="bw-n">Wk '+w.n+'</span><span class="bw-l">'+escHTML(w.label)+' · '+dueTxt+'</span>'+tag+'</div>';}).join('');
@@ -2770,7 +2771,7 @@ function doResetAll(){
     S.cfgs=snap.cfgs;S.active=snap.active;S.cfg=S.active?S.cfgs[S.active]:null;_prevSig=progressSig();save();
     if(S.cfg){reflow();render();}else renderWelcome();toast("Restored ✓");});
 }
-const BUILD="2026-07-17r";
+const BUILD="2026-07-17s";
 /* ---------- What's new (changelog) ----------
    Newest entry first. Bump the top entry's id whenever you add one and the
    pop-up shows once per person (tracked in synced settings.seenUpdate). */
