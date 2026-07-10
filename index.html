@@ -894,19 +894,18 @@ function brodyWeekLoads(c,blk){
     let days=0,dd=isoToDate(w.start);for(let k=0;k<10;k++){const iso=isoFromDate(dd);if(iso>=end)break;if(iso>=cursor&&iso<cutoff&&!rest.includes(dd.getDay())&&!off[iso])days++;dd=addDays(dd,1);}
     return {n:w.n,label:w.label,loadMin:pre?0:load[w.n],count:pre?0:cnt[w.n],days:days,past:days===0,pre:pre};});
 }
-/* Recommended h/day = the higher of two constraints, so you neither fall behind
-   a heavy week nor run out of runway on the total:
-   (1) per-week: cover the heaviest single week within its own study days;
-   (2) overall: finish every remaining minute across the study days left before
-       the review buffer.
-   Weeks before the plan's start week carry loadMin 0 (a late joiner starts at
-   the current week — earlier weeks aren't part of the plan), so they don't
-   inflate the pace. */
+/* Recommended h/day = the gentlest even pace that still keeps you never-behind.
+   Walking the weeks in order, at every week boundary the running total of video
+   minutes must be coverable by the running total of open study days. So the pace
+   is max over weeks of (cumulative minutes / cumulative open days). This spreads
+   the load smoothly across every open day (weekends included) — you may run a
+   little ahead of Brody in light stretches, but never behind. It recomputes with
+   whatever rest days and review buffer are set. Pre-join weeks carry 0 minutes /
+   0 days, so they drop out cleanly. */
 function brodyRecommendedPace(loads){
-  let perWeek=0,totalMin=0,availDays=0;
-  loads.forEach(w=>{if(w.days<=0)return;totalMin+=w.loadMin;availDays+=w.days;perWeek=Math.max(perWeek,w.loadMin/w.days);});
-  const overall=availDays>0?totalMin/availDays:perWeek;
-  return Math.max(0.5,Math.ceil(Math.max(perWeek,overall)/60/0.5)*0.5);
+  let cumMin=0,cumDays=0,pace=0;
+  loads.forEach(w=>{cumMin+=w.loadMin;cumDays+=w.days;if(cumDays>0)pace=Math.max(pace,cumMin/cumDays);});
+  return Math.max(0.5,Math.ceil(pace/60/0.5)*0.5);
 }
 function brodyPace(c){if(c&&c.brodyPace)return c.brodyPace;const blk=brodyBlock(c)||BRODY_BLOCKS[0];return brodyRecommendedPace(brodyWeekLoads(c,blk));}
 function reflowBrody(c,blk){
@@ -933,47 +932,58 @@ function reflowBrody(c,blk){
   const ri=r=>{const i=RES_ORDER.indexOf(r);return i<0?99:i;};
   vids.sort((a,b)=>(a.wk-b.wk)||(ri(a.res)-ri(b.res)));
   const byId={};const orderIndex={};vids.forEach((v,i)=>{byId[v.id]=v;orderIndex[v.id]=i;});
+  // Open study days, in order (respects rest days, off days, and the review buffer).
   const weekDays={};blk.weeks.forEach(w=>weekDays[w.n]=[]);
+  const openDays=[];
   {let dd=isoToDate(cursorISO),g=0;while(isoFromDate(dd)<shelf&&g++<400){const iso=isoFromDate(dd),wd=dd.getDay(),wn=weekOf(iso);
-    if(wn&&!rest.includes(wd)&&!off[iso]&&iso<reviewCutoff)weekDays[wn].push(iso);dd=addDays(dd,1);}}
+    if(wn&&!rest.includes(wd)&&!off[iso]&&iso<reviewCutoff){weekDays[wn].push(iso);openDays.push(iso);}dd=addDays(dd,1);}}
   const doneOrSkip=id=>isDone(id)||isSkip(id);
   const todayISO_=todayISO();let doneTodayMin=0;
   for(const id in (S.vdoneDate||{})){if(S.vdoneDate[id]===todayISO_&&byId[id])doneTodayMin+=byId[id].min;}
   const dayItems={};
   const reserved=(c.ankiMinPerDay||0)+(c.uworldMinPerDay||0);
   const paceMin=Math.max(15,Math.round(brodyPace(c)*60)-reserved);   // recommended (or user-set) h/day
-  // Pack each week's videos onto its own study days at the pace, so you're always
-  // in sync with what Brody is teaching that week. (Weeks before the current one
-  // were already dropped above — no catch-up.)
-  blk.weeks.forEach(w=>{
-    if(w.n<currentWk)return;
-    const wv=vids.filter(v=>v.wk===w.n&&!doneOrSkip(v.id));if(!wv.length)return;
-    const dys=weekDays[w.n];if(!dys.length)return;
-    dys.forEach(iso=>{dayItems[iso]=dayItems[iso]||[];});
-    let ci=0;
-    wv.forEach(it=>{
-      if(ci>dys.length-1)ci=dys.length-1;
-      let iso=dys[ci];const budget=paceMin;
-      const base=(iso===todayISO_?doneTodayMin:0);
-      const used=(dayItems[iso]||[]).reduce((a,x)=>a+x.min,0)+base;
-      if(used>0&&used+it.min>budget+10&&ci<dys.length-1){ci++;iso=dys[ci];}
-      dayItems[iso]=dayItems[iso]||[];dayItems[iso].push(it);
-    });
-  });
+  // Pour the videos (already ordered by Brody week → resource → native order) onto
+  // the open days in sequence, filling each day up to the pace before moving on.
+  // Content flows across week boundaries, so a light week's leftover days get the
+  // next week's videos (studying a little ahead) instead of sitting empty — and at
+  // the recommended pace every week is still finished by its own week's end.
+  let lastFillIdx=-1;
+  {let di=0;
+   vids.filter(v=>!doneOrSkip(v.id)).forEach(it=>{
+     if(!openDays.length)return;
+     if(di>openDays.length-1)di=openDays.length-1;
+     let iso=openDays[di];
+     const base=(iso===todayISO_?doneTodayMin:0);
+     const used=(dayItems[iso]||[]).reduce((a,x)=>a+x.min,0)+base;
+     if(used>0&&used+it.min>paceMin+10&&di<openDays.length-1){di++;iso=openDays[di];}
+     (dayItems[iso]=dayItems[iso]||[]).push(it);lastFillIdx=Math.max(lastFillIdx,di);
+   });}
+  // Finishing the videos ahead of the buffer? The open days between the last video
+  // and the shelf become review too, so the tail reads as one continuous review
+  // window instead of blank days.
+  const lastContentISO=lastFillIdx>=0?openDays[lastFillIdx]:null;
   const skippedWeeks=Math.max(0,currentWk-1);   // weeks that ended before you joined
   const donePins={};const vdd=S.vdoneDate||{};
   for(const id in vdd){const it=byId[id];if(it){(donePins[vdd[id]]=donePins[vdd[id]]||[]).push(it);}}
   const days=[];const dayMap={};
   {let dd=isoToDate(cursorISO),g=0;while(isoFromDate(dd)<shelf&&g++<400){const iso=isoFromDate(dd),wd=dd.getDay();
     const isRest=rest.includes(wd),isOff=!!off[iso];
-    const isReview=(iso>=reviewCutoff)&&!isRest&&!isOff;   // reserved buffer day
+    const isReview=((iso>=reviewCutoff)||(lastContentISO&&iso>lastContentISO))&&!isRest&&!isOff;   // buffer, or finished-ahead tail
     const packed=dayItems[iso]||[];const pinned=donePins[iso]||[];
     const items=packed.concat(pinned).sort((a,b)=>((orderIndex[a.id]!=null?orderIndex[a.id]:1e9)-(orderIndex[b.id]!=null?orderIndex[b.id]:1e9)));
     const row={iso,off:isOff,rest:isRest&&!isOff,review:isReview,items,brodyWeek:weekOf(iso),
       min:items.reduce((a,b)=>a+b.min,0),todo:packed.reduce((a,b)=>a+b.min,0)};
     days.push(row);dayMap[iso]=row;dd=addDays(dd,1);}}
-  const weekLoad=blk.weeks.map(w=>{const dl=weekDays[w.n];const cap=dl.length*paceMin;const past=w.n<currentWk;
-    const load=vids.filter(v=>v.wk===w.n).reduce((a,v)=>a+v.min,0);return {n:w.n,label:w.label,start:w.start,load,cap,heavy:(!past&&load>cap+10),past,days:dl.length};});
+  // A week runs "heavy" if, by the end of its own week, the running total of video
+  // minutes can't be cleared by the running total of open days at this pace — i.e.
+  // you'd fall behind Brody. At the recommended pace no week is heavy; it only lights
+  // up if the pace is nudged too low.
+  let cumLoad=0,cumDays=0;
+  const weekLoad=blk.weeks.map(w=>{const dl=weekDays[w.n];const past=w.n<currentWk;
+    const load=vids.filter(v=>v.wk===w.n).reduce((a,v)=>a+v.min,0);
+    cumLoad+=load;cumDays+=dl.length;
+    return {n:w.n,label:w.label,start:w.start,load,cap:dl.length*paceMin,heavy:(!past&&cumLoad>cumDays*paceMin+10),past,days:dl.length};});
   const remaining=vids.filter(v=>!doneOrSkip(v.id));const remMin=remaining.reduce((a,b)=>a+b.min,0);
   SCHED={days,dayMap,atRisk:[],byId,reviewDates:days.filter(d=>d.review).map(d=>d.iso),contentDates:days.filter(d=>!d.rest&&!d.off&&!d.review).map(d=>d.iso),brody:blk,weekLoad,brodyPace:brodyPace(c),currentWeek:currentWk,skippedWeeks:skippedWeeks,reviewBuf:brodyReviewBuf(c),reviewCutoff:reviewCutoff,
     stats:{remMin,availMin:0,examDaysLeft:Math.max(0,daysBetween(todayISO(),shelf)),reqPerDay:0,feasible:!weekLoad.some(w=>w.heavy),
@@ -2725,7 +2735,7 @@ function doResetAll(){
     S.cfgs=snap.cfgs;S.active=snap.active;S.cfg=S.active?S.cfgs[S.active]:null;_prevSig=progressSig();save();
     if(S.cfg){reflow();render();}else renderWelcome();toast("Restored ✓");});
 }
-const BUILD="2026-07-17l";
+const BUILD="2026-07-17m";
 /* ---------- What's new (changelog) ----------
    Newest entry first. Bump the top entry's id whenever you add one and the
    pop-up shows once per person (tracked in synced settings.seenUpdate). */
