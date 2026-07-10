@@ -2066,11 +2066,11 @@ function renderAdjustBrody(c){
     +'<div class="paceval"><b>'+pace+' h</b><span>per study day</span></div>'
     +'<button type="button" class="pacebtn" data-fpace="inc" aria-label="more">+</button></div>'
     +'<p class="muted small" style="margin:9px 0 0">'+(heavy.length?('Week '+heavy.map(w=>w.n).join(', ')+' has more third-party than fits before its Friday quiz — even at a high pace. Trim a resource or prioritize the high-yield ones there; the rest still finishes by the exam.'):('At '+pace+' h/day every week is done well before its quiz.'))+'</p>'
-    +'<div class="flab mt">Review buffer before the shelf</div>'
+    +'<div class="flab mt">Review buffer before the block exam</div>'
     +'<div class="pacerow"><button type="button" class="pacebtn" data-fbuf="dec" aria-label="fewer">−</button>'
     +'<div class="paceval"><b>'+brodyReviewBuf(c)+' day'+(brodyReviewBuf(c)===1?'':'s')+'</b><span>video-free for UWorld / review</span></div>'
     +'<button type="button" class="pacebtn" data-fbuf="inc" aria-label="more">+</button></div>'
-    +'<p class="muted small" style="margin:9px 0 0">'+(brodyReviewBuf(c)>0?('All videos finish by <b>'+fmtShort(SCHED.reviewCutoff)+'</b> — the last '+brodyReviewBuf(c)+' study day'+(brodyReviewBuf(c)===1?'':'s')+' before the shelf stay open for review. You still never fall behind Brody’s weekly quizzes.'):'No buffer — content runs right up to the shelf.')+'</p>'
+    +'<p class="muted small" style="margin:9px 0 0">'+(brodyReviewBuf(c)>0?('All videos finish by <b>'+fmtShort(SCHED.reviewCutoff)+'</b> — the last '+brodyReviewBuf(c)+' study day'+(brodyReviewBuf(c)===1?'':'s')+' before the block exam stay open for review. You still never fall behind Brody’s quizzes.'):'No buffer — content runs right up to the exam.')+'</p>'
     +'</div></div>';
   body+='<div class="card soft"><div class="cardhd">Weekly plan</div>'+brodyPreview(c)+'</div>';
   colB+='<div class="card"><div class="cardhd">Resources</div><div class="togrow">'
@@ -2587,7 +2587,7 @@ function renderOnboard(){
     const chips=BRODY_BLOCKS.map(b=>'<button type="button" class="tog '+(ob.brody===b.id?"on":"")+'" data-oblk="'+b.id+'">'+escHTML(b.name)+'</button>').join('');
     body+='<div class="card soft"><div class="cardhd">Brody block</div>'
       +'<div class="togrow">'+chips+'</div>'
-      +'<p class="muted small" style="margin:9px 0 0"><b>'+escHTML(blk.name)+'</b> — weeks of '+fmtShort(blk.weeks[0].start)+' → shelf '+fmtShort(blk.shelf)+'. Each week’s videos match what Brody teaches that week, in each resource’s own order, all finished before the shelf.</p></div>';}
+      +'<p class="muted small" style="margin:9px 0 0"><b>'+escHTML(blk.name)+'</b> — weeks of '+fmtShort(blk.weeks[0].start)+' → block exam '+fmtShort(blk.shelf)+'. Each week’s videos match what Brody teaches that week, in each resource’s own order, all finished before the exam.</p></div>';}
   if(obIsNbme()&&!ob.brody)body+='<div class="card"><div class="cardhd">Which exam?</div><div class="form"><label>Name this exam<input type="text" id="o_label" value="'+escAttr(ob.examLabel)+'" placeholder="e.g. Cardiology shelf"></label></div></div>';
   if(!ob.brody)body+='<div class="card"><div class="cardhd">Dates</div><div class="form">'
     +'<label>Exam date'+dateTriggerHTML("o_exam",ob.examISO,"Pick your exam date")+'</label>'
@@ -2597,14 +2597,14 @@ function renderOnboard(){
       +'<div class="flab">No-video / rest days</div><div class="togrow">'+dows+'</div>'
       +'<div class="flab mt">Daily pace</div>'
       +'<div class="pacerow"><button type="button" class="pacebtn" data-opace="dec" aria-label="less">−</button>'
-      +'<div class="paceval"><b>'+pace+' h</b><span>per study day</span></div>'
+      +'<div class="paceval"><b id="ob_paceval">'+pace+' h</b><span>per study day</span></div>'
       +'<button type="button" class="pacebtn" data-opace="inc" aria-label="more">+</button></div>'
-      +'<p class="muted small" style="margin:9px 0 0">'+(ob.brodyPace?('Set to '+pace+' h/day.'+(pace<rec?' Below the ~'+rec+' h/day your heaviest week needs — that week will run heavy.':' You’ll finish weeks with room to spare.')):('Recommended ~'+rec+' h/day keeps you covered before each quiz — nudge it to fit your schedule.'))+'</p>'
-      +'<div class="flab mt">Review buffer before the shelf</div>'
+      +'<p class="muted small" id="ob_pacehelp" style="margin:9px 0 0">'+obPaceHelp(ob)+'</p>'
+      +'<div class="flab mt">Review buffer before the block exam</div>'
       +'<div class="pacerow"><button type="button" class="pacebtn" data-obuf="dec" aria-label="fewer">−</button>'
       +'<div class="paceval"><b>'+brodyReviewBuf(ob)+' day'+(brodyReviewBuf(ob)===1?'':'s')+'</b><span>video-free for UWorld / review</span></div>'
       +'<button type="button" class="pacebtn" data-obuf="inc" aria-label="more">+</button></div>'
-      +'<p class="muted small" style="margin:9px 0 0">'+(brodyReviewBuf(ob)>0?('The last '+brodyReviewBuf(ob)+' study day'+(brodyReviewBuf(ob)===1?'':'s')+' before the shelf stay open for UWorld &amp; review — all videos finish before then, and you still never fall behind Brody.'):'No buffer — content runs right up to the shelf.')+'</p>'
+      +'<p class="muted small" style="margin:9px 0 0">'+(brodyReviewBuf(ob)>0?('The last '+brodyReviewBuf(ob)+' study day'+(brodyReviewBuf(ob)===1?'':'s')+' before the block exam stay open for UWorld &amp; review — all videos finish before then, and you still never fall behind Brody.'):'No buffer — content runs right up to the exam.')+'</p>'
       +'</div></div>';
   } else {
     body+='<div class="card"><div class="cardhd">How much can you study?</div><div class="form">'
@@ -2635,7 +2635,7 @@ function renderOnboard(){
   const bindN=(id,k)=>{const e=document.getElementById(id);if(e)e.onchange=()=>{let v=parseFloat(e.value);if(isNaN(v)||v<0)v=0;ob[k]=v;obLive();};};
   bindN("o_wk","wkdayHrs");bindN("o_we","wkendHrs");
   const orv=document.getElementById("o_rev");if(orv)orv.onchange=()=>{let v=parseInt(orv.value,10);if(isNaN(v)||v<0)v=0;ob.reviewDays=v;obLive();};
-  document.querySelectorAll("[data-odow]").forEach(b=>b.onclick=()=>{const i=+b.dataset.odow;const k=ob.restDays.indexOf(i);if(k>=0)ob.restDays.splice(k,1);else ob.restDays.push(i);renderObTogs();});
+  document.querySelectorAll("[data-odow]").forEach(b=>b.onclick=()=>{const i=+b.dataset.odow;const k=ob.restDays.indexOf(i);if(k>=0)ob.restDays.splice(k,1);else ob.restDays.push(i);renderObTogs();obLive();});
   document.querySelectorAll("[data-ores]").forEach(b=>b.onclick=()=>{ob.resources[b.dataset.ores]=!ob.resources[b.dataset.ores];renderObTogs();obLive();});
   document.querySelectorAll("[data-oplan]").forEach(b=>b.onclick=()=>{if(b.dataset.oplan==="brody"){const bl=brodyBlockById(brodyCurrentBlockId());ob.brody=bl.id;ob.systems=bl.systems.slice();ob.examLabel=bl.name;}else ob.brody=null;renderOnboard();});
   document.querySelectorAll("[data-oblk]").forEach(b=>b.onclick=()=>{const bl=brodyBlockById(b.dataset.oblk);if(bl){ob.brody=bl.id;ob.systems=bl.systems.slice();ob.examLabel=bl.name;}renderOnboard();});
@@ -2654,7 +2654,11 @@ function renderObTogs(){
   document.querySelectorAll("[data-odow]").forEach(b=>b.classList.toggle("on",_ob.restDays.includes(+b.dataset.odow)));
   document.querySelectorAll("[data-ores]").forEach(b=>b.classList.toggle("on",!!_ob.resources[b.dataset.ores]));
 }
-function obLive(){const c=document.getElementById("o_reco");if(c){c.innerHTML='<div class="cardhd">Recommended pace</div>'+obPreview();bindUsePace();}}
+function obPaceHelp(ob){const pace=brodyPace(ob),rec=brodyRecommendedPace(brodyWeekLoads(ob,brodyBlockById(ob.brody)||BRODY_BLOCKS[0]));
+  return ob.brodyPace?('Set to '+pace+' h/day.'+(pace<rec?' Below the ~'+rec+' h/day this block needs — you may fall behind a quiz.':' You’ll finish with room to spare.')):('Recommended ~'+rec+' h/day, spread evenly across your open days — nudge it to fit your schedule.');}
+function obLive(){const c=document.getElementById("o_reco");if(c){c.innerHTML='<div class="cardhd">Recommended pace</div>'+obPreview();bindUsePace();}
+  // keep the Daily-pace control in sync as resources / rest days change (Brody plans)
+  if(_ob&&_ob.brody){const pv=document.getElementById("ob_paceval");if(pv)pv.textContent=brodyPace(_ob)+' h';const ph=document.getElementById("ob_pacehelp");if(ph)ph.innerHTML=obPaceHelp(_ob);}}
 /* pacing recommendation for onboarding — a suggestion only; the user keeps
    full control of rest days and weekday/weekend hours. */
 function obReco(){const ob=_ob;
@@ -2759,7 +2763,7 @@ function doResetAll(){
     S.cfgs=snap.cfgs;S.active=snap.active;S.cfg=S.active?S.cfgs[S.active]:null;_prevSig=progressSig();save();
     if(S.cfg){reflow();render();}else renderWelcome();toast("Restored ✓");});
 }
-const BUILD="2026-07-17o";
+const BUILD="2026-07-17p";
 /* ---------- What's new (changelog) ----------
    Newest entry first. Bump the top entry's id whenever you add one and the
    pop-up shows once per person (tracked in synced settings.seenUpdate). */
