@@ -1070,24 +1070,40 @@ function reflow(){
   const review=Math.max(0,Math.min(c.reviewDays||0,studyDates.length));
   const contentDates=studyDates.slice(0,Math.max(0,studyDates.length-review));
   const reviewDates=studyDates.slice(Math.max(0,studyDates.length-review));
-  // greedily pack remaining onto contentDates.
-  // minutes already completed on a day consume THAT day's budget — for every day,
-  // not just today — so checking a video off never frees a slot that pulls a later
-  // video backward onto a day you've already finished (incl. days you studied ahead on).
+  // Pack the backlog onto contentDates IN CATALOG SEQUENCE, with a forward-only day
+  // cursor. Completed videos are pinned to the day they were finished (donePins, below)
+  // and consume that day's budget (doneMinByDay) so a finished day never refills; a
+  // done video studied ahead also pushes the cursor forward, so nothing later in the
+  // sequence is ever packed onto a date before it. The calendar always reads in order,
+  // whatever you've checked off (past-dated completions aside — those are history).
   const doneMinByDay={};const vddPack=S.vdoneDate||{};
   for(const id in vddPack){const it=byId[id];if(it)doneMinByDay[vddPack[id]]=(doneMinByDay[vddPack[id]]||0)+it.min;}
+  const dateIndex={}; contentDates.forEach((iso,i)=>dateIndex[iso]=i);
   const dayItems={}; contentDates.forEach(iso=>dayItems[iso]=[]);
-  let qi=0; const atRisk=[];
-  for(let di=0;di<contentDates.length;di++){
-    const iso=contentDates[di];const budget=dayBudgetMin(isoToDate(iso));
-    const doneMin=doneMinByDay[iso]||0; let used=doneMin; const started=doneMin>0;
-    while(qi<remaining.length){const it=remaining[qi];
-      if((dayItems[iso].length===0&&!started) || used+it.min<=budget+10){dayItems[iso].push(it);used+=it.min;qi++;}
-      else break;
-      if(used>=budget)break;
+  const usedByDay={}; const atRisk=[]; let di=0;
+  for(const it of backlog){
+    if(isSkip(it.id))continue;
+    if(isDone(it.id)){                                  // pinned separately; keep the sequence honest
+      const dd=vddPack[it.id];
+      if(dd!=null&&dateIndex[dd]!=null)di=Math.max(di,dateIndex[dd]);
+      continue;
     }
+    let placed=false;
+    while(di<contentDates.length){
+      const iso=contentDates[di];const budget=dayBudgetMin(isoToDate(iso));
+      const doneMin=doneMinByDay[iso]||0;
+      if(doneMin>=budget){di++;continue;}                              // a finished/full day stays as-is — never pack onto it
+      const used=(usedByDay[iso]||0)+doneMin;
+      const empty=dayItems[iso].length===0 && doneMin===0;             // oversized video still gets a fresh day
+      if(empty || used+it.min<=budget+10){
+        dayItems[iso].push(it);usedByDay[iso]=(usedByDay[iso]||0)+it.min;placed=true;
+        if((usedByDay[iso]+doneMin)>=budget)di++;
+        break;
+      }
+      di++;
+    }
+    if(!placed)atRisk.push(it);
   }
-  while(qi<remaining.length){atRisk.push(remaining[qi]);qi++;}
   // pin completed items to the day they were finished, so they stay visible (checked)
   const donePins={};const vdd=S.vdoneDate||{};
   for(const id in vdd){const it=byId[id];if(it){(donePins[vdd[id]]=donePins[vdd[id]]||[]).push(it);}}
@@ -2815,7 +2831,7 @@ function doResetAll(){
     S.cfgs=snap.cfgs;S.active=snap.active;S.cfg=S.active?S.cfgs[S.active]:null;_prevSig=progressSig();save();
     if(S.cfg){reflow();render();}else renderWelcome();toast("Restored ✓");});
 }
-const BUILD="2026-07-17u";
+const BUILD="2026-07-17v";
 /* ---------- What's new (changelog) ----------
    Newest entry first. Bump the top entry's id whenever you add one and the
    pop-up shows once per person (tracked in synced settings.seenUpdate). */
