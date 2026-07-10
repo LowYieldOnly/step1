@@ -2721,11 +2721,20 @@ function doResetAll(){
     S.cfgs=snap.cfgs;S.active=snap.active;S.cfg=S.active?S.cfgs[S.active]:null;_prevSig=progressSig();save();
     if(S.cfg){reflow();render();}else renderWelcome();toast("Restored ✓");});
 }
-const BUILD="2026-07-17h";
+const BUILD="2026-07-17i";
 /* ---------- What's new (changelog) ----------
    Newest entry first. Bump the top entry's id whenever you add one and the
    pop-up shows once per person (tracked in synced settings.seenUpdate). */
 const CHANGELOG=[
+  {id:"2026-07-10", date:"July 2026", title:"Follow your Brody calendar", items:[
+    "New plan type: the Brody calendar. Instead of counting down to an exam, it lines your third-party videos up with what Brody teaches each week — so you’re covered for every quiz and finish the whole unit’s videos before the shelf.",
+    "Two blocks are ready to pick: Hematology & Renal and Cardiopulmonary. More are on the way, one at a time.",
+    "It sets a recommended daily pace that covers your heaviest week, and you can nudge it up or down. Join a unit late and it spreads the weeks you missed across your remaining days instead of dumping them on day one — you stay in sync going forward.",
+    "New: a review buffer. Pick how many days before the shelf you want video-free for UWorld and Anki — all your videos finish before then, and you still never fall behind Brody’s weekly quizzes.",
+    "Pathoma is now selectable chapter by chapter, so you can include exactly the ones your unit covers.",
+    "Moved on to a new block? Your old units are saved — reopen any of them from the Plan tab and everything you’ve checked off is still there.",
+    "A Grade calculator tab is coming soon to the M2 Scheduler."
+  ]},
   {id:"2026-07-08", date:"July 2026", title:"A bigger resource library and a cleaner Study page", items:[
     "New resource: Bootcamp is now available — plus refreshed Boards & Beyond, Pathoma, and Sketchy, each broken down to the individual video and its length.",
     "Sketchy Micro and Sketchy Pharm now show as separate sections, so they never mix together.",
