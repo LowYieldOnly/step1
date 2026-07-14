@@ -1706,6 +1706,26 @@ function qbankCard(title,pfx,roll,resetId){
     +(bars?('<div class="uwhd">By system — accuracy</div><div class="bars">'+bars+'</div>'):'<p class="muted small">Log a block to start tracking per-system accuracy — pick the system on each block for a breakdown.</p>')
     +'</div>';
 }
+/* combined UWorld + AMBOSS accuracy per system (dedicated scope) — the weak-area signal */
+function stepSystemAccuracy(){
+  const uw=uworldRollup(DSCOPE),am=ambossRollup(DSCOPE);const by={};
+  [uw,am].forEach(roll=>Object.keys(roll.bySys).forEach(s=>{if(s==="Unspecified")return;const e=roll.bySys[s];const t=by[s]=by[s]||{done:0,correct:0};t.done+=e.done;t.correct+=e.correct;}));
+  return Object.keys(by).map(s=>({sys:s,done:by[s].done,pct:by[s].done?Math.round(by[s].correct/by[s].done*100):null})).filter(x=>x.pct!=null);
+}
+function stepFocusCard(){
+  const list=stepSystemAccuracy();
+  if(!list.length)return '<div class="card"><div class="cardhd">Weak systems — where to focus</div><p class="muted small">Log practice blocks with a <b>system</b> tagged and your weakest areas surface here, worst-first — the most actionable signal you have before the exam.</p></div>';
+  list.sort((a,b)=>(a.pct-b.pct)||(b.done-a.done));
+  const weak=list.filter(x=>x.done>=20&&x.pct<65);
+  let h='<div class="card"><div class="cardhd">Weak systems — where to focus</div>';
+  h+=weak.length
+    ? '<div class="status bad">Below 65%: '+weak.map(w=>escHTML(w.sys)+' <b>'+w.pct+'%</b>').join(' · ')+'. Prioritize these before your exam.</div>'
+    : '<div class="status ok">No system under 65% (with ≥20 Qs) yet — keep logging to surface weak areas.</div>';
+  h+='<div class="uwhd">Combined UWorld + AMBOSS · weakest first</div><div class="bars">';
+  list.forEach(x=>{const col=x.pct>=70?'var(--success)':(x.pct>=60?'var(--warning)':'var(--danger)');
+    h+='<div class="bar"><div class="barlab">'+escHTML(x.sys)+'</div><div class="bartrack"><div class="barfill" style="width:'+x.pct+'%;background:'+col+'"></div></div><div class="barpct">'+x.pct+'% <span class="muted small">('+x.done+')</span></div></div>';});
+  h+='</div></div>';return h;
+}
 function renderStepHub(){
   S.settings=S.settings||{};const iso=S.settings.stepExamISO;
   const left=iso?Math.max(0,daysBetween(todayISO(),iso)):null;
@@ -1731,7 +1751,7 @@ function renderStepHub(){
   let colB='';
   colB+=qbankCard("UWorld — dedicated","su",uworldRollup(DSCOPE),"sst_uw");
   colB+=qbankCard("AMBOSS","sa",ambossRollup(DSCOPE),"sst_am");
-  app.innerHTML=chrome("")+'<div class="wrap">'+hero+snap+'<div class="cols"><div>'+colA+'</div><div>'+colB+'</div></div></div>';
+  app.innerHTML=chrome("")+'<div class="wrap">'+hero+snap+stepFocusCard()+'<div class="cols"><div>'+colA+'</div><div>'+colB+'</div></div></div>';
   bindStep();
   const sd=document.getElementById("sd_date");if(sd)sd.onclick=()=>openDatePicker({value:iso||"",min:todayISO(),title:"Step 1 exam date",onPick:(d)=>{S.settings.stepExamISO=d;save();render();}});
 }
@@ -3014,7 +3034,7 @@ function doResetAll(){
     S.cfgs=snap.cfgs;S.active=snap.active;S.cfg=S.active?S.cfgs[S.active]:null;_prevSig=progressSig();save();
     if(S.cfg){reflow();render();}else renderWelcome();toast("Restored ✓");});
 }
-const BUILD="2026-07-17z";
+const BUILD="2026-07-18a";
 /* ---------- What's new (changelog) ----------
    Newest entry first. Bump the top entry's id whenever you add one and the
    pop-up shows once per person (tracked in synced settings.seenUpdate). */
