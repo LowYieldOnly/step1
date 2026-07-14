@@ -306,6 +306,19 @@ b{color:var(--ink)}
 .uwbig span{font-size:12px;color:var(--muted);font-weight:600}
 .uwsub{font-family:var(--mono);font-size:12px;color:var(--muted)}
 .uwhd{font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--faint);margin:12px 0 6px}
+/* Step 1 readiness snapshot + qbank overall progress */
+.readysnap{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:0 0 16px}
+.rtile{background:var(--panel);border:1px solid var(--line);border-radius:13px;padding:12px 10px;text-align:center}
+.rtile-v{font-family:var(--mono);font-weight:700;font-size:22px;color:var(--ink);line-height:1.1}
+.rtile-l{font-size:11px;color:var(--text-2);margin-top:3px}
+.rtile.ok{border-color:color-mix(in srgb,var(--success) 55%,transparent)}.rtile.ok .rtile-v{color:var(--success)}
+.rtile.warn{border-color:color-mix(in srgb,var(--warning) 55%,transparent)}.rtile.warn .rtile-v{color:var(--warning)}
+.rtile.bad{border-color:color-mix(in srgb,var(--danger) 55%,transparent)}.rtile.bad .rtile-v{color:var(--danger)}
+.rtile.info .rtile-v{color:var(--phos)}
+.uwprog{margin:0 0 12px}
+.uwprog .uwproglab{display:flex;justify-content:space-between;font-size:12px;color:var(--text-2);margin-bottom:5px}
+.uwprog .uwproglab b{color:var(--ink);font-family:var(--mono)}
+.bartrack.big{height:11px}
 .flagb{flex:0 0 auto;width:26px;height:26px;border-radius:8px;border:1.5px solid transparent;background:none;color:var(--faint);font-size:13px;cursor:pointer;transition:all .15s}
 .flagb:hover{color:var(--amber);border-color:var(--line2)}
 .flagb.on{color:var(--warning);border-color:var(--warning);background:var(--warning-bg)}
@@ -1497,7 +1510,7 @@ function uworldRollup(scope){scope=scope||S.active;
   const mine=Object.keys(blocks).map(k=>blocks[k]).filter(b=>b&&b.hub===scope);
   let done=0,correct=0;const bySys={};
   mine.forEach(b=>{const q=+b.q||0,c=+b.correct||0;done+=q;correct+=c;
-    if(b.sys){const e=bySys[b.sys]=bySys[b.sys]||{done:0,correct:0};e.done+=q;e.correct+=c;}});
+    const key=b.sys||"Unspecified";const e=bySys[key]=bySys[key]||{done:0,correct:0};e.done+=q;e.correct+=c;});   // untagged blocks still get a bar
   Object.keys(bySys).forEach(s=>{const e=bySys[s];e.pct=e.done?Math.round(e.correct/e.done*100):null;});
   return {total:u.total,done,correct,pct:done?Math.round(correct/done*100):null,bySys};
 }
@@ -1509,7 +1522,7 @@ function ambossRollup(scope){scope=scope||S.active;
   const mine=Object.keys(blocks).map(k=>blocks[k]).filter(b=>b&&b.hub===scope);
   let done=0,correct=0;const bySys={};
   mine.forEach(b=>{const q=+b.q||0,c=+b.correct||0;done+=q;correct+=c;
-    if(b.sys){const e=bySys[b.sys]=bySys[b.sys]||{done:0,correct:0};e.done+=q;e.correct+=c;}});
+    const key=b.sys||"Unspecified";const e=bySys[key]=bySys[key]||{done:0,correct:0};e.done+=q;e.correct+=c;});
   Object.keys(bySys).forEach(s=>{const e=bySys[s];e.pct=e.done?Math.round(e.correct/e.done*100):null;});
   return {total:u.total,done,correct,pct:done?Math.round(correct/done*100):null,bySys};
 }
@@ -1678,14 +1691,19 @@ function qbankForm(pfx,draft,total){
 }
 function qbankCard(title,pfx,roll,resetId){
   const pctTxt=roll.pct!=null?roll.pct+'%':'—';const doneTxt=roll.done+(roll.total?(' / '+roll.total):'')+' Qs';
-  let bars='';const sysList=Object.keys(roll.bySys).sort((a,b)=>(roll.bySys[a].pct||0)-(roll.bySys[b].pct||0));
+  // overall progress through the bank (always shown once anything is logged)
+  const prog=roll.total?Math.min(100,Math.round(roll.done/roll.total*100)):null;
+  const progHtml=roll.done?('<div class="uwprog"><div class="uwproglab"><span><b>'+roll.done+'</b> questions done'+(roll.total?(' of '+roll.total):'')+'</span>'+(prog!=null?('<span>'+prog+'% of bank</span>'):'')+'</div>'+(prog!=null?('<div class="bartrack big"><div class="barfill" style="width:'+prog+'%"></div></div>'):'')+'</div>'):'';
+  // per-system accuracy — untagged blocks fall into an "Unspecified" bar, sorted last
+  let bars='';const sysList=Object.keys(roll.bySys).sort((a,b)=>{if(a==="Unspecified")return 1;if(b==="Unspecified")return -1;return (roll.bySys[a].pct||0)-(roll.bySys[b].pct||0);});
   sysList.forEach(x=>{const e=roll.bySys[x];const col=e.pct==null?'var(--faint)':(e.pct>=70?'var(--success)':(e.pct>=60?'var(--warning)':'var(--danger)'));
     bars+='<div class="bar"><div class="barlab">'+escHTML(x)+'</div><div class="bartrack"><div class="barfill" style="width:'+(e.pct||0)+'%;background:'+col+'"></div></div><div class="barpct">'+(e.pct==null?'—':e.pct+'%')+'</div></div>';});
   const draft=pfx==="su"?SUDRAFT:SADRAFT;
   return '<div class="card"><div class="cardhd">'+title+(roll.done?'<button class="hdreset" id="'+resetId+'">Reset</button>':'')+'</div>'
     +'<div class="uwtop"><div class="uwbig">'+pctTxt+' <span>correct</span></div><div class="uwsub">'+doneTxt+'</div></div>'
+    +progHtml
     +fold(pfx+"form","Log a block",qbankForm(pfx,draft,roll.total),roll.done===0)
-    +(bars?('<div class="uwhd">By system — accuracy</div><div class="bars">'+bars+'</div>'):'<p class="muted small">Log a block to start tracking per-system accuracy.</p>')
+    +(bars?('<div class="uwhd">By system — accuracy</div><div class="bars">'+bars+'</div>'):'<p class="muted small">Log a block to start tracking per-system accuracy — pick the system on each block for a breakdown.</p>')
     +'</div>';
 }
 function renderStepHub(){
@@ -1694,6 +1712,15 @@ function renderStepHub(){
   const list=assessList(DSCOPE);const la=list.length?list[list.length-1]:null;const v=readinessVerdict(la?la.pct:null);
   const hero='<div class="hero"><div class="big">'+(left!=null?left:"—")+' <span>days to Step 1</span></div>'
     +'<div class="sub">'+(iso?('Exam '+escHTML(fmtDate(iso))+' · <button class="link" id="sd_date">Change date</button>'):'<button class="link" id="sd_date">Set your exam date</button>')+'</div></div>';
+  // readiness snapshot — latest NBME, question-bank accuracy, and total questions at a glance
+  const uw=uworldRollup(DSCOPE),am=ambossRollup(DSCOPE);const qsDone=(uw.done||0)+(am.done||0);
+  const band=pct=>pct==null?"":(pct>=70?"ok":(pct>=60?"warn":"bad"));
+  const rtile=(lab,val,cls)=>'<div class="rtile '+(cls||"")+'"><div class="rtile-v">'+val+'</div><div class="rtile-l">'+lab+'</div></div>';
+  const snap='<div class="readysnap">'
+    +rtile("Latest NBME",la?la.pct+"%":"—",la?v.cls:"")
+    +rtile("UWorld",uw.pct!=null?uw.pct+"%":"—",band(uw.pct))
+    +rtile("Questions",qsDone||"—","")
+    +'</div>';
   let colA='';
   colA+='<div class="card"><div class="cardhd">NBME self-assessments'+(list.length?'<button class="hdreset" id="sst_scores">Reset</button>':'')+'</div>'
     +'<div class="status '+v.cls+'">'+(la?('Latest: <b>'+la.pct+'%</b> on '+escHTML(la.form)+' ('+fmtShort(la.dateISO)+') — '+v.text+'.'):'No self-assessment logged yet. Your NBME forms are the single best predictor of your Step score.')+'</div>'
@@ -1704,7 +1731,7 @@ function renderStepHub(){
   let colB='';
   colB+=qbankCard("UWorld — dedicated","su",uworldRollup(DSCOPE),"sst_uw");
   colB+=qbankCard("AMBOSS","sa",ambossRollup(DSCOPE),"sst_am");
-  app.innerHTML=chrome("")+'<div class="wrap">'+hero+'<div class="cols"><div>'+colA+'</div><div>'+colB+'</div></div></div>';
+  app.innerHTML=chrome("")+'<div class="wrap">'+hero+snap+'<div class="cols"><div>'+colA+'</div><div>'+colB+'</div></div></div>';
   bindStep();
   const sd=document.getElementById("sd_date");if(sd)sd.onclick=()=>openDatePicker({value:iso||"",min:todayISO(),title:"Step 1 exam date",onPick:(d)=>{S.settings.stepExamISO=d;save();render();}});
 }
@@ -2977,7 +3004,7 @@ function doResetAll(){
     S.cfgs=snap.cfgs;S.active=snap.active;S.cfg=S.active?S.cfgs[S.active]:null;_prevSig=progressSig();save();
     if(S.cfg){reflow();render();}else renderWelcome();toast("Restored ✓");});
 }
-const BUILD="2026-07-17x";
+const BUILD="2026-07-17y";
 /* ---------- What's new (changelog) ----------
    Newest entry first. Bump the top entry's id whenever you add one and the
    pop-up shows once per person (tracked in synced settings.seenUpdate). */
