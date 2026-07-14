@@ -177,6 +177,46 @@ b{color:var(--ink)}
 .m1soon-tag{display:inline-block;font-family:var(--mono);font-size:10px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:var(--phos);background:var(--phos-soft);border:1px solid var(--phos-dim);border-radius:999px;padding:4px 11px;margin-bottom:15px}
 .m1soon-t{font-family:var(--font-display);font-size:22px;font-weight:600;color:var(--ink);margin-bottom:9px}
 .m1soon-d{font-size:14px;color:var(--text-2);line-height:1.6}
+/* M1 daily flow planner */
+.m1dayhd{display:flex;flex-wrap:wrap;align-items:center;gap:10px;justify-content:space-between;margin:2px 0 12px}
+.m1weeknav{display:flex;align-items:center;gap:8px}
+.m1wbtn{width:30px;height:30px;border-radius:9px;border:1px solid var(--line);background:var(--panel);color:var(--ink);font-size:17px;line-height:1;cursor:pointer}
+.m1wbtn:disabled{opacity:.3;cursor:default}
+.m1weeklab{font-family:var(--font-display);font-size:16px;font-weight:600;color:var(--ink);min-width:11em;text-align:center}
+.m1assess{font-size:12.5px;color:var(--text-2);background:var(--phos-soft);border:1px solid var(--phos-dim);border-radius:999px;padding:5px 12px}
+.m1assess b{color:var(--ink)}
+.m1assess.exam{background:color-mix(in srgb,var(--gold) 14%,transparent);border-color:color-mix(in srgb,var(--gold) 46%,transparent)}
+.m1days{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin:0 0 14px}
+.m1daybtn{position:relative;display:flex;flex-direction:column;align-items:center;gap:2px;padding:8px 0 9px;border:1px solid var(--line);border-radius:11px;background:var(--panel);color:var(--text-2);cursor:pointer;transition:all .14s}
+.m1daybtn .m1dow{font-size:10.5px;font-weight:700;letter-spacing:.05em;text-transform:uppercase}
+.m1daybtn .m1dnum{font-family:var(--font-display);font-size:18px;font-weight:600;color:var(--ink)}
+.m1daybtn .m1ddot{position:absolute;bottom:5px;width:4px;height:4px;border-radius:50%;background:var(--phos-dim)}
+.m1daybtn.today{border-color:var(--phos-dim)}
+.m1daybtn.on{background:var(--phos);border-color:var(--phos)}
+.m1daybtn.on .m1dow,.m1daybtn.on .m1dnum{color:var(--on-accent,#04140b)}
+.m1daybtn.on .m1ddot{background:var(--on-accent,#04140b);opacity:.55}
+.m1flow{border:1px solid var(--line);border-radius:13px;padding:11px 13px;margin:0 0 9px;background:var(--panel)}
+.m1flow.done{opacity:.62}
+.m1fh{display:flex;align-items:flex-start;gap:10px}
+.m1badge{flex:0 0 auto;font-family:var(--mono);font-size:9.5px;font-weight:800;letter-spacing:.03em;padding:4px 6px;border-radius:6px;margin-top:1px;color:#fff;background:#697}
+.m1badge.physio{background:#2f9e7d}.m1badge.anat{background:#c2683a}.m1badge.histo{background:#8a6bd1}
+.m1badge.mbom{background:#3b82c4}.m1badge.pharm{background:#c04b8a}.m1badge.fod{background:#6b7a86}.m1badge.clin{background:#a8842f}
+.m1ft{flex:1;min-width:0;display:flex;flex-direction:column;gap:1px}
+.m1ftitle{font-size:14.5px;font-weight:600;color:var(--ink);line-height:1.32}
+.m1rx{font-family:var(--mono);font-size:9.5px;font-weight:700;color:var(--pharm,#c04b8a);border:1px solid currentColor;border-radius:5px;padding:1px 4px;vertical-align:middle}
+.m1fcourse{font-size:11.5px;color:var(--text-2)}
+.m1kind{margin-left:7px;font-family:var(--mono);font-size:9.5px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--text-2);border:1px solid var(--line);border-radius:5px;padding:1px 5px}
+.m1fres{margin:9px 0 0 34px}
+.m1resvia{display:block;font-size:11px;color:var(--text-2);margin-bottom:6px}
+.m1resvia::before{content:"↳ ";opacity:.6}
+.m1chips{display:flex;flex-wrap:wrap;gap:6px}
+.m1chip{font-size:11.5px;font-weight:600;padding:4px 9px;border-radius:999px;border:1px solid var(--line);background:var(--bg2,var(--panel));color:var(--text-2);cursor:pointer;text-decoration:none;font-family:inherit}
+.m1chip:hover{border-color:var(--phos-dim)}
+.m1chip.tag{color:var(--phos);border-color:var(--phos-dim);background:var(--phos-soft)}
+.m1chip.rx{color:var(--gold);border-color:color-mix(in srgb,var(--gold) 40%,transparent)}
+.m1findbtn{font-size:12px;font-weight:600;color:var(--phos);background:none;border:0;padding:2px 0;cursor:pointer;font-family:inherit}
+.m1break{display:flex;gap:9px;align-items:center;font-size:12.5px;line-height:1.45;color:var(--text-2);background:color-mix(in srgb,var(--phos) 8%,transparent);border:1px dashed var(--phos-dim);border-radius:11px;padding:10px 13px;margin:13px 0 4px}
+.m1break::before{content:"⏸";color:var(--phos);font-size:14px}
 /* M1 disclaimer — full-page gate on entry */
 .m1disc{max-width:40em;margin:30px auto;background:var(--panel);border:1px solid var(--line);border-left:3px solid var(--gold);border-radius:var(--r);padding:34px 30px 30px}
 .m1disc-eyebrow{font-family:var(--mono);font-size:11px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:var(--gold);margin-bottom:12px}
@@ -2241,9 +2281,13 @@ function hubCardSoon(name,desc){
    an "m1:" prefix, so cloud sync needs zero schema change. Data
    lives in an external m1data.json (lazy-fetched, SW-cached).
    ============================================================ */
-let M1DATA=null,M1LOADING=false,M1ERR=false,M1FLAT=[];
-let M1VIEW="browse",M1COURSE=null,M1Q="",M1OPEN={},M1REFOCUS=false;
+let M1DATA=null,M1LOADING=false,M1ERR=false,M1FLAT=[],M1BYID={};
+let M1SCHED=null,M1SCHEDLOADING=false,M1SCHEDERR=false;   // Fall 2026 class lecture calendar (m1schedule.json)
+let M1DAY=null;   // selected day (ISO) in the daily-flow planner
+let M1VIEW="daily",M1COURSE=null,M1Q="",M1OPEN={},M1REFOCUS=false;
 const M1RES=[["bnb","Boards & Beyond"],["pathoma","Pathoma"],["osmosis","Osmosis"],["sketchy","Sketchy"],["bootcamp","Bootcamp"],["dm","Dirty Medicine"],["fa","First Aid"]];
+// course key → [display label, short badge]
+const M1CN={physio:["Physiology","PHY"],anat:["Gross Anatomy","ANA"],histo:["Histology","HIS"],mbom:["MBOM","MBM"],pharm:["Pharmacology","PHM"],fod:["Foundations of Doctoring","FOD"],clin:["Clinical Application","CLN"]};
 function loadM1(cb){
   if(M1DATA){cb&&cb();return;}
   if(M1LOADING)return;
@@ -2252,9 +2296,17 @@ function loadM1(cb){
     .then(d=>{M1DATA=d;M1LOADING=false;buildM1Index();cb&&cb();if(S.active==="m1")render();})
     .catch(()=>{M1LOADING=false;M1ERR=true;if(S.active==="m1")render();});
 }
-function buildM1Index(){M1FLAT=[];if(!M1DATA)return;M1DATA.courses.forEach(c=>c.collections.forEach(C=>C.sets.forEach(s=>s.bricks.forEach(b=>{
-  M1FLAT.push({b:b,cn:c.name,hay:(b.t+" "+c.name+" "+C.name).toLowerCase()});}))));}
-function enterM1(){S.active="m1";S.cfg=null;M1VIEW="browse";M1COURSE=null;M1Q="";save();loadM1();render();}
+function loadM1Sched(cb){
+  if(M1SCHED){cb&&cb();return;}
+  if(M1SCHEDLOADING)return;
+  M1SCHEDLOADING=true;M1SCHEDERR=false;
+  fetch("m1schedule.json").then(r=>{if(!r.ok)throw 0;return r.json();})
+    .then(d=>{M1SCHED=d;M1SCHEDLOADING=false;cb&&cb();if(S.active==="m1"&&M1VIEW==="daily")render();})
+    .catch(()=>{M1SCHEDLOADING=false;M1SCHEDERR=true;if(S.active==="m1"&&M1VIEW==="daily")render();});
+}
+function buildM1Index(){M1FLAT=[];M1BYID={};if(!M1DATA)return;M1DATA.courses.forEach(c=>c.collections.forEach(C=>C.sets.forEach(s=>s.bricks.forEach(b=>{
+  M1FLAT.push({b:b,cn:c.name,hay:(b.t+" "+c.name+" "+C.name).toLowerCase()});M1BYID[b.id]={b:b,cn:c.name};}))));}
+function enterM1(){S.active="m1";S.cfg=null;M1VIEW="daily";M1COURSE=null;M1Q="";M1DAY=null;save();loadM1();loadM1Sched();render();}
 function m1StudiedCount(){let n=0;for(const k in (S.vdone||{}))if(k.indexOf("m1:")===0)n++;return n;}
 function m1HubCard(){
   const n=m1StudiedCount();
@@ -2341,6 +2393,79 @@ function m1TargetLine(o){
   return '<div class="herostat '+(per>25?"warn":"ok")+'"><span class="hsdot"></span><span>~'+per+' topics/day to finish '+rem+' by '+escHTML(fmtDate(iso))+'. <button class="link" id="m1cleartarget">Clear</button></span></div>';
 }
 function m1PickTarget(){openDatePicker({value:S.settings&&S.settings.m1TargetISO||"",min:todayISO(),title:"M1 target date",onPick:iso=>{S.settings=S.settings||{};S.settings.m1TargetISO=iso;save();render();}});}
+
+/* ---------- M1 DAILY FLOW — your class calendar, day by day ----------
+   Reads m1schedule.json (Fall 2026 lecture calendar). Each day lists its real
+   lectures/labs; where a lecture maps to a library topic, its resources show
+   inline. "Studied" ticks are soft coaching state in S.settings (they sync but
+   don't touch the brick progress %). */
+const M1DOW=["Mon","Tue","Wed","Thu","Fri"];
+function m1FlowKey(iso,idx){return iso+"|"+idx;}
+function m1FlowDone(iso,idx){return !!(S.settings&&S.settings.m1FlowDone&&S.settings.m1FlowDone[m1FlowKey(iso,idx)]);}
+function toggleM1Flow(iso,idx){S.settings=S.settings||{};S.settings.m1FlowDone=S.settings.m1FlowDone||{};
+  const k=m1FlowKey(iso,idx);if(S.settings.m1FlowDone[k])delete S.settings.m1FlowDone[k];else{S.settings.m1FlowDone[k]=true;markStudiedToday();}
+  save();render();}
+function m1WeekIndexFor(iso){
+  if(!M1SCHED||!M1SCHED.length)return 0;
+  for(let i=0;i<M1SCHED.length;i++){const w=M1SCHED[i];const end=isoFromDate(addDays(isoToDate(w.mon),4));if(iso>=w.mon&&iso<=end)return i;}
+  if(iso<M1SCHED[0].mon)return 0;
+  for(let i=0;i<M1SCHED.length;i++){if(M1SCHED[i].mon>iso)return i;}   // weekend/gap → the coming week
+  return M1SCHED.length-1;
+}
+function m1RefText(b,resKey){const raw=b.refs&&b.refs[resKey];const groups=Array.isArray(raw)?raw:(raw?[raw]:[]);const out=[];
+  groups.forEach(gr=>{if(typeof gr==="string"){out.push(gr);return;}const p=gr.p||"",items=gr.i||[];if(!p)items.forEach(x=>out.push(x));else items.forEach(x=>out.push(p+" > "+x));});
+  return out.join(" • ");}
+function m1ResChips(b){let chips="";
+  M1RES.forEach(r=>{if(b.refs&&b.refs[r[0]])chips+='<button class="m1chip '+r[0]+'" data-copyref="'+escAttr(m1RefText(b,r[0]))+'" title="Copy this reference">'+escHTML(r[1])+'</button>';});
+  if(b.tag)chips+='<button class="m1chip tag" data-copytag="'+escAttr(b.tag)+'">Anki tags</button>';
+  if(b.rx)chips+='<a class="m1chip rx" href="'+escAttr(b.rx)+'" target="_blank" rel="noopener">ScholarRx ↗</a>';
+  return chips;}
+function m1FlowItem(it,iso,idx){
+  const meta=M1CN[it.c]||[it.c||"Session","·"];const done=m1FlowDone(iso,idx);
+  const brick=it.b&&M1BYID[it.b];
+  const kindTag=it.k==="lab"?'<span class="m1kind">Lab</span>':(it.k==="fod"?'<span class="m1kind">Clinical</span>':"");
+  let h='<div class="m1flow'+(done?" done":"")+'">';
+  h+='<div class="m1fh"><button class="chk '+(done?"on":"")+'" data-m1flowchk="'+iso+"|"+idx+'" aria-label="mark studied">'+(done?"✓":"")+'</button>';
+  h+='<span class="m1badge '+it.c+'">'+meta[1]+'</span>';
+  h+='<div class="m1ft"><span class="m1ftitle">'+escHTML(it.t)+(it.ph?' <span class="m1rx">+Pharm</span>':"")+'</span>'
+    +'<span class="m1fcourse">'+escHTML(meta[0])+kindTag+'</span></div></div>';
+  if(brick){h+='<div class="m1fres"><span class="m1resvia">Resources · '+escHTML(brick.b.t)+'</span><div class="m1chips">'+m1ResChips(brick.b)+'</div></div>';}
+  else if(it.k==="lecture"||it.k==="lab"){h+='<div class="m1fres"><button class="m1findbtn" data-m1find="'+escAttr(it.t)+'">Find resources in the library ↗</button></div>';}
+  h+='</div>';return h;}
+function m1Daily(){
+  if(!M1SCHED)return '<div class="m1wrap">'+(M1SCHEDERR
+    ?'<div class="card"><div class="cardhd" style="justify-content:center">Connect once to load your calendar</div><p class="muted">The class schedule needs one online visit to download. Reconnect and reopen this tab.</p></div>'
+    :'<p class="muted small">Loading your class calendar…</p>')+'</div>';
+  const semStart=M1SCHED[0].mon,semEnd=isoFromDate(addDays(isoToDate(M1SCHED[M1SCHED.length-1].mon),4));
+  if(!M1DAY){const t=todayISO();M1DAY=(t>=semStart&&t<=semEnd)?t:semStart;}
+  const wi=m1WeekIndexFor(M1DAY);const wk=M1SCHED[wi];
+  let day=wk.days.find(d=>d.iso===M1DAY);
+  if(!day){day=wk.days.find(d=>d.iso>=M1DAY)||wk.days[0];M1DAY=day.iso;}
+  const mon=wk.mon,fri=wk.days[wk.days.length-1].iso;const a=wk.assess;
+  let assessHtml="";
+  if(a){const isExam=a.type==="exam";assessHtml='<div class="m1assess'+(isExam?" exam":"")+'">★ <b>'+(isExam?"Unit exam":"Quiz "+a.n)+'</b> · '+fmtLong(a.iso)+'</div>';}
+  let h='<div class="m1wrap">';
+  h+='<div class="m1dayhd"><div class="m1weeknav">'
+    +'<button class="m1wbtn" data-m1wk="prev" aria-label="previous week"'+(wi<=0?" disabled":"")+'>‹</button>'
+    +'<div class="m1weeklab">Week '+wk.wk+' · '+fmtShort(mon)+' – '+fmtShort(fri)+'</div>'
+    +'<button class="m1wbtn" data-m1wk="next" aria-label="next week"'+(wi>=M1SCHED.length-1?" disabled":"")+'>›</button></div>'
+    +assessHtml+'</div>';
+  h+='<div class="m1days">';
+  wk.days.forEach(d=>{const isToday=d.iso===todayISO();
+    h+='<button class="m1daybtn'+(d.iso===M1DAY?" on":"")+(isToday?" today":"")+'" data-m1day="'+d.iso+'">'
+      +'<span class="m1dow">'+M1DOW[d.d]+'</span><span class="m1dnum">'+(+d.iso.slice(8))+'</span>'
+      +(d.items.length?'<span class="m1ddot"></span>':"")+'</button>';});
+  h+='</div>';
+  const qq=QUOTES[daySeed()%QUOTES.length];h+=cheerHTML(qq.t,qq.a);
+  h+='<div class="cardhd" style="margin-top:4px">'+fmtLong(M1DAY)+(M1DAY===todayISO()?' · Today':"")+'</div>';
+  if(!day.items.length){h+='<div class="card soft"><p class="muted" style="margin:0">No scheduled sessions — a good day to catch up on this week’s topics, run your Anki, or rest.</p></div>';}
+  else{
+    h+='<p class="muted small" style="margin:-2px 0 10px">Your rhythm for each block: <b>preview → attend → reinforce with a video → run your Anki</b>.</p>';
+    day.items.forEach((it,idx)=>{h+=m1FlowItem(it,M1DAY,idx);});
+    h+='<div class="m1break">Take a 5–10 min break between blocks — stand, hydrate, look away from the screen. Steady beats frantic.</div>';
+  }
+  h+='</div>';return h;
+}
 function m1Progress(){
   const o=m1Overall();const cs=currentStreak();
   let h='<div class="hero"><div class="big">'+o.pct+'<span>% of M1 topics studied</span></div>'
@@ -2383,7 +2508,7 @@ function renderM1(){
     app.innerHTML=chrome("browse")+'<div class="wrap">'+inner+'</div>';wireChrome();return;}
   let body;
   if(M1VIEW==="progress")body=m1Progress();
-  else if(M1VIEW==="daily")body=m1Soon("Daily flow checklist","A day-by-day rhythm: preview each lecture, watch it, run your Anki, repeat — with practice-problem days you schedule however you like across the unit. Tailored to your class lecture calendar, coming once it's added.");
+  else if(M1VIEW==="daily"){loadM1Sched();body=m1Daily();}
   else if(M1VIEW==="grades")body=m1Soon("Grade calculator","Keep a running tally of where you stand in each course as scores come in — your class grade spreadsheet, built right into the app.");
   else body=M1Q?m1SearchResults():(M1COURSE?m1CourseView(M1COURSE):m1CourseList());
   app.innerHTML=chrome(M1VIEW)+'<div class="wrap">'+m1Notice()+body+'</div>';
@@ -2408,6 +2533,12 @@ function wireM1(){
   const rr=document.getElementById("m1_reread");if(rr)rr.onclick=renderM1Disclaimer;
   const stt=document.getElementById("m1settarget");if(stt)stt.onclick=m1PickTarget;
   const clt=document.getElementById("m1cleartarget");if(clt)clt.onclick=()=>{if(S.settings)delete S.settings.m1TargetISO;save();render();};
+  // daily flow planner
+  document.querySelectorAll("[data-m1day]").forEach(b=>b.onclick=()=>{M1DAY=b.dataset.m1day;render();});
+  document.querySelectorAll("[data-m1wk]").forEach(b=>b.onclick=()=>{if(!M1SCHED)return;const wi=m1WeekIndexFor(M1DAY);
+    const ni=Math.max(0,Math.min(M1SCHED.length-1,wi+(b.dataset.m1wk==="next"?1:-1)));M1DAY=M1SCHED[ni].days[0].iso;render();});
+  document.querySelectorAll("[data-m1flowchk]").forEach(b=>b.onclick=e=>{e.stopPropagation();const p=b.dataset.m1flowchk.split("|");toggleM1Flow(p[0],+p[1]);});
+  document.querySelectorAll("[data-m1find]").forEach(b=>b.onclick=()=>{M1Q=b.dataset.m1find.replace(/[^A-Za-z0-9 ]/g," ").replace(/\b(I|II|III|IV|Dev|Prep|FC|Intro|to|the|and|of)\b/g," ").replace(/\s+/g," ").trim();M1VIEW="browse";M1COURSE=null;render();});
 }
 
 /* ---------- custom date picker (calendar popover; fast month + year nav) ---------- */
@@ -2831,7 +2962,7 @@ function doResetAll(){
     S.cfgs=snap.cfgs;S.active=snap.active;S.cfg=S.active?S.cfgs[S.active]:null;_prevSig=progressSig();save();
     if(S.cfg){reflow();render();}else renderWelcome();toast("Restored ✓");});
 }
-const BUILD="2026-07-17v";
+const BUILD="2026-07-17w";
 /* ---------- What's new (changelog) ----------
    Newest entry first. Bump the top entry's id whenever you add one and the
    pop-up shows once per person (tracked in synced settings.seenUpdate). */
