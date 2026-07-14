@@ -206,6 +206,12 @@ b{color:var(--ink)}
 .m1rx{font-family:var(--mono);font-size:9.5px;font-weight:700;color:var(--pharm,#c04b8a);border:1px solid currentColor;border-radius:5px;padding:1px 4px;vertical-align:middle}
 .m1fcourse{font-size:11.5px;color:var(--text-2)}
 .m1kind{margin-left:7px;font-family:var(--mono);font-size:9.5px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--text-2);border:1px solid var(--line);border-radius:5px;padding:1px 5px}
+.m1steps{display:flex;flex-wrap:wrap;gap:6px;margin:10px 0 0 34px}
+.m1step{display:inline-flex;align-items:center;gap:6px;font-size:11.5px;font-weight:600;color:var(--text-2);background:var(--bg2,var(--panel));border:1px solid var(--line);border-radius:8px;padding:5px 10px 5px 6px;cursor:pointer;font-family:inherit;transition:border-color .12s}
+.m1step:hover{border-color:var(--phos-dim)}
+.m1stepbox{width:15px;height:15px;border-radius:5px;border:1.5px solid var(--line2,var(--line));display:inline-flex;align-items:center;justify-content:center;font-size:10px;font-weight:800;color:var(--on-accent,#04140b);background:transparent}
+.m1step.done{color:var(--ink);border-color:var(--phos-dim)}
+.m1step.done .m1stepbox{background:var(--phos);border-color:var(--phos)}
 .m1fres{margin:9px 0 0 34px}
 .m1resvia{display:block;font-size:11px;color:var(--text-2);margin-bottom:6px}
 .m1resvia::before{content:"↳ ";opacity:.6}
@@ -2400,10 +2406,12 @@ function m1PickTarget(){openDatePicker({value:S.settings&&S.settings.m1TargetISO
    inline. "Studied" ticks are soft coaching state in S.settings (they sync but
    don't touch the brick progress %). */
 const M1DOW=["Mon","Tue","Wed","Thu","Fri"];
-function m1FlowKey(iso,idx){return iso+"|"+idx;}
-function m1FlowDone(iso,idx){return !!(S.settings&&S.settings.m1FlowDone&&S.settings.m1FlowDone[m1FlowKey(iso,idx)]);}
-function toggleM1Flow(iso,idx){S.settings=S.settings||{};S.settings.m1FlowDone=S.settings.m1FlowDone||{};
-  const k=m1FlowKey(iso,idx);if(S.settings.m1FlowDone[k])delete S.settings.m1FlowDone[k];else{S.settings.m1FlowDone[k]=true;markStudiedToday();}
+// the daily rhythm, as small boxes inside each lecture: preview → attend → reinforce → Anki
+const M1STEPS=[["pv","Preview"],["at","Attend"],["rf","Reinforce"],["ak","Anki"]];
+function m1StepKey(iso,idx,st){return iso+"|"+idx+"|"+st;}
+function m1StepDone(iso,idx,st){return !!(S.settings&&S.settings.m1FlowDone&&S.settings.m1FlowDone[m1StepKey(iso,idx,st)]);}
+function toggleM1Step(iso,idx,st){S.settings=S.settings||{};S.settings.m1FlowDone=S.settings.m1FlowDone||{};
+  const k=m1StepKey(iso,idx,st);if(S.settings.m1FlowDone[k])delete S.settings.m1FlowDone[k];else{S.settings.m1FlowDone[k]=true;markStudiedToday();}
   save();render();}
 function m1WeekIndexFor(iso){
   if(!M1SCHED||!M1SCHED.length)return 0;
@@ -2421,14 +2429,21 @@ function m1ResChips(b){let chips="";
   if(b.rx)chips+='<a class="m1chip rx" href="'+escAttr(b.rx)+'" target="_blank" rel="noopener">ScholarRx ↗</a>';
   return chips;}
 function m1FlowItem(it,iso,idx){
-  const meta=M1CN[it.c]||[it.c||"Session","·"];const done=m1FlowDone(iso,idx);
+  const meta=M1CN[it.c]||[it.c||"Session","·"];
   const brick=it.b&&M1BYID[it.b];
   const kindTag=it.k==="lab"?'<span class="m1kind">Lab</span>':(it.k==="fod"?'<span class="m1kind">Clinical</span>':"");
-  let h='<div class="m1flow'+(done?" done":"")+'">';
-  h+='<div class="m1fh"><button class="chk '+(done?"on":"")+'" data-m1flowchk="'+iso+"|"+idx+'" aria-label="mark studied">'+(done?"✓":"")+'</button>';
-  h+='<span class="m1badge '+it.c+'">'+meta[1]+'</span>';
+  // full four-step rhythm for teaching sessions; a single "Done" box for prep/clinical/other
+  const steps=(it.k==="lecture"||it.k==="lab")?M1STEPS:[["done","Done"]];
+  const allDone=steps.every(s=>m1StepDone(iso,idx,s[0]));
+  let h='<div class="m1flow'+(allDone?" done":"")+'">';
+  h+='<div class="m1fh"><span class="m1badge '+it.c+'">'+meta[1]+'</span>';
   h+='<div class="m1ft"><span class="m1ftitle">'+escHTML(it.t)+(it.ph?' <span class="m1rx">+Pharm</span>':"")+'</span>'
     +'<span class="m1fcourse">'+escHTML(meta[0])+kindTag+'</span></div></div>';
+  // the daily-flow list — smaller boxes inside this block
+  h+='<div class="m1steps">';
+  steps.forEach(s=>{const d=m1StepDone(iso,idx,s[0]);
+    h+='<button class="m1step'+(d?" done":"")+'" data-m1step="'+iso+"|"+idx+"|"+s[0]+'"><span class="m1stepbox">'+(d?"✓":"")+'</span>'+s[1]+'</button>';});
+  h+='</div>';
   if(brick){h+='<div class="m1fres"><span class="m1resvia">Resources · '+escHTML(brick.b.t)+'</span><div class="m1chips">'+m1ResChips(brick.b)+'</div></div>';}
   else if(it.k==="lecture"||it.k==="lab"){h+='<div class="m1fres"><button class="m1findbtn" data-m1find="'+escAttr(it.t)+'">Find resources in the library ↗</button></div>';}
   h+='</div>';return h;}
@@ -2537,7 +2552,7 @@ function wireM1(){
   document.querySelectorAll("[data-m1day]").forEach(b=>b.onclick=()=>{M1DAY=b.dataset.m1day;render();});
   document.querySelectorAll("[data-m1wk]").forEach(b=>b.onclick=()=>{if(!M1SCHED)return;const wi=m1WeekIndexFor(M1DAY);
     const ni=Math.max(0,Math.min(M1SCHED.length-1,wi+(b.dataset.m1wk==="next"?1:-1)));M1DAY=M1SCHED[ni].days[0].iso;render();});
-  document.querySelectorAll("[data-m1flowchk]").forEach(b=>b.onclick=e=>{e.stopPropagation();const p=b.dataset.m1flowchk.split("|");toggleM1Flow(p[0],+p[1]);});
+  document.querySelectorAll("[data-m1step]").forEach(b=>b.onclick=e=>{e.stopPropagation();const p=b.dataset.m1step.split("|");toggleM1Step(p[0],+p[1],p[2]);});
   document.querySelectorAll("[data-m1find]").forEach(b=>b.onclick=()=>{M1Q=b.dataset.m1find.replace(/[^A-Za-z0-9 ]/g," ").replace(/\b(I|II|III|IV|Dev|Prep|FC|Intro|to|the|and|of)\b/g," ").replace(/\s+/g," ").trim();M1VIEW="browse";M1COURSE=null;render();});
 }
 
@@ -2962,7 +2977,7 @@ function doResetAll(){
     S.cfgs=snap.cfgs;S.active=snap.active;S.cfg=S.active?S.cfgs[S.active]:null;_prevSig=progressSig();save();
     if(S.cfg){reflow();render();}else renderWelcome();toast("Restored ✓");});
 }
-const BUILD="2026-07-17w";
+const BUILD="2026-07-17x";
 /* ---------- What's new (changelog) ----------
    Newest entry first. Bump the top entry's id whenever you add one and the
    pop-up shows once per person (tracked in synced settings.seenUpdate). */
