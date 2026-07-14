@@ -2491,11 +2491,16 @@ function m1RefItems(b,resKey){const raw=b.refs&&b.refs[resKey];const groups=Arra
   return out;}
 function m1ShortRef(s){return String(s).replace(/^\s*\d+(?:[.\-]\d+)*[\s.):\-]*/,"").replace(/\s*\(?\d+:\d+[^)]*\)?/g,"").replace(/\s*\d+\s*min\b/gi,"").replace(/\s+/g," ").trim()||String(s);}
 function m1ResChips(b){let h="";
+  // one focused reference per resource — the video that best matches this exact topic
+  const bt=String(b.t||"").toLowerCase().split(/[^a-z0-9]+/).filter(w=>w.length>3);
+  const rel=lbl=>{const l=String(lbl).toLowerCase();return bt.reduce((n,w)=>n+(l.indexOf(w)>=0?1:0),0);};
   M1RES.forEach(r=>{const items=m1RefItems(b,r[0]);if(!items.length)return;
-    h+='<div class="m1resrow"><span class="m1reskey">'+escHTML(r[1])+'</span><span class="m1resitems">';
-    items.slice(0,3).forEach(it=>{h+='<button class="m1chip '+r[0]+'" data-copyref="'+escAttr(it.c)+'" title="'+escAttr(it.c)+'">'+escHTML(m1ShortRef(it.l))+'</button>';});
-    if(items.length>3)h+='<span class="m1resmore">+'+(items.length-3)+'</span>';
-    h+='</span></div>';});
+    items.sort((a,c)=>rel(c.l)-rel(a.l));   // most on-topic first (stable → keeps source order on ties)
+    const it=items[0];
+    h+='<div class="m1resrow"><span class="m1reskey">'+escHTML(r[1])+'</span><span class="m1resitems">'
+      +'<button class="m1chip '+r[0]+'" data-copyref="'+escAttr(it.c)+'" title="'+escAttr(it.c)+'">'+escHTML(m1ShortRef(it.l))+'</button>'
+      +(items.length>1?'<span class="m1resmore">+'+(items.length-1)+' in ScholarRx</span>':'')
+      +'</span></div>';});
   if(b.tag)h+='<div class="m1resrow"><span class="m1reskey">Anki</span><span class="m1resitems"><button class="m1chip tag" data-copytag="'+escAttr(b.tag)+'">Copy tags</button></span></div>';
   if(b.rx)h+='<div class="m1resrow"><a class="m1chip rx" href="'+escAttr(b.rx)+'" target="_blank" rel="noopener">Open in ScholarRx ↗</a></div>';
   return h;}
@@ -3052,7 +3057,7 @@ function doResetAll(){
     S.cfgs=snap.cfgs;S.active=snap.active;S.cfg=S.active?S.cfgs[S.active]:null;_prevSig=progressSig();save();
     if(S.cfg){reflow();render();}else renderWelcome();toast("Restored ✓");});
 }
-const BUILD="2026-07-18b";
+const BUILD="2026-07-18c";
 /* ---------- What's new (changelog) ----------
    Newest entry first. Bump the top entry's id whenever you add one and the
    pop-up shows once per person (tracked in synced settings.seenUpdate). */
