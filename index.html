@@ -2411,8 +2411,14 @@ function m1CourseView(key){
   return '<div class="m1wrap">'+h+'</div>';
 }
 function m1SearchResults(){
-  const q=M1Q.toLowerCase();let out=[];
-  for(let i=0;i<M1FLAT.length;i++){if(M1FLAT[i].hay.indexOf(q)>=0){out.push(M1FLAT[i]);if(out.length>=80)break;}}
+  // match by WORD, not whole phrase — every word must appear (AND); if that finds
+  // nothing, fall back to best-overlap (OR) so a multi-word query always lands somewhere
+  const words=M1Q.toLowerCase().split(/\s+/).filter(w=>w.length>1);let out=[];
+  if(words.length){
+    for(let i=0;i<M1FLAT.length;i++){const hay=M1FLAT[i].hay;if(words.every(w=>hay.indexOf(w)>=0)){out.push(M1FLAT[i]);if(out.length>=80)break;}}
+    if(!out.length){const scored=[];for(let i=0;i<M1FLAT.length;i++){const hay=M1FLAT[i].hay;const m=words.filter(w=>hay.indexOf(w)>=0).length;if(m)scored.push([m,M1FLAT[i]]);}
+      scored.sort((a,b)=>b[0]-a[0]);out=scored.slice(0,80).map(x=>x[1]);}
+  }
   let h=m1SearchBox()+'<div class="cardhd">Results <span class="pill">'+out.length+(out.length>=80?"+":"")+'</span></div>';
   if(!out.length)h+='<p class="muted">No topics match “'+escHTML(M1Q)+'”.</p>';
   out.forEach(f=>{h+=m1Brick(f.b,f.cn);});
@@ -2580,7 +2586,11 @@ function wireM1(){
   document.querySelectorAll("[data-m1wk]").forEach(b=>b.onclick=()=>{if(!M1SCHED)return;const wi=m1WeekIndexFor(M1DAY);
     const ni=Math.max(0,Math.min(M1SCHED.length-1,wi+(b.dataset.m1wk==="next"?1:-1)));M1DAY=M1SCHED[ni].days[0].iso;render();});
   document.querySelectorAll("[data-m1step]").forEach(b=>b.onclick=e=>{e.stopPropagation();const p=b.dataset.m1step.split("|");toggleM1Step(p[0],+p[1],p[2]);});
-  document.querySelectorAll("[data-m1find]").forEach(b=>b.onclick=()=>{M1Q=b.dataset.m1find.replace(/[^A-Za-z0-9 ]/g," ").replace(/\b(I|II|III|IV|Dev|Prep|FC|Intro|to|the|and|of)\b/g," ").replace(/\s+/g," ").trim();M1VIEW="browse";M1COURSE=null;render();});
+  document.querySelectorAll("[data-m1find]").forEach(b=>b.onclick=()=>{
+    M1Q=b.dataset.m1find.replace(/[^A-Za-z0-9 ]/g," ")
+      .replace(/\b(I|II|III|IV|V|Dev|Prep|FC|Intro|to|the|and|of|Flipped|Classroom|Problem|Set|Lab|Rev|Lec|Review|Session|combined|neuro|anat|Radiology)\b/gi," ")
+      .replace(/\b\d+\b/g," ").replace(/\s+/g," ").trim();
+    M1VIEW="browse";M1COURSE=null;M1REFOCUS=false;render();});
 }
 
 /* ---------- custom date picker (calendar popover; fast month + year nav) ---------- */
@@ -3004,7 +3014,7 @@ function doResetAll(){
     S.cfgs=snap.cfgs;S.active=snap.active;S.cfg=S.active?S.cfgs[S.active]:null;_prevSig=progressSig();save();
     if(S.cfg){reflow();render();}else renderWelcome();toast("Restored ✓");});
 }
-const BUILD="2026-07-17y";
+const BUILD="2026-07-17z";
 /* ---------- What's new (changelog) ----------
    Newest entry first. Bump the top entry's id whenever you add one and the
    pop-up shows once per person (tracked in synced settings.seenUpdate). */
