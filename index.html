@@ -2875,6 +2875,7 @@ function renderOnboard(){
   const dows=DOW.map((d,i)=>'<button type="button" class="tog '+(ob.restDays.includes(i)?"on":"")+'" data-odow="'+i+'">'+d+'</button>').join('');
   const resBtn=(k,lab)=>'<button type="button" class="tog '+(ob.resources[k]?"on":"")+'" data-ores="'+k+'">'+lab+'</button>';
   let body='<div class="onboard"><button class="link" id="o_back">'+closeLbl+'</button><h1>'+headVerb+escHTML(ob.fresh?"M2 Scheduler":hubName(ob.hub))+'</h1><p class="muted">A plan that paces itself to your exam date and re-flows whenever life happens.</p>';
+  if(obIsNbme())body+=pastUnitsCard();   // reopen a previously made schedule instead of building a new one
   if(obIsNbme())body+='<div class="card"><div class="cardhd">Plan type</div><div class="togrow">'
     +'<button type="button" class="tog '+(!ob.brody?"on":"")+'" data-oplan="exam">Count down to an exam</button>'
     +'<button type="button" class="tog '+(ob.brody?"on":"")+'" data-oplan="brody">Follow my Brody calendar</button>'
@@ -2944,7 +2945,7 @@ function renderOnboard(){
   const sr=document.getElementById("sordReset");if(sr)sr.onclick=()=>{ob.sysOrder=SYS_ORDER_DEFAULT.slice();renderOnboard();};
   const go=document.getElementById("o_go");if(go)go.onclick=commitOnboard;
   const bk=document.getElementById("o_back");if(bk)bk.onclick=()=>{if((editing||ob.fresh)&&S.cfgs[ob.hub]){activate(ob.hub);S.active=ob.hub;VIEW="today";reflow();render();}else renderWelcome();};
-  bindUsePace();bindFolds();
+  bindPastUnits();bindUsePace();bindFolds();
 }
 function renderObTogs(){
   document.querySelectorAll("[data-odow]").forEach(b=>b.classList.toggle("on",_ob.restDays.includes(+b.dataset.odow)));
@@ -3064,7 +3065,7 @@ function doResetAll(){
     S.cfgs=snap.cfgs;S.active=snap.active;S.cfg=S.active?S.cfgs[S.active]:null;_prevSig=progressSig();save();
     if(S.cfg){reflow();render();}else renderWelcome();toast("Restored ✓");});
 }
-const BUILD="2026-07-18e";
+const BUILD="2026-07-18f";
 /* ---------- What's new (changelog) ----------
    Newest entry first. Bump the top entry's id whenever you add one and the
    pop-up shows once per person (tracked in synced settings.seenUpdate). */
