@@ -457,6 +457,7 @@ b{color:var(--ink)}
 .pulist{display:flex;flex-direction:column;gap:8px;margin-top:10px}
 .purow{display:flex;align-items:center;gap:12px;justify-content:space-between;padding:10px 12px;background:var(--panel2);border:1px solid var(--line2);border-radius:12px}
 .pumeta{display:flex;flex-direction:column;gap:2px;min-width:0}
+.pureopen{flex:0 0 auto;font-size:13px;font-weight:700;color:var(--phos);white-space:nowrap}
 .pumeta b{font-size:14px}
 .pumeta span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .link{background:none;border:0;color:var(--phos);font-weight:700;cursor:pointer;padding:0;font-size:inherit;transition:color .15s}
@@ -3063,7 +3064,7 @@ function doResetAll(){
     S.cfgs=snap.cfgs;S.active=snap.active;S.cfg=S.active?S.cfgs[S.active]:null;_prevSig=progressSig();save();
     if(S.cfg){reflow();render();}else renderWelcome();toast("Restored ✓");});
 }
-const BUILD="2026-07-18d";
+const BUILD="2026-07-18e";
 /* ---------- What's new (changelog) ----------
    Newest entry first. Bump the top entry's id whenever you add one and the
    pop-up shows once per person (tracked in synced settings.seenUpdate). */
@@ -3102,6 +3103,7 @@ function openMenu(){
   const email=Cloud.user&&Cloud.user.email;
   const html='<div class="sheet"><div class="sheethd">Menu</div>'
     +(email?'<div class="mrow acctrow"><span class="acctlbl">Signed in</span><span class="acctml">'+escHTML(email)+'</span></div>':'')
+    +(S.active==="nbme"?'<button class="mrow" data-m="pastunits">Past schedules</button>':'')
     +'<button class="mrow" data-m="updates">What’s new</button>'
     +'<button class="mrow" data-m="theme">'+(Theme.current()==="dark"?"Switch to light theme":"Switch to dark theme")+'</button>'
     +'<button class="mrow danger" data-m="reset">Reset all progress</button>'
@@ -3115,10 +3117,23 @@ function openMenu(){
 }
 function menuAct(m){
   if(m==="close")return;
-  if(m==="updates"){showUpdates();}
+  if(m==="pastunits"){openPastUnits();}
+  else if(m==="updates"){showUpdates();}
   else if(m==="theme"){Theme.toggle();}
   else if(m==="signout"){confirmSignOut();}
   else if(m==="reset"){modalSheet({title:"Reset everything?",danger:true,okLabel:"Erase & start over",msg:"This erases EVERYTHING across both hubs — every checkmark, Anki check, note, self-assessment score, UWorld block, review flag, your streak, AND your saved plans (exam dates, systems, settings), here and in your synced account.\n\nYou’ll be taken back to the start to build a fresh plan. You’ll get one chance to undo.",onOk:doResetAll});}
+}
+function openPastUnits(){
+  const pu=(S.settings&&S.settings.pastUnits)||[];
+  let rows;
+  if(!pu.length)rows='<p class="cfmsg">No past schedules yet. When you start a new unit, the plan you moved on from is saved here — with everything you checked off — so you can swap back to it anytime.</p>';
+  else rows=pu.map((u,i)=>'<button class="mrow" data-reopen2="'+i+'"><span class="pumeta" style="flex:1"><b>'+escHTML(u.label||"Unit")+'</b><span class="muted small">'+escHTML(u.sys||"")+(u.savedISO?" · saved "+fmtShort(u.savedISO):"")+'</span></span><span class="pureopen">Reopen →</span></button>').join("");
+  const ov=document.createElement("div");ov.className="overlay";ov.id="overlay";
+  ov.innerHTML='<div class="sheet"><div class="sheethd">Past schedules</div>'+rows+'<button class="mrow close ctr" data-c="close">Close</button></div>';
+  ov.onclick=(e)=>{if(e.target===ov)ov.remove();};
+  document.body.appendChild(ov);
+  ov.querySelector('[data-c="close"]').onclick=()=>ov.remove();
+  ov.querySelectorAll("[data-reopen2]").forEach(b=>b.onclick=()=>{ov.remove();reopenUnit(+b.dataset.reopen2);});
 }
 
 /* ---------- boot ---------- */
