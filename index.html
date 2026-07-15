@@ -2342,7 +2342,7 @@ function hubCardSoon(name,desc){
 let M1DATA=null,M1LOADING=false,M1ERR=false,M1FLAT=[],M1BYID={};
 let M1SCHED=null,M1SCHEDLOADING=false,M1SCHEDERR=false;   // Fall 2026 class lecture calendar (m1schedule.json)
 let M1DAY=null;   // selected day (ISO) in the daily-flow planner
-let M1VIEW="daily",M1COURSE=null,M1Q="",M1OPEN={},M1REFOCUS=false;
+let M1VIEW="daily",M1COURSE=null,M1Q="",M1OPEN={},M1REFOCUS=false,M1FIND=false;
 const M1RES=[["bnb","Boards & Beyond"],["pathoma","Pathoma"],["osmosis","Osmosis"],["sketchy","Sketchy"],["bootcamp","Bootcamp"],["dm","Dirty Medicine"],["fa","First Aid"]];
 // course key → [display label, short badge]
 const M1CN={physio:["Physiology","PHY"],anat:["Gross Anatomy","ANA"],histo:["Histology","HIS"],mbom:["MBOM","MBM"],pharm:["Pharmacology","PHM"],fod:["Foundations of Doctoring","FOD"],clin:["Clinical Application","CLN"]};
@@ -2364,7 +2364,7 @@ function loadM1Sched(cb){
 }
 function buildM1Index(){M1FLAT=[];M1BYID={};if(!M1DATA)return;M1DATA.courses.forEach(c=>c.collections.forEach(C=>C.sets.forEach(s=>s.bricks.forEach(b=>{
   M1FLAT.push({b:b,cn:c.name,hay:(b.t+" "+c.name+" "+C.name).toLowerCase()});M1BYID[b.id]={b:b,cn:c.name};}))));}
-function enterM1(){S.active="m1";S.cfg=null;M1VIEW="daily";M1COURSE=null;M1Q="";M1DAY=null;save();loadM1();loadM1Sched();render();}
+function enterM1(){S.active="m1";S.cfg=null;M1VIEW="daily";M1COURSE=null;M1Q="";M1DAY=null;M1FIND=false;save();loadM1();loadM1Sched();render();}
 function m1StudiedCount(){let n=0;for(const k in (S.vdone||{}))if(k.indexOf("m1:")===0)n++;return n;}
 function m1HubCard(){
   const n=m1StudiedCount();
@@ -2436,15 +2436,21 @@ function m1CourseView(key){
   return '<div class="m1wrap">'+h+'</div>';
 }
 function m1SearchResults(){
-  // match by WORD, not whole phrase — every word must appear (AND); if that finds
-  // nothing, fall back to best-overlap (OR) so a multi-word query always lands somewhere
-  const words=M1Q.toLowerCase().split(/\s+/).filter(w=>w.length>1);let out=[];
+  // rank every topic by relevance to the query (title hits weighted over collection/course),
+  // preferring topics that match ALL the words. When reached from a lecture's "Find resources"
+  // (M1FIND), show only the few closest topics — not a broad dump across subjects.
+  const words=M1Q.toLowerCase().split(/\s+/).filter(w=>w.length>1);
+  const cap=M1FIND?6:60;let out=[];
   if(words.length){
-    for(let i=0;i<M1FLAT.length;i++){const hay=M1FLAT[i].hay;if(words.every(w=>hay.indexOf(w)>=0)){out.push(M1FLAT[i]);if(out.length>=80)break;}}
-    if(!out.length){const scored=[];for(let i=0;i<M1FLAT.length;i++){const hay=M1FLAT[i].hay;const m=words.filter(w=>hay.indexOf(w)>=0).length;if(m)scored.push([m,M1FLAT[i]]);}
-      scored.sort((a,b)=>b[0]-a[0]);out=scored.slice(0,80).map(x=>x[1]);}
+    const scored=[];
+    for(const f of M1FLAT){const t=f.b.t.toLowerCase();let sc=0,hit=0;
+      words.forEach(w=>{if(t.indexOf(w)>=0){sc+=2;hit++;}else if(f.hay.indexOf(w)>=0){sc+=1;hit++;}});
+      if(hit)scored.push([hit===words.length?1:0,sc,f]);}
+    scored.sort((a,b)=>(b[0]-a[0])||(b[1]-a[1]));
+    out=scored.slice(0,cap).map(x=>x[2]);
   }
-  let h=m1SearchBox()+'<div class="cardhd">Results <span class="pill">'+out.length+(out.length>=80?"+":"")+'</span></div>';
+  const label=M1FIND?"Closest topics":"Results";
+  let h=m1SearchBox()+'<div class="cardhd">'+label+' <span class="pill">'+out.length+'</span></div>';
   if(!out.length)h+='<p class="muted">No topics match “'+escHTML(M1Q)+'”.</p>';
   out.forEach(f=>{h+=m1Brick(f.b,f.cn);});
   return '<div class="m1wrap">'+h+'</div>';
@@ -2611,7 +2617,7 @@ function m1Soon(title,desc){
 }
 function wireM1(){
   const q=document.getElementById("m1q");
-  if(q)q.oninput=()=>{M1Q=q.value.trim();M1REFOCUS=true;render();};
+  if(q)q.oninput=()=>{M1Q=q.value.trim();M1FIND=false;M1REFOCUS=true;render();};
   if(M1REFOCUS){M1REFOCUS=false;const el=document.getElementById("m1q");if(el){el.focus();const v=el.value;el.value="";el.value=v;}}
   document.querySelectorAll("[data-m1course]").forEach(b=>b.onclick=()=>{M1COURSE=b.dataset.m1course;M1Q="";render();});
   document.querySelectorAll("[data-m1back]").forEach(b=>b.onclick=()=>{M1COURSE=null;render();});
@@ -2633,7 +2639,7 @@ function wireM1(){
     M1Q=b.dataset.m1find.replace(/[^A-Za-z0-9 ]/g," ")
       .replace(/\b(I|II|III|IV|V|Dev|Prep|FC|Intro|to|the|and|of|Flipped|Classroom|Problem|Set|Lab|Rev|Lec|Review|Session|combined|neuro|anat|Radiology)\b/gi," ")
       .replace(/\b\d+\b/g," ").replace(/\s+/g," ").trim();
-    M1VIEW="browse";M1COURSE=null;M1REFOCUS=false;render();});
+    M1VIEW="browse";M1COURSE=null;M1REFOCUS=false;M1FIND=true;render();});
 }
 
 /* ---------- custom date picker (calendar popover; fast month + year nav) ---------- */
@@ -3057,7 +3063,7 @@ function doResetAll(){
     S.cfgs=snap.cfgs;S.active=snap.active;S.cfg=S.active?S.cfgs[S.active]:null;_prevSig=progressSig();save();
     if(S.cfg){reflow();render();}else renderWelcome();toast("Restored ✓");});
 }
-const BUILD="2026-07-18c";
+const BUILD="2026-07-18d";
 /* ---------- What's new (changelog) ----------
    Newest entry first. Bump the top entry's id whenever you add one and the
    pop-up shows once per person (tracked in synced settings.seenUpdate). */
