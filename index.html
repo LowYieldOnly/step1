@@ -2195,18 +2195,27 @@ function reopenUnit(i){
   save();reflow();VIEW="today";render();
   toast(unitLabel(S.cfgs["nbme"])+" reopened — your progress is kept.");
 }
-function pastUnitsCard(){
+function pastUnitsCard(includeCurrent){
   const pu=(S.settings&&S.settings.pastUnits)||[];
-  if(!pu.length)return '';
-  const rows=pu.map((u,i)=>'<div class="purow"><div class="pumeta"><b>'+escHTML(u.label||"Unit")+'</b>'
+  const cur=(includeCurrent&&S.cfgs&&S.cfgs["nbme"])?S.cfgs["nbme"]:null;
+  if(!pu.length&&!cur)return '';
+  let rows='';
+  if(cur)rows+='<div class="purow"><div class="pumeta"><b>'+escHTML(unitLabel(cur))+'</b>'
+    +'<span class="muted small">'+escHTML((cur.systems||[]).join(", "))+' · your current schedule</span></div>'
+    +'<button class="btn ghost sm" data-reopen-cur="1">Open</button></div>';
+  rows+=pu.map((u,i)=>'<div class="purow"><div class="pumeta"><b>'+escHTML(u.label||"Unit")+'</b>'
     +'<span class="muted small">'+escHTML(u.sys||'')+(u.savedISO?' · saved '+fmtShort(u.savedISO):'')+'</span></div>'
     +'<button class="btn ghost sm" data-reopen="'+i+'">Reopen</button></div>').join('');
-  return '<div class="card soft"><div class="cardhd">Past units</div>'
-    +'<p class="muted small">Units you moved on from. Reopen one to swap it back in — everything you’ve checked off is kept.</p>'
+  const hd=cur?"Your schedules":"Past units";
+  const intro=cur?"Jump back into a schedule you’ve already built — everything you’ve checked off is kept."
+                 :"Units you moved on from. Reopen one to swap it back in — everything you’ve checked off is kept.";
+  return '<div class="card soft"><div class="cardhd">'+hd+'</div>'
+    +'<p class="muted small">'+intro+'</p>'
     +'<div class="pulist">'+rows+'</div></div>';
 }
 function bindPastUnits(){
   document.querySelectorAll("[data-reopen]").forEach(b=>b.onclick=()=>reopenUnit(+b.dataset.reopen));
+  document.querySelectorAll("[data-reopen-cur]").forEach(b=>b.onclick=()=>{if(S.cfgs&&S.cfgs["nbme"]){activate("nbme");S.active="nbme";VIEW="today";reflow();render();}});
 }
 
 function renderAdjustBrody(c){
@@ -2875,7 +2884,7 @@ function renderOnboard(){
   const dows=DOW.map((d,i)=>'<button type="button" class="tog '+(ob.restDays.includes(i)?"on":"")+'" data-odow="'+i+'">'+d+'</button>').join('');
   const resBtn=(k,lab)=>'<button type="button" class="tog '+(ob.resources[k]?"on":"")+'" data-ores="'+k+'">'+lab+'</button>';
   let body='<div class="onboard"><button class="link" id="o_back">'+closeLbl+'</button><h1>'+headVerb+escHTML(ob.fresh?"M2 Scheduler":hubName(ob.hub))+'</h1><p class="muted">A plan that paces itself to your exam date and re-flows whenever life happens.</p>';
-  if(obIsNbme())body+=pastUnitsCard();   // reopen a previously made schedule instead of building a new one
+  if(obIsNbme())body+=pastUnitsCard(true);   // reopen a previously made schedule (incl. the current one) instead of building a new one
   if(obIsNbme())body+='<div class="card"><div class="cardhd">Plan type</div><div class="togrow">'
     +'<button type="button" class="tog '+(!ob.brody?"on":"")+'" data-oplan="exam">Count down to an exam</button>'
     +'<button type="button" class="tog '+(ob.brody?"on":"")+'" data-oplan="brody">Follow my Brody calendar</button>'
@@ -3065,7 +3074,7 @@ function doResetAll(){
     S.cfgs=snap.cfgs;S.active=snap.active;S.cfg=S.active?S.cfgs[S.active]:null;_prevSig=progressSig();save();
     if(S.cfg){reflow();render();}else renderWelcome();toast("Restored ✓");});
 }
-const BUILD="2026-07-18f";
+const BUILD="2026-07-18g";
 /* ---------- What's new (changelog) ----------
    Newest entry first. Bump the top entry's id whenever you add one and the
    pop-up shows once per person (tracked in synced settings.seenUpdate). */
