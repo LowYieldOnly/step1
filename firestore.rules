@@ -13,9 +13,10 @@ service cloud.firestore {
           || request.auth.token.email in ['dylanwlewis@protonmail.com', 'trial@lowyieldonly.com']
         );
     }
-    // Each user can read/write only their own profile document, and only if
-    // their email is on the allowlist.
-    match /users/{uid} {
+    // Each user can read/write only their own profile document AND everything
+    // under it (e.g. the backups/ version-history subcollection), and only if
+    // their email is on the allowlist. The /{document=**} makes it recursive.
+    match /users/{uid}/{document=**} {
       allow read, write: if allowedEmail() && request.auth.uid == uid;
     }
     // Deny everything else by default.
