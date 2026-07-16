@@ -1,5 +1,5 @@
 /* ============================================================
-   LOW YIELD ONLY — Service Worker (online-first)
+   BRODY MODE — Service Worker (online-first)
 
    This site is used online, in the browser, on phones and
    computers. So every request tries the NETWORK FIRST: users

@@ -10,7 +10,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Mulish:wght@400;500;600;700;800&family=Newsreader:ital,wght@0,400;0,500;0,600;1,400;1,500&display=swap" rel="stylesheet">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="icon-192.png">
-<title>LOW YIELD ONLY</title>
+<title>BRODY MODE</title>
 <style>
 :root{
   color-scheme:light dark;
@@ -2697,7 +2697,7 @@ function renderDatePicker(){const ov=document.getElementById("dpov");if(!ov)retu
 /* ---------- AUTH GATE (email + password, required) ---------- */
 let AUTH_MODE="signin";
 function renderAuthChecking(){
-  app.innerHTML='<div class="wrap welcomewrap"><div class="welcome"><div class="wbrand">Low Yield Only</div><p class="wtag">Connecting\u2026</p><div class="authspin"></div></div></div>';
+  app.innerHTML='<div class="wrap welcomewrap"><div class="welcome"><div class="wbrand">BRODY MODE</div><p class="wtag">Connecting\u2026</p><div class="authspin"></div></div></div>';
 }
 /* ---------- read-only preview / demo ----------
    Lets an instructor (or anyone) tour a fully-populated sample plan without an
@@ -2765,7 +2765,7 @@ function showDemoBanner(){
 }
 function renderAuthGate(opts){if(DEMO)return;opts=opts||{};AUTHED=false;   // preview overrides the gate
   if(opts.offline){
-    app.innerHTML='<div class="wrap welcomewrap"><div class="welcome"><div class="wbrand">Low Yield Only</div>'
+    app.innerHTML='<div class="wrap welcomewrap"><div class="welcome"><div class="wbrand">BRODY MODE</div>'
       +'<p class="wtag">Couldn\u2019t reach the server.</p>'
       +'<div class="authcard"><p class="muted small" style="margin:0 0 14px">Check your internet connection and try again.</p>'
       +'<button class="btn" id="auth_retry">Retry</button></div></div></div>';
@@ -2773,7 +2773,7 @@ function renderAuthGate(opts){if(DEMO)return;opts=opts||{};AUTHED=false;   // pr
     return;
   }
   if(opts.denied){
-    app.innerHTML='<div class="wrap welcomewrap"><div class="welcome"><div class="wbrand">Low Yield Only</div>'
+    app.innerHTML='<div class="wrap welcomewrap"><div class="welcome"><div class="wbrand">BRODY MODE</div>'
       +'<p class="wtag">This account isn\u2019t eligible.</p>'
       +'<div class="authcard"><p class="muted small" style="margin:0 0 14px">'+escHTML(ACCESS_MSG)+'</p>'
       +'<button class="btn" id="auth_back">Back to sign in</button></div></div></div>';
@@ -2782,7 +2782,7 @@ function renderAuthGate(opts){if(DEMO)return;opts=opts||{};AUTHED=false;   // pr
   }
   const signup=AUTH_MODE==="signup";
   app.innerHTML='<div class="wrap welcomewrap"><div class="welcome">'
-    +'<div class="wbrand">Low Yield Only</div>'
+    +'<div class="wbrand">BRODY MODE</div>'
     +'<p class="wtag">'+(signup?"Create your ECU profile to begin.":"Sign in to your profile.")+'</p>'
     +'<p class="muted small" style="margin:-6px 0 14px">ECU only \u2014 use your <b>ecu.edu</b> email address.</p>'
     +'<div class="authtabs"><button class="atab '+(!signup?"on":"")+'" data-mode="signin">Sign in</button><button class="atab '+(signup?"on":"")+'" data-mode="signup">Create account</button></div>'
@@ -2841,7 +2841,7 @@ function renderWelcome(){
   // leaving a hub = no active hub; persist so a sync merge arriving while the
   // chooser is open can't re-activate the hub and pull the user back inside
   if(S.active){S.active=null;S.cfg=null;save();}
-  let body='<div class="welcome"><div class="wbrand">Low Yield Only</div>'
+  let body='<div class="welcome"><div class="wbrand">BRODY MODE</div>'
     +'<div class="wservire"><span>SERVIRE</span></div>'
     +'<div class="hubs">'+hubCard("nbme")+m1HubCard()+stepDHubCard()+'</div>'
     +'<div class="wfoot">'+((Cloud.user&&Cloud.user.email)?('<div class="acct">Signed in as '+escHTML(Cloud.user.email)+'</div>'):'')+'<button class="wfootlink" id="w_about">About</button><button class="wfootlink" id="w_step1">Step 1 Command Center (legacy)</button><button class="wfootlink" id="w_restore">Restore a backup</button>'+((Cloud.user&&Cloud.user.email)?'<button class="wfootlink" id="w_signout">Sign out</button>':'')+'</div>'
@@ -2859,16 +2859,16 @@ function renderWelcome(){
 function renderAbout(){
   const body='<div class="about">'
     +'<button class="m1back" id="a_back">‹ Back</button>'
-    +'<div class="wbrand about-brand">Low Yield Only</div>'
+    +'<div class="wbrand about-brand">BRODY MODE</div>'
     +'<div class="wservire"><span>SERVIRE</span></div>'
     +'<p class="about-lead">By Brody medical students, for Brody medical students.</p>'
-    +'<p class="about-intro">Low Yield Only brings the study schedules and curated resources of the preclinical years together in one place — built to remain useful long after its creators have moved on.</p>'
+    +'<p class="about-intro">Brody Mode brings the study schedules and curated resources of the preclinical years together in one place — built to remain useful long after its creators have moved on.</p>'
     +'<div class="about-sec">Credits</div>'
     +'<div class="about-credits">'
       +'<div class="credit"><div class="credit-role">M2 Scheduler</div><div class="credit-name">Conceived and organized by <b>Dylan Lewis</b>.</div><div class="credit-cls">Class of 2029</div></div>'
       +'<div class="credit"><div class="credit-role">M1 Resource Hub</div><div class="credit-name">Designed and built by <b>Ash Beach</b> and <b>Caleb Dixon</b>, with implementation support from <b>Dylan Lewis</b>.</div><div class="credit-cls">Class of 2029</div></div>'
     +'</div>'
-    +'<p class="about-goal">Offered freely, in the hope that Low Yield Only endures as a shared resource for every Brody student in the years to come.</p>'
+    +'<p class="about-goal">Offered freely, in the hope that Brody Mode endures as a shared resource for every Brody student in the years to come.</p>'
     +'</div>';
   app.innerHTML='<div class="wrap welcomewrap">'+body+'</div>';
   const ab=document.getElementById("a_back");if(ab)ab.onclick=renderWelcome;
@@ -3117,7 +3117,7 @@ function doResetAll(){
     S.cfgs=snap.cfgs;S.active=snap.active;S.cfg=S.active?S.cfgs[S.active]:null;_prevSig=progressSig();save();
     if(S.cfg){reflow();render();}else renderWelcome();toast("Restored ✓");});
 }
-const BUILD="2026-07-18p";
+const BUILD="2026-07-18q";
 /* ---------- What's new (changelog) ----------
    Newest entry first. Bump the top entry's id whenever you add one and the
    pop-up shows once per person (tracked in synced settings.seenUpdate). */
@@ -3216,7 +3216,7 @@ function boot(){
   registerNetWatch();
   registerSW();
   if(!fbEnabled()){
-    app.innerHTML='<div class="wrap welcomewrap"><div class="welcome"><div class="wbrand">Low Yield Only</div><p class="wtag">Accounts aren\u2019t configured on this copy.</p></div></div>';
+    app.innerHTML='<div class="wrap welcomewrap"><div class="welcome"><div class="wbrand">BRODY MODE</div><p class="wtag">Accounts aren\u2019t configured on this copy.</p></div></div>';
     return;
   }
   renderAuthChecking();
