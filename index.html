@@ -854,7 +854,7 @@ function progressSig(){let n=0;for(const k in S.vdone)if(S.vdone[k])n++;return n
 function markStudiedToday(){S.streak=S.streak||{days:{}};S.streak.days=S.streak.days||{};S.streak.days[todayISO()]=true;}
 function markStreakIfProgress(){const s=progressSig();if(_prevSig===null){_prevSig=s;return;}if(s>_prevSig)markStudiedToday();_prevSig=s;}
 function studyDays(){const d=(S.streak&&S.streak.days)||{};return Object.keys(d).filter(k=>d[k]).sort();}
-function currentStreak(){const set=new Set(studyDays());let d=new Date();d.setHours(0,0,0,0);if(!set.has(isoFromDate(d)))d=addDays(d,-1);let n=0;while(set.has(isoFromDate(d))){n++;d=addDays(d,-1);}return n;}
+function currentStreak(){const set=new Set(studyDays());let d=isoToDate(todayISO());d.setHours(0,0,0,0);if(!set.has(isoFromDate(d)))d=addDays(d,-1);let n=0;while(set.has(isoFromDate(d))){n++;d=addDays(d,-1);}return n;}
 
 /* ============================================================
    BACKLOG — ordered list of items from the chosen resources.
@@ -2703,27 +2703,58 @@ function renderAuthChecking(){
    Lets an instructor (or anyone) tour a fully-populated sample plan without an
    account. save() is a no-op and cloud sync never starts, so nothing persists;
    "Exit" reloads back to the sign-in gate. */
+const DEMO_TODAY="2026-08-05";   // mid-week-2 of the Heme/Renal Brody block (07-27 → 08-21)
 function demoISO(n){return isoFromDate(addDays(isoToDate(todayISO()),n));}
 function enterDemo(){
   DEMO=true;AUTHED=true;SKEY="cc_demo";
   resetStateToEmpty();
-  S.cfgs.nbme={examType:"nbme",examLabel:"Cardiology shelf",examISO:demoISO(45),startISO:demoISO(-12),wkdayHrs:4,wkendHrs:3,restDays:[0],reviewDays:7,resources:{bnb:true,pathoma:true,sketchy:true,fa:true,anking:true,uworld:true},systems:["Cardiology","Pulmonary","Renal"],sysOrder:SYS_ORDER_DEFAULT.slice()};
+  // Sit "today" mid-way through the live Heme/Renal Brody block so the calendar
+  // shows a real in-progress plan (weeks 1 done, week 2 underway) rather than a
+  // not-yet-started one. Everything else in the app reads todayISO(), so the
+  // whole demo is internally consistent.
+  todayISO=()=>DEMO_TODAY;
+  const blk=brodyBlockById("heme-renal")||BRODY_BLOCKS[0];
+  // M2 scheduler — the featured Brody Heme/Renal calendar (1:1 with a real plan)
+  S.cfgs.nbme={examType:"nbme",brody:blk.id,examLabel:blk.name,examISO:blk.shelf,startISO:blk.weeks[0].start,
+    restDays:[0],resources:{bnb:true,pathoma:true,sketchy:true,fa:true,anking:true,uworld:true},
+    systems:blk.systems.slice(),brodyReviewDays:3,brodyJoinWk:1};
   normalizeCfg(S.cfgs.nbme,"nbme");
-  [0,1,2,3].forEach(d=>{S.streak.days[demoISO(-d)]=true;});   // a lived-in streak
-  // land on the home page so the explorer starts at the beginning and picks a
-  // hub; the sample plan is pre-built so entering M2 shows a populated plan
-  // (no forced setup), and they can still build their own via the Plan tab
+  [0,1,2,3,4].forEach(d=>{S.streak.days[demoISO(-d)]=true;});   // a lived-in streak up to today
+  seedDemoStep();                 // Step 1 dedicated: UWorld / AMBOSS / NBME so its trackers populate
+  S.settings.m1Ack=true;          // M1: skip the one-time welcome so the hub is browsable
+  // land on the home page so the explorer picks a hub; every hub is pre-populated
   S.active=null;S.cfg=null;
   showDemoBanner();
   renderWelcome();
   loadCatalog(()=>{seedDemoProgress();_prevSig=progressSig();renderWelcome();});
 }
 function seedDemoProgress(){
-  const prev=S.active;activate("nbme");
-  const bl=buildBacklog();
-  for(let i=0;i<Math.min(16,bl.length);i++){S.vdone[bl[i].id]=true;S.vdoneDate[bl[i].id]=demoISO(-(i%4));}
-  [5,9].forEach(i=>{if(bl[i])S.vshaky[bl[i].id]=true;});
+  const prev=S.active;activate("nbme");reflow();
+  const byId=(SCHED&&SCHED.byId)||{};const cw=(SCHED&&SCHED.currentWeek)||1;
+  const ids=Object.keys(byId).sort((a,b)=>(byId[a].wk-byId[b].wk));
+  const curTotal=ids.filter(id=>byId[id].wk===cw).length;let doneCur=0;
+  ids.forEach(id=>{const v=byId[id];
+    if(v.wk<cw){S.vdone[id]=true;S.vdoneDate[id]=demoISO(-(8-Math.min(6,v.wk)));}          // earlier weeks: done
+    else if(v.wk===cw&&doneCur<Math.ceil(curTotal*0.45)){S.vdone[id]=true;S.vdoneDate[id]=demoISO(-(doneCur%3));doneCur++;}  // this week: ~half done
+  });
+  ids.filter(id=>byId[id].wk===cw).slice(2,4).forEach(id=>{S.vshaky[id]=true;});           // a couple flagged shaky
+  ids.filter(id=>S.vdone[id]).slice(0,12).forEach(id=>{S.akdone[id]=true;});               // some Anki checks
   S.active=prev;S.cfg=prev?S.cfgs[prev]:null;
+}
+function seedDemoStep(){
+  // The Step 1 dedicated hub scopes its data under DSCOPE ("step1").
+  // A dedicated period mid-stride: question banks logged by system + a rising NBME trend.
+  S.settings.stepExamISO=demoISO(40);   // a Step date so the hub shows a countdown
+  [["Hematology",40,31],["Renal",40,25],["Cardiology",40,28],["Pulmonary",40,30],["Endocrinology",40,23],["Gastroenterology",40,32],["Neurology",40,27]]
+    .forEach((r,i)=>addUworldBlock({dateISO:demoISO(-(22-i*2)),sys:r[0],q:r[1],correct:r[2],mode:"random"},DSCOPE));
+  setUworldTotal(3300);
+  [["Immunology",30,20],["Musculoskeletal",30,24]].forEach((r,i)=>addAmbossBlock({dateISO:demoISO(-(7-i*2)),sys:r[0],q:r[1],correct:r[2]},DSCOPE));
+  setAmbossTotal(2800);
+  addAssessment({form:"NBME 25",dateISO:demoISO(-20),pct:58},DSCOPE);
+  addAssessment({form:"NBME 27",dateISO:demoISO(-9),pct:64},DSCOPE);
+  addAssessment({form:"NBME 28",dateISO:demoISO(-2),pct:69},DSCOPE);
+  // a couple of blocks under the M2 hub too, so its practice-question tracker isn't empty
+  [["Hematology",40,29],["Renal",40,26]].forEach((r,i)=>addUworldBlock({dateISO:demoISO(-(5-i*2)),sys:r[0],q:r[1],correct:r[2],mode:"system"},"nbme"));
 }
 function showDemoBanner(){
   if(document.getElementById("demobar"))return;
@@ -3086,7 +3117,7 @@ function doResetAll(){
     S.cfgs=snap.cfgs;S.active=snap.active;S.cfg=S.active?S.cfgs[S.active]:null;_prevSig=progressSig();save();
     if(S.cfg){reflow();render();}else renderWelcome();toast("Restored ✓");});
 }
-const BUILD="2026-07-18o";
+const BUILD="2026-07-18p";
 /* ---------- What's new (changelog) ----------
    Newest entry first. Bump the top entry's id whenever you add one and the
    pop-up shows once per person (tracked in synced settings.seenUpdate). */
