@@ -2501,7 +2501,7 @@ function m1SearchResults(){
   }
   const label=M1FIND?"Closest topics":"Results";
   let h=m1SearchBox()+'<div class="cardhd">'+label+' <span class="pill">'+out.length+'</span></div>';
-  if(!out.length)h+='<p class="muted">No topics match “'+escHTML(M1Q)+'”.</p>';
+  if(!out.length)h+='<p class="muted">No topics match “'+escHTML(M1Q.trim())+'”.</p>';
   out.forEach(f=>{h+=m1Brick(f.b,f.cn);});
   return '<div class="m1wrap">'+h+'</div>';
 }
@@ -2630,7 +2630,7 @@ function renderM1(){
   if(M1VIEW==="progress")body=m1Progress();
   else if(M1VIEW==="daily"){loadM1Sched();body=m1Daily();}
   else if(M1VIEW==="grades")body=m1Soon("Grade calculator","Keep a running tally of where you stand in each course as scores come in — your class grade spreadsheet, built right into the app.");
-  else body=M1Q?m1SearchResults():(M1COURSE?m1CourseView(M1COURSE):m1CourseList());
+  else body=M1Q.trim()?m1SearchResults():(M1COURSE?m1CourseView(M1COURSE):m1CourseList());
   app.innerHTML=chrome(M1VIEW)+'<div class="wrap">'+m1Notice()+body+'</div>';
   wireChrome();wireM1();
 }
@@ -2640,7 +2640,10 @@ function m1Soon(title,desc){
 }
 function wireM1(){
   const q=document.getElementById("m1q");
-  if(q)q.oninput=()=>{M1Q=q.value.trim();M1FIND=false;M1REFOCUS=true;render();};
+  // keep the raw field value (don't .trim() here): trimming on every keystroke
+  // stripped the trailing space the moment you typed it, so you couldn't put a
+  // space between words. The search tokenizer already splits on whitespace.
+  if(q)q.oninput=()=>{M1Q=q.value;M1FIND=false;M1REFOCUS=true;render();};
   if(M1REFOCUS){M1REFOCUS=false;const el=document.getElementById("m1q");if(el){el.focus();const v=el.value;el.value="";el.value=v;}}
   document.querySelectorAll("[data-m1course]").forEach(b=>b.onclick=()=>{M1COURSE=b.dataset.m1course;M1Q="";render();});
   document.querySelectorAll("[data-m1back]").forEach(b=>b.onclick=()=>{M1COURSE=null;render();});
@@ -3117,7 +3120,7 @@ function doResetAll(){
     S.cfgs=snap.cfgs;S.active=snap.active;S.cfg=S.active?S.cfgs[S.active]:null;_prevSig=progressSig();save();
     if(S.cfg){reflow();render();}else renderWelcome();toast("Restored ✓");});
 }
-const BUILD="2026-07-18q";
+const BUILD="2026-07-18r";
 /* ---------- What's new (changelog) ----------
    Newest entry first. Bump the top entry's id whenever you add one and the
    pop-up shows once per person (tracked in synced settings.seenUpdate). */
