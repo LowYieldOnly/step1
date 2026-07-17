@@ -1200,14 +1200,21 @@ function reflow(){
   // pin completed items to the day they were finished, so they stay visible (checked)
   const donePins={};const vdd=S.vdoneDate||{};
   for(const id in vdd){const it=byId[id];if(it){(donePins[vdd[id]]=donePins[vdd[id]]||[]).push(it);}}
-  // assemble full day list (for calendar) incl rest/off within window, oldest first
+  // Assemble the day list oldest-first. Packing starts at the cursor (today), but the
+  // calendar also reaches BACK to show finished history: any day you already checked
+  // videos off on stays visible with those ✓ (what got done; anything you didn't finish
+  // simply re-flowed forward into today's list). Without this, past completions vanished
+  // from the calendar the moment the day rolled over.
+  let histStart=cursorISO;
+  for(const id in vdd){const dt=vdd[id];if(byId[id]&&dt&&dt<histStart)histStart=dt;}
   const days=[]; const dayMap={};
-  let dd=isoToDate(cursorISO); let g2=0;
-  while(isoFromDate(dd)<examISO && g2++<800){const iso=isoFromDate(dd);const wd=dd.getDay();
+  let dd=isoToDate(histStart); let g2=0;
+  while(isoFromDate(dd)<examISO && g2++<900){const iso=isoFromDate(dd);const wd=dd.getDay();
+    const past=iso<cursorISO;
     const isRest=rest.includes(wd), isOff=!!off[iso], isReview=reviewDates.includes(iso);
-    const packed=dayItems[iso]||[]; const pinned=donePins[iso]||[];
+    const packed=dayItems[iso]||[]; const pinned=donePins[iso]||[];   // past days carry pins only
     const items=packed.concat(pinned).sort((a,b)=>(orderIndex[a.id]!=null?orderIndex[a.id]:1e9)-(orderIndex[b.id]!=null?orderIndex[b.id]:1e9));
-    const row={iso,off:isOff,rest:isRest&&!isOff,review:isReview&&!isOff&&!isRest,items,
+    const row={iso,past,off:isOff&&!past,rest:isRest&&!isOff&&!past,review:isReview&&!isOff&&!isRest&&!past,items,
       min:items.reduce((a,b)=>a+b.min,0),todo:packed.reduce((a,b)=>a+b.min,0)};
     days.push(row);dayMap[iso]=row;
     dd=addDays(dd,1);
@@ -1375,7 +1382,11 @@ function itemRows(items,opts){opts=opts||{};if(!items.length)return '<div class=
   const order=["bnb","pathoma","skmicro","skpharm"];const merged=mergeItems(items);const groups={};merged.forEach(it=>{(groups[it.res]=groups[it.res]||[]).push(it);});
   const keys=order.filter(k=>groups[k]).concat(Object.keys(groups).filter(k=>order.indexOf(k)<0));
   return keys.map(k=>'<div class="vgrp"><div class="vghdr">'+resLabel(k)+'</div>'+groups[k].map(it=>{
-    const done=it.ids.every(isDone);const shaky=it.ids.some(isShaky);const idsAttr=escAttr(it.ids.join(","));
+    // Join ids with "|" (never present in a video name — it's the reserved field
+    // delimiter used by brodyKey), NOT ",", because 21 catalog names contain commas
+    // (e.g. "2.1 Acute Inflammation (Parts 1, 2, & 3)"). A comma delimiter shredded
+    // those ids on split, so checking them off silently marked bogus keys and no ✓ appeared.
+    const done=it.ids.every(isDone);const shaky=it.ids.some(isShaky);const idsAttr=escAttr(it.ids.join("|"));
     return '<div class="vrow '+(done?"done":"")+(shaky?" shaky":"")+'">'
       +'<button class="chk '+(done?"on":"")+'" data-ids="'+idsAttr+'"'+dayAttr+' aria-label="watched">'+(done?"✓":"")+'</button>'
       +'<div class="vmeta"><span class="vn">'+escHTML(vName(it))+'</span>'
@@ -2052,8 +2063,8 @@ function renderToday(){
   document.querySelectorAll("[data-cal]").forEach(b=>b.onclick=()=>{CAL_SEL=b.dataset.cal;render();});
 }
 function toggleShakyItems(ids){const all=ids.every(isShaky);S.vshaky=S.vshaky||{};ids.forEach(id=>{if(all)delete S.vshaky[id];else S.vshaky[id]=true;});save();}
-function bindVlist(){document.querySelectorAll(".chk[data-ids]").forEach(b=>b.onclick=()=>toggleItems(b.dataset.ids.split(","),b.dataset.day));
-  document.querySelectorAll(".flagb[data-flag]").forEach(b=>b.onclick=()=>{toggleShakyItems(b.dataset.flag.split(","));render();});
+function bindVlist(){document.querySelectorAll(".chk[data-ids]").forEach(b=>b.onclick=()=>toggleItems(b.dataset.ids.split("|"),b.dataset.day));
+  document.querySelectorAll(".flagb[data-flag]").forEach(b=>b.onclick=()=>{toggleShakyItems(b.dataset.flag.split("|"));render();});
   document.querySelectorAll("[data-dayreset]").forEach(b=>b.onclick=()=>uncheckDay(b.dataset.dayreset));}
 
 function setDayOff(iso,on){S.cfg.off=S.cfg.off||{};if(on)S.cfg.off[iso]=true;else delete S.cfg.off[iso];save();reflow();render();}
@@ -2080,13 +2091,15 @@ function calCell(iso){
     else if(row.rest){cls+=" rest";ind='<span class="ci">rest</span>';}
     else if(row.review){cls+=" review";ind='<span class="ci">UW</span>';}
     else if(row.items.length){const allDone=row.items.every(it=>isDone(it.id));cls+=allDone?" alldone":" load";ind='<span class="ci">'+(allDone?"✓":fmtH(row.min))+'</span>';}
+    else if(row.past){cls+=" past";}   // past day, nothing was checked off here
   } else if(iso<todayISO()){cls+=" past";}
   if(iso===todayISO())cls+=" today";
   if(iso===CAL_SEL)cls+=" sel";
   return '<button class="'+cls+'" data-cal="'+iso+'"><span class="cd">'+day+'</span>'+ind+'</button>';
 }
 function dayDetail(iso){
-  const row=SCHED.dayMap[iso];const head=fmtLong(iso)+(iso===todayISO()?" · today":"");
+  const row=SCHED.dayMap[iso];const past=!!(row&&row.past);
+  const head=fmtLong(iso)+(iso===todayISO()?" · today":(past?" · past":""));
   let h='<div class="card daydetail"><div class="cardhd">'+escHTML(head);
   if(row&&!row.off&&!row.rest&&!row.review&&row.items.length){h+=' <span class="pill">'+fmtH(row.min)+'</span>';
     if(row.items.some(it=>isDone(it.id)))h+='<button class="hdreset" data-dayreset="'+iso+'" title="Uncheck everything on this day">Uncheck all</button>';}
@@ -2095,6 +2108,8 @@ function dayDetail(iso){
   else if(row.off)h+='<p class="muted">Day off — no videos scheduled. <button class="link" id="d_unoff">Cancel day off</button></p>';
   else if(row.rest)h+='<p class="muted small">Weekly rest day. Enjoy the breather.</p>';
   else if(row.review)h+='<p class="muted small">Review window — timed UWorld blocks + Anki. No new videos.</p>';
+  else if(past&&row.items.length)h+='<p class="muted small">What you checked off this day. Anything left unfinished re-flowed forward.</p>'+dayVlist(row);
+  else if(past)h+='<p class="muted small">Nothing was checked off this day — that work re-flowed forward.</p>';
   else if(row.items.length)h+=dayVlist(row)+'<div class="rowtools"><button class="btn ghost" id="d_off">Take this day off</button></div>';
   else h+='<p class="muted small">Nothing scheduled this day.</p>';
   return h+'</div>';
@@ -3120,11 +3135,15 @@ function doResetAll(){
     S.cfgs=snap.cfgs;S.active=snap.active;S.cfg=S.active?S.cfgs[S.active]:null;_prevSig=progressSig();save();
     if(S.cfg){reflow();render();}else renderWelcome();toast("Restored ✓");});
 }
-const BUILD="2026-07-18r";
+const BUILD="2026-07-18s";
 /* ---------- What's new (changelog) ----------
    Newest entry first. Bump the top entry's id whenever you add one and the
    pop-up shows once per person (tracked in synced settings.seenUpdate). */
 const CHANGELOG=[
+  {id:"2026-07-18", date:"July 2026", title:"Check-off fix + your history is visible", items:[
+    "Fixed: a handful of videos whose title contains a comma — like Pathoma’s “Acute Inflammation (Parts 1, 2, & 3)” — wouldn’t take a check mark. They now check off like everything else.",
+    "The calendar now shows your past days, not just today onward. Tap any earlier day to see exactly what you checked off then — anything you didn’t finish simply re-flowed forward into today’s list.",
+  ]},
   {id:"2026-07-10", date:"July 2026", title:"Follow your Brody calendar", items:[
     "New plan type: the Brody calendar. Instead of counting down to an exam, it lines your third-party videos up with what Brody teaches each week — so you’re covered for every quiz and finish the whole unit’s videos before the shelf.",
     "Two blocks are ready to pick: Hematology & Renal and Cardiopulmonary. More are on the way, one at a time.",
