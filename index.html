@@ -343,6 +343,8 @@ b{color:var(--ink)}
 .wgcard .wgn{font-family:var(--mono);font-weight:700;font-size:13px;color:var(--ink)}
 .wgcard .wgn.met{color:var(--success)}
 .wgtoggle{display:flex;align-items:center;gap:10px}
+.uwprog .uwproglab .wgmet{color:var(--success);font-weight:700}
+.barfill.over{background-image:linear-gradient(45deg,rgba(255,255,255,.28) 25%,transparent 25%,transparent 50%,rgba(255,255,255,.28) 50%,rgba(255,255,255,.28) 75%,transparent 75%);background-size:14px 14px}
 .bartrack.big{height:11px}
 .flagb{flex:0 0 auto;width:26px;height:26px;border-radius:8px;border:1.5px solid transparent;background:none;color:var(--faint);font-size:13px;cursor:pointer;transition:all .15s}
 .flagb:hover{color:var(--amber);border-color:var(--line2)}
@@ -1599,16 +1601,20 @@ function subjectConfidence(scope){scope=scope||S.active;const uw=uworldRollup(sc
   [uw,am].forEach(roll=>Object.keys(roll.bySys).forEach(s=>{if(s==="Unspecified")return;const e=roll.bySys[s];const t=by[s]=by[s]||{done:0,correct:0};t.done+=e.done;t.correct+=e.correct;}));
   return Object.keys(by).map(s=>{const done=by[s].done,pct=done?Math.round(by[s].correct/done*100):null,rated=done>=CONF_MIN_Q;
     return {sys:s,done,pct,rated,tier:!rated?"none":(pct>=CONF_MASTERY?"solid":(pct>=70?"dev":"weak"))};});}
-/* progress bar for the weekly goal — reused on Today and the Plan page */
+/* progress bar for the weekly goal — reused on Today and the Plan page.
+   Going OVER the target is a good thing: the bar fills to 100% and the
+   surplus is called out ("+N beyond goal") rather than silently capped. */
 function weeklyGoalProgressHTML(c){const goal=weeklyGoal(c);if(!goal)return '';
-  const done=weeklyQLogged();const pct=Math.min(100,Math.round(done/goal*100));const met=done>=goal;
-  return '<div class="uwprog"><div class="uwproglab"><span><b>'+done+'</b> / '+goal+' questions this week</span><span>'+(met?'Goal met ✓':pct+'%')+'</span></div>'
-    +'<div class="bartrack big"><div class="barfill" style="width:'+pct+'%'+(met?';background:var(--success)':'')+'"></div></div></div>';}
+  const done=weeklyQLogged();const pct=Math.min(100,Math.round(done/goal*100));const met=done>=goal;const over=done-goal;
+  const right=met?('Goal met ✓'+(over>0?' · +'+over+' beyond':'')):(pct+'%');
+  return '<div class="uwprog"><div class="uwproglab"><span><b>'+done+'</b> / '+goal+' questions this week</span><span'+(met?' class="wgmet"':'')+'>'+right+'</span></div>'
+    +'<div class="bartrack big"><div class="barfill'+(over>0?' over':'')+'" style="width:'+pct+'%'+(met?';background:var(--success)':'')+'"></div></div></div>';}
 /* compact Today-hero chip */
 function weeklyGoalChip(){if(S.active!=="nbme")return '';const goal=weeklyGoal();if(!goal)return '';
-  const done=weeklyQLogged();const pct=Math.min(100,Math.round(done/goal*100));const met=done>=goal;
-  return '<div class="card wgcard"><div class="wgrow"><span class="wglab">Practice questions · this week</span><span class="wgn'+(met?' met':'')+'">'+done+' / '+goal+(met?' ✓':'')+'</span></div>'
-    +'<div class="bartrack"><div class="barfill" style="width:'+pct+'%'+(met?';background:var(--success)':'')+'"></div></div></div>';}
+  const done=weeklyQLogged();const pct=Math.min(100,Math.round(done/goal*100));const met=done>=goal;const over=done-goal;
+  const label=met?(done+' / '+goal+' ✓'+(over>0?' · +'+over:'')):(done+' / '+goal);
+  return '<div class="card wgcard"><div class="wgrow"><span class="wglab">Practice questions · this week</span><span class="wgn'+(met?' met':'')+'">'+label+'</span></div>'
+    +'<div class="bartrack"><div class="barfill'+(over>0?' over':'')+'" style="width:'+pct+'%'+(met?';background:var(--success)':'')+'"></div></div></div>';}
 /* Plan-page opt-in: toggle + target (off by default). M2 only. */
 function weeklyGoalSettingHTML(c){
   const on=weeklyGoal(c)>0;const goal=c.weeklyQGoal>0?c.weeklyQGoal:15;
@@ -3207,7 +3213,7 @@ function doResetAll(){
     S.cfgs=snap.cfgs;S.active=snap.active;S.cfg=S.active?S.cfgs[S.active]:null;_prevSig=progressSig();save();
     if(S.cfg){reflow();render();}else renderWelcome();toast("Restored ✓");});
 }
-const BUILD="2026-07-18t";
+const BUILD="2026-07-18u";
 /* ---------- What's new (changelog) ----------
    Newest entry first. Bump the top entry's id whenever you add one and the
    pop-up shows once per person (tracked in synced settings.seenUpdate). */
