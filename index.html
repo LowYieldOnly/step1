@@ -345,6 +345,14 @@ b{color:var(--ink)}
 .wgtoggle{display:flex;align-items:center;gap:10px}
 .uwprog .uwproglab .wgmet{color:var(--success);font-weight:700}
 .barfill.over{background-image:linear-gradient(45deg,rgba(255,255,255,.28) 25%,transparent 25%,transparent 50%,rgba(255,255,255,.28) 50%,rgba(255,255,255,.28) 75%,transparent 75%);background-size:14px 14px}
+.wgcard .wgstatus{font-size:12px;color:var(--text-2);margin:8px 0 0}
+.wgcard .wgstatus b{color:var(--ink);font-family:var(--mono)}
+.wgcard .wgstatus.met,.wgcard .wgstatus.met b{color:var(--success)}
+.wqlog{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+.wqlog .wqsel,.wqlog .wqnum{background:var(--bg2);border:1px solid var(--line2);color:var(--ink);border-radius:8px;padding:6px 8px;font-family:inherit;font-size:12.5px}
+.wqlog .wqsel{flex:1;min-width:84px}
+.wqlog .wqnum{width:74px;flex:0 0 auto}
+.wqlog .wqbtn{padding:6px 15px;font-size:12.5px;flex:0 0 auto}
 .bartrack.big{height:11px}
 .flagb{flex:0 0 auto;width:26px;height:26px;border-radius:8px;border:1.5px solid transparent;background:none;color:var(--faint);font-size:13px;cursor:pointer;transition:all .15s}
 .flagb:hover{color:var(--amber);border-color:var(--line2)}
@@ -1558,6 +1566,7 @@ function readinessVerdict(pct){
 }
 let RDRAFT={form:"NBME 28",dateISO:todayISO(),pct:"",estProb:""};
 let UDRAFT={sys:"",q:"40",correct:"",src:"uworld"};
+let WQDRAFT={src:"uworld",sys:""};   // sticky source/system for the Today quick-logger
 function assessList(scope){scope=scope||S.active;const a=S.assessments||{};return Object.keys(a).map(k=>Object.assign({id:k},a[k])).filter(x=>x.hub===scope).sort((x,y)=>x.dateISO<y.dateISO?-1:(x.dateISO>y.dateISO?1:(x._t||0)-(y._t||0)));}
 function latestAssess(scope){const l=assessList(scope);return l.length?l[l.length-1]:null;}
 function addAssessment(o,scope){S.assessments=S.assessments||{};S.assessments[uid()]={hub:(scope||S.active),form:o.form,dateISO:o.dateISO,pct:o.pct,estProb:(o.estProb!=null?o.estProb:null),note:o.note||"",_t:Date.now()};save();}
@@ -1609,12 +1618,38 @@ function weeklyGoalProgressHTML(c){const goal=weeklyGoal(c);if(!goal)return '';
   const right=met?('Goal met ✓'+(over>0?' · +'+over+' beyond':'')):(pct+'%');
   return '<div class="uwprog"><div class="uwproglab"><span><b>'+done+'</b> / '+goal+' questions this week</span><span'+(met?' class="wgmet"':'')+'>'+right+'</span></div>'
     +'<div class="bartrack big"><div class="barfill'+(over>0?' over':'')+'" style="width:'+pct+'%'+(met?';background:var(--success)':'')+'"></div></div></div>';}
-/* compact Today-hero chip */
+/* compact Today-hero chip — running weekly tally, a plain-English "N left / N
+   over" line that updates every day, and an inline quick-logger. Anything
+   logged here lands in the same block log the Stats page reads. */
 function weeklyGoalChip(){if(S.active!=="nbme")return '';const goal=weeklyGoal();if(!goal)return '';
-  const done=weeklyQLogged();const pct=Math.min(100,Math.round(done/goal*100));const met=done>=goal;const over=done-goal;
-  const label=met?(done+' / '+goal+' ✓'+(over>0?' · +'+over:'')):(done+' / '+goal);
-  return '<div class="card wgcard"><div class="wgrow"><span class="wglab">Practice questions · this week</span><span class="wgn'+(met?' met':'')+'">'+label+'</span></div>'
-    +'<div class="bartrack"><div class="barfill'+(over>0?' over':'')+'" style="width:'+pct+'%'+(met?';background:var(--success)':'')+'"></div></div></div>';}
+  const done=weeklyQLogged();const pct=Math.min(100,Math.round(done/goal*100));const met=done>=goal;const over=done-goal;const left=goal-done;
+  const status=met?(over>0?('You’re <b>'+over+'</b> over your weekly goal — nice.'):'Weekly goal met ✓'):('<b>'+left+'</b> question'+(left===1?'':'s')+' left this week');
+  return '<div class="card wgcard"><div class="wgrow"><span class="wglab">Practice questions · this week</span><span class="wgn'+(met?' met':'')+'">'+done+' / '+goal+(met?' ✓':'')+'</span></div>'
+    +'<div class="bartrack"><div class="barfill'+(over>0?' over':'')+'" style="width:'+pct+'%'+(met?';background:var(--success)':'')+'"></div></div>'
+    +'<div class="wgstatus'+(met?' met':'')+'">'+status+'</div>'
+    +weeklyQuickLogHTML()+'</div>';}
+/* inline quick-logger (Today). Feeds addUworldBlock / addAmbossBlock, so it
+   flows into the weekly tally AND the Stats subject-confidence ratings. */
+function weeklyQuickLogHTML(){
+  const sysOpts=['<option value="">System…</option>'].concat(planSystems().map(s=>'<option'+(WQDRAFT.sys===s?' selected':'')+'>'+escHTML(s)+'</option>')).join('');
+  return '<div class="wqlog">'
+    +'<select id="wq_src" class="wqsel" aria-label="source"><option value="uworld"'+(WQDRAFT.src!=="amboss"?' selected':'')+'>UWorld</option><option value="amboss"'+(WQDRAFT.src==="amboss"?' selected':'')+'>AMBOSS</option></select>'
+    +'<select id="wq_sys" class="wqsel" aria-label="system">'+sysOpts+'</select>'
+    +'<input id="wq_q" class="wqnum" type="number" inputmode="numeric" min="1" placeholder="# Qs" aria-label="questions">'
+    +'<input id="wq_c" class="wqnum" type="number" inputmode="numeric" min="0" placeholder="# right" aria-label="correct">'
+    +'<button class="btn ghost wqbtn" id="wq_save">Log</button></div>';}
+function bindWeeklyQuickLog(){
+  const src=document.getElementById("wq_src");if(src)src.onchange=()=>{WQDRAFT.src=src.value;};
+  const sys=document.getElementById("wq_sys");if(sys)sys.onchange=()=>{WQDRAFT.sys=sys.value;};
+  const sv=document.getElementById("wq_save");if(sv)sv.onclick=()=>{
+    const q=parseInt((document.getElementById("wq_q")||{}).value,10);
+    const cc=parseInt((document.getElementById("wq_c")||{}).value,10);
+    const s=(document.getElementById("wq_src")||{}).value||"uworld";
+    const sy=(document.getElementById("wq_sys")||{}).value||"";
+    if(isNaN(q)||q<1){toast("How many questions?");return;}
+    if(isNaN(cc)||cc<0||cc>q){toast("# correct can’t exceed the question count");return;}
+    if(s==="amboss")addAmbossBlock({sys:sy,q:q,correct:cc});else addUworldBlock({sys:sy,q:q,correct:cc});
+    WQDRAFT={src:s,sys:sy};toast((s==="amboss"?"AMBOSS":"UWorld")+" · "+q+" logged ✓");render();};}
 /* Plan-page opt-in: toggle + target (off by default). M2 only. */
 function weeklyGoalSettingHTML(c){
   const on=weeklyGoal(c)>0;const goal=c.weeklyQGoal>0?c.weeklyQGoal:15;
@@ -1633,7 +1668,7 @@ function bindWeeklyGoal(c,apply){
 /* confidence flags + review queue (Change 4) */
 function isShaky(id){return !!(S.vshaky&&S.vshaky[id]);}
 function toggleShaky(id){S.vshaky=S.vshaky||{};if(S.vshaky[id])delete S.vshaky[id];else S.vshaky[id]=true;save();}
-function weakSystems(target,scope){const roll=uworldRollup(scope);const out=[];Object.keys(roll.bySys).forEach(s=>{const e=roll.bySys[s];if(e.pct!=null&&e.done>=20&&e.pct<(target||65))out.push({sys:s,pct:e.pct});});return out.sort((a,b)=>a.pct-b.pct);}
+function weakSystems(target,scope){return subjectConfidence(scope).filter(x=>x.pct!=null&&x.done>=20&&x.pct<(target||65)).map(x=>({sys:x.sys,pct:x.pct})).sort((a,b)=>a.pct-b.pct);}
 /* small readiness chip for the Today hero */
 function readinessChip(){
   const la=latestAssess();
@@ -1691,12 +1726,28 @@ function uworldCard(){
     +(bars?('<div class="uwhd">By system — accuracy</div><div class="bars">'+bars+'</div><p class="muted small">Systems under 65% feed your review queue below.</p>'):'<p class="muted small">Log a block to start tracking per-system accuracy — the most actionable weak-area signal you have.</p>')
     +'</div>';
 }
+/* M2 practice-question block — combined UWorld + AMBOSS totals; the source is
+   chosen per block at logging, and every block flows into Subject confidence
+   above. Per-subject accuracy lives there, so this block stays a clean total. */
+function practiceRollup(scope){scope=scope||S.active;const uw=uworldRollup(scope),am=ambossRollup(scope);
+  const done=uw.done+am.done,correct=uw.correct+am.correct;
+  return {done,correct,pct:done?Math.round(correct/done*100):null,uw:uw.done,am:am.done};}
+function practiceCard(){
+  const r=practiceRollup();const pctTxt=r.pct!=null?r.pct+'%':'—';
+  const doneTxt=r.done?(r.done+' Qs · '+r.uw+' UWorld / '+r.am+' AMBOSS'):'0 Qs';
+  const hasData=r.done>0;
+  return '<div class="card"><div class="cardhd">Practice questions'+(hasData?'<button class="hdreset" id="rst_pr" title="Clear this hub’s practice-question log">Reset</button>':'')+'</div>'
+    +'<div class="uwtop"><div class="uwbig">'+pctTxt+' <span>correct</span></div><div class="uwsub">'+doneTxt+'</div></div>'
+    +fold("uwform","Log a block",uworldForm(),r.done===0)
+    +(hasData?'<p class="muted small">Pick <b>UWorld or AMBOSS</b> on each block. Per-subject accuracy — and whether you’ve hit mastery — is in <b>Subject confidence</b> above.</p>':'<p class="muted small">Log a block and choose <b>UWorld or AMBOSS</b> — it flows straight into your subject confidence above.</p>')
+    +'</div>';
+}
 function reviewCard(){
   const shaky=[];buildBacklog().forEach(it=>{if(isShaky(it.id))shaky.push(it);});
   const weak=weakSystems(65);
   if(!shaky.length&&!weak.length)return '';
   let body='<div class="card soft"><div class="cardhd">Review queue'+(shaky.length?'<button class="hdreset" id="rst_flags" title="Clear every review flag">Reset</button>':'')+'</div>';
-  if(weak.length)body+='<p class="muted small">Weak UWorld systems (&lt; 65%): '+weak.map(w=>escHTML(w.sys)+' <b>'+w.pct+'%</b>').join(', ')+'</p>';
+  if(weak.length)body+='<p class="muted small">Weak systems (&lt; 65%): '+weak.map(w=>escHTML(w.sys)+' <b>'+w.pct+'%</b>').join(', ')+'</p>';
   if(shaky.length){body+='<div class="alist">'+shaky.slice(0,40).map(it=>'<div class="arow"><span class="adot warn"></span><span class="aform">'+escHTML(vName(it))+'</span><button class="alink" data-unshaky="'+escAttr(it.id)+'">clear</button></div>').join('')+'</div>';if(shaky.length>40)body+='<p class="muted small">+'+(shaky.length-40)+' more flagged.</p>';}
   body+='</div>';return body;
 }
@@ -1720,14 +1771,12 @@ function confidenceCard(){
   return h+'</div>';
 }
 function readinessCards(){return S.active==="nbme"?brodyStatsCards():stepReadinessCards();}
-/* Brody Stats — UWorld first; NBME self-assessments tucked to the STEP tab */
+/* Brody Stats — Subject confidence first, then the practice-question log that
+   feeds it. NBME self-assessments live in the STEP dedicated hub, not here. */
 function brodyStatsCards(){
-  let body=uworldCard();
-  body+=confidenceCard();
+  let body=confidenceCard();
+  body+=practiceCard();
   body+=reviewCard();
-  body+='<div class="card soft"><div class="cardhd">STEP self-assessments</div>'
-    +'<p class="muted small" style="margin-top:0">NBME self-assessment scores (NBME 26\u201332, UWSA, Free 120) are dedicated Step prep \u2014 they now live in the <b>STEP</b> tab.</p>'
-    +'<button class="btn ghost" data-gostep="1">Open the STEP tab \u2192</button></div>';
   return body;
 }
 function stepReadinessCards(){
@@ -1782,6 +1831,7 @@ function bindReady(){
   document.querySelectorAll("[data-unshaky]").forEach(b=>b.onclick=()=>{toggleShaky(b.dataset.unshaky);render();});
   const rsc=document.getElementById("rst_scores");if(rsc)rsc.onclick=()=>confirmClear("Clear all logged scores?","Removes every self-assessment score in this hub's log. You'll get one chance to undo.",clearScores);
   const ruw=document.getElementById("rst_uw");if(ruw)ruw.onclick=()=>confirmClear("Clear the UWorld log?","Removes every logged UWorld block and your qbank size. You'll get one chance to undo.",clearUworld);
+  const rprc=document.getElementById("rst_pr");if(rprc)rprc.onclick=()=>confirmClear("Clear the practice-question log?","Removes every UWorld and AMBOSS block logged in this hub — your subject confidence resets with it. You'll get one chance to undo.",()=>clearScopedPractice(S.active));
   const rfl=document.getElementById("rst_flags");if(rfl)rfl.onclick=()=>confirmClear("Clear all review flags?","Un-flags every video you marked as shaky. You'll get one chance to undo.",clearFlags);
   const rvd=document.getElementById("rst_vid");if(rvd)rvd.onclick=()=>confirmClear("Reset video progress?","Clears every video checkmark and daily Anki check across BOTH hubs. Scores, UWorld log, and flags stay. You'll get one chance to undo.",clearVideos);
   wireChrome();
@@ -1902,6 +1952,14 @@ function bindStep(){
 }
 function clearScopedAssess(scope){const snap=Object.assign({},S.assessments);Object.keys(S.assessments||{}).forEach(k=>{if(S.assessments[k].hub===scope)delete S.assessments[k];});bumpReset();save();render();toastUndo("Dedicated scores cleared.",()=>{S.assessments=snap;save();render();});}
 function clearScopedUworld(scope){const snap=JSON.parse(JSON.stringify(S.uworld||{total:null,blocks:{}}));const bl=(S.uworld||{}).blocks||{};Object.keys(bl).forEach(k=>{if(bl[k].hub===scope)delete bl[k];});bumpReset();save();render();toastUndo("Dedicated UWorld cleared.",()=>{S.uworld=snap;save();render();});}
+/* clear this hub's whole practice log — both UWorld and AMBOSS blocks (M2) */
+function clearScopedPractice(scope){scope=scope||S.active;
+  const snapU=JSON.parse(JSON.stringify(S.uworld||{total:null,blocks:{}}));
+  const snapA=JSON.parse(JSON.stringify(S.amboss||{total:null,blocks:{}}));
+  const ub=(S.uworld||{}).blocks||{};Object.keys(ub).forEach(k=>{if(ub[k].hub===scope)delete ub[k];});
+  const ab=(S.amboss||{}).blocks||{};Object.keys(ab).forEach(k=>{if(ab[k].hub===scope)delete ab[k];});
+  bumpReset();save();render();
+  toastUndo("Practice-question log cleared.",()=>{S.uworld=snapU;S.amboss=snapA;save();render();});}
 function clearAmboss(){const snap=JSON.parse(JSON.stringify(S.amboss||{total:null,blocks:{}}));S.amboss={total:null,blocks:{}};bumpReset();save();render();toastUndo("AMBOSS log cleared.",()=>{S.amboss=snap;save();render();});}
 
 /* ---------- daily encouragement (positive reinforcement, top of Today) ----------
@@ -2125,7 +2183,7 @@ function renderToday(){
   // "Log practice questions" sits directly beneath the day box
   colB+='<div class="hchips">'+uworldChip()+'</div>';
   app.innerHTML=chrome("today")+'<div class="wrap"><div class="studygrid"><div class="studyblocks">'+colA+'</div><div class="studywork">'+colB+'</div><div class="studycalz">'+studyCalendar()+'</div></div></div>';
-  bindVlist();bindExtras();
+  bindVlist();bindExtras();bindWeeklyQuickLog();
   const o1=document.getElementById("offToday");if(o1)o1.onclick=()=>dayOffToggle(todayISO(),true);
   const o2=document.getElementById("unoff");if(o2)o2.onclick=()=>dayOffToggle(todayISO(),false);
   const bt=document.getElementById("backToday");if(bt)bt.onclick=()=>{CAL_SEL=todayISO();render();};
@@ -3213,11 +3271,17 @@ function doResetAll(){
     S.cfgs=snap.cfgs;S.active=snap.active;S.cfg=S.active?S.cfgs[S.active]:null;_prevSig=progressSig();save();
     if(S.cfg){reflow();render();}else renderWelcome();toast("Restored ✓");});
 }
-const BUILD="2026-07-18u";
+const BUILD="2026-07-20b";
 /* ---------- What's new (changelog) ----------
    Newest entry first. Bump the top entry's id whenever you add one and the
    pop-up shows once per person (tracked in synced settings.seenUpdate). */
 const CHANGELOG=[
+  {id:"2026-07-20", date:"July 2026", title:"Log questions from Study; confidence-first Stats", items:[
+    "Your weekly practice-question tracker on the Study page now has a quick logger built in: log a block in one line, see how many questions are left this week (or how many you've gone over), and it saves straight to Stats.",
+    "Subject confidence now sits at the top of Stats — it's the answer to 'am I ready?', so it leads.",
+    "The practice-question block lets you pick UWorld or AMBOSS on each block you log, and everything you log flows straight into your subject confidence.",
+    "The STEP self-assessment shortcut was removed from the M2 Stats page — those scores live in the STEP dedicated hub, where they belong.",
+  ]},
   {id:"2026-07-19", date:"July 2026", title:"Weekly question goal + subject confidence", items:[
     "New (optional): set a weekly practice-question goal on the Plan page — pick a target (15–20/week is a good start) and your logged UWorld or AMBOSS questions count toward it, right on your Study screen. It resets every Monday. Off by default.",
     "Stats now shows Subject confidence: each subject gets a rating from your accuracy on the questions you've logged, with 80% as the mastery mark. Subjects without enough questions yet are marked as still building — so you get a running answer to 'am I actually ready here, or just doing questions?'",
