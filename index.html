@@ -1633,7 +1633,7 @@ function bindWeeklyGoal(c,apply){
 /* confidence flags + review queue (Change 4) */
 function isShaky(id){return !!(S.vshaky&&S.vshaky[id]);}
 function toggleShaky(id){S.vshaky=S.vshaky||{};if(S.vshaky[id])delete S.vshaky[id];else S.vshaky[id]=true;save();}
-function weakSystems(target,scope){const roll=uworldRollup(scope);const out=[];Object.keys(roll.bySys).forEach(s=>{const e=roll.bySys[s];if(e.pct!=null&&e.done>=20&&e.pct<(target||65))out.push({sys:s,pct:e.pct});});return out.sort((a,b)=>a.pct-b.pct);}
+function weakSystems(target,scope){return subjectConfidence(scope).filter(x=>x.pct!=null&&x.done>=20&&x.pct<(target||65)).map(x=>({sys:x.sys,pct:x.pct})).sort((a,b)=>a.pct-b.pct);}
 /* small readiness chip for the Today hero */
 function readinessChip(){
   const la=latestAssess();
@@ -1691,12 +1691,28 @@ function uworldCard(){
     +(bars?('<div class="uwhd">By system — accuracy</div><div class="bars">'+bars+'</div><p class="muted small">Systems under 65% feed your review queue below.</p>'):'<p class="muted small">Log a block to start tracking per-system accuracy — the most actionable weak-area signal you have.</p>')
     +'</div>';
 }
+/* M2 practice-question block — combined UWorld + AMBOSS totals; the source is
+   chosen per block at logging, and every block flows into Subject confidence
+   above. Per-subject accuracy lives there, so this block stays a clean total. */
+function practiceRollup(scope){scope=scope||S.active;const uw=uworldRollup(scope),am=ambossRollup(scope);
+  const done=uw.done+am.done,correct=uw.correct+am.correct;
+  return {done,correct,pct:done?Math.round(correct/done*100):null,uw:uw.done,am:am.done};}
+function practiceCard(){
+  const r=practiceRollup();const pctTxt=r.pct!=null?r.pct+'%':'—';
+  const doneTxt=r.done?(r.done+' Qs · '+r.uw+' UWorld / '+r.am+' AMBOSS'):'0 Qs';
+  const hasData=r.done>0;
+  return '<div class="card"><div class="cardhd">Practice questions'+(hasData?'<button class="hdreset" id="rst_pr" title="Clear this hub’s practice-question log">Reset</button>':'')+'</div>'
+    +'<div class="uwtop"><div class="uwbig">'+pctTxt+' <span>correct</span></div><div class="uwsub">'+doneTxt+'</div></div>'
+    +fold("uwform","Log a block",uworldForm(),r.done===0)
+    +(hasData?'<p class="muted small">Pick <b>UWorld or AMBOSS</b> on each block. Per-subject accuracy — and whether you’ve hit mastery — is in <b>Subject confidence</b> above.</p>':'<p class="muted small">Log a block and choose <b>UWorld or AMBOSS</b> — it flows straight into your subject confidence above.</p>')
+    +'</div>';
+}
 function reviewCard(){
   const shaky=[];buildBacklog().forEach(it=>{if(isShaky(it.id))shaky.push(it);});
   const weak=weakSystems(65);
   if(!shaky.length&&!weak.length)return '';
   let body='<div class="card soft"><div class="cardhd">Review queue'+(shaky.length?'<button class="hdreset" id="rst_flags" title="Clear every review flag">Reset</button>':'')+'</div>';
-  if(weak.length)body+='<p class="muted small">Weak UWorld systems (&lt; 65%): '+weak.map(w=>escHTML(w.sys)+' <b>'+w.pct+'%</b>').join(', ')+'</p>';
+  if(weak.length)body+='<p class="muted small">Weak systems (&lt; 65%): '+weak.map(w=>escHTML(w.sys)+' <b>'+w.pct+'%</b>').join(', ')+'</p>';
   if(shaky.length){body+='<div class="alist">'+shaky.slice(0,40).map(it=>'<div class="arow"><span class="adot warn"></span><span class="aform">'+escHTML(vName(it))+'</span><button class="alink" data-unshaky="'+escAttr(it.id)+'">clear</button></div>').join('')+'</div>';if(shaky.length>40)body+='<p class="muted small">+'+(shaky.length-40)+' more flagged.</p>';}
   body+='</div>';return body;
 }
@@ -1720,14 +1736,12 @@ function confidenceCard(){
   return h+'</div>';
 }
 function readinessCards(){return S.active==="nbme"?brodyStatsCards():stepReadinessCards();}
-/* Brody Stats — UWorld first; NBME self-assessments tucked to the STEP tab */
+/* Brody Stats — Subject confidence first, then the practice-question log that
+   feeds it. NBME self-assessments live in the STEP dedicated hub, not here. */
 function brodyStatsCards(){
-  let body=uworldCard();
-  body+=confidenceCard();
+  let body=confidenceCard();
+  body+=practiceCard();
   body+=reviewCard();
-  body+='<div class="card soft"><div class="cardhd">STEP self-assessments</div>'
-    +'<p class="muted small" style="margin-top:0">NBME self-assessment scores (NBME 26\u201332, UWSA, Free 120) are dedicated Step prep \u2014 they now live in the <b>STEP</b> tab.</p>'
-    +'<button class="btn ghost" data-gostep="1">Open the STEP tab \u2192</button></div>';
   return body;
 }
 function stepReadinessCards(){
@@ -1782,6 +1796,7 @@ function bindReady(){
   document.querySelectorAll("[data-unshaky]").forEach(b=>b.onclick=()=>{toggleShaky(b.dataset.unshaky);render();});
   const rsc=document.getElementById("rst_scores");if(rsc)rsc.onclick=()=>confirmClear("Clear all logged scores?","Removes every self-assessment score in this hub's log. You'll get one chance to undo.",clearScores);
   const ruw=document.getElementById("rst_uw");if(ruw)ruw.onclick=()=>confirmClear("Clear the UWorld log?","Removes every logged UWorld block and your qbank size. You'll get one chance to undo.",clearUworld);
+  const rprc=document.getElementById("rst_pr");if(rprc)rprc.onclick=()=>confirmClear("Clear the practice-question log?","Removes every UWorld and AMBOSS block logged in this hub — your subject confidence resets with it. You'll get one chance to undo.",()=>clearScopedPractice(S.active));
   const rfl=document.getElementById("rst_flags");if(rfl)rfl.onclick=()=>confirmClear("Clear all review flags?","Un-flags every video you marked as shaky. You'll get one chance to undo.",clearFlags);
   const rvd=document.getElementById("rst_vid");if(rvd)rvd.onclick=()=>confirmClear("Reset video progress?","Clears every video checkmark and daily Anki check across BOTH hubs. Scores, UWorld log, and flags stay. You'll get one chance to undo.",clearVideos);
   wireChrome();
@@ -1902,6 +1917,14 @@ function bindStep(){
 }
 function clearScopedAssess(scope){const snap=Object.assign({},S.assessments);Object.keys(S.assessments||{}).forEach(k=>{if(S.assessments[k].hub===scope)delete S.assessments[k];});bumpReset();save();render();toastUndo("Dedicated scores cleared.",()=>{S.assessments=snap;save();render();});}
 function clearScopedUworld(scope){const snap=JSON.parse(JSON.stringify(S.uworld||{total:null,blocks:{}}));const bl=(S.uworld||{}).blocks||{};Object.keys(bl).forEach(k=>{if(bl[k].hub===scope)delete bl[k];});bumpReset();save();render();toastUndo("Dedicated UWorld cleared.",()=>{S.uworld=snap;save();render();});}
+/* clear this hub's whole practice log — both UWorld and AMBOSS blocks (M2) */
+function clearScopedPractice(scope){scope=scope||S.active;
+  const snapU=JSON.parse(JSON.stringify(S.uworld||{total:null,blocks:{}}));
+  const snapA=JSON.parse(JSON.stringify(S.amboss||{total:null,blocks:{}}));
+  const ub=(S.uworld||{}).blocks||{};Object.keys(ub).forEach(k=>{if(ub[k].hub===scope)delete ub[k];});
+  const ab=(S.amboss||{}).blocks||{};Object.keys(ab).forEach(k=>{if(ab[k].hub===scope)delete ab[k];});
+  bumpReset();save();render();
+  toastUndo("Practice-question log cleared.",()=>{S.uworld=snapU;S.amboss=snapA;save();render();});}
 function clearAmboss(){const snap=JSON.parse(JSON.stringify(S.amboss||{total:null,blocks:{}}));S.amboss={total:null,blocks:{}};bumpReset();save();render();toastUndo("AMBOSS log cleared.",()=>{S.amboss=snap;save();render();});}
 
 /* ---------- daily encouragement (positive reinforcement, top of Today) ----------
@@ -3213,11 +3236,16 @@ function doResetAll(){
     S.cfgs=snap.cfgs;S.active=snap.active;S.cfg=S.active?S.cfgs[S.active]:null;_prevSig=progressSig();save();
     if(S.cfg){reflow();render();}else renderWelcome();toast("Restored ✓");});
 }
-const BUILD="2026-07-18u";
+const BUILD="2026-07-20a";
 /* ---------- What's new (changelog) ----------
    Newest entry first. Bump the top entry's id whenever you add one and the
    pop-up shows once per person (tracked in synced settings.seenUpdate). */
 const CHANGELOG=[
+  {id:"2026-07-20", date:"July 2026", title:"Stats: confidence first, log UWorld or AMBOSS", items:[
+    "Subject confidence now sits at the top of Stats — it's the answer to 'am I ready?', so it leads.",
+    "The practice-question block lets you pick UWorld or AMBOSS on each block you log, and everything you log flows straight into your subject confidence.",
+    "The STEP self-assessment shortcut was removed from the M2 Stats page — those scores live in the STEP dedicated hub, where they belong.",
+  ]},
   {id:"2026-07-19", date:"July 2026", title:"Weekly question goal + subject confidence", items:[
     "New (optional): set a weekly practice-question goal on the Plan page — pick a target (15–20/week is a good start) and your logged UWorld or AMBOSS questions count toward it, right on your Study screen. It resets every Monday. Off by default.",
     "Stats now shows Subject confidence: each subject gets a rating from your accuracy on the questions you've logged, with 80% as the mastery mark. Subjects without enough questions yet are marked as still building — so you get a running answer to 'am I actually ready here, or just doing questions?'",
