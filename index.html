@@ -338,6 +338,13 @@ b{color:var(--ink)}
 .uwprog{margin:0 0 12px}
 .uwprog .uwproglab{display:flex;justify-content:space-between;font-size:12px;color:var(--text-2);margin-bottom:5px}
 .uwprog .uwproglab b{color:var(--ink);font-family:var(--mono)}
+.wgcard .wgrow{display:flex;justify-content:space-between;align-items:baseline;gap:8px;margin-bottom:7px}
+.wgcard .wglab{font-size:12.5px;color:var(--text-2)}
+.wgcard .wgn{font-family:var(--mono);font-weight:700;font-size:13px;color:var(--ink)}
+.wgcard .wgn.met{color:var(--success)}
+.wgtoggle{display:flex;align-items:center;gap:10px}
+.uwprog .uwproglab .wgmet{color:var(--success);font-weight:700}
+.barfill.over{background-image:linear-gradient(45deg,rgba(255,255,255,.28) 25%,transparent 25%,transparent 50%,rgba(255,255,255,.28) 50%,rgba(255,255,255,.28) 75%,transparent 75%);background-size:14px 14px}
 .bartrack.big{height:11px}
 .flagb{flex:0 0 auto;width:26px;height:26px;border-radius:8px;border:1.5px solid transparent;background:none;color:var(--faint);font-size:13px;cursor:pointer;transition:all .15s}
 .flagb:hover{color:var(--amber);border-color:var(--line2)}
@@ -1550,7 +1557,7 @@ function readinessVerdict(pct){
   return {text:"below the passing range",cls:"bad"};
 }
 let RDRAFT={form:"NBME 28",dateISO:todayISO(),pct:"",estProb:""};
-let UDRAFT={sys:"",q:"40",correct:""};
+let UDRAFT={sys:"",q:"40",correct:"",src:"uworld"};
 function assessList(scope){scope=scope||S.active;const a=S.assessments||{};return Object.keys(a).map(k=>Object.assign({id:k},a[k])).filter(x=>x.hub===scope).sort((x,y)=>x.dateISO<y.dateISO?-1:(x.dateISO>y.dateISO?1:(x._t||0)-(y._t||0)));}
 function latestAssess(scope){const l=assessList(scope);return l.length?l[l.length-1]:null;}
 function addAssessment(o,scope){S.assessments=S.assessments||{};S.assessments[uid()]={hub:(scope||S.active),form:o.form,dateISO:o.dateISO,pct:o.pct,estProb:(o.estProb!=null?o.estProb:null),note:o.note||"",_t:Date.now()};save();}
@@ -1579,6 +1586,50 @@ function ambossRollup(scope){scope=scope||S.active;
 }
 function addAmbossBlock(o,scope){S.amboss=S.amboss||{total:null,blocks:{}};S.amboss.blocks=S.amboss.blocks||{};S.amboss.blocks[uid()]={hub:(scope||S.active),dateISO:o.dateISO||todayISO(),sys:o.sys||"",q:+o.q||0,correct:+o.correct||0,_t:Date.now()};save();}
 function setAmbossTotal(n){S.amboss=S.amboss||{total:null,blocks:{}};S.amboss.total=(n>0?n:null);save();}
+/* ---- Weekly practice-question goal (M2, opt-in) + subject confidence ----
+   Off unless the student sets a target on the Plan page. UWorld AND AMBOSS
+   blocks logged in this hub both count; the tally resets each Monday. */
+const CONF_MIN_Q=10;   // questions in a subject before it earns a confidence rating
+const CONF_MASTERY=80; // % accuracy that counts as sufficient mastery
+function weekStartISO(iso){const d=isoToDate(iso);const wd=(d.getDay()+6)%7;return isoFromDate(addDays(d,-wd));}  // Monday-start of iso's week
+function weeklyGoal(c){c=c||S.cfg;return (c&&c.weeklyQGoal>0)?c.weeklyQGoal:0;}
+function weeklyQLogged(scope){scope=scope||S.active;const ws=weekStartISO(todayISO());const we=isoFromDate(addDays(isoToDate(ws),7));
+  let n=0;[S.uworld,S.amboss].forEach(log=>{const bl=(log&&log.blocks)||{};for(const k in bl){const b=bl[k];if(b&&b.hub===scope&&b.dateISO>=ws&&b.dateISO<we)n+=(+b.q||0);}});return n;}
+/* combined UWorld + AMBOSS accuracy per subject, each with a confidence tier (mastery = 80%).
+   Subjects below CONF_MIN_Q logged questions aren't rated yet. */
+function subjectConfidence(scope){scope=scope||S.active;const uw=uworldRollup(scope),am=ambossRollup(scope);const by={};
+  [uw,am].forEach(roll=>Object.keys(roll.bySys).forEach(s=>{if(s==="Unspecified")return;const e=roll.bySys[s];const t=by[s]=by[s]||{done:0,correct:0};t.done+=e.done;t.correct+=e.correct;}));
+  return Object.keys(by).map(s=>{const done=by[s].done,pct=done?Math.round(by[s].correct/done*100):null,rated=done>=CONF_MIN_Q;
+    return {sys:s,done,pct,rated,tier:!rated?"none":(pct>=CONF_MASTERY?"solid":(pct>=70?"dev":"weak"))};});}
+/* progress bar for the weekly goal — reused on Today and the Plan page.
+   Going OVER the target is a good thing: the bar fills to 100% and the
+   surplus is called out ("+N beyond goal") rather than silently capped. */
+function weeklyGoalProgressHTML(c){const goal=weeklyGoal(c);if(!goal)return '';
+  const done=weeklyQLogged();const pct=Math.min(100,Math.round(done/goal*100));const met=done>=goal;const over=done-goal;
+  const right=met?('Goal met ✓'+(over>0?' · +'+over+' beyond':'')):(pct+'%');
+  return '<div class="uwprog"><div class="uwproglab"><span><b>'+done+'</b> / '+goal+' questions this week</span><span'+(met?' class="wgmet"':'')+'>'+right+'</span></div>'
+    +'<div class="bartrack big"><div class="barfill'+(over>0?' over':'')+'" style="width:'+pct+'%'+(met?';background:var(--success)':'')+'"></div></div></div>';}
+/* compact Today-hero chip */
+function weeklyGoalChip(){if(S.active!=="nbme")return '';const goal=weeklyGoal();if(!goal)return '';
+  const done=weeklyQLogged();const pct=Math.min(100,Math.round(done/goal*100));const met=done>=goal;const over=done-goal;
+  const label=met?(done+' / '+goal+' ✓'+(over>0?' · +'+over:'')):(done+' / '+goal);
+  return '<div class="card wgcard"><div class="wgrow"><span class="wglab">Practice questions · this week</span><span class="wgn'+(met?' met':'')+'">'+label+'</span></div>'
+    +'<div class="bartrack"><div class="barfill'+(over>0?' over':'')+'" style="width:'+pct+'%'+(met?';background:var(--success)':'')+'"></div></div></div>';}
+/* Plan-page opt-in: toggle + target (off by default). M2 only. */
+function weeklyGoalSettingHTML(c){
+  const on=weeklyGoal(c)>0;const goal=c.weeklyQGoal>0?c.weeklyQGoal:15;
+  let h='<div class="card"><div class="cardhd">Weekly practice-question goal</div>'
+    +'<div class="wgtoggle"><button type="button" class="tog '+(on?"on":"")+'" id="wg_toggle">'+(on?"On":"Off")+'</button>'
+    +'<span class="muted small">Optional · off by default</span></div>';
+  if(on)h+='<div class="form" style="margin-top:10px"><label>Questions per week <span class="opt">(15–20 recommended)</span><input type="number" id="wg_goal" min="1" step="1" value="'+goal+'"></label></div>'
+    +'<p class="muted small">UWorld or AMBOSS questions you log count toward this — it resets every Monday.</p>'+weeklyGoalProgressHTML(c);
+  else h+='<p class="muted small">Set a target number of UWorld / AMBOSS questions to do each week and track your progress toward it. 15–20 a week is a solid start.</p>';
+  return h+'</div>';
+}
+function bindWeeklyGoal(c,apply){
+  const t=document.getElementById("wg_toggle");if(t)t.onclick=()=>{c.weeklyQGoal=(weeklyGoal(c)>0)?0:15;apply();};
+  const g=document.getElementById("wg_goal");if(g)g.onchange=()=>{let v=parseInt(g.value,10);if(isNaN(v)||v<1)v=1;c.weeklyQGoal=v;apply();};
+}
 /* confidence flags + review queue (Change 4) */
 function isShaky(id){return !!(S.vshaky&&S.vshaky[id]);}
 function toggleShaky(id){S.vshaky=S.vshaky||{};if(S.vshaky[id])delete S.vshaky[id];else S.vshaky[id]=true;save();}
@@ -1621,6 +1672,7 @@ function scoreTrend(list){
 function uworldForm(){
   const sysOpts=['<option value="">System (optional)…</option>'].concat(planSystems().map(s=>'<option'+(UDRAFT.sys===s?' selected':'')+'>'+s+'</option>')).join('');
   return '<div class="form2">'
+    +'<label>Source<select id="u_src"><option value="uworld"'+(UDRAFT.src!=="amboss"?' selected':'')+'>UWorld</option><option value="amboss"'+(UDRAFT.src==="amboss"?' selected':'')+'>AMBOSS</option></select></label>'
     +'<label>System<select id="u_sys">'+sysOpts+'</select></label>'
     +'<label>Questions<input id="u_q" type="number" inputmode="numeric" min="1" value="'+escAttr(UDRAFT.q)+'"></label>'
     +'<label># correct<input id="u_c" type="number" inputmode="numeric" min="0" value="'+escAttr(UDRAFT.correct)+'" placeholder="in that block"></label>'
@@ -1648,10 +1700,30 @@ function reviewCard(){
   if(shaky.length){body+='<div class="alist">'+shaky.slice(0,40).map(it=>'<div class="arow"><span class="adot warn"></span><span class="aform">'+escHTML(vName(it))+'</span><button class="alink" data-unshaky="'+escAttr(it.id)+'">clear</button></div>').join('')+'</div>';if(shaky.length>40)body+='<p class="muted small">+'+(shaky.length-40)+' more flagged.</p>';}
   body+='</div>';return body;
 }
+/* Subject confidence — combined UWorld+AMBOSS accuracy per subject, 80% = mastery.
+   Answers "am I actually ready in this subject, or just doing questions?" */
+function confidenceCard(){
+  const list=subjectConfidence();
+  if(!list.length)return '<div class="card"><div class="cardhd">Subject confidence</div>'
+    +'<p class="muted small" style="margin-top:0">Log practice blocks with a <b>system</b> tagged and each subject earns a confidence rating from your accuracy — <b>'+CONF_MASTERY+'% is the mastery mark</b>. Nothing rated yet.</p></div>';
+  const rated=list.filter(x=>x.rated).sort((a,b)=>a.pct-b.pct);
+  const pending=list.filter(x=>!x.rated).sort((a,b)=>b.done-a.done);
+  let h='<div class="card"><div class="cardhd">Subject confidence</div>'
+    +'<p class="muted small" style="margin-top:0">Your accuracy per subject on logged UWorld + AMBOSS questions. <b>'+CONF_MASTERY+'% = mastery.</b></p>';
+  if(rated.length){h+='<div class="bars">';
+    rated.forEach(x=>{const col=x.tier==="solid"?'var(--success)':(x.tier==="dev"?'var(--warning)':'var(--danger)');
+      const lab=x.tier==="solid"?'Confident':(x.tier==="dev"?'Developing':'Needs work');
+      h+='<div class="bar"><div class="barlab">'+escHTML(x.sys)+'</div><div class="bartrack"><div class="barfill" style="width:'+x.pct+'%;background:'+col+'"></div></div><div class="barpct">'+x.pct+'% <span class="muted small">'+lab+'</span></div></div>';});
+    h+='</div>';}
+  else h+='<p class="muted small">No subject has enough logged questions for a rating yet — '+CONF_MIN_Q+'+ in a subject unlocks one.</p>';
+  if(pending.length)h+='<p class="muted small">Building toward a rating: '+pending.map(x=>escHTML(x.sys)+' <b>'+x.done+'</b>/'+CONF_MIN_Q).join(' · ')+'.</p>';
+  return h+'</div>';
+}
 function readinessCards(){return S.active==="nbme"?brodyStatsCards():stepReadinessCards();}
 /* Brody Stats — UWorld first; NBME self-assessments tucked to the STEP tab */
 function brodyStatsCards(){
   let body=uworldCard();
+  body+=confidenceCard();
   body+=reviewCard();
   body+='<div class="card soft"><div class="cardhd">STEP self-assessments</div>'
     +'<p class="muted small" style="margin-top:0">NBME self-assessment scores (NBME 26\u201332, UWSA, Free 120) are dedicated Step prep \u2014 they now live in the <b>STEP</b> tab.</p>'
@@ -1701,11 +1773,12 @@ function bindReady(){
   const rpr=document.getElementById("r_prob");if(rpr)rpr.onchange=()=>{RDRAFT.estProb=rpr.value;};
   const rs=document.getElementById("r_save");if(rs)rs.onclick=()=>{const pct=parseFloat(rp?rp.value:RDRAFT.pct);if(isNaN(pct)||pct<0||pct>100){toast("Enter a % between 0 and 100");return;}const prob=parseFloat(rpr?rpr.value:RDRAFT.estProb);addAssessment({form:(rf?rf.value:RDRAFT.form),dateISO:RDRAFT.dateISO,pct:Math.round(pct),estProb:isNaN(prob)?null:Math.round(prob)});RDRAFT={form:(rf?rf.value:RDRAFT.form),dateISO:todayISO(),pct:"",estProb:""};toast("Score logged \u2713");render();};
   document.querySelectorAll("[data-del]").forEach(b=>b.onclick=()=>{delAssessment(b.dataset.del);render();});
+  const usr=document.getElementById("u_src");if(usr)usr.onchange=()=>{UDRAFT.src=usr.value;};
   const us=document.getElementById("u_sys");if(us)us.onchange=()=>{UDRAFT.sys=us.value;};
   const uq=document.getElementById("u_q");if(uq)uq.onchange=()=>{UDRAFT.q=uq.value;};
   const uc=document.getElementById("u_c");if(uc)uc.onchange=()=>{UDRAFT.correct=uc.value;};
   const ut=document.getElementById("u_total");if(ut)ut.onchange=()=>{const n=parseInt(ut.value,10);setUworldTotal(isNaN(n)?0:n);};
-  const usv=document.getElementById("u_save");if(usv)usv.onclick=()=>{const q=parseInt(uq?uq.value:UDRAFT.q,10),cc=parseInt(uc?uc.value:UDRAFT.correct,10);if(isNaN(q)||q<1){toast("How many questions in the block?");return;}if(isNaN(cc)||cc<0||cc>q){toast("# correct can\u2019t exceed the question count");return;}addUworldBlock({sys:(us?us.value:UDRAFT.sys),q:q,correct:cc});UDRAFT={sys:(us?us.value:UDRAFT.sys),q:"40",correct:""};toast("Block logged \u2713");render();};
+  const usv=document.getElementById("u_save");if(usv)usv.onclick=()=>{const q=parseInt(uq?uq.value:UDRAFT.q,10),cc=parseInt(uc?uc.value:UDRAFT.correct,10);const src=(usr?usr.value:UDRAFT.src)||"uworld";if(isNaN(q)||q<1){toast("How many questions in the block?");return;}if(isNaN(cc)||cc<0||cc>q){toast("# correct can\u2019t exceed the question count");return;}const blk={sys:(us?us.value:UDRAFT.sys),q:q,correct:cc};if(src==="amboss")addAmbossBlock(blk);else addUworldBlock(blk);UDRAFT={sys:(us?us.value:UDRAFT.sys),q:"40",correct:"",src:src};toast((src==="amboss"?"AMBOSS":"UWorld")+" block logged \u2713");render();};
   document.querySelectorAll("[data-unshaky]").forEach(b=>b.onclick=()=>{toggleShaky(b.dataset.unshaky);render();});
   const rsc=document.getElementById("rst_scores");if(rsc)rsc.onclick=()=>confirmClear("Clear all logged scores?","Removes every self-assessment score in this hub's log. You'll get one chance to undo.",clearScores);
   const ruw=document.getElementById("rst_uw");if(ruw)ruw.onclick=()=>confirmClear("Clear the UWorld log?","Removes every logged UWorld block and your qbank size. You'll get one chance to undo.",clearUworld);
@@ -2028,6 +2101,7 @@ function renderToday(){
   colA+=loadCaveat();
   colA+=brodyChip(focusISO);
   colA+=encouragement(todayRow,isOffToday,cs);
+  colA+=weeklyGoalChip();
   colA+=ankiCardBlock(focusISO);
   // UPPER-RIGHT — the checklist for the selected day
   if(!isFocusToday){
@@ -2302,11 +2376,13 @@ function renderAdjustBrody(c){
   colB+='<div class="card"><div class="cardhd">Resources</div><div class="togrow">'
     +resBtn("bnb","Boards &amp; Beyond")+resBtn("pathoma","Pathoma")+resBtn("sketchy","Sketchy")+resBtn("fa","First Aid")+resBtn("anking","AnKing")+resBtn("uworld","UWorld")
     +'</div><p class="muted small">Turn on the resources you use — the plan re-flows live.</p></div>';
+  colB+=weeklyGoalSettingHTML(c);
   colB+='<div class="card soft"><div class="cardhd">Different plan?</div><p class="muted small">Switch to an exam countdown or start a fresh unit.</p><button class="btn" id="newUnit">Start a new plan…</button></div>';
   colB+=pastUnitsCard();
   colB+='<div class="card soft"><button class="btn" id="saveDone">Done — back to Study</button><p class="muted small center" style="margin-top:10px">Every change here saves and re-flows your plan instantly.</p></div>';
   app.innerHTML=chrome("adjust")+'<div class="wrap"><div class="cols"><div>'+body+'</div><div>'+colB+'</div></div></div>';
   const apply=()=>{save();reflow();renderAdjust();};
+  bindWeeklyGoal(c,apply);
   document.querySelectorAll("[data-dow]").forEach(b=>b.onclick=()=>{const i=+b.dataset.dow;c.restDays=c.restDays||[];const k=c.restDays.indexOf(i);if(k>=0)c.restDays.splice(k,1);else c.restDays.push(i);apply();});
   document.querySelectorAll("[data-res]").forEach(b=>b.onclick=()=>{c.resources=c.resources||{};c.resources[b.dataset.res]=!hasRes(b.dataset.res);apply();});
   document.querySelectorAll("[data-fpace]").forEach(b=>b.onclick=()=>{const cur=brodyPace(c);c.brodyPace=Math.max(0.5,cur+(b.dataset.fpace==="inc"?0.5:-0.5));apply();});
@@ -2341,6 +2417,7 @@ function renderAdjust(){
   colB+='<div class="card"><div class="cardhd">Resources</div><div class="togrow">'
     +resBtn("bnb","Boards &amp; Beyond")+resBtn("pathoma","Pathoma")+resBtn("sketchy","Sketchy")+resBtn("fa","First Aid")+resBtn("anking","AnKing")+resBtn("uworld","UWorld")
     +'</div><p class="muted small">Pick the video resources to weave into this plan — turn any off you\'re not using.</p></div>';
+  if(S.active==="nbme")colB+=weeklyGoalSettingHTML(c);
   const sysInner='<p class="muted small" style="margin-top:6px">'+(S.active==="nbme"
       ?'Pick the systems this shelf covers — immuno, micro, genetics and the rest are each selectable. Reorder with ▲▼ to set what’s studied first; the plan re-flows live.'
       :'Recommended Boards &amp; Beyond sequence. Reorder with ▲▼ or tap to include/drop — the plan re-flows live.')+'</p>'
@@ -2357,6 +2434,7 @@ function renderAdjust(){
   app.innerHTML=chrome("adjust")+'<div class="wrap"><div class="cols"><div>'+body+'</div><div>'+colB+'</div></div></div>';
   // live-apply
   const apply=()=>{save();reflow();renderAdjust();};
+  bindWeeklyGoal(c,apply);
   const bindNum=(id,key,mul)=>{const e=document.getElementById(id);if(e)e.onchange=()=>{let v=parseFloat(e.value);if(isNaN(v))v=0;c[key]=v;apply();};};
   const fe=document.getElementById("f_exam");if(fe)fe.onclick=()=>openDatePicker({value:c.examISO,min:todayISO(),title:"Exam date",onPick:(iso)=>{c.examISO=iso;apply();}});
   const fs=document.getElementById("f_start");if(fs)fs.onclick=()=>openDatePicker({value:c.startISO||todayISO(),title:"Start date",onPick:(iso)=>{c.startISO=iso;apply();}});
@@ -3135,11 +3213,16 @@ function doResetAll(){
     S.cfgs=snap.cfgs;S.active=snap.active;S.cfg=S.active?S.cfgs[S.active]:null;_prevSig=progressSig();save();
     if(S.cfg){reflow();render();}else renderWelcome();toast("Restored ✓");});
 }
-const BUILD="2026-07-18s";
+const BUILD="2026-07-18u";
 /* ---------- What's new (changelog) ----------
    Newest entry first. Bump the top entry's id whenever you add one and the
    pop-up shows once per person (tracked in synced settings.seenUpdate). */
 const CHANGELOG=[
+  {id:"2026-07-19", date:"July 2026", title:"Weekly question goal + subject confidence", items:[
+    "New (optional): set a weekly practice-question goal on the Plan page — pick a target (15–20/week is a good start) and your logged UWorld or AMBOSS questions count toward it, right on your Study screen. It resets every Monday. Off by default.",
+    "Stats now shows Subject confidence: each subject gets a rating from your accuracy on the questions you've logged, with 80% as the mastery mark. Subjects without enough questions yet are marked as still building — so you get a running answer to 'am I actually ready here, or just doing questions?'",
+    "You can now log AMBOSS blocks in the M2 hub too, not just UWorld.",
+  ]},
   {id:"2026-07-18", date:"July 2026", title:"Check-off fix + your history is visible", items:[
     "Fixed: a handful of videos whose title contains a comma — like Pathoma’s “Acute Inflammation (Parts 1, 2, & 3)” — wouldn’t take a check mark. They now check off like everything else.",
     "The calendar now shows your past days, not just today onward. Tap any earlier day to see exactly what you checked off then — anything you didn’t finish simply re-flowed forward into today’s list.",
