@@ -1804,10 +1804,11 @@ function videoCards(){
   const by=sysProgress();const o=overall();
   let body='<div class="hero"><div class="hero-l">'+ring(o.pct,72)+'</div><div class="hero-r"><div class="big">'+o.done+' <span>/ '+o.total+' videos</span></div><div class="sub">'+SCHED.stats.remItems+' remaining · '+currentStreak()+'-day streak</div></div></div>';
   body+=pacingChart();
-  body+='<div class="card"><div class="cardhd">By subject'+(o.done?'<button class="hdreset" id="rst_vid" title="Clear every video checkmark">Reset</button>':'')+'</div><div class="bars">';
+  body+='<div class="card"><div class="cardhd">Video completion by subject'+(o.done?'<button class="hdreset" id="rst_vid" title="Clear every video checkmark">Reset</button>':'')+'</div>'
+    +'<p class="muted small" style="margin-top:0">How much of each subject’s videos you’ve watched — not question accuracy (that’s <b>Subject confidence</b>).</p><div class="bars">';
   const rows=[]; planSystems().forEach(s=>{if(by[s]&&by[s].t)rows.push(s);});
   rows.forEach(s=>{const x=by[s];const pct=Math.round(x.d/x.t*100);
-    body+='<div class="bar"><div class="barlab">'+escHTML(s)+'</div><div class="bartrack"><div class="barfill" style="width:'+pct+'%"></div></div><div class="barpct">'+pct+'%</div></div>';});
+    body+='<div class="bar"><div class="barlab">'+escHTML(s)+'</div><div class="bartrack"><div class="barfill" style="width:'+pct+'%"></div></div><div class="barpct">'+pct+'% <span class="muted small">'+x.d+'/'+x.t+'</span></div></div>';});
   body+='</div></div>';
   return body;
 }
@@ -3271,7 +3272,7 @@ function doResetAll(){
     S.cfgs=snap.cfgs;S.active=snap.active;S.cfg=S.active?S.cfgs[S.active]:null;_prevSig=progressSig();save();
     if(S.cfg){reflow();render();}else renderWelcome();toast("Restored ✓");});
 }
-const BUILD="2026-07-20b";
+const BUILD="2026-07-20c";
 /* ---------- What's new (changelog) ----------
    Newest entry first. Bump the top entry's id whenever you add one and the
    pop-up shows once per person (tracked in synced settings.seenUpdate). */
