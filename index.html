@@ -440,6 +440,9 @@ b{color:var(--ink)}
 .bartrack{flex:1;height:8px;background:var(--bg2);border-radius:999px;overflow:hidden}
 .barfill{height:100%;border-radius:999px;background:var(--accent);transition:width .5s cubic-bezier(.5,1.2,.4,1)}
 .barpct{flex:0 0 auto;font-family:var(--mono);font-size:12px;color:var(--muted);width:38px;text-align:right}
+.barpct.conf{width:80px;flex:0 0 80px;line-height:1.2}
+.barpct.conf b{color:var(--ink);font-weight:700}
+.barpct.conf .conftier{display:block;font-family:var(--sans);font-size:10.5px;color:var(--muted);white-space:nowrap}
 
 /* forms / toggles */
 .form{display:flex;flex-direction:column;gap:13px}
@@ -1764,7 +1767,7 @@ function confidenceCard(){
   if(rated.length){h+='<div class="bars">';
     rated.forEach(x=>{const col=x.tier==="solid"?'var(--success)':(x.tier==="dev"?'var(--warning)':'var(--danger)');
       const lab=x.tier==="solid"?'Confident':(x.tier==="dev"?'Developing':'Needs work');
-      h+='<div class="bar"><div class="barlab">'+escHTML(x.sys)+'</div><div class="bartrack"><div class="barfill" style="width:'+x.pct+'%;background:'+col+'"></div></div><div class="barpct">'+x.pct+'% <span class="muted small">'+lab+'</span></div></div>';});
+      h+='<div class="bar"><div class="barlab">'+escHTML(x.sys)+'</div><div class="bartrack"><div class="barfill" style="width:'+x.pct+'%;background:'+col+'"></div></div><div class="barpct conf"><b>'+x.pct+'%</b><span class="conftier">'+lab+'</span></div></div>';});
     h+='</div>';}
   else h+='<p class="muted small">No subject has enough logged questions for a rating yet — '+CONF_MIN_Q+'+ in a subject unlocks one.</p>';
   if(pending.length)h+='<p class="muted small">Building toward a rating: '+pending.map(x=>escHTML(x.sys)+' <b>'+x.done+'</b>/'+CONF_MIN_Q).join(' · ')+'.</p>';
@@ -3272,7 +3275,7 @@ function doResetAll(){
     S.cfgs=snap.cfgs;S.active=snap.active;S.cfg=S.active?S.cfgs[S.active]:null;_prevSig=progressSig();save();
     if(S.cfg){reflow();render();}else renderWelcome();toast("Restored ✓");});
 }
-const BUILD="2026-07-20c";
+const BUILD="2026-07-20d";
 /* ---------- What's new (changelog) ----------
    Newest entry first. Bump the top entry's id whenever you add one and the
    pop-up shows once per person (tracked in synced settings.seenUpdate). */
