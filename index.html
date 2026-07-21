@@ -390,6 +390,12 @@ b{color:var(--ink)}
 .aktags>summary::-webkit-details-marker{display:none}
 .aktags>summary::before{content:"▸ ";color:var(--faint)}
 .aktags[open]>summary::before{content:"▾ "}
+.aktagsec{margin-top:11px}
+.aktaghd{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:2px}
+.aktagreslab{font-size:12.5px;font-weight:700;color:var(--ink)}
+.aktagreslab .akn{font-family:var(--mono);font-size:10.5px;color:var(--faint)}
+.cpyres{flex:0 0 auto;background:var(--phos-soft);border:1px solid var(--phos-dim);color:var(--phos);border-radius:9px;padding:5px 11px;font-size:11px;font-weight:800;cursor:pointer;white-space:nowrap}
+.cpyres:hover{background:var(--phos);color:var(--on-accent)}
 .aktaglist{display:flex;flex-direction:column;gap:6px;margin-top:8px}
 .aktagrow{display:flex;align-items:center;gap:8px;width:100%;text-align:left;background:var(--bg2);border:1px solid var(--line);border-radius:9px;padding:8px 10px;cursor:pointer;transition:border-color .14s}
 .aktagrow:hover{border-color:var(--phos-dim)}
@@ -440,6 +446,39 @@ b{color:var(--ink)}
 .bartrack{flex:1;height:8px;background:var(--bg2);border-radius:999px;overflow:hidden}
 .barfill{height:100%;border-radius:999px;background:var(--accent);transition:width .5s cubic-bezier(.5,1.2,.4,1)}
 .barpct{flex:0 0 auto;font-family:var(--mono);font-size:12px;color:var(--muted);width:38px;text-align:right}
+.barpct.conf{width:80px;flex:0 0 80px;line-height:1.2}
+.barpct.conf b{color:var(--ink);font-weight:700}
+.barpct.conf .conftier{display:block;font-family:var(--sans);font-size:10.5px;color:var(--muted);white-space:nowrap}
+/* master checklist */
+.clwrap{max-width:800px;margin:0 auto}
+.clhead .cltop{display:flex;justify-content:space-between;align-items:baseline;margin:6px 0 9px}
+.clbig{font-size:26px;font-weight:800;color:var(--ink)}
+.clbig span{font-size:14px;color:var(--muted);font-weight:600}
+.clpct{font-family:var(--mono);font-size:15px;font-weight:800;color:var(--phos)}
+.clpct.met{color:var(--success)}
+.clres{padding:0;overflow:hidden}
+.clfold>summary{list-style:none;cursor:pointer}
+.clfold>summary::-webkit-details-marker{display:none}
+.clsum{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:14px 16px}
+.clreslab{font-size:15px;font-weight:800;color:var(--ink)}
+.clreslab::before{content:"▸ ";color:var(--faint);font-size:12px}
+.clfold[open]>summary .clreslab::before{content:"▾ "}
+.clprog{display:flex;align-items:center;gap:10px;flex:0 0 auto}
+.clfrac{font-family:var(--mono);font-size:12px;color:var(--muted)}
+.clfrac.met{color:var(--success)}
+.clmini{width:82px;height:6px;background:var(--bg2);border-radius:999px;overflow:hidden}
+.clminifill{display:block;height:100%;background:var(--phos);border-radius:999px}
+.clsys{padding:0 16px 6px}
+.clsyshd{font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.04em;color:var(--muted);margin:12px 0 6px}
+.clcat{font-size:12px;color:var(--faint);margin:9px 0 4px}
+.cllist{display:flex;flex-direction:column;gap:5px}
+.clrow{display:flex;align-items:center;gap:10px;width:100%;text-align:left;background:var(--bg2);border:1px solid var(--line);border-radius:9px;padding:8px 11px;cursor:pointer;transition:border-color .14s}
+.clrow:hover{border-color:var(--phos-dim)}
+.clchk{flex:0 0 auto;width:20px;height:20px;border-radius:6px;border:1.5px solid var(--line2);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;color:var(--on-accent)}
+.clchk.on{background:var(--phos);border-color:var(--phos)}
+.clname{flex:1;min-width:0;font-size:13px;color:var(--ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.clrow.done .clname{text-decoration:line-through;color:var(--faint)}
+.clmin{flex:0 0 auto;font-family:var(--mono);font-size:11px;color:var(--faint)}
 
 /* forms / toggles */
 .form{display:flex;flex-direction:column;gap:13px}
@@ -941,6 +980,24 @@ function buildBacklog(){
   });
   return out;
 }
+/* Every third-party video in the current plan's scope, normalized for the
+   master checklist. Brody plans honor the block's include/exclude rules;
+   custom plans use the same backlog scope the scheduler packs. */
+function planVideos(){
+  const c=S.cfg; if(!c)return [];
+  const blk=brodyBlock(c); const en=resEnabled(); const pathSel=en.pathoma?effectivePathChapters(c):new Set();
+  const out=[];
+  if(blk){
+    catVideos().forEach(v=>{
+      if(!brodyInBlock(blk,v))return; if(!en[v.res])return;
+      if(v.res==="pathoma"&&!pathSel.has(pathChapterOf(v)))return;
+      out.push({res:v.res,sys:v.sys,cat:v.cat||"",name:v.name,min:v.min,id:itemId(v)});
+    });
+  } else {
+    buildBacklog().forEach(it=>out.push({res:it.res,sys:it.sys,cat:it.fa||"",name:it.name,min:it.min,id:it.id}));
+  }
+  return out;
+}
 
 /* ============================================================
    SCHEDULER — pack the *unfinished* backlog onto study days from
@@ -1412,19 +1469,29 @@ function itemRows(items,opts){opts=opts||{};if(!items.length)return '<div class=
 /* ---------- copy helpers + per-day Anki block ---------- */
 function fallbackCopy(t,msg){try{const ta=document.createElement("textarea");ta.value=t;ta.style.position="fixed";ta.style.opacity="0";document.body.appendChild(ta);ta.focus();ta.select();document.execCommand("copy");document.body.removeChild(ta);toast(msg||"Copied");}catch(e){toast("Copy failed — long-press to copy");}}
 function copyText(t,msg){t=t||"";if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(t).then(()=>toast(msg||"Copied"),()=>fallbackCopy(t,msg));}else fallbackCopy(t,msg);}
-function dayTagPairs(iso){const row=SCHED&&SCHED.dayMap[iso];if(!row)return [];const seen={},out=[];row.items.forEach(it=>{if(it.res==="bnb"&&it.tag&&!seen[it.tag]){seen[it.tag]=1;out.push([vName(it),it.tag]);}});return out;}
-function dayTags(iso){return dayTagPairs(iso).map(p=>p[1]);}
-/* Format AnKing tags as a single Anki Browse search: "tag:X" OR "tag:Y" … */
-function ankiSearch(tags){return (tags||[]).filter(Boolean).map(t=>'"tag:'+t+'"').join(" OR ");}
-function ankiBlock(iso,openTags){if(!hasRes("anking"))return "";const pairs=dayTagPairs(iso);const on=!!(S.akdone&&S.akdone[iso]);
+function dayTagGroups(iso){
+  const row=SCHED&&SCHED.dayMap[iso];if(!row)return [];
+  const order=["bnb","pathoma","skmicro","skpharm"];const byRes={};const seen={};
+  row.items.forEach(it=>{if(!it.tag)return;const tags=Array.isArray(it.tag)?it.tag:[it.tag];
+    tags.forEach(tg=>{if(!tg)return;const k=it.res+"|"+tg;if(seen[k])return;seen[k]=1;(byRes[it.res]=byRes[it.res]||[]).push([vName(it),tg]);});});
+  return order.filter(r=>byRes[r]).map(r=>({res:r,label:resLabel(r),tags:byRes[r]}));
+}
+/* One Anki Browse search from a set of tags. Each tag also matches its subtree
+   (tag:X::*) so a section AnKing splits into parts is still caught in full. */
+function ankiSearch(tags){return (tags||[]).filter(Boolean).map(t=>'"tag:'+t+'" OR "tag:'+t+'::*"').join(" OR ");}
+function ankiBlock(iso,openTags){if(!hasRes("anking"))return "";
+  const groups=dayTagGroups(iso);const total=groups.reduce((a,g)=>a+g.tags.length,0);const on=!!(S.akdone&&S.akdone[iso]);
   let h='<div class="anki"><button class="chk akchk '+(on?"on":"")+'" data-akiso="'+iso+'" aria-label="anki reviews done">'+(on?"✓":"")+'</button>'
     +'<div class="akmeta"><span class="aklab">Anki reviews — AnKing</span>'
-    +'<span class="akcount">'+(pairs.length?(pairs.length+' AnKing tag'+(pairs.length>1?"s":"")+' for today'):'Today\u2019s spaced-repetition reviews')+'</span></div>'
-    +(pairs.length?'<button class="cpyall" data-cpyall="'+iso+'" title="Copy an Anki Browse search for this day’s AnKing tags">Copy tags</button>':'')+'</div>';
-  if(pairs.length){
-    h+='<details class="aktags"'+(openTags?' open':'')+'><summary>Show AnKing tags</summary><div class="aktaglist">'
-      + pairs.map(p=>'<button class="aktagrow" data-copy="'+escAttr(p[1])+'" title="Copy Anki search for this tag"><span class="aktagname">'+escHTML(p[0])+'</span><span class="aktagcopy">⧉</span></button>').join('')
-      + '</div></details>';
+    +'<span class="akcount">'+(total?(total+' tag'+(total>1?"s":"")+' · '+groups.length+' resource'+(groups.length>1?"s":"")):'Today’s spaced-repetition reviews')+'</span></div></div>';
+  if(total){
+    h+='<details class="aktags"'+(openTags?' open':'')+'><summary>AnKing tags by resource</summary>';
+    groups.forEach(g=>{
+      h+='<div class="aktagsec"><div class="aktaghd"><span class="aktagreslab">'+escHTML(g.label)+' <span class="akn">'+g.tags.length+'</span></span>'
+        +'<button class="cpyres" data-cpyres="'+iso+'|'+g.res+'" title="Copy an Anki Browse search for these '+escHTML(g.label)+' tags">Copy '+escHTML(g.label)+'</button></div>'
+        +'<div class="aktaglist">'+g.tags.map(p=>'<button class="aktagrow" data-copy="'+escAttr(p[1])+'" title="Copy Anki search for this tag"><span class="aktagname">'+escHTML(p[0])+'</span><span class="aktagcopy">⧉</span></button>').join('')+'</div></div>';
+    });
+    h+='</details>';
   }
   return h;}
 function ankiCardBlock(iso){if(!hasRes("anking"))return "";return '<div class="card ankicard">'+ankiBlock(iso,true)+'</div>';}
@@ -1442,7 +1509,7 @@ function brodyChip(iso){
 }
 function bindExtras(){
   document.querySelectorAll("[data-copy]").forEach(b=>b.onclick=(e)=>{e.stopPropagation();copyText(ankiSearch([b.getAttribute("data-copy")]),"Copied — paste into Anki’s Browse search");});
-  document.querySelectorAll("[data-cpyall]").forEach(b=>b.onclick=(e)=>{e.stopPropagation();const t=dayTags(b.dataset.cpyall);if(!t.length){toast("No tags here");return;}copyText(ankiSearch(t),"Copied "+t.length+" AnKing tag"+(t.length>1?"s":"")+" — paste into Anki’s Browse search");});
+  document.querySelectorAll("[data-cpyres]").forEach(b=>b.onclick=(e)=>{e.stopPropagation();const parts=b.dataset.cpyres.split("|");const g=dayTagGroups(parts[0]).find(x=>x.res===parts[1]);if(!g||!g.tags.length){toast("No tags here");return;}const t=g.tags.map(p=>p[1]);copyText(ankiSearch(t),"Copied "+t.length+" "+g.label+" tag"+(t.length>1?"s":"")+" — paste into Anki’s Browse search");});
   document.querySelectorAll("[data-akiso]").forEach(b=>b.onclick=(e)=>{e.stopPropagation();const iso=b.dataset.akiso;S.akdone=S.akdone||{};if(S.akdone[iso])delete S.akdone[iso];else S.akdone[iso]=true;save();const on=!!S.akdone[iso];b.classList.toggle("on",on);b.textContent=on?"✓":"";});
 }
 
@@ -1479,7 +1546,7 @@ function chrome(active){
   let tabs;
   if(S.active==="m1"){tabs=[["browse","Browse"],["daily","Daily"],["grades","Grades"],["progress","Progress"]];}
   else if(S.active==="stepd"){tabs=[];}
-  else if(S.active==="nbme"){tabs=[["today","Study"],["stats","Stats"],["grades","Grades"],["adjust","Plan"]];}
+  else if(S.active==="nbme"){tabs=[["today","Study"],["checklist","Checklist"],["stats","Stats"],["grades","Grades"],["adjust","Plan"]];}
   else{tabs=[["today","Study"],["stats","Stats"],["adjust","Plan"]];}
   const nm=(S.active==="nbme"||S.active==="m1"||S.active==="stepd")?"Home":hubName(S.active||"step1");
   return '<div class="topbar'+(tabs.length?'':' solo')+'">'+'<button class="brandbtn" id="brandBtn" title="Switch hub">‹ <span class="brandnm">'+escHTML(nm)+'</span></button>'
@@ -1516,6 +1583,7 @@ function render(){
   if(VIEW==="ready"||VIEW==="progress")VIEW="stats"; // legacy views merged into Stats
   if(VIEW==="step"||VIEW==="plan")VIEW="today"; // Step is its own hub; Planner folded into Study
   if(VIEW==="today")renderToday();
+  else if(VIEW==="checklist")renderChecklist();
   else if(VIEW==="stats")renderStats();
   else if(VIEW==="grades")renderGrades();
   else if(VIEW==="adjust")renderAdjust();
@@ -1764,7 +1832,7 @@ function confidenceCard(){
   if(rated.length){h+='<div class="bars">';
     rated.forEach(x=>{const col=x.tier==="solid"?'var(--success)':(x.tier==="dev"?'var(--warning)':'var(--danger)');
       const lab=x.tier==="solid"?'Confident':(x.tier==="dev"?'Developing':'Needs work');
-      h+='<div class="bar"><div class="barlab">'+escHTML(x.sys)+'</div><div class="bartrack"><div class="barfill" style="width:'+x.pct+'%;background:'+col+'"></div></div><div class="barpct">'+x.pct+'% <span class="muted small">'+lab+'</span></div></div>';});
+      h+='<div class="bar"><div class="barlab">'+escHTML(x.sys)+'</div><div class="bartrack"><div class="barfill" style="width:'+x.pct+'%;background:'+col+'"></div></div><div class="barpct conf"><b>'+x.pct+'%</b><span class="conftier">'+lab+'</span></div></div>';});
     h+='</div>';}
   else h+='<p class="muted small">No subject has enough logged questions for a rating yet — '+CONF_MIN_Q+'+ in a subject unlocks one.</p>';
   if(pending.length)h+='<p class="muted small">Building toward a rating: '+pending.map(x=>escHTML(x.sys)+' <b>'+x.done+'</b>/'+CONF_MIN_Q).join(' · ')+'.</p>';
@@ -1804,12 +1872,55 @@ function videoCards(){
   const by=sysProgress();const o=overall();
   let body='<div class="hero"><div class="hero-l">'+ring(o.pct,72)+'</div><div class="hero-r"><div class="big">'+o.done+' <span>/ '+o.total+' videos</span></div><div class="sub">'+SCHED.stats.remItems+' remaining · '+currentStreak()+'-day streak</div></div></div>';
   body+=pacingChart();
-  body+='<div class="card"><div class="cardhd">By subject'+(o.done?'<button class="hdreset" id="rst_vid" title="Clear every video checkmark">Reset</button>':'')+'</div><div class="bars">';
+  body+='<div class="card"><div class="cardhd">Video completion by subject'+(o.done?'<button class="hdreset" id="rst_vid" title="Clear every video checkmark">Reset</button>':'')+'</div>'
+    +'<p class="muted small" style="margin-top:0">How much of each subject’s videos you’ve watched — not question accuracy (that’s <b>Subject confidence</b>).</p><div class="bars">';
   const rows=[]; planSystems().forEach(s=>{if(by[s]&&by[s].t)rows.push(s);});
   rows.forEach(s=>{const x=by[s];const pct=Math.round(x.d/x.t*100);
-    body+='<div class="bar"><div class="barlab">'+escHTML(s)+'</div><div class="bartrack"><div class="barfill" style="width:'+pct+'%"></div></div><div class="barpct">'+pct+'%</div></div>';});
+    body+='<div class="bar"><div class="barlab">'+escHTML(s)+'</div><div class="bartrack"><div class="barfill" style="width:'+pct+'%"></div></div><div class="barpct">'+pct+'% <span class="muted small">'+x.d+'/'+x.t+'</span></div></div>';});
   body+='</div></div>';
   return body;
+}
+/* ---------- MASTER CHECKLIST ----------
+   Every third-party video in the plan, grouped resource → system → category,
+   with live checkboxes. Checking here shares state with the daily plan (same
+   vdone), so progress moves together. */
+const CLFOLD={};
+function renderChecklist(){
+  const vids=planVideos();
+  const total=vids.length, done=vids.filter(v=>isDone(v.id)).length, pct=total?Math.round(done/total*100):0;
+  let body='<div class="card clhead"><div class="cardhd">Master checklist</div>';
+  if(!total){
+    body+='<p class="muted small">No videos in your plan yet. Turn on some resources in <b>Plan</b> and they’ll appear here to check off.</p></div>';
+    app.innerHTML=chrome("checklist")+'<div class="wrap"><div class="clwrap">'+body+'</div></div>';wireChrome();return;
+  }
+  // group res -> sys -> cat, preserving first-appearance order
+  const RES=["bnb","pathoma","skmicro","skpharm"];const byRes={};
+  vids.forEach(v=>{const R=byRes[v.res]=byRes[v.res]||{order:[],sys:{}};
+    if(!R.sys[v.sys]){R.sys[v.sys]={order:[],cat:{}};R.order.push(v.sys);}
+    const Sy=R.sys[v.sys];if(!Sy.cat[v.cat]){Sy.cat[v.cat]=[];Sy.order.push(v.cat);}Sy.cat[v.cat].push(v);});
+  body+='<div class="cltop"><div class="clbig">'+done+' <span>/ '+total+' videos</span></div><div class="clpct'+(pct>=100?' met':'')+'">'+pct+'%</div></div>'
+    +'<div class="bartrack big"><div class="barfill" style="width:'+pct+'%'+(pct>=100?';background:var(--success)':'')+'"></div></div>'
+    +'<p class="muted small" style="margin-bottom:0">Every video in your plan’s third-party resources. Check one off here or on <b>Study</b> — both stay in sync.</p></div>';
+  RES.filter(r=>byRes[r]).forEach(r=>{
+    const R=byRes[r];const rv=[];R.order.forEach(s=>R.sys[s].order.forEach(c=>rv.push.apply(rv,R.sys[s].cat[c])));
+    const rd=rv.filter(v=>isDone(v.id)).length, rp=rv.length?Math.round(rd/rv.length*100):0;
+    const fid='cl_'+r, open=(CLFOLD[fid]!=null)?CLFOLD[fid]:true;
+    body+='<div class="card clres"><details class="clfold" data-clfold="'+fid+'"'+(open?' open':'')+'>'
+      +'<summary class="clsum"><span class="clreslab">'+resLabel(r)+'</span><span class="clprog"><span class="clfrac'+(rp>=100?' met':'')+'">'+rd+' / '+rv.length+'</span><span class="clmini"><span class="clminifill" style="width:'+rp+'%'+(rp>=100?';background:var(--success)':'')+'"></span></span></span></summary>';
+    R.order.forEach(s=>{const Sy=R.sys[s];
+      body+='<div class="clsys"><div class="clsyshd">'+escHTML(s)+'</div>';
+      Sy.order.forEach(c=>{
+        if(c)body+='<div class="clcat">'+escHTML(c)+'</div>';
+        body+='<div class="cllist">'+Sy.cat[c].map(v=>{const dn=isDone(v.id);
+          return '<button class="clrow'+(dn?' done':'')+'" data-clid="'+escAttr(v.id)+'"><span class="clchk'+(dn?' on':'')+'">'+(dn?'✓':'')+'</span><span class="clname">'+escHTML(vName(v))+'</span><span class="clmin">'+v.min+'m</span></button>';}).join('')+'</div>';
+      });
+      body+='</div>';});
+    body+='</details></div>';
+  });
+  app.innerHTML=chrome("checklist")+'<div class="wrap"><div class="clwrap">'+body+'</div></div>';
+  wireChrome();
+  document.querySelectorAll("[data-clid]").forEach(b=>b.onclick=()=>toggleItems([b.dataset.clid]));
+  document.querySelectorAll("[data-clfold]").forEach(d=>d.ontoggle=()=>{CLFOLD[d.dataset.clfold]=d.open;});
 }
 function renderStats(){
   app.innerHTML=chrome("stats")+'<div class="wrap"><div class="cols"><div>'+videoCards()+'</div><div>'+readinessCards()+'</div></div></div>';
@@ -3271,11 +3382,19 @@ function doResetAll(){
     S.cfgs=snap.cfgs;S.active=snap.active;S.cfg=S.active?S.cfgs[S.active]:null;_prevSig=progressSig();save();
     if(S.cfg){reflow();render();}else renderWelcome();toast("Restored ✓");});
 }
-const BUILD="2026-07-20b";
+const BUILD="2026-07-20f";
 /* ---------- What's new (changelog) ----------
    Newest entry first. Bump the top entry's id whenever you add one and the
    pop-up shows once per person (tracked in synced settings.seenUpdate). */
 const CHANGELOG=[
+  {id:"2026-07-22", date:"July 2026", title:"Master checklist", items:[
+    "New Checklist tab in the M2 hub: every video in your plan, grouped by resource → subject → topic, with a running total and per-resource progress.",
+    "Check videos off here or on your daily Study plan — they stay in sync, so your progress moves together no matter where you tick a video off.",
+  ]},
+  {id:"2026-07-21", date:"July 2026", title:"Pathoma AnKing tags", items:[
+    "Pathoma videos now carry AnKing tags too, not just Boards & Beyond. When Pathoma is on your plan, each day's Anki block lists its Pathoma tags.",
+    "The day's AnKing tags are now grouped by resource — a separate Boards & Beyond and Pathoma section, each with its own one-tap Anki Browse search to copy.",
+  ]},
   {id:"2026-07-20", date:"July 2026", title:"Log questions from Study; confidence-first Stats", items:[
     "Your weekly practice-question tracker on the Study page now has a quick logger built in: log a block in one line, see how many questions are left this week (or how many you've gone over), and it saves straight to Stats.",
     "Subject confidence now sits at the top of Stats — it's the answer to 'am I ready?', so it leads.",
