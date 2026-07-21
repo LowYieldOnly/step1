@@ -390,6 +390,12 @@ b{color:var(--ink)}
 .aktags>summary::-webkit-details-marker{display:none}
 .aktags>summary::before{content:"▸ ";color:var(--faint)}
 .aktags[open]>summary::before{content:"▾ "}
+.aktagsec{margin-top:11px}
+.aktaghd{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:2px}
+.aktagreslab{font-size:12.5px;font-weight:700;color:var(--ink)}
+.aktagreslab .akn{font-family:var(--mono);font-size:10.5px;color:var(--faint)}
+.cpyres{flex:0 0 auto;background:var(--phos-soft);border:1px solid var(--phos-dim);color:var(--phos);border-radius:9px;padding:5px 11px;font-size:11px;font-weight:800;cursor:pointer;white-space:nowrap}
+.cpyres:hover{background:var(--phos);color:var(--on-accent)}
 .aktaglist{display:flex;flex-direction:column;gap:6px;margin-top:8px}
 .aktagrow{display:flex;align-items:center;gap:8px;width:100%;text-align:left;background:var(--bg2);border:1px solid var(--line);border-radius:9px;padding:8px 10px;cursor:pointer;transition:border-color .14s}
 .aktagrow:hover{border-color:var(--phos-dim)}
@@ -1415,19 +1421,29 @@ function itemRows(items,opts){opts=opts||{};if(!items.length)return '<div class=
 /* ---------- copy helpers + per-day Anki block ---------- */
 function fallbackCopy(t,msg){try{const ta=document.createElement("textarea");ta.value=t;ta.style.position="fixed";ta.style.opacity="0";document.body.appendChild(ta);ta.focus();ta.select();document.execCommand("copy");document.body.removeChild(ta);toast(msg||"Copied");}catch(e){toast("Copy failed — long-press to copy");}}
 function copyText(t,msg){t=t||"";if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(t).then(()=>toast(msg||"Copied"),()=>fallbackCopy(t,msg));}else fallbackCopy(t,msg);}
-function dayTagPairs(iso){const row=SCHED&&SCHED.dayMap[iso];if(!row)return [];const seen={},out=[];row.items.forEach(it=>{if(it.res==="bnb"&&it.tag&&!seen[it.tag]){seen[it.tag]=1;out.push([vName(it),it.tag]);}});return out;}
-function dayTags(iso){return dayTagPairs(iso).map(p=>p[1]);}
-/* Format AnKing tags as a single Anki Browse search: "tag:X" OR "tag:Y" … */
-function ankiSearch(tags){return (tags||[]).filter(Boolean).map(t=>'"tag:'+t+'"').join(" OR ");}
-function ankiBlock(iso,openTags){if(!hasRes("anking"))return "";const pairs=dayTagPairs(iso);const on=!!(S.akdone&&S.akdone[iso]);
+function dayTagGroups(iso){
+  const row=SCHED&&SCHED.dayMap[iso];if(!row)return [];
+  const order=["bnb","pathoma","skmicro","skpharm"];const byRes={};const seen={};
+  row.items.forEach(it=>{if(!it.tag)return;const tags=Array.isArray(it.tag)?it.tag:[it.tag];
+    tags.forEach(tg=>{if(!tg)return;const k=it.res+"|"+tg;if(seen[k])return;seen[k]=1;(byRes[it.res]=byRes[it.res]||[]).push([vName(it),tg]);});});
+  return order.filter(r=>byRes[r]).map(r=>({res:r,label:resLabel(r),tags:byRes[r]}));
+}
+/* One Anki Browse search from a set of tags. Each tag also matches its subtree
+   (tag:X::*) so a section AnKing splits into parts is still caught in full. */
+function ankiSearch(tags){return (tags||[]).filter(Boolean).map(t=>'"tag:'+t+'" OR "tag:'+t+'::*"').join(" OR ");}
+function ankiBlock(iso,openTags){if(!hasRes("anking"))return "";
+  const groups=dayTagGroups(iso);const total=groups.reduce((a,g)=>a+g.tags.length,0);const on=!!(S.akdone&&S.akdone[iso]);
   let h='<div class="anki"><button class="chk akchk '+(on?"on":"")+'" data-akiso="'+iso+'" aria-label="anki reviews done">'+(on?"✓":"")+'</button>'
     +'<div class="akmeta"><span class="aklab">Anki reviews — AnKing</span>'
-    +'<span class="akcount">'+(pairs.length?(pairs.length+' AnKing tag'+(pairs.length>1?"s":"")+' for today'):'Today\u2019s spaced-repetition reviews')+'</span></div>'
-    +(pairs.length?'<button class="cpyall" data-cpyall="'+iso+'" title="Copy an Anki Browse search for this day’s AnKing tags">Copy tags</button>':'')+'</div>';
-  if(pairs.length){
-    h+='<details class="aktags"'+(openTags?' open':'')+'><summary>Show AnKing tags</summary><div class="aktaglist">'
-      + pairs.map(p=>'<button class="aktagrow" data-copy="'+escAttr(p[1])+'" title="Copy Anki search for this tag"><span class="aktagname">'+escHTML(p[0])+'</span><span class="aktagcopy">⧉</span></button>').join('')
-      + '</div></details>';
+    +'<span class="akcount">'+(total?(total+' tag'+(total>1?"s":"")+' · '+groups.length+' resource'+(groups.length>1?"s":"")):'Today’s spaced-repetition reviews')+'</span></div></div>';
+  if(total){
+    h+='<details class="aktags"'+(openTags?' open':'')+'><summary>AnKing tags by resource</summary>';
+    groups.forEach(g=>{
+      h+='<div class="aktagsec"><div class="aktaghd"><span class="aktagreslab">'+escHTML(g.label)+' <span class="akn">'+g.tags.length+'</span></span>'
+        +'<button class="cpyres" data-cpyres="'+iso+'|'+g.res+'" title="Copy an Anki Browse search for these '+escHTML(g.label)+' tags">Copy '+escHTML(g.label)+'</button></div>'
+        +'<div class="aktaglist">'+g.tags.map(p=>'<button class="aktagrow" data-copy="'+escAttr(p[1])+'" title="Copy Anki search for this tag"><span class="aktagname">'+escHTML(p[0])+'</span><span class="aktagcopy">⧉</span></button>').join('')+'</div></div>';
+    });
+    h+='</details>';
   }
   return h;}
 function ankiCardBlock(iso){if(!hasRes("anking"))return "";return '<div class="card ankicard">'+ankiBlock(iso,true)+'</div>';}
@@ -1445,7 +1461,7 @@ function brodyChip(iso){
 }
 function bindExtras(){
   document.querySelectorAll("[data-copy]").forEach(b=>b.onclick=(e)=>{e.stopPropagation();copyText(ankiSearch([b.getAttribute("data-copy")]),"Copied — paste into Anki’s Browse search");});
-  document.querySelectorAll("[data-cpyall]").forEach(b=>b.onclick=(e)=>{e.stopPropagation();const t=dayTags(b.dataset.cpyall);if(!t.length){toast("No tags here");return;}copyText(ankiSearch(t),"Copied "+t.length+" AnKing tag"+(t.length>1?"s":"")+" — paste into Anki’s Browse search");});
+  document.querySelectorAll("[data-cpyres]").forEach(b=>b.onclick=(e)=>{e.stopPropagation();const parts=b.dataset.cpyres.split("|");const g=dayTagGroups(parts[0]).find(x=>x.res===parts[1]);if(!g||!g.tags.length){toast("No tags here");return;}const t=g.tags.map(p=>p[1]);copyText(ankiSearch(t),"Copied "+t.length+" "+g.label+" tag"+(t.length>1?"s":"")+" — paste into Anki’s Browse search");});
   document.querySelectorAll("[data-akiso]").forEach(b=>b.onclick=(e)=>{e.stopPropagation();const iso=b.dataset.akiso;S.akdone=S.akdone||{};if(S.akdone[iso])delete S.akdone[iso];else S.akdone[iso]=true;save();const on=!!S.akdone[iso];b.classList.toggle("on",on);b.textContent=on?"✓":"";});
 }
 
@@ -3275,11 +3291,15 @@ function doResetAll(){
     S.cfgs=snap.cfgs;S.active=snap.active;S.cfg=S.active?S.cfgs[S.active]:null;_prevSig=progressSig();save();
     if(S.cfg){reflow();render();}else renderWelcome();toast("Restored ✓");});
 }
-const BUILD="2026-07-20d";
+const BUILD="2026-07-20e";
 /* ---------- What's new (changelog) ----------
    Newest entry first. Bump the top entry's id whenever you add one and the
    pop-up shows once per person (tracked in synced settings.seenUpdate). */
 const CHANGELOG=[
+  {id:"2026-07-21", date:"July 2026", title:"Pathoma AnKing tags", items:[
+    "Pathoma videos now carry AnKing tags too, not just Boards & Beyond. When Pathoma is on your plan, each day's Anki block lists its Pathoma tags.",
+    "The day's AnKing tags are now grouped by resource — a separate Boards & Beyond and Pathoma section, each with its own one-tap Anki Browse search to copy.",
+  ]},
   {id:"2026-07-20", date:"July 2026", title:"Log questions from Study; confidence-first Stats", items:[
     "Your weekly practice-question tracker on the Study page now has a quick logger built in: log a block in one line, see how many questions are left this week (or how many you've gone over), and it saves straight to Stats.",
     "Subject confidence now sits at the top of Stats — it's the answer to 'am I ready?', so it leads.",
