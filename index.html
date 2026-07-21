@@ -980,23 +980,15 @@ function buildBacklog(){
   });
   return out;
 }
-/* Every third-party video in the current plan's scope, normalized for the
-   master checklist. Brody plans honor the block's include/exclude rules;
-   custom plans use the same backlog scope the scheduler packs. */
-function planVideos(){
-  const c=S.cfg; if(!c)return [];
-  const blk=brodyBlock(c); const en=resEnabled(); const pathSel=en.pathoma?effectivePathChapters(c):new Set();
-  const out=[];
-  if(blk){
-    catVideos().forEach(v=>{
-      if(!brodyInBlock(blk,v))return; if(!en[v.res])return;
-      if(v.res==="pathoma"&&!pathSel.has(pathChapterOf(v)))return;
-      out.push({res:v.res,sys:v.sys,cat:v.cat||"",name:v.name,min:v.min,id:itemId(v)});
-    });
-  } else {
-    buildBacklog().forEach(it=>out.push({res:it.res,sys:it.sys,cat:it.fa||"",name:it.name,min:it.min,id:it.id}));
-  }
-  return out;
+/* The WHOLE third-party catalog, normalized for the master checklist — every
+   B&B, Pathoma, and Sketchy video across every system, not just the current
+   plan. Ordered resource → system (recommended order) → catalog order. */
+const CL_RESORDER={bnb:0,pathoma:1,skmicro:2,skpharm:3};
+function checklistVideos(){
+  const sysIdx=s=>{const i=SYS_ORDER_DEFAULT.indexOf(s);return i<0?99:i;};
+  return catVideos().map((v,i)=>({res:v.res,sys:v.sys,cat:v.cat||"",name:v.name,min:v.min,id:itemId(v),_i:i}))
+    .filter(v=>CL_RESORDER[v.res]!=null)
+    .sort((a,b)=>(CL_RESORDER[a.res]-CL_RESORDER[b.res])||(sysIdx(a.sys)-sysIdx(b.sys))||(a._i-b._i));
 }
 
 /* ============================================================
@@ -1884,29 +1876,24 @@ function videoCards(){
    Every third-party video in the plan, grouped resource → system → category,
    with live checkboxes. Checking here shares state with the daily plan (same
    vdone), so progress moves together. */
-const CLFOLD={};
+const CLFOLD={};let CLVIDS=[];
 function renderChecklist(){
-  const vids=planVideos();
+  CLVIDS=checklistVideos();const vids=CLVIDS;
   const total=vids.length, done=vids.filter(v=>isDone(v.id)).length, pct=total?Math.round(done/total*100):0;
-  let body='<div class="card clhead"><div class="cardhd">Master checklist</div>';
-  if(!total){
-    body+='<p class="muted small">No videos in your plan yet. Turn on some resources in <b>Plan</b> and they’ll appear here to check off.</p></div>';
-    app.innerHTML=chrome("checklist")+'<div class="wrap"><div class="clwrap">'+body+'</div></div>';wireChrome();return;
-  }
-  // group res -> sys -> cat, preserving first-appearance order
   const RES=["bnb","pathoma","skmicro","skpharm"];const byRes={};
   vids.forEach(v=>{const R=byRes[v.res]=byRes[v.res]||{order:[],sys:{}};
     if(!R.sys[v.sys]){R.sys[v.sys]={order:[],cat:{}};R.order.push(v.sys);}
     const Sy=R.sys[v.sys];if(!Sy.cat[v.cat]){Sy.cat[v.cat]=[];Sy.order.push(v.cat);}Sy.cat[v.cat].push(v);});
-  body+='<div class="cltop"><div class="clbig">'+done+' <span>/ '+total+' videos</span></div><div class="clpct'+(pct>=100?' met':'')+'">'+pct+'%</div></div>'
-    +'<div class="bartrack big"><div class="barfill" style="width:'+pct+'%'+(pct>=100?';background:var(--success)':'')+'"></div></div>'
-    +'<p class="muted small" style="margin-bottom:0">Every video in your plan’s third-party resources. Check one off here or on <b>Study</b> — both stay in sync.</p></div>';
+  let body='<div class="card clhead"><div class="cardhd">Master checklist</div>'
+    +'<div class="cltop"><div class="clbig"><span id="clDone">'+done+'</span> <span>/ '+total+' videos</span></div><div class="clpct'+(pct>=100?' met':'')+'" id="clPct">'+pct+'%</div></div>'
+    +'<div class="bartrack big"><div class="barfill" id="clBar" style="width:'+pct+'%'+(pct>=100?';background:var(--success)':'')+'"></div></div>'
+    +'<p class="muted small" style="margin-bottom:0">The whole third-party catalog — Boards &amp; Beyond, Pathoma, and Sketchy across every system. Check videos off here or on <b>Study</b>; progress stays in sync.</p></div>';
   RES.filter(r=>byRes[r]).forEach(r=>{
     const R=byRes[r];const rv=[];R.order.forEach(s=>R.sys[s].order.forEach(c=>rv.push.apply(rv,R.sys[s].cat[c])));
     const rd=rv.filter(v=>isDone(v.id)).length, rp=rv.length?Math.round(rd/rv.length*100):0;
-    const fid='cl_'+r, open=(CLFOLD[fid]!=null)?CLFOLD[fid]:true;
+    const fid='cl_'+r, open=(CLFOLD[fid]!=null)?CLFOLD[fid]:false;   // collapsed by default — the full catalog is large
     body+='<div class="card clres"><details class="clfold" data-clfold="'+fid+'"'+(open?' open':'')+'>'
-      +'<summary class="clsum"><span class="clreslab">'+resLabel(r)+'</span><span class="clprog"><span class="clfrac'+(rp>=100?' met':'')+'">'+rd+' / '+rv.length+'</span><span class="clmini"><span class="clminifill" style="width:'+rp+'%'+(rp>=100?';background:var(--success)':'')+'"></span></span></span></summary>';
+      +'<summary class="clsum"><span class="clreslab">'+resLabel(r)+'</span><span class="clprog"><span class="clfrac'+(rp>=100?' met':'')+'" data-clfrac="'+r+'">'+rd+' / '+rv.length+'</span><span class="clmini"><span class="clminifill" data-clfill="'+r+'" style="width:'+rp+'%'+(rp>=100?';background:var(--success)':'')+'"></span></span></span></summary>';
     R.order.forEach(s=>{const Sy=R.sys[s];
       body+='<div class="clsys"><div class="clsyshd">'+escHTML(s)+'</div>';
       Sy.order.forEach(c=>{
@@ -1919,8 +1906,28 @@ function renderChecklist(){
   });
   app.innerHTML=chrome("checklist")+'<div class="wrap"><div class="clwrap">'+body+'</div></div>';
   wireChrome();
-  document.querySelectorAll("[data-clid]").forEach(b=>b.onclick=()=>toggleItems([b.dataset.clid]));
+  document.querySelectorAll("[data-clid]").forEach(b=>b.onclick=()=>clToggle(b));
   document.querySelectorAll("[data-clfold]").forEach(d=>d.ontoggle=()=>{CLFOLD[d.dataset.clfold]=d.open;});
+}
+function clToggle(btn){
+  const id=btn.dataset.clid;const nowDone=!isDone(id);
+  S.vdone=S.vdone||{};S.vskip=S.vskip||{};S.vdoneDate=S.vdoneDate||{};
+  if(nowDone){S.vdone[id]=true;delete S.vskip[id];S.vdoneDate[id]=todayISO();markStudiedToday();}
+  else{delete S.vdone[id];delete S.vdoneDate[id];}
+  save();reflow();
+  btn.classList.toggle('done',nowDone);
+  const chk=btn.querySelector('.clchk');if(chk){chk.classList.toggle('on',nowDone);chk.textContent=nowDone?'✓':'';}
+  clUpdateCounters();
+}
+function clUpdateCounters(){
+  const total=CLVIDS.length,done=CLVIDS.filter(v=>isDone(v.id)).length,pct=total?Math.round(done/total*100):0;
+  const d=document.getElementById('clDone');if(d)d.textContent=done;
+  const pc=document.getElementById('clPct');if(pc){pc.textContent=pct+'%';pc.classList.toggle('met',pct>=100);}
+  const bar=document.getElementById('clBar');if(bar){bar.style.width=pct+'%';bar.style.background=pct>=100?'var(--success)':'';}
+  ["bnb","pathoma","skmicro","skpharm"].forEach(r=>{const rv=CLVIDS.filter(v=>v.res===r);if(!rv.length)return;
+    const rd=rv.filter(v=>isDone(v.id)).length,rp=rv.length?Math.round(rd/rv.length*100):0;
+    const f=document.querySelector('[data-clfrac="'+r+'"]');if(f){f.textContent=rd+' / '+rv.length;f.classList.toggle('met',rp>=100);}
+    const fl=document.querySelector('[data-clfill="'+r+'"]');if(fl){fl.style.width=rp+'%';fl.style.background=rp>=100?'var(--success)':'';}});
 }
 function renderStats(){
   app.innerHTML=chrome("stats")+'<div class="wrap"><div class="cols"><div>'+videoCards()+'</div><div>'+readinessCards()+'</div></div></div>';
@@ -3382,13 +3389,13 @@ function doResetAll(){
     S.cfgs=snap.cfgs;S.active=snap.active;S.cfg=S.active?S.cfgs[S.active]:null;_prevSig=progressSig();save();
     if(S.cfg){reflow();render();}else renderWelcome();toast("Restored ✓");});
 }
-const BUILD="2026-07-20f";
+const BUILD="2026-07-20g";
 /* ---------- What's new (changelog) ----------
    Newest entry first. Bump the top entry's id whenever you add one and the
    pop-up shows once per person (tracked in synced settings.seenUpdate). */
 const CHANGELOG=[
   {id:"2026-07-22", date:"July 2026", title:"Master checklist", items:[
-    "New Checklist tab in the M2 hub: every video in your plan, grouped by resource → subject → topic, with a running total and per-resource progress.",
+    "New Checklist tab in the M2 hub: the whole third-party catalog — Boards & Beyond, Pathoma, and Sketchy across every system — grouped by resource → subject → topic, with a running total and per-resource progress.",
     "Check videos off here or on your daily Study plan — they stay in sync, so your progress moves together no matter where you tick a video off.",
   ]},
   {id:"2026-07-21", date:"July 2026", title:"Pathoma AnKing tags", items:[
