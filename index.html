@@ -1538,7 +1538,7 @@ function chrome(active){
   let tabs;
   if(S.active==="m1"){tabs=[["browse","Browse"],["daily","Daily"],["grades","Grades"],["progress","Progress"]];}
   else if(S.active==="stepd"){tabs=[];}
-  else if(S.active==="nbme"){tabs=[["today","Study"],["checklist","Checklist"],["stats","Stats"],["grades","Grades"],["adjust","Plan"]];}
+  else if(S.active==="nbme"){tabs=[["today","Study"],["stats","Stats"],["grades","Grades"],["adjust","Plan"],["checklist","Checklist"]];}
   else{tabs=[["today","Study"],["stats","Stats"],["adjust","Plan"]];}
   const nm=(S.active==="nbme"||S.active==="m1"||S.active==="stepd")?"Home":hubName(S.active||"step1");
   return '<div class="topbar'+(tabs.length?'':' solo')+'">'+'<button class="brandbtn" id="brandBtn" title="Switch hub">‹ <span class="brandnm">'+escHTML(nm)+'</span></button>'
@@ -3389,7 +3389,7 @@ function doResetAll(){
     S.cfgs=snap.cfgs;S.active=snap.active;S.cfg=S.active?S.cfgs[S.active]:null;_prevSig=progressSig();save();
     if(S.cfg){reflow();render();}else renderWelcome();toast("Restored ✓");});
 }
-const BUILD="2026-07-20g";
+const BUILD="2026-07-20h";
 /* ---------- What's new (changelog) ----------
    Newest entry first. Bump the top entry's id whenever you add one and the
    pop-up shows once per person (tracked in synced settings.seenUpdate). */
