@@ -449,6 +449,36 @@ b{color:var(--ink)}
 .barpct.conf{width:80px;flex:0 0 80px;line-height:1.2}
 .barpct.conf b{color:var(--ink);font-weight:700}
 .barpct.conf .conftier{display:block;font-family:var(--sans);font-size:10.5px;color:var(--muted);white-space:nowrap}
+/* master checklist */
+.clwrap{max-width:800px;margin:0 auto}
+.clhead .cltop{display:flex;justify-content:space-between;align-items:baseline;margin:6px 0 9px}
+.clbig{font-size:26px;font-weight:800;color:var(--ink)}
+.clbig span{font-size:14px;color:var(--muted);font-weight:600}
+.clpct{font-family:var(--mono);font-size:15px;font-weight:800;color:var(--phos)}
+.clpct.met{color:var(--success)}
+.clres{padding:0;overflow:hidden}
+.clfold>summary{list-style:none;cursor:pointer}
+.clfold>summary::-webkit-details-marker{display:none}
+.clsum{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:14px 16px}
+.clreslab{font-size:15px;font-weight:800;color:var(--ink)}
+.clreslab::before{content:"▸ ";color:var(--faint);font-size:12px}
+.clfold[open]>summary .clreslab::before{content:"▾ "}
+.clprog{display:flex;align-items:center;gap:10px;flex:0 0 auto}
+.clfrac{font-family:var(--mono);font-size:12px;color:var(--muted)}
+.clfrac.met{color:var(--success)}
+.clmini{width:82px;height:6px;background:var(--bg2);border-radius:999px;overflow:hidden}
+.clminifill{display:block;height:100%;background:var(--phos);border-radius:999px}
+.clsys{padding:0 16px 6px}
+.clsyshd{font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.04em;color:var(--muted);margin:12px 0 6px}
+.clcat{font-size:12px;color:var(--faint);margin:9px 0 4px}
+.cllist{display:flex;flex-direction:column;gap:5px}
+.clrow{display:flex;align-items:center;gap:10px;width:100%;text-align:left;background:var(--bg2);border:1px solid var(--line);border-radius:9px;padding:8px 11px;cursor:pointer;transition:border-color .14s}
+.clrow:hover{border-color:var(--phos-dim)}
+.clchk{flex:0 0 auto;width:20px;height:20px;border-radius:6px;border:1.5px solid var(--line2);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;color:var(--on-accent)}
+.clchk.on{background:var(--phos);border-color:var(--phos)}
+.clname{flex:1;min-width:0;font-size:13px;color:var(--ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.clrow.done .clname{text-decoration:line-through;color:var(--faint)}
+.clmin{flex:0 0 auto;font-family:var(--mono);font-size:11px;color:var(--faint)}
 
 /* forms / toggles */
 .form{display:flex;flex-direction:column;gap:13px}
@@ -948,6 +978,24 @@ function buildBacklog(){
   visit.forEach(sn=>{const byRes=bySys[sn];if(!byRes)return;const isSel=orderSet.has(sn);
     RES_ORDER.forEach(r=>{if(r!=="pathoma"&&!isSel)return;(byRes[r]||[]).forEach(v=>out.push({sys:sn,name:v.name,min:v.min,fa:v.cat||"",tag:v.tag||"",res:r,label:v.name,id:itemId(v)}));});
   });
+  return out;
+}
+/* Every third-party video in the current plan's scope, normalized for the
+   master checklist. Brody plans honor the block's include/exclude rules;
+   custom plans use the same backlog scope the scheduler packs. */
+function planVideos(){
+  const c=S.cfg; if(!c)return [];
+  const blk=brodyBlock(c); const en=resEnabled(); const pathSel=en.pathoma?effectivePathChapters(c):new Set();
+  const out=[];
+  if(blk){
+    catVideos().forEach(v=>{
+      if(!brodyInBlock(blk,v))return; if(!en[v.res])return;
+      if(v.res==="pathoma"&&!pathSel.has(pathChapterOf(v)))return;
+      out.push({res:v.res,sys:v.sys,cat:v.cat||"",name:v.name,min:v.min,id:itemId(v)});
+    });
+  } else {
+    buildBacklog().forEach(it=>out.push({res:it.res,sys:it.sys,cat:it.fa||"",name:it.name,min:it.min,id:it.id}));
+  }
   return out;
 }
 
@@ -1498,7 +1546,7 @@ function chrome(active){
   let tabs;
   if(S.active==="m1"){tabs=[["browse","Browse"],["daily","Daily"],["grades","Grades"],["progress","Progress"]];}
   else if(S.active==="stepd"){tabs=[];}
-  else if(S.active==="nbme"){tabs=[["today","Study"],["stats","Stats"],["grades","Grades"],["adjust","Plan"]];}
+  else if(S.active==="nbme"){tabs=[["today","Study"],["checklist","Checklist"],["stats","Stats"],["grades","Grades"],["adjust","Plan"]];}
   else{tabs=[["today","Study"],["stats","Stats"],["adjust","Plan"]];}
   const nm=(S.active==="nbme"||S.active==="m1"||S.active==="stepd")?"Home":hubName(S.active||"step1");
   return '<div class="topbar'+(tabs.length?'':' solo')+'">'+'<button class="brandbtn" id="brandBtn" title="Switch hub">‹ <span class="brandnm">'+escHTML(nm)+'</span></button>'
@@ -1535,6 +1583,7 @@ function render(){
   if(VIEW==="ready"||VIEW==="progress")VIEW="stats"; // legacy views merged into Stats
   if(VIEW==="step"||VIEW==="plan")VIEW="today"; // Step is its own hub; Planner folded into Study
   if(VIEW==="today")renderToday();
+  else if(VIEW==="checklist")renderChecklist();
   else if(VIEW==="stats")renderStats();
   else if(VIEW==="grades")renderGrades();
   else if(VIEW==="adjust")renderAdjust();
@@ -1830,6 +1879,48 @@ function videoCards(){
     body+='<div class="bar"><div class="barlab">'+escHTML(s)+'</div><div class="bartrack"><div class="barfill" style="width:'+pct+'%"></div></div><div class="barpct">'+pct+'% <span class="muted small">'+x.d+'/'+x.t+'</span></div></div>';});
   body+='</div></div>';
   return body;
+}
+/* ---------- MASTER CHECKLIST ----------
+   Every third-party video in the plan, grouped resource → system → category,
+   with live checkboxes. Checking here shares state with the daily plan (same
+   vdone), so progress moves together. */
+const CLFOLD={};
+function renderChecklist(){
+  const vids=planVideos();
+  const total=vids.length, done=vids.filter(v=>isDone(v.id)).length, pct=total?Math.round(done/total*100):0;
+  let body='<div class="card clhead"><div class="cardhd">Master checklist</div>';
+  if(!total){
+    body+='<p class="muted small">No videos in your plan yet. Turn on some resources in <b>Plan</b> and they’ll appear here to check off.</p></div>';
+    app.innerHTML=chrome("checklist")+'<div class="wrap"><div class="clwrap">'+body+'</div></div>';wireChrome();return;
+  }
+  // group res -> sys -> cat, preserving first-appearance order
+  const RES=["bnb","pathoma","skmicro","skpharm"];const byRes={};
+  vids.forEach(v=>{const R=byRes[v.res]=byRes[v.res]||{order:[],sys:{}};
+    if(!R.sys[v.sys]){R.sys[v.sys]={order:[],cat:{}};R.order.push(v.sys);}
+    const Sy=R.sys[v.sys];if(!Sy.cat[v.cat]){Sy.cat[v.cat]=[];Sy.order.push(v.cat);}Sy.cat[v.cat].push(v);});
+  body+='<div class="cltop"><div class="clbig">'+done+' <span>/ '+total+' videos</span></div><div class="clpct'+(pct>=100?' met':'')+'">'+pct+'%</div></div>'
+    +'<div class="bartrack big"><div class="barfill" style="width:'+pct+'%'+(pct>=100?';background:var(--success)':'')+'"></div></div>'
+    +'<p class="muted small" style="margin-bottom:0">Every video in your plan’s third-party resources. Check one off here or on <b>Study</b> — both stay in sync.</p></div>';
+  RES.filter(r=>byRes[r]).forEach(r=>{
+    const R=byRes[r];const rv=[];R.order.forEach(s=>R.sys[s].order.forEach(c=>rv.push.apply(rv,R.sys[s].cat[c])));
+    const rd=rv.filter(v=>isDone(v.id)).length, rp=rv.length?Math.round(rd/rv.length*100):0;
+    const fid='cl_'+r, open=(CLFOLD[fid]!=null)?CLFOLD[fid]:true;
+    body+='<div class="card clres"><details class="clfold" data-clfold="'+fid+'"'+(open?' open':'')+'>'
+      +'<summary class="clsum"><span class="clreslab">'+resLabel(r)+'</span><span class="clprog"><span class="clfrac'+(rp>=100?' met':'')+'">'+rd+' / '+rv.length+'</span><span class="clmini"><span class="clminifill" style="width:'+rp+'%'+(rp>=100?';background:var(--success)':'')+'"></span></span></span></summary>';
+    R.order.forEach(s=>{const Sy=R.sys[s];
+      body+='<div class="clsys"><div class="clsyshd">'+escHTML(s)+'</div>';
+      Sy.order.forEach(c=>{
+        if(c)body+='<div class="clcat">'+escHTML(c)+'</div>';
+        body+='<div class="cllist">'+Sy.cat[c].map(v=>{const dn=isDone(v.id);
+          return '<button class="clrow'+(dn?' done':'')+'" data-clid="'+escAttr(v.id)+'"><span class="clchk'+(dn?' on':'')+'">'+(dn?'✓':'')+'</span><span class="clname">'+escHTML(vName(v))+'</span><span class="clmin">'+v.min+'m</span></button>';}).join('')+'</div>';
+      });
+      body+='</div>';});
+    body+='</details></div>';
+  });
+  app.innerHTML=chrome("checklist")+'<div class="wrap"><div class="clwrap">'+body+'</div></div>';
+  wireChrome();
+  document.querySelectorAll("[data-clid]").forEach(b=>b.onclick=()=>toggleItems([b.dataset.clid]));
+  document.querySelectorAll("[data-clfold]").forEach(d=>d.ontoggle=()=>{CLFOLD[d.dataset.clfold]=d.open;});
 }
 function renderStats(){
   app.innerHTML=chrome("stats")+'<div class="wrap"><div class="cols"><div>'+videoCards()+'</div><div>'+readinessCards()+'</div></div></div>';
@@ -3291,11 +3382,15 @@ function doResetAll(){
     S.cfgs=snap.cfgs;S.active=snap.active;S.cfg=S.active?S.cfgs[S.active]:null;_prevSig=progressSig();save();
     if(S.cfg){reflow();render();}else renderWelcome();toast("Restored ✓");});
 }
-const BUILD="2026-07-20e";
+const BUILD="2026-07-20f";
 /* ---------- What's new (changelog) ----------
    Newest entry first. Bump the top entry's id whenever you add one and the
    pop-up shows once per person (tracked in synced settings.seenUpdate). */
 const CHANGELOG=[
+  {id:"2026-07-22", date:"July 2026", title:"Master checklist", items:[
+    "New Checklist tab in the M2 hub: every video in your plan, grouped by resource → subject → topic, with a running total and per-resource progress.",
+    "Check videos off here or on your daily Study plan — they stay in sync, so your progress moves together no matter where you tick a video off.",
+  ]},
   {id:"2026-07-21", date:"July 2026", title:"Pathoma AnKing tags", items:[
     "Pathoma videos now carry AnKing tags too, not just Boards & Beyond. When Pathoma is on your plan, each day's Anki block lists its Pathoma tags.",
     "The day's AnKing tags are now grouped by resource — a separate Boards & Beyond and Pathoma section, each with its own one-tap Anki Browse search to copy.",
