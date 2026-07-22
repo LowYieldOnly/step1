@@ -602,6 +602,16 @@ b{color:var(--ink)}
 .pathrow.on .pathinc{background:var(--phos);border-color:var(--phos)}
 .pathnm{flex:1;min-width:0;font-size:13px;color:var(--ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .pathsys{flex:0 0 auto;font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:.03em;color:var(--faint);white-space:nowrap}
+/* psych / ethics section picker */
+.card.threadwarn{border-color:color-mix(in srgb,var(--warning) 55%,transparent);background:var(--warning-bg)}
+.thbadge{font-family:var(--mono);font-size:9.5px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--warning);border:1px solid color-mix(in srgb,var(--warning) 45%,transparent);border-radius:6px;padding:2px 6px}
+.threadprompt{font-size:12.5px;line-height:1.45;color:var(--warning);margin:0 0 4px}
+.threadbtns{display:flex;align-items:center;gap:8px;margin:2px 0 8px}
+.threadbtns .thsep{color:var(--faint)}
+.threadhd{display:flex;align-items:center;justify-content:space-between;gap:9px;width:100%;text-align:left;background:transparent;border:none;cursor:pointer;padding:9px 2px 4px;font-family:inherit}
+.thcatnm{display:flex;align-items:center;gap:7px;font-size:12.5px;font-weight:700;color:var(--ink);min-width:0}
+.thcatct{flex:0 0 auto;font-family:var(--mono);font-size:10px;font-weight:800;color:var(--faint);border:1px solid var(--line);border-radius:6px;padding:1px 6px}
+.thcatct.on{color:var(--phos);border-color:color-mix(in srgb,var(--phos) 45%,transparent)}
 /* Brody weekly plan preview + Study-view week chip */
 .brodywks{display:flex;flex-direction:column;gap:6px}
 .brodywk{display:flex;align-items:center;gap:10px;background:var(--bg2);border:1px solid var(--line);border-radius:10px;padding:8px 11px}
@@ -962,13 +972,34 @@ function effectivePathChapters(c){
   return new Set(PATHOMA_CH.filter(ch=>selSys.has(ch[2])).map(ch=>ch[0]));
 }
 function togglePathCh(c,n){const sel=effectivePathChapters(c);if(sel.has(n))sel.delete(n);else sel.add(n);c.pathChapters=[...sel].sort((a,b)=>a-b);}
+/* Psychiatry & Behavioral Science (ethics) are threaded through the whole M2
+   year rather than living in one block, so a custom plan picks their sections
+   topic-by-topic instead of taking the system wholesale. c.threadTopics is the
+   chosen itemIds: an explicit [] means "prompt me, nothing yet"; undefined means
+   a legacy/pre-feature plan (everything included, back-compat) until first edited. */
+const THREAD_SYS=new Set(["Psychiatry","Behavioral Science"]);
+function resEnabledFor(c){const R=(c&&c.resources)||{};return {bnb:!!R.bnb,pathoma:!!R.pathoma,skmicro:!!R.sketchy,skpharm:!!R.sketchy,bootcamp:!!R.bootcamp};}
+function threadVideos(c,sys){const en=resEnabledFor(c);return catVideos().filter(v=>v.sys===sys&&en[v.res]);}
+function ensureThreadArr(c){if(!Array.isArray(c.threadTopics)){const ids=[];THREAD_SYS.forEach(sys=>threadVideos(c,sys).forEach(v=>ids.push(itemId(v))));c.threadTopics=ids;}}
+function toggleThreadTopic(c,id){ensureThreadArr(c);const arr=c.threadTopics.slice();const i=arr.indexOf(id);if(i>=0)arr.splice(i,1);else arr.push(id);c.threadTopics=arr;}
+function setThreadTopics(c,ids,on){ensureThreadArr(c);const s=new Set(c.threadTopics);ids.forEach(id=>{if(on)s.add(id);else s.delete(id);});c.threadTopics=[...s];}
+/* a thread system sits in the plan's systems but the student has made an explicit
+   selection with nothing picked for it → they must choose (or drop the system). */
+function threadUnconfigured(c){
+  if(!Array.isArray(c.threadTopics))return null;   // legacy/all-in never blocks
+  const sel=new Set((c.systems&&c.systems.length)?c.systems:SYS);const picked=new Set(c.threadTopics);
+  for(const sys of THREAD_SYS){if(!sel.has(sys))continue;const vids=threadVideos(c,sys);if(vids.length&&!vids.some(v=>picked.has(itemId(v))))return sys;}
+  return null;
+}
 function buildBacklog(){
   const c=S.cfg;const order=planSystems();const en=resEnabled();
   const pathSel=en.pathoma?effectivePathChapters(c):new Set();
+  const threadSel=Array.isArray(c.threadTopics)?new Set(c.threadTopics):null;   // null = legacy all-in
   const bySys={}; // sys -> res -> [videos], catalog order preserved
   catVideos().forEach(v=>{
     if(!en[v.res])return;
     if(v.res==="pathoma"&&!pathSel.has(pathChapterOf(v)))return;   // chapter-level Pathoma selection
+    if(threadSel&&THREAD_SYS.has(v.sys)&&!threadSel.has(itemId(v)))return;   // year-long courses: only picked sections
     (bySys[v.sys]=bySys[v.sys]||{});(bySys[v.sys][v.res]=bySys[v.sys][v.res]||[]).push(v);
   });
   // visit selected systems, plus any system that only holds a chosen Pathoma
@@ -2609,6 +2640,7 @@ function renderAdjust(){
   colB+='<div class="card"><div class="cardhd">'+(S.active==="nbme"?'Units &amp; study order':'Study order &amp; systems')+'</div>'
     + fold("adj_sys",(c.systems||SYS).length+' of '+SYS.length+' systems selected — edit / reorder',sysInner,false)+'</div>';
   colB+=pathChaptersHTML(c,"adj_path");
+  colB+=threadTopicsHTML(c,"adj");
   if(S.active==="nbme"){
     colB+='<div class="card soft"><div class="cardhd">Finished this unit?</div><p class="muted small">Start a fresh plan for your next block or shelf — new exam, dates, and systems.</p><button class="btn" id="newUnit">Start a new unit…</button></div>';
     colB+=pastUnitsCard();
@@ -2629,6 +2661,7 @@ function renderAdjust(){
   document.querySelectorAll("[data-res]").forEach(b=>b.onclick=()=>{c.resources=c.resources||{};c.resources[b.dataset.res]=!hasRes(b.dataset.res);apply();});
   document.querySelectorAll("[data-sinc]").forEach(b=>b.onclick=()=>{const s=b.dataset.sinc;c.systems=c.systems||SYS.slice();const k=c.systems.indexOf(s);if(k>=0){if(c.systems.length>1)c.systems.splice(k,1);}else c.systems.push(s);apply();});
   document.querySelectorAll("[data-pathch]").forEach(b=>b.onclick=()=>{togglePathCh(c,+b.dataset.pathch);apply();});
+  bindThreadTopics(c,apply);
   document.querySelectorAll("[data-sup]").forEach(b=>b.onclick=()=>{const i=+b.dataset.sup;const a=c.sysOrder=(c.sysOrder||SYS_ORDER_DEFAULT).slice();if(i>0){const t=a[i-1];a[i-1]=a[i];a[i]=t;apply();}});
   document.querySelectorAll("[data-sdn]").forEach(b=>b.onclick=()=>{const i=+b.dataset.sdn;const a=c.sysOrder=(c.sysOrder||SYS_ORDER_DEFAULT).slice();if(i<a.length-1){const t=a[i+1];a[i+1]=a[i];a[i]=t;apply();}});
   const sr=document.getElementById("sordReset");if(sr)sr.onclick=()=>{c.sysOrder=SYS_ORDER_DEFAULT.slice();apply();};
@@ -3158,9 +3191,9 @@ function enterHub(key){if(!S.cfgs[key]){startOnboard(key);return;}activate(key);
 let _ob=null;
 function defaultsForHub(key,fresh){const ex=fresh?null:S.cfgs[key];
   let o;
-  if(ex)o={hub:key,fresh:false,brody:ex.brody||null,brodyPace:ex.brodyPace||null,brodyJoinWk:(ex.brodyJoinWk!=null?ex.brodyJoinWk:undefined),brodyReviewDays:(ex.brodyReviewDays!=null?ex.brodyReviewDays:undefined),examLabel:ex.examLabel||"",examISO:ex.examISO||"",startISO:ex.startISO||todayISO(),wkdayHrs:ex.wkdayHrs,wkendHrs:ex.wkendHrs,restDays:(ex.restDays||[0]).slice(),reviewDays:ex.reviewDays,resources:Object.assign({bnb:true,pathoma:true,sketchy:true,fa:true,anking:true,uworld:true},ex.resources||{}),systems:(ex.systems||SYS).slice(),sysOrder:(ex.sysOrder&&ex.sysOrder.length===SYS.length?ex.sysOrder:SYS_ORDER_DEFAULT).slice(),pathChapters:(Array.isArray(ex.pathChapters)?ex.pathChapters.slice():undefined)};
+  if(ex)o={hub:key,fresh:false,brody:ex.brody||null,brodyPace:ex.brodyPace||null,brodyJoinWk:(ex.brodyJoinWk!=null?ex.brodyJoinWk:undefined),brodyReviewDays:(ex.brodyReviewDays!=null?ex.brodyReviewDays:undefined),examLabel:ex.examLabel||"",examISO:ex.examISO||"",startISO:ex.startISO||todayISO(),wkdayHrs:ex.wkdayHrs,wkendHrs:ex.wkendHrs,restDays:(ex.restDays||[0]).slice(),reviewDays:ex.reviewDays,resources:Object.assign({bnb:true,pathoma:true,sketchy:true,fa:true,anking:true,uworld:true},ex.resources||{}),systems:(ex.systems||SYS).slice(),sysOrder:(ex.sysOrder&&ex.sysOrder.length===SYS.length?ex.sysOrder:SYS_ORDER_DEFAULT).slice(),pathChapters:(Array.isArray(ex.pathChapters)?ex.pathChapters.slice():undefined),threadTopics:(Array.isArray(ex.threadTopics)?ex.threadTopics.slice():undefined)};
   // a brand-new plan starts with every resource unchecked — the student picks
-  else o={hub:key,fresh:!!fresh,examLabel:key==="step1"?"Step 1":"",examISO:"",startISO:todayISO(),wkdayHrs:6,wkendHrs:4,restDays:[0],reviewDays:14,resources:{bnb:false,pathoma:false,sketchy:false,fa:false,anking:false,uworld:false},systems:(key==="nbme"?[]:SYS.slice()),sysOrder:SYS_ORDER_DEFAULT.slice()};
+  else o={hub:key,fresh:!!fresh,examLabel:key==="step1"?"Step 1":"",examISO:"",startISO:todayISO(),wkdayHrs:6,wkendHrs:4,restDays:[0],reviewDays:14,resources:{bnb:false,pathoma:false,sketchy:false,fa:false,anking:false,uworld:false},systems:(key==="nbme"?[]:SYS.slice()),sysOrder:SYS_ORDER_DEFAULT.slice(),threadTopics:[]};
   // NBME hub now selects individual systems (like Step 1); migrate any legacy block selection
   if(key==="nbme"&&ex&&(!ex.systems||!ex.systems.length)&&Array.isArray(ex.blocks)&&ex.blocks.length){
     const set=new Set(ex.blocks);o.systems=flatSys((ex.blockOrder||blockNames()).filter(b=>set.has(b)));
@@ -3189,6 +3222,55 @@ function pathChaptersHTML(c,foldId){
     +'<div class="pathlist">'+rows+'</div>';
   return '<div class="card"><div class="cardhd">Pathoma chapters</div>'
     + fold(foldId,sel.size+' of '+PATHOMA_CH.length+' chapters selected — edit',inner,false)+'</div>';
+}
+/* Psych / ethics section picker (custom plans only). Psychiatry and Behavioral
+   Science run across every M2 block, so instead of dumping all their videos in,
+   the student checks the sections their current block actually covers. Default
+   is nothing chosen — the card flags "needs a pick" and (in onboarding) blocks
+   Continue until they select some or drop the system. */
+function threadTopicsHTML(c,idPrefix){
+  const sel=new Set((c.systems&&c.systems.length)?c.systems:SYS);
+  const active=[...THREAD_SYS].filter(s=>sel.has(s));
+  if(!active.length)return "";
+  const explicit=Array.isArray(c.threadTopics);
+  const pickedSet=explicit?new Set(c.threadTopics):null;
+  const isOn=id=>explicit?pickedSet.has(id):true;   // legacy plan shows all on
+  let html="";
+  active.forEach(sys=>{
+    const vids=threadVideos(c,sys);
+    if(!vids.length)return;   // no enabled resource covers this system yet
+    const nOn=vids.filter(v=>isOn(itemId(v))).length;
+    const need=explicit&&nOn===0;
+    // group by resource then category, preserving catalog order within a group
+    const groups=[];const gmap={};
+    vids.forEach(v=>{const k=v.res+"||"+(v.cat||"");if(!gmap[k]){gmap[k]={res:v.res,cat:v.cat||"",vids:[]};groups.push(gmap[k]);}gmap[k].vids.push(v);});
+    groups.sort((a,b)=>(RES_ORDER.indexOf(a.res)-RES_ORDER.indexOf(b.res)));
+    let inner='<p class="muted small" style="margin:2px 0 8px">'+escHTML(sys)+' runs all year. Check the sections your current block covers — only these get scheduled.</p>'
+      +'<div class="threadbtns"><button type="button" class="link" data-thall="'+escAttr(sys)+'">Select all</button><span class="thsep">·</span><button type="button" class="link" data-thclr="'+escAttr(sys)+'">Clear</button></div>';
+    groups.forEach(g=>{
+      const ids=g.vids.map(v=>itemId(v));const gon=ids.filter(isOn).length;
+      inner+='<button type="button" class="threadhd" data-thg="'+escAttr(sys+"||"+g.res+"||"+g.cat)+'">'
+        +'<span class="thcatnm">'+resBadge(g.res)+' '+escHTML(g.cat||resLabel(g.res))+'</span>'
+        +'<span class="thcatct'+(gon?" on":"")+'">'+gon+'/'+ids.length+'</span></button>';
+      inner+='<div class="pathlist">'+g.vids.map(v=>{const id=itemId(v),on=isOn(id);
+        return '<button type="button" class="pathrow'+(on?" on":"")+'" data-thtopic="'+escAttr(id)+'">'
+          +'<span class="pathinc">'+(on?"✓":"")+'</span><span class="pathnm">'+escHTML(v.name)+'</span></button>';}).join('')+'</div>';
+    });
+    const summ=need?('⚠ Pick the sections to include'):(nOn+' of '+vids.length+' videos selected — edit');
+    html+='<div class="card'+(need?' threadwarn':'')+'"><div class="cardhd">'+escHTML(sys)+' sections'
+      +(need?' <span class="thbadge">needs a pick</span>':'')+'</div>'
+      +(need?'<p class="threadprompt">This course threads through every block, so it isn’t added automatically. Choose the sections your current unit covers — nothing from '+escHTML(sys)+' is scheduled until you do.</p>':'')
+      +fold(idPrefix+"_th_"+sys.replace(/\W/g,''),summ,inner,need)+'</div>';
+  });
+  return html;
+}
+function bindThreadTopics(c,apply){
+  document.querySelectorAll("[data-thtopic]").forEach(b=>b.onclick=()=>{toggleThreadTopic(c,b.dataset.thtopic);apply();});
+  document.querySelectorAll("[data-thg]").forEach(b=>b.onclick=()=>{const parts=b.dataset.thg.split("||");const sys=parts[0],res=parts[1],cat=parts.slice(2).join("||");
+    const ids=threadVideos(c,sys).filter(v=>v.res===res&&(v.cat||"")===cat).map(v=>itemId(v));
+    const cur=new Set(Array.isArray(c.threadTopics)?c.threadTopics:ids);const allOn=ids.every(id=>cur.has(id));setThreadTopics(c,ids,!allOn);apply();});
+  document.querySelectorAll("[data-thall]").forEach(b=>b.onclick=()=>{const ids=threadVideos(c,b.dataset.thall).map(v=>itemId(v));setThreadTopics(c,ids,true);apply();});
+  document.querySelectorAll("[data-thclr]").forEach(b=>b.onclick=()=>{const ids=threadVideos(c,b.dataset.thclr).map(v=>itemId(v));setThreadTopics(c,ids,false);apply();});
 }
 /* block-level list for the NBME hub (combined units) */
 function startOnboard(key,fresh){_ob=defaultsForHub(key,fresh);loadCatalog(()=>{if(_ob)obLive();});renderOnboard();}
@@ -3253,6 +3335,7 @@ function renderOnboard(){
   body+='<div class="card"><div class="cardhd">'+(obIsNbme()?'Units &amp; study order':'Study order &amp; systems')+'</div>'
     + fold("ob_sys",ob.systems.length+' of '+SYS.length+' systems selected \u2014 edit / reorder',obSysInner,obIsNbme())+'</div>';}
   if(!ob.brody)body+=pathChaptersHTML(ob,"ob_path");
+  if(!ob.brody)body+=threadTopicsHTML(ob,"ob");
   body+='<button class="btn big" id="o_go">'+goLbl+'</button>';
   body+='</div>';
   app.innerHTML='<div class="wrap onb">'+body+'</div>';
@@ -3270,6 +3353,7 @@ function renderOnboard(){
   document.querySelectorAll("[data-obuf]").forEach(b=>b.onclick=()=>{const cur=brodyReviewBuf(ob);ob.brodyReviewDays=Math.max(0,Math.min(14,cur+(b.dataset.obuf==="inc"?1:-1)));renderOnboard();});
   document.querySelectorAll("[data-sinc]").forEach(b=>b.onclick=()=>{const s=b.dataset.sinc;const k=ob.systems.indexOf(s);if(k>=0){if(ob.systems.length>1)ob.systems.splice(k,1);}else ob.systems.push(s);renderOnboard();});
   document.querySelectorAll("[data-pathch]").forEach(b=>b.onclick=()=>{togglePathCh(ob,+b.dataset.pathch);renderOnboard();});
+  bindThreadTopics(ob,()=>renderOnboard());
   document.querySelectorAll("[data-sup]").forEach(b=>b.onclick=()=>{const i=+b.dataset.sup;if(i>0){const a=ob.sysOrder;const t=a[i-1];a[i-1]=a[i];a[i]=t;renderOnboard();}});
   document.querySelectorAll("[data-sdn]").forEach(b=>b.onclick=()=>{const i=+b.dataset.sdn;const a=ob.sysOrder;if(i<a.length-1){const t=a[i+1];a[i+1]=a[i];a[i]=t;renderOnboard();}});
   const sr=document.getElementById("sordReset");if(sr)sr.onclick=()=>{ob.sysOrder=SYS_ORDER_DEFAULT.slice();renderOnboard();};
@@ -3296,8 +3380,10 @@ function obReco(){const ob=_ob;
   const selSys=new Set(order);const R=ob.resources||{};
   const en={bnb:R.bnb,pathoma:R.pathoma,skmicro:R.sketchy,skpharm:R.sketchy,bootcamp:R.bootcamp};
   const pathSel=en.pathoma?effectivePathChapters(ob):new Set();
+  const threadSel=Array.isArray(ob.threadTopics)?new Set(ob.threadTopics):null;
   let total=0;catVideos().forEach(v=>{
     if(!en[v.res])return;
+    if(threadSel&&THREAD_SYS.has(v.sys)&&!threadSel.has(itemId(v)))return;   // only picked psych/ethics sections
     if(v.res==="pathoma"){if(pathSel.has(pathChapterOf(v)))total+=v.min;return;}
     if(selSys.has(v.sys))total+=v.min;});
   if(!total)return {ok:false,msg:"Turn on at least one video resource (B&amp;B, Bootcamp, Pathoma, or Sketchy)."};
@@ -3350,13 +3436,14 @@ function commitOnboard(){const ob=_ob;
   if(!brody&&!ob.examISO){toast("Pick an exam date first");return;}
   if(!brody&&!ob.systems.length){toast("Pick at least one system");return;}
   if(!["bnb","pathoma","sketchy"].some(k=>ob.resources[k])){toast("Pick at least one video resource");return;}
+  if(!brody){const un=threadUnconfigured(ob);if(un){toast("Choose which "+un+" sections to include — or remove "+un+" from your systems.");renderOnboard();const el=document.querySelector(".threadwarn");if(el)el.scrollIntoView({behavior:"smooth",block:"center"});return;}}
   const key=ob.hub;
   const prev=S.cfgs[key]?JSON.parse(JSON.stringify(S.cfgs[key])):null;
   const c=S.cfgs[key]||{};
   Object.assign(c,{examType:key,examLabel:key==="step1"?"Step 1":(brody?brody.name:(ob.examLabel||"Shelf exam")),
     brody:(brody?brody.id:undefined),brodyPace:(brody?(ob.brodyPace||undefined):undefined),brodyJoinWk:(brody?(ob.brodyJoinWk!=null?ob.brodyJoinWk:undefined):undefined),brodyReviewDays:(brody?brodyReviewBuf(ob):undefined),
     examISO:(brody?brody.shelf:ob.examISO),startISO:(brody?brody.weeks[0].start:ob.startISO),wkdayHrs:ob.wkdayHrs,wkendHrs:ob.wkendHrs,restDays:ob.restDays.slice(),
-    reviewDays:(brody?0:ob.reviewDays),resources:Object.assign({},ob.resources),systems:(brody?brody.systems.slice():ob.systems.slice()),sysOrder:(ob.sysOrder||SYS_ORDER_DEFAULT).slice(),pathChapters:(Array.isArray(ob.pathChapters)?ob.pathChapters.slice():undefined)});
+    reviewDays:(brody?0:ob.reviewDays),resources:Object.assign({},ob.resources),systems:(brody?brody.systems.slice():ob.systems.slice()),sysOrder:(ob.sysOrder||SYS_ORDER_DEFAULT).slice(),pathChapters:(Array.isArray(ob.pathChapters)?ob.pathChapters.slice():undefined),threadTopics:(brody?undefined:(Array.isArray(ob.threadTopics)?ob.threadTopics.slice():undefined))});
   c.off=c.off||{};
   if(ob.fresh&&prev&&key==="nbme")archiveUnit(prev);   // keep the old unit reachable under Plan → Past units
   S.cfgs[key]=c;activate(key);S.active=key;
@@ -3396,11 +3483,16 @@ function doResetAll(){
     S.cfgs=snap.cfgs;S.active=snap.active;S.cfg=S.active?S.cfgs[S.active]:null;_prevSig=progressSig();save();
     if(S.cfg){reflow();render();}else renderWelcome();toast("Restored ✓");});
 }
-const BUILD="2026-07-20i";
+const BUILD="2026-07-20j";
 /* ---------- What's new (changelog) ----------
    Newest entry first. Bump the top entry's id whenever you add one and the
    pop-up shows once per person (tracked in synced settings.seenUpdate). */
 const CHANGELOG=[
+  {id:"2026-07-24", date:"July 2026", title:"Pick your psych & ethics sections", items:[
+    "Psychiatry and Behavioral Science (ethics) run through every M2 block, so custom plans now let you choose exactly which sections to include instead of dumping the whole course in.",
+    "Nothing from those two is scheduled until you pick — a new plan prompts you to select the sections your current block covers (or drop the system) before you continue.",
+    "Select whole sections at once or individual videos, across Boards & Beyond and Bootcamp. Existing plans keep everything they had until you narrow it.",
+  ]},
   {id:"2026-07-23", date:"July 2026", title:"Bootcamp is back — and schedulable", items:[
     "Bootcamp is now a first-class resource: turn it on in Plan and its ~2,400 videos schedule alongside Boards & Beyond, Pathoma, and Sketchy — in your custom plan (by system) and in the Brody calendar (mapped week-by-week to the block content).",
     "Bootcamp videos appear in the master checklist and count toward your progress like everything else.",
