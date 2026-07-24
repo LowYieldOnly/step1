@@ -494,7 +494,19 @@ b{color:var(--ink)}
 .dpnav{display:flex;align-items:center;gap:6px;padding:12px 14px 4px}
 .dpnavbtn{flex:0 0 auto;width:38px;height:38px;border:1px solid var(--line2);background:var(--bg2);color:var(--phos);border-radius:10px;font-size:18px;line-height:1;cursor:pointer;font-family:var(--mono);transition:background .15s,border-color .15s}
 .dpnavbtn:hover{background:var(--phos-soft);border-color:var(--phos-dim)}
-.dpym{flex:1;text-align:center;font-family:var(--mono);font-weight:700;font-size:15px;letter-spacing:.03em;color:var(--ink)}
+.dpym{flex:1;text-align:center;font-family:var(--mono);font-weight:700;font-size:15px;letter-spacing:.03em;color:var(--ink);background:var(--bg2);border:1px solid var(--line2);border-radius:10px;height:38px;cursor:pointer;transition:background .15s,border-color .15s}
+.dpym:hover,.dpym.open{background:var(--phos-soft);border-color:var(--phos-dim)}
+.dpym i{font-style:normal;font-size:11px;color:var(--faint);margin-left:3px}
+.dpjump{padding:10px 14px 6px}
+.dpyears{display:flex;gap:6px;overflow-x:auto;padding-bottom:9px;margin-bottom:9px;border-bottom:1px solid var(--line);-webkit-overflow-scrolling:touch}
+.dpyr{flex:0 0 auto;min-width:58px;height:34px;border:1px solid var(--line2);background:var(--bg2);color:var(--ink);border-radius:9px;font-family:var(--mono);font-size:14px;font-weight:700;cursor:pointer;transition:background .12s,border-color .12s}
+.dpyr:hover{background:var(--phos-soft);border-color:var(--phos-dim)}
+.dpyr.on{background:var(--phos);color:var(--on-accent);border-color:var(--phos)}
+.dpmonths{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+.dpmo{height:42px;border:1px solid var(--line2);background:var(--bg2);color:var(--ink);border-radius:9px;font-family:var(--mono);font-size:13px;font-weight:700;cursor:pointer;transition:background .12s,border-color .12s}
+.dpmo:hover:not(:disabled){background:var(--phos-soft);border-color:var(--phos-dim)}
+.dpmo.on{background:var(--phos);color:var(--on-accent);border-color:var(--phos)}
+.dpmo:disabled{opacity:.3;cursor:default}
 .dpgrid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;padding:8px 14px 6px}
 .dpdow{text-align:center;font-family:var(--mono);font-size:10px;color:var(--faint);padding:3px 0;text-transform:uppercase;letter-spacing:.06em}
 .dpcell{aspect-ratio:1/1;display:flex;align-items:center;justify-content:center;border:1px solid transparent;background:var(--bg2);color:var(--ink);border-radius:9px;font-size:14px;font-family:var(--mono);cursor:pointer;transition:background .12s,border-color .12s}
@@ -3026,36 +3038,54 @@ function wireM1(){
 }
 
 /* ---------- custom date picker (calendar popover; fast month + year nav) ---------- */
-let PICK_YM=null,PICK_SEL="",PICK_MIN=null,PICK_CB=null,PICK_TITLE="";
+let PICK_YM=null,PICK_SEL="",PICK_MIN=null,PICK_CB=null,PICK_TITLE="",PICK_JUMP=false;
 function fmtDate(iso){if(!iso)return"";const d=isoToDate(iso);return MON[d.getMonth()]+" "+d.getDate()+", "+d.getFullYear();}
 function dateTriggerHTML(id,iso,ph){return '<button type="button" class="datebtn" id="'+id+'">'
   +'<span class="datebtn-v'+(iso?'':' dim')+'">'+(iso?escHTML(fmtDate(iso)):escHTML(ph||"Pick a date"))+'</span>'
   +'<span class="datebtn-ic">▾</span></button>';}
-function openDatePicker(o){o=o||{};PICK_SEL=o.value||"";PICK_MIN=o.min||null;PICK_CB=o.onPick||function(){};PICK_TITLE=o.title||"Pick a date";
+function openDatePicker(o){o=o||{};PICK_SEL=o.value||"";PICK_MIN=o.min||null;PICK_CB=o.onPick||function(){};PICK_TITLE=o.title||"Pick a date";PICK_JUMP=false;
   PICK_YM=(PICK_SEL||o.min||todayISO()).slice(0,7);
   let ov=document.getElementById("dpov");if(!ov){ov=document.createElement("div");ov.className="overlay";ov.id="dpov";document.body.appendChild(ov);}
   ov.onclick=(e)=>{if(e.target===ov)closeDatePicker();};
   renderDatePicker();}
 function closeDatePicker(){const ov=document.getElementById("dpov");if(ov)ov.remove();}
 function renderDatePicker(){const ov=document.getElementById("dpov");if(!ov)return;
-  const p=PICK_YM.split("-").map(Number),y=p[0],m=p[1];const cells=monthMatrix(PICK_YM);const today=todayISO();
-  let grid='<div class="dpgrid">';DOW.forEach(d=>{grid+='<div class="dpdow">'+d[0]+'</div>';});
-  cells.forEach(iso=>{if(!iso){grid+='<div class="dpcell empty"></div>';return;}
-    const dd=isoToDate(iso).getDate();const off=PICK_MIN&&iso<PICK_MIN;const cls=["dpcell"];
-    if(off)cls.push("off");if(iso===PICK_SEL)cls.push("sel");if(iso===today)cls.push("today");
-    grid+='<button type="button" class="'+cls.join(" ")+'"'+(off?" disabled":"")+' data-d="'+iso+'">'+dd+'</button>';});
-  grid+='</div>';
+  const p=PICK_YM.split("-").map(Number),y=p[0],m=p[1];const today=todayISO();
+  const pad=n=>String(n).padStart(2,"0");
+  let body;
+  if(PICK_JUMP){
+    // fast jump: tap a year, then a month — no month-by-month scrolling to reach
+    // a date far in the future. Years span from the earliest allowed to a few out.
+    const nowY=+today.slice(0,4),minY=PICK_MIN?+PICK_MIN.slice(0,4):null,selY=PICK_SEL?+PICK_SEL.slice(0,4):null;
+    const y0=Math.min(nowY,minY!=null?minY:nowY,selY!=null?selY:nowY);
+    const y1=Math.max(nowY+5,selY!=null?selY:nowY,(minY!=null?minY:nowY)+1);
+    let years='<div class="dpyears">';for(let yy=y0;yy<=y1;yy++){years+='<button type="button" class="dpyr'+(yy===y?' on':'')+'" data-jy="'+yy+'">'+yy+'</button>';}years+='</div>';
+    let months='<div class="dpmonths">';for(let mm=1;mm<=12;mm++){const off=PICK_MIN&&(y+"-"+pad(mm))<PICK_MIN.slice(0,7);
+      months+='<button type="button" class="dpmo'+(mm===m?' on':'')+'"'+(off?' disabled':'')+' data-jm="'+mm+'">'+MON[mm-1]+'</button>';}months+='</div>';
+    body='<div class="dpjump">'+years+months+'</div>';
+  } else {
+    const cells=monthMatrix(PICK_YM);
+    let grid='<div class="dpgrid">';DOW.forEach(d=>{grid+='<div class="dpdow">'+d[0]+'</div>';});
+    cells.forEach(iso=>{if(!iso){grid+='<div class="dpcell empty"></div>';return;}
+      const dd=isoToDate(iso).getDate();const off=PICK_MIN&&iso<PICK_MIN;const cls=["dpcell"];
+      if(off)cls.push("off");if(iso===PICK_SEL)cls.push("sel");if(iso===today)cls.push("today");
+      grid+='<button type="button" class="'+cls.join(" ")+'"'+(off?" disabled":"")+' data-d="'+iso+'">'+dd+'</button>';});
+    grid+='</div>';body=grid;
+  }
   ov.innerHTML='<div class="sheet dpsheet"><div class="sheethd">'+escHTML(PICK_TITLE)+'</div>'
     +'<div class="dpnav">'
     +'<button type="button" class="dpnavbtn" data-ny="-1" title="Previous year">«</button>'
     +'<button type="button" class="dpnavbtn" data-nm="-1" title="Previous month">‹</button>'
-    +'<div class="dpym">'+MON[m-1]+' '+y+'</div>'
+    +'<button type="button" class="dpym'+(PICK_JUMP?' open':'')+'" data-dpjump="1" title="Jump to a month / year">'+MON[m-1]+' '+y+'<i>▾</i></button>'
     +'<button type="button" class="dpnavbtn" data-nm="1" title="Next month">›</button>'
     +'<button type="button" class="dpnavbtn" data-ny="1" title="Next year">»</button>'
-    +'</div>'+grid
+    +'</div>'+body
     +'<button class="mrow close ctr" data-dpx="1">Cancel</button></div>';
   ov.querySelectorAll("[data-ny]").forEach(b=>b.onclick=()=>{PICK_YM=(parseInt(PICK_YM.slice(0,4),10)+(+b.dataset.ny))+PICK_YM.slice(4);renderDatePicker();});
   ov.querySelectorAll("[data-nm]").forEach(b=>b.onclick=()=>{PICK_YM=ymShift(PICK_YM,+b.dataset.nm);renderDatePicker();});
+  const jb=ov.querySelector("[data-dpjump]");if(jb)jb.onclick=()=>{PICK_JUMP=!PICK_JUMP;renderDatePicker();};
+  ov.querySelectorAll("[data-jy]").forEach(b=>b.onclick=()=>{PICK_YM=b.dataset.jy+"-"+pad(m);renderDatePicker();});   // pick year, stay in jump to choose month
+  ov.querySelectorAll("[data-jm]").forEach(b=>b.onclick=()=>{PICK_YM=y+"-"+pad(+b.dataset.jm);PICK_JUMP=false;renderDatePicker();});   // month chosen → back to days
   ov.querySelectorAll("[data-d]").forEach(b=>b.onclick=()=>{const iso=b.dataset.d;closeDatePicker();PICK_CB(iso);});
   const cx=ov.querySelector("[data-dpx]");if(cx)cx.onclick=closeDatePicker;}
 
@@ -3536,11 +3566,14 @@ function doResetAll(){
     S.cfgs=snap.cfgs;S.active=snap.active;S.cfg=S.active?S.cfgs[S.active]:null;_prevSig=progressSig();save();
     if(S.cfg){reflow();render();}else renderWelcome();toast("Restored ✓");});
 }
-const BUILD="2026-07-20k";
+const BUILD="2026-07-20l";
 /* ---------- What's new (changelog) ----------
    Newest entry first. Bump the top entry's id whenever you add one and the
    pop-up shows once per person (tracked in synced settings.seenUpdate). */
 const CHANGELOG=[
+  {id:"2026-07-26", date:"July 2026", title:"Jump to any date in two taps", items:[
+    "The date picker now jumps straight to a month and year — tap the month/year label, pick the year, pick the month. No more clicking arrows month-by-month to reach an exam or Step date far in the future.",
+  ]},
   {id:"2026-07-25", date:"July 2026", title:"Your semester questions carry into dedicated + pace up front", items:[
     "The Step 1 dedicated hub now blends your whole semester of practice: every UWorld/AMBOSS block you logged during M2 rolls into the weak-systems view, so your weakest areas are obvious the moment dedicated begins — no starting from zero.",
     "Each system shows a source split (how many questions came from M2 vs. dedicated) so you can tell fresh dedicated accuracy from earlier practice.",
@@ -3598,16 +3631,17 @@ const CHANGELOG=[
 ];
 const LATEST_UPDATE=CHANGELOG.length?CHANGELOG[0].id:null;
 function updatesHTML(entries){return entries.map(e=>'<div class="chgentry"><div class="chgdate">'+escHTML(e.date)+'</div><div class="chgtitle">'+escHTML(e.title)+'</div><ul class="chglist">'+e.items.map(it=>'<li>'+escHTML(it)+'</li>').join('')+'</ul></div>').join('');}
-function showUpdates(){
+function showUpdates(limit){
   if(document.getElementById("updates"))return;
+  const entries=(limit>0)?CHANGELOG.slice(0,limit):CHANGELOG;   // auto-popup shows just the latest; the menu shows full history
   const ov=document.createElement("div");ov.className="overlay";ov.id="updates";
-  ov.innerHTML='<div class="sheet"><div class="sheethd">What’s new</div><div class="chglog">'+updatesHTML(CHANGELOG)+'</div><button class="mrow ctr" data-c="ok">Got it</button></div>';
+  ov.innerHTML='<div class="sheet"><div class="sheethd">What’s new</div><div class="chglog">'+updatesHTML(entries)+'</div><button class="mrow ctr" data-c="ok">Got it</button></div>';
   const done=()=>{ov.remove();S.settings=S.settings||{};if(S.settings.seenUpdate!==LATEST_UPDATE){S.settings.seenUpdate=LATEST_UPDATE;save();}};
   ov.onclick=(e)=>{if(e.target===ov)done();};
   document.body.appendChild(ov);
   ov.querySelector('[data-c="ok"]').onclick=done;
 }
-function maybeShowUpdates(){if(!LATEST_UPDATE)return;S.settings=S.settings||{};if(S.settings.seenUpdate!==LATEST_UPDATE)showUpdates();}
+function maybeShowUpdates(){if(!LATEST_UPDATE)return;S.settings=S.settings||{};if(S.settings.seenUpdate!==LATEST_UPDATE)showUpdates(2);}
 function openMenu(){
   const email=Cloud.user&&Cloud.user.email;
   const html='<div class="sheet"><div class="sheethd">Menu</div>'
