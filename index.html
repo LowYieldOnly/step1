@@ -612,6 +612,23 @@ b{color:var(--ink)}
 .thcatnm{display:flex;align-items:center;gap:7px;font-size:12.5px;font-weight:700;color:var(--ink);min-width:0}
 .thcatct{flex:0 0 auto;font-family:var(--mono);font-size:10px;font-weight:800;color:var(--faint);border:1px solid var(--line);border-radius:6px;padding:1px 6px}
 .thcatct.on{color:var(--phos);border-color:color-mix(in srgb,var(--phos) 45%,transparent)}
+/* recommended-pace banner (custom schedule editor) */
+.pacebanner{border-radius:14px;padding:14px 15px;margin:2px 0 14px;border:1px solid var(--line)}
+.pacebanner.ok{background:color-mix(in srgb,var(--success) 9%,var(--surface));border-color:color-mix(in srgb,var(--success) 32%,transparent)}
+.pacebanner.warn{background:var(--warning-bg);border-color:color-mix(in srgb,var(--warning) 38%,transparent)}
+.pbtop{display:flex;align-items:center;gap:13px}
+.pbnum{font-family:var(--font-display);font-weight:800;font-size:34px;line-height:1;color:var(--ink);white-space:nowrap}
+.pbnum i{font-style:normal;font-size:14px;font-weight:700;color:var(--faint);margin-left:3px}
+.pblab{display:flex;flex-direction:column;gap:2px;min-width:0}
+.pblab b{font-size:14.5px;color:var(--ink);letter-spacing:-.01em}
+.pblab span{font-size:12px;color:var(--text-2);line-height:1.35}
+.pbstat{font-size:12.5px;line-height:1.45;color:var(--text-2);margin-top:10px}
+.pbok,.pbwarn{font-weight:800;font-size:11px;letter-spacing:.04em;text-transform:uppercase;padding:1px 7px;border-radius:6px;margin-right:6px}
+.pbok{color:var(--success);background:color-mix(in srgb,var(--success) 15%,transparent)}
+.pbwarn{color:var(--warning);background:color-mix(in srgb,var(--warning) 18%,transparent)}
+.pbbtn{margin-top:11px;width:100%}
+.srcsplit{font-family:var(--mono);font-size:9.5px;font-weight:700;letter-spacing:.02em;color:var(--faint);margin-left:5px;white-space:nowrap}
+.rtile-s{display:block;font-family:var(--mono);font-size:8.5px;font-weight:700;letter-spacing:.02em;color:var(--faint);margin-top:2px;text-transform:none}
 /* Brody weekly plan preview + Study-view week chip */
 .brodywks{display:flex;flex-direction:column;gap:6px}
 .brodywk{display:flex;align-items:center;gap:10px;background:var(--bg2);border:1px solid var(--line);border-radius:10px;padding:8px 11px}
@@ -2036,25 +2053,39 @@ function qbankCard(title,pfx,roll,resetId){
     +(bars?('<div class="uwhd">By system — accuracy</div><div class="bars">'+bars+'</div>'):'<p class="muted small">Log a block to start tracking per-system accuracy — pick the system on each block for a breakdown.</p>')
     +'</div>';
 }
-/* combined UWorld + AMBOSS accuracy per system (dedicated scope) — the weak-area signal */
-function stepSystemAccuracy(){
-  const uw=uworldRollup(DSCOPE),am=ambossRollup(DSCOPE);const by={};
-  [uw,am].forEach(roll=>Object.keys(roll.bySys).forEach(s=>{if(s==="Unspecified")return;const e=roll.bySys[s];const t=by[s]=by[s]||{done:0,correct:0};t.done+=e.done;t.correct+=e.correct;}));
-  return Object.keys(by).map(s=>({sys:s,done:by[s].done,pct:by[s].done?Math.round(by[s].correct/by[s].done*100):null})).filter(x=>x.pct!=null);
+/* Dedicated view blends the WHOLE semester: every UWorld/AMBOSS block from M2
+   (hub "nbme") plus dedicated (DSCOPE) rolls up per system, split by source so a
+   student can tell fresh dedicated accuracy from earlier M2 practice. This is the
+   weak-area signal — a semester of logged questions, not just the dedicated period. */
+function stepBlendAccuracy(){
+  const by={};
+  [S.uworld,S.amboss].forEach(log=>{const bl=(log&&log.blocks)||{};for(const k in bl){const b=bl[k];if(!b)continue;
+    const sys=b.sys||"Unspecified";if(sys==="Unspecified")continue;
+    const q=+b.q||0,c=+b.correct||0;const e=by[sys]=by[sys]||{done:0,correct:0,m2:0,ded:0};
+    e.done+=q;e.correct+=c;if(b.hub===DSCOPE)e.ded+=q;else e.m2+=q;}});
+  return Object.keys(by).map(s=>({sys:s,done:by[s].done,pct:by[s].done?Math.round(by[s].correct/by[s].done*100):null,m2:by[s].m2,ded:by[s].ded})).filter(x=>x.pct!=null);
 }
+/* combined UWorld+AMBOSS totals across every hub — the dedicated headline snapshot */
+function stepBlendTotals(){let done=0,correct=0,m2=0,ded=0;
+  [S.uworld,S.amboss].forEach(log=>{const bl=(log&&log.blocks)||{};for(const k in bl){const b=bl[k];if(!b)continue;const q=+b.q||0;done+=q;correct+=+b.correct||0;if(b.hub===DSCOPE)ded+=q;else m2+=q;}});
+  return {done,correct,pct:done?Math.round(correct/done*100):null,m2,ded};}
 function stepFocusCard(){
-  const list=stepSystemAccuracy();
-  if(!list.length)return '<div class="card"><div class="cardhd">Weak systems — where to focus</div><p class="muted small">Log practice blocks with a <b>system</b> tagged and your weakest areas surface here, worst-first — the most actionable signal you have before the exam.</p></div>';
+  const list=stepBlendAccuracy();
+  if(!list.length)return '<div class="card"><div class="cardhd">Weak systems — where to focus</div><p class="muted small">Log practice blocks with a <b>system</b> tagged — in M2 all semester, or here — and your weakest areas surface, worst-first. Every question you log during M2 counts toward this.</p></div>';
   list.sort((a,b)=>(a.pct-b.pct)||(b.done-a.done));
   const weak=list.filter(x=>x.done>=20&&x.pct<65);
+  const anyM2=list.some(x=>x.m2>0);
   let h='<div class="card"><div class="cardhd">Weak systems — where to focus</div>';
   h+=weak.length
     ? '<div class="status bad">Below 65%: '+weak.map(w=>escHTML(w.sys)+' <b>'+w.pct+'%</b>').join(' · ')+'. Prioritize these before your exam.</div>'
     : '<div class="status ok">No system under 65% (with ≥20 Qs) yet — keep logging to surface weak areas.</div>';
-  h+='<div class="uwhd">Combined UWorld + AMBOSS · weakest first</div><div class="bars">';
+  h+='<div class="uwhd">Combined UWorld + AMBOSS · weakest first'+(anyM2?' · includes your M2 semester':'')+'</div><div class="bars">';
   list.forEach(x=>{const col=x.pct>=70?'var(--success)':(x.pct>=60?'var(--warning)':'var(--danger)');
-    h+='<div class="bar"><div class="barlab">'+escHTML(x.sys)+'</div><div class="bartrack"><div class="barfill" style="width:'+x.pct+'%;background:'+col+'"></div></div><div class="barpct">'+x.pct+'% <span class="muted small">('+x.done+')</span></div></div>';});
-  h+='</div></div>';return h;
+    const split=(x.m2>0&&x.ded>0)?(' <span class="srcsplit">'+x.m2+' M2·'+x.ded+' ded</span>'):(x.m2>0&&x.ded===0?' <span class="srcsplit">M2</span>':'');
+    h+='<div class="bar"><div class="barlab">'+escHTML(x.sys)+split+'</div><div class="bartrack"><div class="barfill" style="width:'+x.pct+'%;background:'+col+'"></div></div><div class="barpct">'+x.pct+'% <span class="muted small">('+x.done+')</span></div></div>';});
+  h+='</div>';
+  if(anyM2)h+='<p class="muted small"><b>M2</b> = logged during the block phase · <b>ded</b> = logged here in dedicated. Both count toward each system’s accuracy.</p>';
+  h+='</div>';return h;
 }
 function renderStepHub(){
   S.settings=S.settings||{};const iso=S.settings.stepExamISO;
@@ -2062,14 +2093,15 @@ function renderStepHub(){
   const list=assessList(DSCOPE);const la=list.length?list[list.length-1]:null;const v=readinessVerdict(la?la.pct:null);
   const hero='<div class="hero"><div class="big">'+(left!=null?left:"—")+' <span>days to Step 1</span></div>'
     +'<div class="sub">'+(iso?('Exam '+escHTML(fmtDate(iso))+' · <button class="link" id="sd_date">Change date</button>'):'<button class="link" id="sd_date">Set your exam date</button>')+'</div></div>';
-  // readiness snapshot — latest NBME, question-bank accuracy, and total questions at a glance
-  const uw=uworldRollup(DSCOPE),am=ambossRollup(DSCOPE);const qsDone=(uw.done||0)+(am.done||0);
+  // readiness snapshot — latest NBME plus the whole semester's practice accuracy and
+  // question count (M2 + dedicated blended), so the hub isn't empty on day one of dedicated
+  const blend=stepBlendTotals();
   const band=pct=>pct==null?"":(pct>=70?"ok":(pct>=60?"warn":"bad"));
-  const rtile=(lab,val,cls)=>'<div class="rtile '+(cls||"")+'"><div class="rtile-v">'+val+'</div><div class="rtile-l">'+lab+'</div></div>';
+  const rtile=(lab,val,cls,sub)=>'<div class="rtile '+(cls||"")+'"><div class="rtile-v">'+val+'</div><div class="rtile-l">'+lab+(sub?'<span class="rtile-s">'+sub+'</span>':'')+'</div></div>';
   const snap='<div class="readysnap">'
     +rtile("Latest NBME",la?la.pct+"%":"—",la?v.cls:"")
-    +rtile("UWorld",uw.pct!=null?uw.pct+"%":"—",band(uw.pct))
-    +rtile("Questions",qsDone||"—","")
+    +rtile("Practice",blend.pct!=null?blend.pct+"%":"—",band(blend.pct),blend.m2>0?"incl. M2":"")
+    +rtile("Questions",blend.done||"—","",blend.m2>0?(blend.m2+" M2 · "+blend.ded+" ded"):"")
     +'</div>';
   let colA='';
   colA+='<div class="card"><div class="cardhd">NBME self-assessments'+(list.length?'<button class="hdreset" id="sst_scores">Reset</button>':'')+'</div>'
@@ -2605,18 +2637,33 @@ function renderAdjustBrody(c){
   bindPastUnits();
   const sd=document.getElementById("saveDone");if(sd)sd.onclick=()=>{VIEW="today";render();};
 }
+/* Prominent, always-visible recommended-pace readout for the custom schedule
+   editor — the "set your schedule → see the pace → adjust" loop, so the number is
+   never something a student has to hunt for. reqPerDay is the h/day needed to clear
+   every remaining video before the review buffer; it updates live as inputs change. */
+function customPaceBanner(c,st){
+  const need=isFinite(st.reqPerDay)?(Math.round(st.reqPerDay/60*10)/10):null;
+  const rec=(need!=null)?Math.max(0.5,Math.ceil(st.reqPerDay/60*2)/2):null;
+  const planned=(c.wkdayHrs||0)+'h wd / '+(c.wkendHrs||0)+'h we';
+  const ok=st.feasible;const atRisk=(SCHED&&SCHED.atRisk)?SCHED.atRisk.length:0;
+  return '<div class="pacebanner '+(ok?'ok':'warn')+'">'
+    +'<div class="pbtop"><div class="pbnum">'+(need!=null?need:'—')+'<i>h/day</i></div>'
+    +'<div class="pblab"><b>Recommended pace</b><span>to finish every video before your '+(c.reviewDays||0)+'-day review buffer</span></div></div>'
+    +'<div class="pbstat">'+(ok
+        ?('<span class="pbok">On track</span> your plan ('+planned+') covers it — change anything below and this updates instantly.')
+        :('<span class="pbwarn">Behind</span> you’ve planned '+planned+(atRisk?(' · '+atRisk+' video'+(atRisk===1?'':'s')+' don’t fit yet'):'')+'. Raise hours, move the exam date, or trim resources.'))+'</div>'
+    +(rec!=null?'<button type="button" class="btn ghost pbbtn" id="usePace">Set my hours to '+rec+' h/day</button>':'')
+    +'</div>';
+}
 function renderAdjust(){
   if(S.cfg&&S.cfg.brody){renderAdjustBrody(S.cfg);return;}
   const c=S.cfg;const st=SCHED.stats;
   const dows=DOW.map((d,i)=>'<button type="button" class="tog '+((c.restDays||[]).includes(i)?"on":"")+'" data-dow="'+i+'">'+d+'</button>').join('');
   const resBtn=(k,lab)=>'<button type="button" class="tog '+(hasRes(k)?"on":"")+'" data-res="'+k+'">'+lab+'</button>';
   let body='',colB='';
-  body+='<div class="card"><div class="cardhd">Feasibility</div>'+statusLine()
-    +'<div class="grid2"><div><div class="kv">'+st.contentDaysLeft+'</div><div class="kvl">study days for videos</div></div>'
-    +'<div><div class="kv">'+(st.remItems)+'</div><div class="kvl">videos left</div></div>'
-    +'<div><div class="kv">'+Math.round(st.remMin/60)+'h</div><div class="kvl">video time left</div></div>'
-    +'<div><div class="kv">'+(isFinite(st.reqPerDay)?(Math.round(st.reqPerDay/60*10)/10+'h'):'—')+'</div><div class="kvl">needed per study day</div></div></div></div>';
-  body+='<div class="card"><div class="cardhd">Exam &amp; pace</div><div class="form">'
+  body+='<div class="card"><div class="cardhd">Exam &amp; pace</div>'
+    +customPaceBanner(c,st)
+    +'<div class="form">'
     +'<label>Exam date'+dateTriggerHTML("f_exam",c.examISO,"Pick your exam date")+'</label>'
     +'<label>Start date'+dateTriggerHTML("f_start",c.startISO||todayISO(),"Pick a start date")+'</label>'
     +'<label>Weekday hours/day<input type="number" id="f_wk" min="0" step="0.5" value="'+(c.wkdayHrs)+'"></label>'
@@ -2628,6 +2675,11 @@ function renderAdjust(){
     +'<p class="muted small" style="margin:2px 0 0">Reserved time is subtracted from your daily hours so the plan schedules a realistic number of videos — not more than a real day holds.</p>'
     +'<div class="flab">Weekly rest days</div><div class="togrow">'+dows+'</div>'
     +'</div></div>';
+  body+='<div class="card soft"><div class="cardhd">Feasibility detail</div>'+statusLine()
+    +'<div class="grid2"><div><div class="kv">'+st.contentDaysLeft+'</div><div class="kvl">study days for videos</div></div>'
+    +'<div><div class="kv">'+(st.remItems)+'</div><div class="kvl">videos left</div></div>'
+    +'<div><div class="kv">'+Math.round(st.remMin/60)+'h</div><div class="kvl">video time left</div></div>'
+    +'<div><div class="kv">'+(isFinite(st.reqPerDay)?(Math.round(st.reqPerDay/60*10)/10+'h'):'—')+'</div><div class="kvl">needed per study day</div></div></div></div>';
   colB+='<div class="card"><div class="cardhd">Resources</div><div class="togrow">'
     +resBtn("bnb","Boards &amp; Beyond")+resBtn("pathoma","Pathoma")+resBtn("sketchy","Sketchy")+resBtn("bootcamp","Bootcamp")+resBtn("fa","First Aid")+resBtn("anking","AnKing")+resBtn("uworld","UWorld")
     +'</div><p class="muted small">Pick the video resources to weave into this plan — turn any off you\'re not using.</p></div>';
@@ -2654,6 +2706,7 @@ function renderAdjust(){
   const fe=document.getElementById("f_exam");if(fe)fe.onclick=()=>openDatePicker({value:c.examISO,min:todayISO(),title:"Exam date",onPick:(iso)=>{c.examISO=iso;apply();}});
   const fs=document.getElementById("f_start");if(fs)fs.onclick=()=>openDatePicker({value:c.startISO||todayISO(),title:"Start date",onPick:(iso)=>{c.startISO=iso;apply();}});
   bindNum("f_wk","wkdayHrs");bindNum("f_we","wkendHrs");
+  const up=document.getElementById("usePace");if(up)up.onclick=()=>{const st=SCHED.stats;if(isFinite(st.reqPerDay)){const rec=Math.max(0.5,Math.ceil(st.reqPerDay/60*2)/2);c.wkdayHrs=rec;c.wkendHrs=rec;apply();}};
   const fa2=document.getElementById("f_anki");if(fa2)fa2.onchange=()=>{let v=parseInt(fa2.value,10);c.ankiMinPerDay=(isNaN(v)||v<0)?0:v;apply();};
   const fu2=document.getElementById("f_uw");if(fu2)fu2.onchange=()=>{let v=parseInt(fu2.value,10);c.uworldMinPerDay=(isNaN(v)||v<0)?0:v;apply();};
   const fr=document.getElementById("f_rev");if(fr)fr.onchange=()=>{let v=parseInt(fr.value,10);if(isNaN(v)||v<0)v=0;c.reviewDays=v;apply();};
@@ -3483,11 +3536,16 @@ function doResetAll(){
     S.cfgs=snap.cfgs;S.active=snap.active;S.cfg=S.active?S.cfgs[S.active]:null;_prevSig=progressSig();save();
     if(S.cfg){reflow();render();}else renderWelcome();toast("Restored ✓");});
 }
-const BUILD="2026-07-20j";
+const BUILD="2026-07-20k";
 /* ---------- What's new (changelog) ----------
    Newest entry first. Bump the top entry's id whenever you add one and the
    pop-up shows once per person (tracked in synced settings.seenUpdate). */
 const CHANGELOG=[
+  {id:"2026-07-25", date:"July 2026", title:"Your semester questions carry into dedicated + pace up front", items:[
+    "The Step 1 dedicated hub now blends your whole semester of practice: every UWorld/AMBOSS block you logged during M2 rolls into the weak-systems view, so your weakest areas are obvious the moment dedicated begins — no starting from zero.",
+    "Each system shows a source split (how many questions came from M2 vs. dedicated) so you can tell fresh dedicated accuracy from earlier practice.",
+    "The recommended pace is now front-and-center in the schedule editor: set your exam date and hours and the h/day you need to finish on time updates live, with a one-tap “set my hours to this pace.” No more hunting for it.",
+  ]},
   {id:"2026-07-24", date:"July 2026", title:"Pick your psych & ethics sections", items:[
     "Psychiatry and Behavioral Science (ethics) run through every M2 block, so custom plans now let you choose exactly which sections to include instead of dumping the whole course in.",
     "Nothing from those two is scheduled until you pick — a new plan prompts you to select the sections your current block covers (or drop the system) before you continue.",
