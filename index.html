@@ -652,6 +652,19 @@ b{color:var(--ink)}
 .pbbtn{margin-top:11px;width:100%}
 .srcsplit{font-family:var(--mono);font-size:9.5px;font-weight:700;letter-spacing:.02em;color:var(--faint);margin-left:5px;white-space:nowrap}
 .rtile-s{display:block;font-family:var(--mono);font-size:8.5px;font-weight:700;letter-spacing:.02em;color:var(--faint);margin-top:2px;text-transform:none}
+/* Plan tab landing menu */
+.planmenu{max-width:560px;margin:0 auto;display:flex;flex-direction:column;gap:13px}
+.pmhd{font-family:var(--font-display);font-weight:700;font-size:24px;letter-spacing:-.01em;color:var(--ink);margin:4px 0 6px}
+.pmback{align-self:flex-start;margin-bottom:2px}
+.pmcard{display:flex;align-items:center;gap:15px;width:100%;text-align:left;background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:18px 18px;cursor:pointer;font-family:inherit;transition:border-color .15s,background .15s,transform .06s}
+.pmcard:hover:not(.disabled){border-color:var(--phos-dim);background:var(--phos-soft)}
+.pmcard:active:not(.disabled){transform:scale(.994)}
+.pmcard.disabled{opacity:.5;cursor:default}
+.pmc-ic{flex:0 0 auto;width:46px;height:46px;border-radius:12px;background:var(--soft);display:flex;align-items:center;justify-content:center;font-size:22px}
+.pmc-tx{flex:1;min-width:0;display:flex;flex-direction:column;gap:3px}
+.pmc-t{font-size:16px;font-weight:650;color:var(--ink);letter-spacing:-.005em}
+.pmc-s{font-size:12.5px;color:var(--text-2);line-height:1.4}
+.pmc-arrow{flex:0 0 auto;font-size:22px;color:var(--faint);font-family:var(--mono)}
 /* Brody weekly plan preview + Study-view week chip */
 .brodywks{display:flex;flex-direction:column;gap:6px}
 .brodywk{display:flex;align-items:center;gap:10px;background:var(--bg2);border:1px solid var(--line);border-radius:10px;padding:8px 11px}
@@ -1504,6 +1517,7 @@ Cloud.signOut=function(){try{firebase.auth().signOut();}catch(e){}};
    ============================================================ */
 const app=document.getElementById("app");
 let VIEW="today";
+let ADJ_VIEW=null;   // Plan tab landing: null = 3-button menu, "edit" = editor, "old" = past plans
 const toEl=document.getElementById("toast");let toT=null;
 function toast(m){toEl.textContent=m;toEl.classList.add("show");clearTimeout(toT);toT=setTimeout(()=>toEl.classList.remove("show"),2400);}
 function toastUndo(m,fn){toEl.innerHTML=escHTML(m)+' <button id="tu">Undo</button>';toEl.classList.add("show");clearTimeout(toT);const b=document.getElementById("tu");if(b)b.onclick=()=>{fn();toEl.classList.remove("show");};toT=setTimeout(()=>toEl.classList.remove("show"),6500);}
@@ -1625,7 +1639,7 @@ function chrome(active){
    +'</div>';}
 
 function wireChrome(){
-  document.querySelectorAll(".navb").forEach(b=>b.onclick=()=>{if(S.active==="m1"){M1VIEW=b.dataset.view;}else{VIEW=b.dataset.view;}render();});
+  document.querySelectorAll(".navb").forEach(b=>b.onclick=()=>{if(S.active==="m1"){M1VIEW=b.dataset.view;}else{VIEW=b.dataset.view;if(b.dataset.view==="adjust")ADJ_VIEW=null;}render();});
   const mb=document.getElementById("menuBtn");if(mb)mb.onclick=openMenu;
   const sc=document.getElementById("syncChip");if(sc)sc.onclick=openBackups;
   const bb=document.getElementById("brandBtn");if(bb)bb.onclick=renderWelcome;
@@ -2649,7 +2663,7 @@ function renderAdjustBrody(c){
   colB+='<div class="card soft"><div class="cardhd">Different plan?</div><p class="muted small">Switch to an exam countdown or start a fresh unit.</p><button class="btn" id="newUnit">Start a new plan…</button></div>';
   colB+=pastUnitsCard();
   colB+='<div class="card soft"><button class="btn" id="saveDone">Done — back to Study</button><p class="muted small center" style="margin-top:10px">Every change here saves and re-flows your plan instantly.</p></div>';
-  app.innerHTML=chrome("adjust")+'<div class="wrap"><div class="cols"><div>'+body+'</div><div>'+colB+'</div></div></div>';
+  app.innerHTML=chrome("adjust")+'<div class="wrap"><button class="link pmback" id="adjBack">‹ Plan</button><div class="cols"><div>'+body+'</div><div>'+colB+'</div></div></div>';
   const apply=()=>{save();reflow();renderAdjust();};
   bindWeeklyGoal(c,apply);
   document.querySelectorAll("[data-dow]").forEach(b=>b.onclick=()=>{const i=+b.dataset.dow;c.restDays=c.restDays||[];const k=c.restDays.indexOf(i);if(k>=0)c.restDays.splice(k,1);else c.restDays.push(i);apply();});
@@ -2657,6 +2671,7 @@ function renderAdjustBrody(c){
   document.querySelectorAll("[data-fpace]").forEach(b=>b.onclick=()=>{const cur=brodyPace(c);c.brodyPace=Math.max(0.5,cur+(b.dataset.fpace==="inc"?0.5:-0.5));apply();});
   document.querySelectorAll("[data-fbuf]").forEach(b=>b.onclick=()=>{const cur=brodyReviewBuf(c);c.brodyReviewDays=Math.max(0,Math.min(14,cur+(b.dataset.fbuf==="inc"?1:-1)));apply();});
   const nu=document.getElementById("newUnit");if(nu)nu.onclick=()=>{startOnboard("nbme",true);};
+  const ab=document.getElementById("adjBack");if(ab)ab.onclick=()=>{ADJ_VIEW=null;render();};
   bindPastUnits();
   const sd=document.getElementById("saveDone");if(sd)sd.onclick=()=>{VIEW="today";render();};
 }
@@ -2678,7 +2693,40 @@ function customPaceBanner(c,st){
     +(rec!=null?'<button type="button" class="btn ghost pbbtn" id="usePace">Set my hours to '+rec+' h/day</button>':'')
     +'</div>';
 }
+/* Plan tab landing — three plain choices instead of one dense editor, so the
+   page isn't overwhelming. Each routes to the flow it names. */
 function renderAdjust(){
+  if(ADJ_VIEW==="edit"){renderPlanEditor();return;}
+  if(ADJ_VIEW==="old"){renderPlanOld();return;}
+  renderPlanMenu();
+}
+function renderPlanMenu(){
+  const c=S.cfg;const brody=(c&&c.brody)?brodyBlockById(c.brody):null;
+  const label=brody?brody.name:((c&&c.examLabel)||"Your plan");
+  const dateTxt=brody?('Block exam '+fmtShort(brody.shelf)):((c&&c.examISO)?('Exam '+fmtShort(c.examISO)):'No exam date set yet');
+  const past=(S.settings&&S.settings.pastUnits)||[];
+  const card=(id,ic,t,s,dis)=>'<button class="pmcard'+(dis?' disabled':'')+'" id="'+id+'"'+(dis?' disabled':'')+'>'
+    +'<span class="pmc-ic">'+ic+'</span><span class="pmc-tx"><span class="pmc-t">'+t+'</span><span class="pmc-s">'+s+'</span></span><span class="pmc-arrow">›</span></button>';
+  let h='<div class="planmenu"><h2 class="pmhd">Plan</h2>'
+    +card("pm_edit","📋","View / edit current plan",escHTML(label)+' · '+dateTxt,false)
+    +card("pm_new","✚","Start a new plan","A new block, shelf, or exam countdown — set up step by step.",false)
+    +card("pm_old","🗂️","Open old plans",past.length?(past.length+' past plan'+(past.length===1?'':'s')+' — reopen one'):'No past plans yet',!past.length)
+    +'</div>';
+  app.innerHTML=chrome("adjust")+'<div class="wrap">'+h+'</div>';
+  const e=document.getElementById("pm_edit");if(e)e.onclick=()=>{ADJ_VIEW="edit";render();};
+  const n=document.getElementById("pm_new");if(n)n.onclick=()=>{startOnboard("nbme",true);};
+  const o=document.getElementById("pm_old");if(o&&past.length)o.onclick=()=>{ADJ_VIEW="old";render();};
+  wireChrome();
+}
+function renderPlanOld(){
+  const h='<div class="planmenu"><button class="link pmback" id="pm_back">‹ Plan</button><h2 class="pmhd">Old plans</h2>'
+    +'<p class="muted small" style="margin:-6px 0 14px">Reopen a plan you set up before — it becomes your current plan again, progress and all.</p>'
+    +pastUnitsCard(false)+'</div>';
+  app.innerHTML=chrome("adjust")+'<div class="wrap">'+h+'</div>';
+  const b=document.getElementById("pm_back");if(b)b.onclick=()=>{ADJ_VIEW=null;render();};
+  bindPastUnits();wireChrome();
+}
+function renderPlanEditor(){
   if(S.cfg&&S.cfg.brody){renderAdjustBrody(S.cfg);return;}
   const c=S.cfg;const st=SCHED.stats;
   const dows=DOW.map((d,i)=>'<button type="button" class="tog '+((c.restDays||[]).includes(i)?"on":"")+'" data-dow="'+i+'">'+d+'</button>').join('');
@@ -2721,7 +2769,7 @@ function renderAdjust(){
     colB+=pastUnitsCard();
   }
   colB+='<div class="card soft"><button class="btn" id="saveDone">Done — back to Today</button><p class="muted small center" style="margin-top:10px">Every change here saves and re-flows your plan instantly.</p></div>';
-  app.innerHTML=chrome("adjust")+'<div class="wrap"><div class="cols"><div>'+body+'</div><div>'+colB+'</div></div></div>';
+  app.innerHTML=chrome("adjust")+'<div class="wrap"><button class="link pmback" id="adjBack">‹ Plan</button><div class="cols"><div>'+body+'</div><div>'+colB+'</div></div></div>';
   // live-apply
   const apply=()=>{save();reflow();renderAdjust();};
   bindWeeklyGoal(c,apply);
@@ -2742,6 +2790,7 @@ function renderAdjust(){
   document.querySelectorAll("[data-sdn]").forEach(b=>b.onclick=()=>{const i=+b.dataset.sdn;const a=c.sysOrder=(c.sysOrder||SYS_ORDER_DEFAULT).slice();if(i<a.length-1){const t=a[i+1];a[i+1]=a[i];a[i]=t;apply();}});
   const sr=document.getElementById("sordReset");if(sr)sr.onclick=()=>{c.sysOrder=SYS_ORDER_DEFAULT.slice();apply();};
   const nu=document.getElementById("newUnit");if(nu)nu.onclick=()=>{startOnboard("nbme",true);};
+  const ab=document.getElementById("adjBack");if(ab)ab.onclick=()=>{ADJ_VIEW=null;render();};
   bindPastUnits();
   const sd=document.getElementById("saveDone");if(sd)sd.onclick=()=>{save();VIEW="today";render();toast("Plan updated ✓");};
   wireChrome();
@@ -3594,7 +3643,7 @@ function doResetAll(){
     S.cfgs=snap.cfgs;S.active=snap.active;S.cfg=S.active?S.cfgs[S.active]:null;_prevSig=progressSig();save();
     if(S.cfg){reflow();render();}else renderWelcome();toast("Restored ✓");});
 }
-const BUILD="2026-07-20s";
+const BUILD="2026-07-20t";
 /* ---------- What's new (changelog) ----------
    Newest entry first. Bump the top entry's id whenever you add one and the
    pop-up shows once per person (tracked in synced settings.seenUpdate). */
