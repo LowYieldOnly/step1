@@ -665,6 +665,29 @@ b{color:var(--ink)}
 .pmc-t{font-size:16px;font-weight:650;color:var(--ink);letter-spacing:-.005em}
 .pmc-s{font-size:12.5px;color:var(--text-2);line-height:1.4}
 .pmc-arrow{flex:0 0 auto;font-size:22px;color:var(--faint);font-family:var(--mono)}
+/* onboarding step wizard */
+.onboard.wiz{max-width:560px;margin:0 auto}
+.wizhead{margin-bottom:22px}
+.wizcancel{display:inline-block;margin-bottom:14px;color:var(--faint)}
+.wizprog{height:6px;border-radius:3px;background:var(--soft);overflow:hidden}
+.wizprog-bar{height:100%;background:var(--phos);border-radius:3px;transition:width .3s cubic-bezier(.4,0,.2,1)}
+.wizstepn{font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--faint);margin-top:8px}
+.wiztitle{font-family:var(--font-display);font-weight:700;font-size:clamp(24px,6vw,30px);letter-spacing:-.015em;color:var(--ink);margin:0 0 4px}
+.wizsub{font-size:14.5px;margin:0 0 20px}
+.obstep{animation:obin .28s cubic-bezier(.4,0,.2,1)}
+.obstep.back{animation:obinb .28s cubic-bezier(.4,0,.2,1)}
+@keyframes obin{from{opacity:0;transform:translateX(18px)}to{opacity:1;transform:none}}
+@keyframes obinb{from{opacity:0;transform:translateX(-18px)}to{opacity:1;transform:none}}
+.wizfoot{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:22px}
+.wizfoot .btn{min-width:120px}
+.wizfoot .btn.ghost{min-width:96px}
+.wizfoot .btn.disabled{opacity:.45;pointer-events:none}
+.wizhint{font-size:12.5px;color:var(--warning);text-align:right;margin:10px 0 0}
+.wizreview{display:flex;flex-direction:column;gap:1px;margin-top:4px}
+.wrv{display:flex;justify-content:space-between;gap:16px;padding:9px 0;border-bottom:1px solid var(--line)}
+.wrv:last-child{border-bottom:0}
+.wrv-k{font-size:12.5px;font-weight:700;color:var(--faint);text-transform:uppercase;letter-spacing:.04em;font-family:var(--mono);flex:0 0 auto}
+.wrv-v{font-size:14px;color:var(--ink);text-align:right;line-height:1.4}
 /* Brody weekly plan preview + Study-view week chip */
 .brodywks{display:flex;flex-direction:column;gap:6px}
 .brodywk{display:flex;align-items:center;gap:10px;background:var(--bg2);border:1px solid var(--line);border-radius:10px;padding:8px 11px}
@@ -3350,9 +3373,9 @@ function enterHub(key){if(!S.cfgs[key]){startOnboard(key);return;}activate(key);
 let _ob=null;
 function defaultsForHub(key,fresh){const ex=fresh?null:S.cfgs[key];
   let o;
-  if(ex)o={hub:key,fresh:false,brody:ex.brody||null,brodyPace:ex.brodyPace||null,brodyJoinWk:(ex.brodyJoinWk!=null?ex.brodyJoinWk:undefined),brodyReviewDays:(ex.brodyReviewDays!=null?ex.brodyReviewDays:undefined),examLabel:ex.examLabel||"",examISO:ex.examISO||"",startISO:ex.startISO||todayISO(),wkdayHrs:ex.wkdayHrs,wkendHrs:ex.wkendHrs,restDays:(ex.restDays||[0]).slice(),reviewDays:ex.reviewDays,resources:Object.assign({bnb:true,pathoma:true,sketchy:true,fa:true,anking:true,uworld:true},ex.resources||{}),systems:(ex.systems||SYS).slice(),sysOrder:(ex.sysOrder&&ex.sysOrder.length===SYS.length?ex.sysOrder:SYS_ORDER_DEFAULT).slice(),pathChapters:(Array.isArray(ex.pathChapters)?ex.pathChapters.slice():undefined),threadTopics:(Array.isArray(ex.threadTopics)?ex.threadTopics.slice():undefined)};
+  if(ex)o={hub:key,fresh:false,brody:ex.brody||null,brodyPace:ex.brodyPace||null,brodyJoinWk:(ex.brodyJoinWk!=null?ex.brodyJoinWk:undefined),brodyReviewDays:(ex.brodyReviewDays!=null?ex.brodyReviewDays:undefined),examLabel:ex.examLabel||"",examISO:ex.examISO||"",startISO:ex.startISO||todayISO(),wkdayHrs:ex.wkdayHrs,wkendHrs:ex.wkendHrs,restDays:(ex.restDays||[0]).slice(),reviewDays:ex.reviewDays,resources:Object.assign({bnb:true,pathoma:true,sketchy:true,fa:true,anking:true,uworld:true},ex.resources||{}),systems:(ex.systems||SYS).slice(),sysOrder:(ex.sysOrder&&ex.sysOrder.length===SYS.length?ex.sysOrder:SYS_ORDER_DEFAULT).slice(),pathChapters:(Array.isArray(ex.pathChapters)?ex.pathChapters.slice():undefined),threadTopics:(Array.isArray(ex.threadTopics)?ex.threadTopics.slice():undefined),weeklyQGoal:(ex.weeklyQGoal||0),step:0};
   // a brand-new plan starts with every resource unchecked — the student picks
-  else o={hub:key,fresh:!!fresh,examLabel:key==="step1"?"Step 1":"",examISO:"",startISO:todayISO(),wkdayHrs:6,wkendHrs:4,restDays:[0],reviewDays:14,resources:{bnb:false,pathoma:false,sketchy:false,fa:false,anking:false,uworld:false},systems:(key==="nbme"?[]:SYS.slice()),sysOrder:SYS_ORDER_DEFAULT.slice(),threadTopics:[]};
+  else o={hub:key,fresh:!!fresh,examLabel:key==="step1"?"Step 1":"",examISO:"",startISO:todayISO(),wkdayHrs:6,wkendHrs:4,restDays:[0],reviewDays:14,resources:{bnb:false,pathoma:false,sketchy:false,fa:false,anking:false,uworld:false},systems:(key==="nbme"?[]:SYS.slice()),sysOrder:SYS_ORDER_DEFAULT.slice(),threadTopics:[],weeklyQGoal:0,step:0};
   // NBME hub now selects individual systems (like Step 1); migrate any legacy block selection
   if(key==="nbme"&&ex&&(!ex.systems||!ex.systems.length)&&Array.isArray(ex.blocks)&&ex.blocks.length){
     const set=new Set(ex.blocks);o.systems=flatSys((ex.blockOrder||blockNames()).filter(b=>set.has(b)));
@@ -3432,70 +3455,132 @@ function bindThreadTopics(c,apply){
   document.querySelectorAll("[data-thclr]").forEach(b=>b.onclick=()=>{const ids=threadVideos(c,b.dataset.thclr).map(v=>itemId(v));setThreadTopics(c,ids,false);apply();});
 }
 /* block-level list for the NBME hub (combined units) */
-function startOnboard(key,fresh){_ob=defaultsForHub(key,fresh);loadCatalog(()=>{if(_ob)obLive();});renderOnboard();}
+let _obDir=1;   // wizard slide direction: 1 = forward, -1 = back
+function startOnboard(key,fresh){_ob=defaultsForHub(key,fresh);_ob.step=0;_obDir=1;loadCatalog(()=>{if(_ob)renderOnboard();});renderOnboard();}
 function obIsNbme(){return _ob&&_ob.hub==="nbme";}
+/* the ordered wizard steps for the current plan type — one thing per page */
+function obSteps(ob){
+  const nbme=ob.hub==="nbme";
+  if(ob.brody)return (nbme?["plan"]:[]).concat(["block","resources","routine","practice","review"]);
+  const s=[];if(nbme)s.push("plan","name");
+  s.push("dates","resources","systems","routine","practice","review");
+  return s;
+}
+const OB_STEP_META={
+  plan:["Choose your plan","How do you want this schedule built?"],
+  block:["Pick your block","Which Brody unit are you on?"],
+  name:["Name your exam","What are you studying for?"],
+  dates:["Set your dates","When is your exam, and when do you start?"],
+  resources:["Pick your resources","Which video series do you actually use?"],
+  systems:["Systems & study order","What does this shelf cover — and in what order?"],
+  routine:["Your routine","How much can you study, and how fast?"],
+  practice:["Practice questions","Optionally set a weekly question goal."],
+  review:["Review & start","One last look before you build it."]
+};
+function obHasVideoRes(ob){return !!(ob.resources&&["bnb","pathoma","sketchy","bootcamp"].some(k=>ob.resources[k]));}
+/* per-step gate for Next — true to allow, or a string to show why it's blocked */
+function obStepValid(ob,key){
+  if(key==="dates")return ob.examISO?true:"Pick your exam date to continue.";
+  if(key==="resources")return obHasVideoRes(ob)?true:"Turn on at least one video resource (B&B, Pathoma, Sketchy, or Bootcamp).";
+  if(key==="systems"){if(!ob.systems.length)return "Pick at least one system this exam covers.";const un=threadUnconfigured(ob);if(un)return "Choose which "+un+" sections to include — or drop it from your systems.";}
+  return true;
+}
+function obReviewHTML(ob){
+  const brody=ob.brody?brodyBlockById(ob.brody):null;
+  const RESNM={bnb:"B&B",pathoma:"Pathoma",sketchy:"Sketchy",bootcamp:"Bootcamp",fa:"First Aid",anking:"AnKing",uworld:"UWorld"};
+  const res=Object.keys(RESNM).filter(k=>ob.resources&&ob.resources[k]).map(k=>RESNM[k]);
+  const rows=[];
+  rows.push(["Plan",brody?("Brody calendar · "+brody.name):"Custom exam countdown"]);
+  if(brody)rows.push(["Block exam",fmtShort(brody.shelf)]);
+  else{rows.push(["Exam",(ob.examLabel||"Shelf exam")+" · "+(ob.examISO?fmtShort(ob.examISO):"—")]);rows.push(["Start",fmtShort(ob.startISO)]);}
+  rows.push(["Resources",res.join(", ")||"—"]);
+  if(!brody)rows.push(["Systems",ob.systems.length+" selected"]);
+  if(brody)rows.push(["Daily pace",brodyPace(ob)+" h/day"]);
+  else rows.push(["Study hours",ob.wkdayHrs+" h weekday / "+ob.wkendHrs+" h weekend"]);
+  rows.push(["Rest days",ob.restDays.length?ob.restDays.map(i=>DOW[i]).join(", "):"none"]);
+  rows.push(["Review buffer",(brody?brodyReviewBuf(ob):ob.reviewDays)+" day"+(((brody?brodyReviewBuf(ob):ob.reviewDays))===1?"":"s")]);
+  rows.push(["Weekly Q goal",weeklyGoal(ob)>0?(weeklyGoal(ob)+" / week"):"off"]);
+  let h='<div class="card"><div class="cardhd">Your plan</div><div class="wizreview">'
+    +rows.map(r=>'<div class="wrv"><span class="wrv-k">'+escHTML(r[0])+'</span><span class="wrv-v">'+escHTML(r[1])+'</span></div>').join('')+'</div></div>';
+  h+='<div class="card soft" id="o_reco"><div class="cardhd">The plan at a glance</div>'+obPreview()+'</div>';
+  return h;
+}
+function obNext(){const ob=_ob;const steps=obSteps(ob);const key=steps[ob.step];if(obStepValid(ob,key)!==true)return;if(ob.step>=steps.length-1){commitOnboard();return;}_obDir=1;ob.step++;renderOnboard();}
+function obPrev(){const ob=_ob;if(ob.step<=0){obCancel();return;}_obDir=-1;ob.step--;renderOnboard();}
+function obCancel(){const ob=_ob;if(S.cfgs[ob.hub]){activate(ob.hub);S.active=ob.hub;VIEW="today";reflow();render();}else renderWelcome();}
 function renderOnboard(){
   if(!_ob)_ob=defaultsForHub("step1");
-  const ob=_ob;const exists=!!S.cfgs[ob.hub];const editing=exists&&!ob.fresh;
-  const headVerb=ob.fresh?"New unit \u2014 ":(editing?"Reconfigure ":"Set up ");
-  const closeLbl=(editing||ob.fresh)?"\u2715 Cancel":"\u2039 Back";
-  const goLbl=ob.fresh?"Start this unit":(editing?"Save changes":"Build my hub");
+  const ob=_ob;
+  const steps=obSteps(ob);
+  ob.step=Math.max(0,Math.min(steps.length-1,ob.step||0));
+  const key=steps[ob.step];
+  const editing=(!!S.cfgs[ob.hub])&&!ob.fresh;
+  const meta=OB_STEP_META[key]||["",""];
   const dows=DOW.map((d,i)=>'<button type="button" class="tog '+(ob.restDays.includes(i)?"on":"")+'" data-odow="'+i+'">'+d+'</button>').join('');
   const resBtn=(k,lab)=>'<button type="button" class="tog '+(ob.resources[k]?"on":"")+'" data-ores="'+k+'">'+lab+'</button>';
-  let body='<div class="onboard"><button class="link" id="o_back">'+closeLbl+'</button><h1>'+headVerb+escHTML(ob.fresh?"M2 Scheduler":hubName(ob.hub))+'</h1><p class="muted">A plan that paces itself to your exam date and re-flows whenever life happens.</p>';
-  if(obIsNbme())body+=pastUnitsCard(true);   // reopen a previously made schedule (incl. the current one) instead of building a new one
-  if(obIsNbme())body+='<div class="card"><div class="cardhd">Plan type</div><div class="togrow">'
+  let body='<div class="onboard wiz">';
+  body+='<div class="wizhead"><button class="link wizcancel" id="o_cancel">✕ Cancel</button>'
+    +'<div class="wizprog"><div class="wizprog-bar" style="width:'+Math.round((ob.step+1)/steps.length*100)+'%"></div></div>'
+    +'<div class="wizstepn">Step '+(ob.step+1)+' of '+steps.length+'</div></div>';
+  body+='<div class="obstep '+(_obDir<0?"back":"fwd")+'"><h1 class="wiztitle">'+escHTML(meta[0])+'</h1><p class="muted wizsub">'+escHTML(meta[1])+'</p>';
+  if(key==="plan")body+='<div class="card"><div class="cardhd">Plan type</div><div class="togrow">'
     +'<button type="button" class="tog '+(ob.brody?"on":"")+'" data-oplan="brody">Follow my Brody calendar</button>'
-    +'<button type="button" class="tog '+(!ob.brody?"on":"")+'" data-oplan="exam">Custom Schedule</button>'
-    +'</div><p class="muted small">'+(ob.brody?'Videos line up with each week of the Brody calendar so you’re covered for every quiz.':'Set an exam date and the plan paces itself to it.')+'</p></div>';
-  if(obIsNbme()&&ob.brody){const blk=brodyBlockById(ob.brody)||BRODY_BLOCKS[0];
+    +'<button type="button" class="tog '+(!ob.brody?"on":"")+'" data-oplan="exam">Custom schedule</button>'
+    +'</div><p class="muted small">'+(ob.brody?'Videos line up with each week of the Brody calendar so you’re covered for every quiz.':'Set an exam date and the plan paces itself to it — great for a remediation exam, a custom shelf, or Step prep.')+'</p></div>';
+  if(key==="block"){const blk=brodyBlockById(ob.brody)||BRODY_BLOCKS[0];
     const chips=BRODY_BLOCKS.map(b=>'<button type="button" class="tog '+(ob.brody===b.id?"on":"")+'" data-oblk="'+b.id+'">'+escHTML(b.name)+'</button>').join('');
-    body+='<div class="card soft"><div class="cardhd">Brody block</div>'
-      +'<div class="togrow">'+chips+'</div>'
-      +'<p class="muted small" style="margin:9px 0 0"><b>'+escHTML(blk.name)+'</b> — weeks of '+fmtShort(blk.weeks[0].start)+' → block exam '+fmtShort(blk.shelf)+'. Each week’s videos match what Brody teaches that week, in each resource’s own order, all finished before the exam.</p></div>';}
-  if(obIsNbme()&&ob.brody)body+='<div class="card"><div class="cardhd">Resources</div><div class="togrow">'   // Brody: resources sit right under the block
-    +resBtn("bnb","Boards &amp; Beyond")+resBtn("pathoma","Pathoma")+resBtn("sketchy","Sketchy")+resBtn("bootcamp","Bootcamp")+resBtn("fa","First Aid")+resBtn("anking","AnKing")+resBtn("uworld","UWorld")
-    +'</div><p class="muted small">Turn on the video resources you use — they interleave into each Brody week.</p></div>';
-  if(obIsNbme()&&!ob.brody)body+='<div class="card"><div class="cardhd">Which exam?</div><div class="form"><label>Name this exam<input type="text" id="o_label" value="'+escAttr(ob.examLabel)+'" placeholder="e.g. Cardiology shelf"></label></div></div>';
-  if(!ob.brody)body+='<div class="card"><div class="cardhd">Dates</div><div class="form">'
+    body+='<div class="card"><div class="cardhd">Brody block</div><div class="togrow">'+chips+'</div>'
+      +'<p class="muted small" style="margin:9px 0 0"><b>'+escHTML(blk.name)+'</b> — weeks of '+fmtShort(blk.weeks[0].start)+' → block exam '+fmtShort(blk.shelf)+'. Each week’s videos match what Brody teaches that week, all finished before the exam.</p></div>';}
+  if(key==="name")body+='<div class="card"><div class="cardhd">Which exam?</div><div class="form"><label>Name this exam<input type="text" id="o_label" value="'+escAttr(ob.examLabel)+'" placeholder="e.g. Cardiology shelf"></label></div><p class="muted small">Just a label so you can tell your plans apart.</p></div>';
+  if(key==="dates")body+='<div class="card"><div class="cardhd">Dates</div><div class="form">'
     +'<label>Exam date'+dateTriggerHTML("o_exam",ob.examISO,"Pick your exam date")+'</label>'
     +'<label>Start date'+dateTriggerHTML("o_start",ob.startISO,"Pick a start date")+'</label></div></div>';
-  if(ob.brody){const pace=brodyPace(ob),rec=brodyRecommendedPace(brodyWeekLoads(ob,brodyBlockById(ob.brody)||BRODY_BLOCKS[0]));
-    body+='<div class="card"><div class="cardhd">Study days &amp; pace</div><div class="form">'
-      +'<div class="flab">No-video / rest days</div><div class="togrow">'+dows+'</div>'
-      +'<div class="flab mt">Daily pace</div>'
-      +'<div class="pacerow"><button type="button" class="pacebtn" data-opace="dec" aria-label="less">−</button>'
-      +'<div class="paceval"><b id="ob_paceval">'+pace+' h</b><span>per study day</span></div>'
-      +'<button type="button" class="pacebtn" data-opace="inc" aria-label="more">+</button></div>'
-      +'<p class="muted small" id="ob_pacehelp" style="margin:9px 0 0">'+obPaceHelp(ob)+'</p>'
-      +'<div class="flab mt">Review buffer before the block exam</div>'
-      +'<div class="pacerow"><button type="button" class="pacebtn" data-obuf="dec" aria-label="fewer">−</button>'
-      +'<div class="paceval"><b>'+brodyReviewBuf(ob)+' day'+(brodyReviewBuf(ob)===1?'':'s')+'</b><span>video-free for UWorld / review</span></div>'
-      +'<button type="button" class="pacebtn" data-obuf="inc" aria-label="more">+</button></div>'
-      +'<p class="muted small" style="margin:9px 0 0">'+(brodyReviewBuf(ob)>0?('The last '+brodyReviewBuf(ob)+' study day'+(brodyReviewBuf(ob)===1?'':'s')+' before the block exam stay open for UWorld &amp; review — all videos finish before then, and you still never fall behind Brody.'):'No buffer — content runs right up to the exam.')+'</p>'
-      +'</div></div>';
-  } else {
-    body+='<div class="card"><div class="cardhd">How much can you study?</div><div class="form">'
-      +'<label>Weekday hours/day<input type="number" id="o_wk" min="0" step="0.5" value="'+ob.wkdayHrs+'"></label>'
-      +'<label>Weekend hours/day<input type="number" id="o_we" min="0" step="0.5" value="'+ob.wkendHrs+'"></label>'
-      +'<div class="flab">Weekly rest days</div><div class="togrow">'+dows+'</div>'
-      +'<label class="mt">UWorld / review buffer — finish content this many study days before your exam<input type="number" id="o_rev" min="0" step="1" value="'+ob.reviewDays+'"></label>'
-      +'</div></div>';
-  }
-  body+='<div class="card soft" id="o_reco"><div class="cardhd">Recommended pace</div>'+obPreview()+'</div>';
-  if(!ob.brody)body+='<div class="card"><div class="cardhd">Resources</div><div class="togrow">'   // custom plan keeps resources here (Brody shows them under the block)
+  if(key==="resources")body+='<div class="card"><div class="cardhd">Resources</div><div class="togrow">'
     +resBtn("bnb","Boards &amp; Beyond")+resBtn("pathoma","Pathoma")+resBtn("sketchy","Sketchy")+resBtn("bootcamp","Bootcamp")+resBtn("fa","First Aid")+resBtn("anking","AnKing")+resBtn("uworld","UWorld")
-    +'</div><p class="muted small">Turn on the video resources you use \u2014 they interleave into the plan.</p></div>';
-  if(!ob.brody){const obSysInner='<p class="muted small" style="margin-top:6px">'+(obIsNbme()
-      ?'Tap the systems this shelf covers \u2014 immuno, micro, genetics, biochem and the rest are each selectable. The B&amp;B/Pathoma topics for each come with it. Reorder with \u25b2\u25bc to set what you study first.'
-      :'This is the recommended Boards &amp; Beyond sequence. Reorder with \u25b2\u25bc, and tap a system to include or drop it.')+'</p>'
+    +'</div><p class="muted small">Turn on the video resources you use — they interleave into '+(ob.brody?'each Brody week':'the plan')+'. First Aid, AnKing, and UWorld are companions, not scheduled videos.</p></div>';
+  if(key==="systems"){const obSysInner='<p class="muted small" style="margin-top:6px">'+(obIsNbme()
+      ?'Tap the systems this shelf covers. Reorder with ▲▼ to set what you study first.'
+      :'The recommended Boards &amp; Beyond sequence. Reorder with ▲▼, and tap a system to include or drop it.')+'</p>'
     + orderedSysHTML(ob.sysOrder,ob.systems)
-    + '<button class="link" id="sordReset">\u21ba Reset to recommended order</button>';
-  body+='<div class="card"><div class="cardhd">'+(obIsNbme()?'Units &amp; study order':'Study order &amp; systems')+'</div>'
-    + fold("ob_sys",ob.systems.length+' of '+SYS.length+' systems selected \u2014 edit / reorder',obSysInner,obIsNbme())+'</div>';}
-  if(!ob.brody)body+=pathChaptersHTML(ob,"ob_path");
-  if(!ob.brody)body+=threadTopicsHTML(ob,"ob");
-  body+='<button class="btn big" id="o_go">'+goLbl+'</button>';
+    + '<button class="link" id="sordReset">↺ Reset to recommended order</button>';
+    body+='<div class="card"><div class="cardhd">'+(obIsNbme()?'Units &amp; study order':'Study order &amp; systems')+'</div>'
+      + fold("ob_sys",ob.systems.length+' of '+SYS.length+' systems selected — edit / reorder',obSysInner,true)+'</div>';
+    body+=pathChaptersHTML(ob,"ob_path");
+    body+=threadTopicsHTML(ob,"ob");}
+  if(key==="routine"){
+    if(ob.brody){
+      body+='<div class="card"><div class="cardhd">Study days &amp; pace</div><div class="form">'
+        +'<div class="flab">No-video / rest days</div><div class="togrow">'+dows+'</div>'
+        +'<div class="flab mt">Daily pace</div>'
+        +'<div class="pacerow"><button type="button" class="pacebtn" data-opace="dec" aria-label="less">−</button>'
+        +'<div class="paceval"><b id="ob_paceval">'+brodyPace(ob)+' h</b><span>per study day</span></div>'
+        +'<button type="button" class="pacebtn" data-opace="inc" aria-label="more">+</button></div>'
+        +'<p class="muted small" id="ob_pacehelp" style="margin:9px 0 0">'+obPaceHelp(ob)+'</p>'
+        +'<div class="flab mt">Review buffer before the block exam</div>'
+        +'<div class="pacerow"><button type="button" class="pacebtn" data-obuf="dec" aria-label="fewer">−</button>'
+        +'<div class="paceval"><b>'+brodyReviewBuf(ob)+' day'+(brodyReviewBuf(ob)===1?'':'s')+'</b><span>video-free for UWorld / review</span></div>'
+        +'<button type="button" class="pacebtn" data-obuf="inc" aria-label="more">+</button></div>'
+        +'<p class="muted small" style="margin:9px 0 0">'+(brodyReviewBuf(ob)>0?('The last '+brodyReviewBuf(ob)+' study day'+(brodyReviewBuf(ob)===1?'':'s')+' before the block exam stay open for UWorld &amp; review.'):'No buffer — content runs right up to the exam.')+'</p>'
+        +'</div></div>';
+    } else {
+      body+='<div class="card"><div class="cardhd">How much can you study?</div><div class="form">'
+        +'<label>Weekday hours/day<input type="number" id="o_wk" min="0" step="0.5" value="'+ob.wkdayHrs+'"></label>'
+        +'<label>Weekend hours/day<input type="number" id="o_we" min="0" step="0.5" value="'+ob.wkendHrs+'"></label>'
+        +'<div class="flab">Weekly rest days</div><div class="togrow">'+dows+'</div>'
+        +'<label class="mt">UWorld / review buffer — finish content this many study days before your exam<input type="number" id="o_rev" min="0" step="1" value="'+ob.reviewDays+'"></label>'
+        +'</div></div>';
+    }
+    body+='<div class="card soft" id="o_reco"><div class="cardhd">The plan at a glance</div>'+obPreview()+'</div>';
+  }
+  if(key==="practice")body+=weeklyGoalSettingHTML(ob);
+  if(key==="review")body+=obReviewHTML(ob);
+  body+='</div>';
+  const valid=obStepValid(ob,key);const last=ob.step>=steps.length-1;
+  const nextLbl=last?(ob.fresh?"Start this unit":(editing?"Save changes":"Build my plan")):"Next ›";
+  body+='<div class="wizfoot">'
+    +(ob.step>0?'<button class="btn ghost" id="o_prev">‹ Back</button>':'<span></span>')
+    +'<button class="btn'+(valid===true?'':' disabled')+'" id="o_next"'+(valid===true?'':' disabled')+'>'+nextLbl+'</button></div>';
+  if(valid!==true)body+='<p class="wizhint">'+escHTML(valid)+'</p>';
   body+='</div>';
   app.innerHTML='<div class="wrap onb">'+body+'</div>';
   const ol=document.getElementById("o_label");if(ol)ol.onchange=()=>{ob.examLabel=ol.value||"Shelf exam";};
@@ -3505,7 +3590,7 @@ function renderOnboard(){
   bindN("o_wk","wkdayHrs");bindN("o_we","wkendHrs");
   const orv=document.getElementById("o_rev");if(orv)orv.onchange=()=>{let v=parseInt(orv.value,10);if(isNaN(v)||v<0)v=0;ob.reviewDays=v;obLive();};
   document.querySelectorAll("[data-odow]").forEach(b=>b.onclick=()=>{const i=+b.dataset.odow;const k=ob.restDays.indexOf(i);if(k>=0)ob.restDays.splice(k,1);else ob.restDays.push(i);renderObTogs();obLive();});
-  document.querySelectorAll("[data-ores]").forEach(b=>b.onclick=()=>{ob.resources[b.dataset.ores]=!ob.resources[b.dataset.ores];renderObTogs();obLive();});
+  document.querySelectorAll("[data-ores]").forEach(b=>b.onclick=()=>{ob.resources[b.dataset.ores]=!ob.resources[b.dataset.ores];renderOnboard();});   // full re-render so the step's Next-gate updates
   document.querySelectorAll("[data-oplan]").forEach(b=>b.onclick=()=>{if(b.dataset.oplan==="brody"){const bl=brodyBlockById(brodyCurrentBlockId());if(ob.brody!==bl.id)ob.brodyJoinWk=null;ob.brody=bl.id;ob.systems=bl.systems.slice();ob.examLabel=bl.name;}else ob.brody=null;renderOnboard();});
   document.querySelectorAll("[data-oblk]").forEach(b=>b.onclick=()=>{const bl=brodyBlockById(b.dataset.oblk);if(bl){if(ob.brody!==bl.id)ob.brodyJoinWk=null;ob.brody=bl.id;ob.systems=bl.systems.slice();ob.examLabel=bl.name;}renderOnboard();});
   document.querySelectorAll("[data-opace]").forEach(b=>b.onclick=()=>{const cur=brodyPace(ob);ob.brodyPace=Math.max(0.5,cur+(b.dataset.opace==="inc"?0.5:-0.5));renderOnboard();});
@@ -3516,9 +3601,11 @@ function renderOnboard(){
   document.querySelectorAll("[data-sup]").forEach(b=>b.onclick=()=>{const i=+b.dataset.sup;if(i>0){const a=ob.sysOrder;const t=a[i-1];a[i-1]=a[i];a[i]=t;renderOnboard();}});
   document.querySelectorAll("[data-sdn]").forEach(b=>b.onclick=()=>{const i=+b.dataset.sdn;const a=ob.sysOrder;if(i<a.length-1){const t=a[i+1];a[i+1]=a[i];a[i]=t;renderOnboard();}});
   const sr=document.getElementById("sordReset");if(sr)sr.onclick=()=>{ob.sysOrder=SYS_ORDER_DEFAULT.slice();renderOnboard();};
-  const go=document.getElementById("o_go");if(go)go.onclick=commitOnboard;
-  const bk=document.getElementById("o_back");if(bk)bk.onclick=()=>{if((editing||ob.fresh)&&S.cfgs[ob.hub]){activate(ob.hub);S.active=ob.hub;VIEW="today";reflow();render();}else renderWelcome();};
-  bindPastUnits();bindUsePace();bindFolds();
+  bindWeeklyGoal(ob,()=>renderOnboard());
+  const nx=document.getElementById("o_next");if(nx)nx.onclick=obNext;
+  const pv=document.getElementById("o_prev");if(pv)pv.onclick=obPrev;
+  const cx=document.getElementById("o_cancel");if(cx)cx.onclick=obCancel;
+  bindUsePace();bindFolds();
 }
 function renderObTogs(){
   document.querySelectorAll("[data-odow]").forEach(b=>b.classList.toggle("on",_ob.restDays.includes(+b.dataset.odow)));
@@ -3540,11 +3627,11 @@ function obReco(){const ob=_ob;
   const en={bnb:R.bnb,pathoma:R.pathoma,skmicro:R.sketchy,skpharm:R.sketchy,bootcamp:R.bootcamp};
   const pathSel=en.pathoma?effectivePathChapters(ob):new Set();
   const threadSel=Array.isArray(ob.threadTopics)?new Set(ob.threadTopics):null;
-  let total=0;catVideos().forEach(v=>{
+  let total=0,nv=0;catVideos().forEach(v=>{
     if(!en[v.res])return;
     if(threadSel&&THREAD_SYS.has(v.sys)&&!threadSel.has(itemId(v)))return;   // only picked psych/ethics sections
-    if(v.res==="pathoma"){if(pathSel.has(pathChapterOf(v)))total+=v.min;return;}
-    if(selSys.has(v.sys))total+=v.min;});
+    if(v.res==="pathoma"){if(pathSel.has(pathChapterOf(v))){total+=v.min;nv++;}return;}
+    if(selSys.has(v.sys)){total+=v.min;nv++;}});
   if(!total)return {ok:false,msg:"Turn on at least one video resource (B&amp;B, Bootcamp, Pathoma, or Sketchy)."};
   const cur=(ob.startISO>todayISO())?ob.startISO:todayISO();const rest=ob.restDays||[];
   let d=isoToDate(cur),g=0;const sdw=[];
@@ -3554,7 +3641,7 @@ function obReco(){const ob=_ob;
   const studyDaysPerWeek=Math.max(1,7-rest.length);const perWeek=perDay*studyDaysPerWeek;
   let cap=0;for(let i=0;i<content&&i<sdw.length;i++){cap+=((sdw[i]===0||sdw[i]===6)?(ob.wkendHrs||0):(ob.wkdayHrs||0));}
   const feasible=cap>=totalH-0.05;const gap=Math.max(0,totalH-cap);
-  return {ok:true,totalH:Math.round(totalH),nSys:order.length,sd:sd,content:content,perDay:perDay,perWeek:perWeek,reviewDays:(ob.reviewDays||0),feasible:feasible,gap:gap,wd:ob.wkdayHrs,we:ob.wkendHrs,fromISO:cur,examISO:ob.examISO};
+  return {ok:true,totalH:Math.round(totalH),nVids:nv,nSys:order.length,sd:sd,content:content,perDay:perDay,perWeek:perWeek,reviewDays:(ob.reviewDays||0),feasible:feasible,gap:gap,wd:ob.wkdayHrs,we:ob.wkendHrs,fromISO:cur,examISO:ob.examISO};
 }
 function brodyPreview(ob){
   if(!catReady())return '<p class="muted small" style="margin:0">Loading the video catalog…</p>';
@@ -3584,7 +3671,7 @@ function obPreview(){const ob=_ob;
   const r=obReco();
   if(!r.ok)return '<p class="muted small" style="margin:0">'+r.msg+'</p>';
   const pd=Math.round(r.perDay*10)/10,pw=Math.round(r.perWeek);
-  let h='<p class="muted small" style="margin:0 0 8px">'+r.totalH+' h of video across '+r.nSys+' system'+(r.nSys>1?"s":"")+', '+fmtShort(r.fromISO)+' \u2192 '+fmtShort(r.examISO)+'. To finish before your '+r.reviewDays+'-study-day question buffer, aim for about <b>'+pd+' h/day</b> on study days (\u2248 <b>'+pw+' h/week</b>).</p>';
+  let h='<p class="muted small" style="margin:0 0 8px"><b>'+r.nVids+' videos</b> \u00b7 '+r.totalH+' h across '+r.nSys+' system'+(r.nSys>1?"s":"")+', '+fmtShort(r.fromISO)+' \u2192 '+fmtShort(r.examISO)+'. To finish before your '+r.reviewDays+'-study-day question buffer, aim for about <b>'+pd+' h/day</b> on study days (\u2248 <b>'+pw+' h/week</b>).</p>';
   h+='<button type="button" class="btn ghost" id="o_usepace">Use this pace ('+Math.max(0.5,Math.ceil(r.perDay*2)/2)+' h/day)</button>';
   h+='<p class="small" style="margin:8px 0 0;color:'+(r.feasible?"var(--text-2)":"var(--warning)")+'">'+(r.feasible?("\u2713 Your hours ("+r.wd+" weekday / "+r.we+" weekend) cover this with room to spare \u2014 adjust anytime."):("\u26a0 Your hours ("+r.wd+" wd / "+r.we+" we) fall about "+Math.ceil(r.gap)+" h short. Raise your hours, lengthen the buffer, move the date, or trim resources."))+'</p>';
   return h;
@@ -3602,7 +3689,7 @@ function commitOnboard(){const ob=_ob;
   Object.assign(c,{examType:key,examLabel:key==="step1"?"Step 1":(brody?brody.name:(ob.examLabel||"Shelf exam")),
     brody:(brody?brody.id:undefined),brodyPace:(brody?(ob.brodyPace||undefined):undefined),brodyJoinWk:(brody?(ob.brodyJoinWk!=null?ob.brodyJoinWk:undefined):undefined),brodyReviewDays:(brody?brodyReviewBuf(ob):undefined),
     examISO:(brody?brody.shelf:ob.examISO),startISO:(brody?brody.weeks[0].start:ob.startISO),wkdayHrs:ob.wkdayHrs,wkendHrs:ob.wkendHrs,restDays:ob.restDays.slice(),
-    reviewDays:(brody?0:ob.reviewDays),resources:Object.assign({},ob.resources),systems:(brody?brody.systems.slice():ob.systems.slice()),sysOrder:(ob.sysOrder||SYS_ORDER_DEFAULT).slice(),pathChapters:(Array.isArray(ob.pathChapters)?ob.pathChapters.slice():undefined),threadTopics:(brody?undefined:(Array.isArray(ob.threadTopics)?ob.threadTopics.slice():undefined))});
+    reviewDays:(brody?0:ob.reviewDays),resources:Object.assign({},ob.resources),systems:(brody?brody.systems.slice():ob.systems.slice()),sysOrder:(ob.sysOrder||SYS_ORDER_DEFAULT).slice(),pathChapters:(Array.isArray(ob.pathChapters)?ob.pathChapters.slice():undefined),threadTopics:(brody?undefined:(Array.isArray(ob.threadTopics)?ob.threadTopics.slice():undefined)),weeklyQGoal:(ob.weeklyQGoal>0?ob.weeklyQGoal:0)});
   c.off=c.off||{};
   if(ob.fresh&&prev&&key==="nbme")archiveUnit(prev);   // keep the old unit reachable under Plan → Past units
   S.cfgs[key]=c;activate(key);S.active=key;
@@ -3642,7 +3729,7 @@ function doResetAll(){
     S.cfgs=snap.cfgs;S.active=snap.active;S.cfg=S.active?S.cfgs[S.active]:null;_prevSig=progressSig();save();
     if(S.cfg){reflow();render();}else renderWelcome();toast("Restored ✓");});
 }
-const BUILD="2026-07-20u";
+const BUILD="2026-07-20v";
 /* ---------- What's new (changelog) ----------
    Newest entry first. Bump the top entry's id whenever you add one and the
    pop-up shows once per person (tracked in synced settings.seenUpdate). */
