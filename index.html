@@ -3647,7 +3647,7 @@ function brodyPreview(ob){
   if(!catReady())return '<p class="muted small" style="margin:0">Loading the video catalog…</p>';
   const blk=brodyBlock(ob)||BRODY_BLOCKS[0];const loads=brodyWeekLoads(ob,blk);
   const total=loads.reduce((a,w)=>a+w.loadMin,0);
-  if(!['bnb','pathoma','sketchy'].some(k=>ob.resources&&ob.resources[k]))return '<p class="muted small" style="margin:0">Turn on at least one video resource to see the weekly plan.</p>';
+  if(!obHasVideoRes(ob))return '<p class="muted small" style="margin:0">Turn on at least one video resource to see the weekly plan.</p>';
   if(!total)return '<p class="muted small" style="margin:0">Every video in this block is checked off — the days ahead are yours for questions and review.</p>';
   const pace=brodyPace(ob);
   // a late joiner's plan starts at their join week; joined weeks that passed only
@@ -3681,7 +3681,7 @@ function commitOnboard(){const ob=_ob;
   const brody=ob.brody?brodyBlockById(ob.brody):null;
   if(!brody&&!ob.examISO){toast("Pick an exam date first");return;}
   if(!brody&&!ob.systems.length){toast("Pick at least one system");return;}
-  if(!["bnb","pathoma","sketchy"].some(k=>ob.resources[k])){toast("Pick at least one video resource");return;}
+  if(!obHasVideoRes(ob)){toast("Pick at least one video resource");return;}
   if(!brody){const un=threadUnconfigured(ob);if(un){toast("Choose which "+un+" sections to include — or remove "+un+" from your systems.");renderOnboard();const el=document.querySelector(".threadwarn");if(el)el.scrollIntoView({behavior:"smooth",block:"center"});return;}}
   const key=ob.hub;
   const prev=S.cfgs[key]?JSON.parse(JSON.stringify(S.cfgs[key])):null;
@@ -3729,7 +3729,7 @@ function doResetAll(){
     S.cfgs=snap.cfgs;S.active=snap.active;S.cfg=S.active?S.cfgs[S.active]:null;_prevSig=progressSig();save();
     if(S.cfg){reflow();render();}else renderWelcome();toast("Restored ✓");});
 }
-const BUILD="2026-07-20v";
+const BUILD="2026-07-20w";
 /* ---------- What's new (changelog) ----------
    Newest entry first. Bump the top entry's id whenever you add one and the
    pop-up shows once per person (tracked in synced settings.seenUpdate). */
