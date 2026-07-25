@@ -598,6 +598,14 @@ b{color:var(--ink)}
 .credit.pending{border-left-style:dashed;border-left-color:var(--line2)}
 .credit-name.soon{font-family:var(--mono);font-size:12px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--faint)}
 .credit-soon{font-size:11.5px;font-style:italic;color:var(--muted);margin-top:3px}
+.members{display:flex;flex-direction:column;gap:13px;margin-top:11px}
+.member{display:flex;align-items:center;gap:13px}
+.credit-photo{flex:0 0 auto;width:54px;height:54px;border-radius:50%;overflow:hidden;background:var(--soft);border:1px solid var(--line);display:flex;align-items:center;justify-content:center;font-family:var(--font-display);font-weight:700;font-size:17px;color:var(--faint);letter-spacing:.02em}
+.credit-photo img{width:100%;height:100%;object-fit:cover;display:block}
+.credit-photo.empty{border-style:dashed;background:transparent}
+.member-info{min-width:0}
+.member-name{font-size:14.5px;font-weight:600;color:var(--ink);line-height:1.35}
+.member-name.soon{font-family:var(--mono);font-size:12px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--faint)}
 
 /* ordered systems (reorderable) */
 .sysord{display:flex;flex-direction:column;gap:6px;margin:10px 0 8px}
@@ -3255,20 +3263,26 @@ function renderWelcome(){
   const wa=document.getElementById("w_about");if(wa)wa.onclick=renderAbout;
 }
 function renderAbout(){
+  // To add a headshot, set a member's photo to an image path (e.g. photo:"img/dylan.jpg");
+  // until then the circular slot shows the member's initials, holding the space.
   const roster=[
-    {role:"President",name:"Dylan Lewis",cls:"Class of 2029"},
-    {role:"Co-Vice Presidents",name:"Caleb Dixon & Ash Beach",cls:"Class of 2029"},
-    {role:"M2 Content Moderation",name:"Nathan Neef",cls:"Class of 2029",note:"Additional member coming soon"},
-    {role:"M1 Content Moderation Team",soon:true},
+    {role:"President",members:[{name:"Dylan Lewis",cls:"Class of 2029"}]},
+    {role:"Co-Vice Presidents",members:[{name:"Caleb Dixon",cls:"Class of 2029"},{name:"Ash Beach",cls:"Class of 2029"}]},
+    {role:"M2 Content Moderation",members:[{name:"Nathan Neef",cls:"Class of 2029"},{soon:true}]},
+    {role:"M1 Content Moderation Team",members:[{soon:true}]},
   ];
-  const credits=roster.map(r=>'<div class="credit'+(r.soon?' pending':'')+'">'
-    +'<div class="credit-role">'+escHTML(r.role)+'</div>'
-    +(r.soon
-        ?'<div class="credit-name soon">Coming soon</div>'
-        :('<div class="credit-name"><b>'+escHTML(r.name)+'</b></div>'
-          +'<div class="credit-cls">'+escHTML(r.cls)+'</div>'
-          +(r.note?'<div class="credit-soon">'+escHTML(r.note)+'</div>':'')))
-    +'</div>').join('');
+  const initials=n=>n.split(/\s+/).filter(Boolean).map(w=>w[0]).slice(0,2).join('').toUpperCase();
+  const memberHTML=m=>'<div class="member'+(m.soon?' pending':'')+'">'
+    +'<div class="credit-photo'+(m.soon?' empty':'')+'">'+(m.photo?'<img src="'+escAttr(m.photo)+'" alt="'+escAttr(m.name||'')+'">':(m.soon?'':escHTML(initials(m.name))))+'</div>'
+    +'<div class="member-info">'
+      +(m.soon?'<div class="member-name soon">Coming soon</div>'
+             :'<div class="member-name">'+escHTML(m.name)+'</div><div class="credit-cls">'+escHTML(m.cls)+'</div>')
+    +'</div></div>';
+  const credits=roster.map(r=>{const allSoon=r.members.every(m=>m.soon);
+    return '<div class="credit'+(allSoon?' pending':'')+'">'
+      +'<div class="credit-role">'+escHTML(r.role)+'</div>'
+      +'<div class="members">'+r.members.map(memberHTML).join('')+'</div>'
+    +'</div>';}).join('');
   const body='<div class="about">'
     +'<button class="m1back" id="a_back">‹ Back</button>'
     +'<div class="wbrand about-brand">BRODY MODE</div>'
@@ -3580,7 +3594,7 @@ function doResetAll(){
     S.cfgs=snap.cfgs;S.active=snap.active;S.cfg=S.active?S.cfgs[S.active]:null;_prevSig=progressSig();save();
     if(S.cfg){reflow();render();}else renderWelcome();toast("Restored ✓");});
 }
-const BUILD="2026-07-20m";
+const BUILD="2026-07-20n";
 /* ---------- What's new (changelog) ----------
    Newest entry first. Bump the top entry's id whenever you add one and the
    pop-up shows once per person (tracked in synced settings.seenUpdate). */
