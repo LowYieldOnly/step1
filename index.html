@@ -3266,7 +3266,7 @@ function renderAbout(){
   // To add a headshot, set a member's photo to an image path (e.g. photo:"img/dylan.jpg");
   // until then the circular slot shows the member's initials, holding the space.
   const roster=[
-    {role:"President",members:[{name:"Dylan Lewis",cls:"Class of 2029"}]},
+    {role:"President",members:[{name:"Dylan Lewis",cls:"Class of 2029",photo:"img/dylan.jpg"}]},
     {role:"Co-Vice Presidents",members:[{name:"Caleb Dixon",cls:"Class of 2029"},{name:"Ash Beach",cls:"Class of 2029"}]},
     {role:"M2 Content Leads",members:[{name:"Nathan Neef",cls:"Class of 2029"},{name:"Matthew Wittenborn",cls:"Class of 2029"}]},
     {role:"M1 Content Leads",members:[{soon:true}]},
@@ -3594,7 +3594,7 @@ function doResetAll(){
     S.cfgs=snap.cfgs;S.active=snap.active;S.cfg=S.active?S.cfgs[S.active]:null;_prevSig=progressSig();save();
     if(S.cfg){reflow();render();}else renderWelcome();toast("Restored ✓");});
 }
-const BUILD="2026-07-20q";
+const BUILD="2026-07-20r";
 /* ---------- What's new (changelog) ----------
    Newest entry first. Bump the top entry's id whenever you add one and the
    pop-up shows once per person (tracked in synced settings.seenUpdate). */
