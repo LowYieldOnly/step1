@@ -595,6 +595,9 @@ b{color:var(--ink)}
 .credit-name{font-size:14.5px;color:var(--ink);line-height:1.5}
 .credit-cls{display:block;font-size:12px;color:var(--muted);margin-top:2px}
 .about-goal{font-size:14.5px;color:var(--text-2);line-height:1.65;max-width:27em;margin:0 auto}
+.credit.pending{border-left-style:dashed;border-left-color:var(--line2)}
+.credit-name.soon{font-family:var(--mono);font-size:12px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--faint)}
+.credit-soon{font-size:11.5px;font-style:italic;color:var(--muted);margin-top:3px}
 
 /* ordered systems (reorderable) */
 .sysord{display:flex;flex-direction:column;gap:6px;margin:10px 0 8px}
@@ -3239,7 +3242,7 @@ function renderWelcome(){
   let body='<div class="welcome"><div class="wbrand">BRODY MODE</div>'
     +'<div class="wservire"><span>SERVIRE</span></div>'
     +'<div class="hubs">'+hubCard("nbme")+m1HubCard()+stepDHubCard()+'</div>'
-    +'<div class="wfoot">'+((Cloud.user&&Cloud.user.email)?('<div class="acct">Signed in as '+escHTML(Cloud.user.email)+'</div>'):'')+'<button class="wfootlink" id="w_about">About</button><button class="wfootlink" id="w_step1">Step 1 Command Center (legacy)</button><button class="wfootlink" id="w_restore">Restore a backup</button>'+((Cloud.user&&Cloud.user.email)?'<button class="wfootlink" id="w_signout">Sign out</button>':'')+'</div>'
+    +'<div class="wfoot">'+((Cloud.user&&Cloud.user.email)?('<div class="acct">Signed in as '+escHTML(Cloud.user.email)+'</div>'):'')+'<button class="wfootlink" id="w_about">Governing Body</button><button class="wfootlink" id="w_step1">Step 1 Command Center (legacy)</button><button class="wfootlink" id="w_restore">Restore a backup</button>'+((Cloud.user&&Cloud.user.email)?'<button class="wfootlink" id="w_signout">Sign out</button>':'')+'</div>'
     +'</div>';
   app.innerHTML='<div class="wrap welcomewrap">'+body+'</div>';
   document.querySelectorAll("[data-enter]").forEach(b=>b.onclick=()=>enterHub(b.dataset.enter));
@@ -3252,17 +3255,28 @@ function renderWelcome(){
   const wa=document.getElementById("w_about");if(wa)wa.onclick=renderAbout;
 }
 function renderAbout(){
+  const roster=[
+    {role:"President",name:"Dylan Lewis",cls:"Class of 2029"},
+    {role:"Co-Vice Presidents",name:"Caleb Dixon & Ash Beach",cls:"Class of 2029"},
+    {role:"M2 Content Moderation",name:"Nathan Neef",cls:"Class of 2029",note:"Additional member coming soon"},
+    {role:"M1 Content Moderation Team",soon:true},
+  ];
+  const credits=roster.map(r=>'<div class="credit'+(r.soon?' pending':'')+'">'
+    +'<div class="credit-role">'+escHTML(r.role)+'</div>'
+    +(r.soon
+        ?'<div class="credit-name soon">Coming soon</div>'
+        :('<div class="credit-name"><b>'+escHTML(r.name)+'</b></div>'
+          +'<div class="credit-cls">'+escHTML(r.cls)+'</div>'
+          +(r.note?'<div class="credit-soon">'+escHTML(r.note)+'</div>':'')))
+    +'</div>').join('');
   const body='<div class="about">'
     +'<button class="m1back" id="a_back">‹ Back</button>'
     +'<div class="wbrand about-brand">BRODY MODE</div>'
     +'<div class="wservire"><span>SERVIRE</span></div>'
     +'<p class="about-lead">By Brody medical students, for Brody medical students.</p>'
-    +'<p class="about-intro">Brody Mode brings the study schedules and curated resources of the preclinical years together in one place — built to remain useful long after its creators have moved on.</p>'
-    +'<div class="about-sec">Credits</div>'
-    +'<div class="about-credits">'
-      +'<div class="credit"><div class="credit-role">M2 Scheduler</div><div class="credit-name">Conceived and organized by <b>Dylan Lewis</b>.</div><div class="credit-cls">Class of 2029</div></div>'
-      +'<div class="credit"><div class="credit-role">M1 Resource Hub</div><div class="credit-name">Designed and built by <b>Ash Beach</b> and <b>Caleb Dixon</b>, with implementation support from <b>Dylan Lewis</b>.</div><div class="credit-cls">Class of 2029</div></div>'
-    +'</div>'
+    +'<p class="about-intro">The students who steward Brody Mode — keeping the schedules, resources, and content accurate and useful for every class that follows.</p>'
+    +'<div class="about-sec">Governing Body</div>'
+    +'<div class="about-credits">'+credits+'</div>'
     +'<p class="about-goal">Offered freely, in the hope that Brody Mode endures as a shared resource for every Brody student in the years to come.</p>'
     +'</div>';
   app.innerHTML='<div class="wrap welcomewrap">'+body+'</div>';
@@ -3566,7 +3580,7 @@ function doResetAll(){
     S.cfgs=snap.cfgs;S.active=snap.active;S.cfg=S.active?S.cfgs[S.active]:null;_prevSig=progressSig();save();
     if(S.cfg){reflow();render();}else renderWelcome();toast("Restored ✓");});
 }
-const BUILD="2026-07-20l";
+const BUILD="2026-07-20m";
 /* ---------- What's new (changelog) ----------
    Newest entry first. Bump the top entry's id whenever you add one and the
    pop-up shows once per person (tracked in synced settings.seenUpdate). */
