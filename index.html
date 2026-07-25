@@ -3268,8 +3268,8 @@ function renderAbout(){
   const roster=[
     {role:"President",members:[{name:"Dylan Lewis",cls:"Class of 2029"}]},
     {role:"Co-Vice Presidents",members:[{name:"Caleb Dixon",cls:"Class of 2029"},{name:"Ash Beach",cls:"Class of 2029"}]},
-    {role:"M2 Content Moderation",members:[{name:"Nathan Neef",cls:"Class of 2029"},{soon:true}]},
-    {role:"M1 Content Moderation Team",members:[{soon:true}]},
+    {role:"M2 Content Directors",members:[{name:"Nathan Neef",cls:"Class of 2029"},{name:"Matthew Wittenborn",cls:"Class of 2029"}]},
+    {role:"M1 Content Directors",members:[{soon:true}]},
   ];
   const initials=n=>n.split(/\s+/).filter(Boolean).map(w=>w[0]).slice(0,2).join('').toUpperCase();
   const memberHTML=m=>'<div class="member'+(m.soon?' pending':'')+'">'
@@ -3594,7 +3594,7 @@ function doResetAll(){
     S.cfgs=snap.cfgs;S.active=snap.active;S.cfg=S.active?S.cfgs[S.active]:null;_prevSig=progressSig();save();
     if(S.cfg){reflow();render();}else renderWelcome();toast("Restored ✓");});
 }
-const BUILD="2026-07-20n";
+const BUILD="2026-07-20o";
 /* ---------- What's new (changelog) ----------
    Newest entry first. Bump the top entry's id whenever you add one and the
    pop-up shows once per person (tracked in synced settings.seenUpdate). */
