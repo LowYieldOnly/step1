@@ -427,6 +427,7 @@ b{color:var(--ink)}
 .calcell.alldone{background:var(--accent-bg);border-color:var(--accent)}.calcell.alldone .ci{color:var(--accent);font-size:12px}
 .calcell.rest,.calcell.off{background:var(--warning-bg)}.calcell.rest .ci,.calcell.off .ci{color:var(--amber)}
 .calcell.review{background:var(--info-bg);border-color:var(--info)}.calcell.review .ci{color:var(--violet)}
+.cvlist{display:none}   /* per-day video titles — only shown in the big (desktop) calendar */
 .calcell.today{border-color:transparent;box-shadow:0 0 0 1.5px var(--phos) inset}
 .calcell.sel{box-shadow:0 0 0 2px var(--ink) inset;border-color:transparent;animation:none}
 .callegend{display:flex;flex-wrap:wrap;gap:12px;margin:14px 2px 4px;font-family:var(--mono);font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.03em}
@@ -804,6 +805,15 @@ b{color:var(--ink)}
   .studycalz{grid-area:cal}
   .studycalz>*{margin:0!important}
   .studycalz .calgrid{grid-auto-rows:minmax(58px,auto)}
+  /* big calendar: each study day grows to list its videos in small print, hours top-right */
+  .studycalz .calcell{align-self:start}
+  .studycalz .calcell.load,.studycalz .calcell.alldone{aspect-ratio:auto;align-items:stretch;justify-content:flex-start;padding:6px 7px 7px;min-height:58px}
+  .studycalz .calcell.load .cd,.studycalz .calcell.alldone .cd{align-self:flex-start}
+  .studycalz .calcell.load .ci,.studycalz .calcell.alldone .ci{position:absolute;top:6px;right:8px}
+  .studycalz .cvlist{display:flex;flex-direction:column;gap:1px;margin-top:5px;min-width:0;text-align:left}
+  .studycalz .cv{font-family:var(--mono);font-size:8.5px;line-height:1.3;color:var(--text-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .studycalz .cv.done{color:var(--faint);text-decoration:line-through}
+  .studycalz .cvmore{font-family:var(--mono);font-size:8px;color:var(--faint);font-style:italic;margin-top:1px}
   /* larger header tabs */
   .navb{padding:13px 26px;font-size:15px}
 
@@ -2461,6 +2471,17 @@ function monthMatrix(ym){const p=ym.split("-").map(Number),y=p[0],m=p[1];
   for(let d=1;d<=dim;d++)cells.push(isoFromDate(new Date(y,m-1,d)));
   while(cells.length%7!==0)cells.push(null);
   return cells;}
+/* small-print title list shown inside a loaded calendar day (big/desktop calendar
+   only — CSS hides it where cells are too narrow). Capped so tall days don't blow
+   out the row; the full list is one tap away in the day detail. */
+function calVlist(row){
+  const items=row.items;if(!items||!items.length)return '';
+  const CAP=8;let h='<div class="cvlist">';
+  items.slice(0,CAP).forEach(it=>{const done=isDone(it.id);
+    h+='<span class="cv'+(done?" done":"")+'" title="'+escAttr(it.name)+'">'+(done?"✓ ":"")+escHTML(it.name)+'</span>';});
+  if(items.length>CAP)h+='<span class="cvmore">+'+(items.length-CAP)+' more</span>';
+  return h+'</div>';
+}
 function calCell(iso){
   if(!iso)return '<div class="calcell empty"></div>';
   const day=+iso.slice(8);const row=SCHED.dayMap[iso];
@@ -2469,7 +2490,7 @@ function calCell(iso){
     if(row.off){cls+=" off";ind='<span class="ci">off</span>';}
     else if(row.rest){cls+=" rest";ind='<span class="ci">rest</span>';}
     else if(row.review){cls+=" review";ind='<span class="ci">UW</span>';}
-    else if(row.items.length){const allDone=row.items.every(it=>isDone(it.id));cls+=allDone?" alldone":" load";ind='<span class="ci">'+(allDone?"✓":fmtH(row.min))+'</span>';}
+    else if(row.items.length){const allDone=row.items.every(it=>isDone(it.id));cls+=allDone?" alldone":" load";ind='<span class="ci">'+(allDone?"✓ "+fmtH(row.min):fmtH(row.min))+'</span>'+calVlist(row);}
     else if(row.past){cls+=" past";}   // past day, nothing was checked off here
   } else if(iso<todayISO()){cls+=" past";}
   if(iso===todayISO())cls+=" today";
@@ -3729,7 +3750,7 @@ function doResetAll(){
     S.cfgs=snap.cfgs;S.active=snap.active;S.cfg=S.active?S.cfgs[S.active]:null;_prevSig=progressSig();save();
     if(S.cfg){reflow();render();}else renderWelcome();toast("Restored ✓");});
 }
-const BUILD="2026-07-20w";
+const BUILD="2026-07-20x";
 /* ---------- What's new (changelog) ----------
    Newest entry first. Bump the top entry's id whenever you add one and the
    pop-up shows once per person (tracked in synced settings.seenUpdate). */
