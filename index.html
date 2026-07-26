@@ -666,6 +666,24 @@ b{color:var(--ink)}
 .pmc-t{font-size:16px;font-weight:650;color:var(--ink);letter-spacing:-.005em}
 .pmc-s{font-size:12.5px;color:var(--text-2);line-height:1.4}
 .pmc-arrow{flex:0 0 auto;font-size:22px;color:var(--faint);font-family:var(--mono)}
+/* content audit (leads) */
+.ca-flag{border:1px solid color-mix(in srgb,var(--warning) 40%,transparent);background:var(--warning-bg);border-radius:11px;padding:11px 12px;margin:10px 0}
+.ca-flaghd{font-size:12.5px;font-weight:800;color:var(--warning);margin-bottom:7px}
+.ca-row{display:flex;align-items:center;gap:8px;font-size:12.5px;color:var(--ink);padding:3px 0;line-height:1.35}
+.ca-row.mono{font-family:var(--mono);font-size:11px;color:var(--text-2);word-break:break-all}
+.ca-sc{font-family:var(--mono);font-size:10px;font-weight:700;color:var(--faint);white-space:nowrap}
+.ca-wk{border-top:1px solid var(--line);margin-top:14px;padding-top:12px}
+.ca-wkhd{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;margin-bottom:8px}
+.ca-wkn{font-family:var(--mono);font-size:11px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--phos);background:var(--phos-soft);border-radius:6px;padding:2px 8px}
+.ca-wklab{font-family:var(--font-display);font-weight:650;font-size:15px;color:var(--ink)}
+.ca-wkct{margin-left:auto;font-family:var(--mono);font-size:10.5px;color:var(--faint)}
+.ca-resgrp{margin:8px 0 4px}
+.ca-reslab{display:flex;align-items:center;gap:7px;font-size:12px;font-weight:700;color:var(--text-2);margin:6px 0 3px}
+.ca-cat{margin:0 0 5px 4px}
+.ca-catnm{font-family:var(--mono);font-size:9.5px;font-weight:700;letter-spacing:.03em;text-transform:uppercase;color:var(--faint);margin:4px 0 2px}
+.ca-v{font-size:12.5px;color:var(--ink);line-height:1.45;padding:1px 0 1px 10px;border-left:2px solid var(--line)}
+.ca-v.def{border-left-color:var(--warning);color:var(--warning)}
+.ca-deftag{font-family:var(--mono);font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:.04em;color:var(--warning);border:1px solid color-mix(in srgb,var(--warning) 45%,transparent);border-radius:5px;padding:0 5px;margin-left:5px}
 /* onboarding step wizard */
 .onboard.wiz{max-width:560px;margin:0 auto}
 .wizhead{margin-bottom:22px}
@@ -932,6 +950,10 @@ function emailAllowed(email){email=(email||"").trim().toLowerCase();if(!email)re
   if(ACCESS_EMAILS.indexOf(email)>=0)return true;
   const d=email.split("@")[1]||"";return ACCESS_DOMAINS.some(dom=>d===dom||d.endsWith("."+dom));}
 const ACCESS_MSG="Access is limited to ECU. Sign in with your ECU email address (ending in ecu.edu).";
+/* Content leads (+ Dylan) who can open the read-only Content Audit view. Add a
+   lead's login email here to give them access. */
+const AUDIT_EMAILS=["dylanwlewis@protonmail.com","lewisd25@students.ecu.edu"];
+function isAuditor(){const e=(Cloud.user&&Cloud.user.email||"").trim().toLowerCase();return !!e&&AUDIT_EMAILS.map(x=>x.toLowerCase()).indexOf(e)>=0;}
 
 /* ---------- NBME exam blocks (your school's combined units) ----------
    Each block maps to a set of systems; B&B/Pathoma/Sketchy follow per system. */
@@ -3750,7 +3772,7 @@ function doResetAll(){
     S.cfgs=snap.cfgs;S.active=snap.active;S.cfg=S.active?S.cfgs[S.active]:null;_prevSig=progressSig();save();
     if(S.cfg){reflow();render();}else renderWelcome();toast("Restored ✓");});
 }
-const BUILD="2026-07-20x";
+const BUILD="2026-07-20y";
 /* ---------- What's new (changelog) ----------
    Newest entry first. Bump the top entry's id whenever you add one and the
    pop-up shows once per person (tracked in synced settings.seenUpdate). */
@@ -3831,6 +3853,7 @@ function openMenu(){
   const html='<div class="sheet"><div class="sheethd">Menu</div>'
     +(email?'<div class="mrow acctrow"><span class="acctlbl">Signed in</span><span class="acctml">'+escHTML(email)+'</span></div>':'')
     +(S.active==="nbme"?'<button class="mrow" data-m="pastunits">Past schedules</button>':'')
+    +(isAuditor()?'<button class="mrow" data-m="audit">Content audit (leads)</button>':'')
     +'<button class="mrow" data-m="backups">Backups &amp; version history</button>'
     +'<button class="mrow" data-m="updates">What’s new</button>'
     +'<button class="mrow" data-m="theme">'+(Theme.current()==="dark"?"Switch to light theme":"Switch to dark theme")+'</button>'
@@ -3851,6 +3874,78 @@ function menuAct(m){
   else if(m==="theme"){Theme.toggle();}
   else if(m==="signout"){confirmSignOut();}
   else if(m==="reset"){modalSheet({title:"Reset everything?",danger:true,okLabel:"Erase & start over",msg:"This erases EVERYTHING across both hubs — every checkmark, Anki check, note, self-assessment score, UWorld block, review flag, your streak, AND your saved plans (exam dates, systems, settings), here and in your synced account.\n\nYou’ll be taken back to the start to build a fresh plan. You’ll get one chance to undo.",onOk:doResetAll});}
+  else if(m==="audit"){if(isAuditor())renderContentAudit();}
+}
+/* ---------- CONTENT AUDIT (content leads / admin, read-only) ----------
+   A safety check on the Brody calendar mapping: shows the exact week-by-week
+   mapping the scheduler uses, and flags the objective problems (videos not
+   mapped to a week, and mappings whose video no longer exists). Read-only —
+   leads review and report; the map is edited in code. */
+function auditBlock(blk){
+  const vids=catVideos().filter(v=>brodyInBlock(blk,v));
+  const explicitOf=v=>(blk.videoWeek[brodyKey(v)]!=null)||(v.res==="bootcamp"&&blk.bcWeek&&blk.bcWeek[v.sys+"|"+(v.cat||"")]!=null);
+  const weeks=blk.weeks.map(w=>({n:w.n,label:w.label,start:w.start,vids:[]}));
+  const wkIdx={};blk.weeks.forEach((w,i)=>wkIdx[w.n]=i);
+  const unmapped=[];
+  vids.forEach(v=>{const wk=brodyVideoWeek(blk,v);const exp=explicitOf(v);
+    const bucket=weeks[wkIdx[wk]!=null?wkIdx[wk]:weeks.length-1];
+    bucket.vids.push({res:v.res,sys:v.sys,cat:v.cat||"",name:v.name,exp});
+    if(!exp)unmapped.push({res:v.res,sys:v.sys,cat:v.cat||"",name:v.name,wk});});
+  const ri=r=>RES_ORDER.indexOf(r);
+  weeks.forEach(w=>w.vids.sort((a,b)=>(ri(a.res)-ri(b.res))||a.name.localeCompare(b.name)));
+  const catKeys=new Set(catVideos().map(brodyKey));
+  const orphans=Object.keys(blk.videoWeek||{}).filter(k=>!catKeys.has(k));
+  const bcKeys=new Set(catVideos().filter(v=>v.res==="bootcamp").map(v=>v.sys+"|"+(v.cat||"")));
+  const bcOrphans=Object.keys(blk.bcWeek||{}).filter(k=>!bcKeys.has(k));
+  return {blk,weeks,unmapped,orphans,bcOrphans,total:vids.length};
+}
+function renderContentAudit(){
+  if(!catReady()){loadCatalog(()=>{if(document.getElementById("ca_root"))renderContentAudit();});
+    app.innerHTML=chrome("")+'<div class="wrap" id="ca_root"><p class="cfmsg">Loading the catalog…</p></div>';wireChrome();return;}
+  let body='<div class="wrap" id="ca_root"><button class="link pmback" id="ca_back">‹ Back</button><h1 class="pmhd">Content audit</h1>'
+    +'<p class="muted small" style="margin:-6px 0 18px;max-width:62ch">Read-only. This is the exact mapping the Brody calendar schedules from — scroll each week and check the videos against what Brody teaches that week. Spot something off? Note it and send it to Dylan; the map is edited in code.</p>';
+  BRODY_BLOCKS.forEach(blk=>{
+    const a=auditBlock(blk);const issues=a.unmapped.length+a.orphans.length+a.bcOrphans.length;
+    body+='<div class="card"><div class="cardhd">'+escHTML(blk.name)+' <span class="pill">'+a.total+' videos</span>'
+      +'<button class="btn ghost sm" data-cacsv="'+escAttr(blk.id)+'" style="margin-left:auto">Export CSV</button></div>';
+    body+='<div class="status '+(issues?"warn":"ok")+'">'+(issues
+      ?('⚠ '+issues+' item'+(issues===1?"":"s")+' need attention — see below.')
+      :'✓ Every video is mapped to a week, and every mapping points at a real video. Nothing auto-defaulted.')+'</div>';
+    if(a.unmapped.length)body+='<div class="ca-flag"><div class="ca-flaghd">Not mapped to a week — dumped into the last week ('+a.unmapped.length+')</div>'
+      +a.unmapped.map(v=>'<div class="ca-row">'+resBadge(v.res)+'<span class="ca-sc">'+escHTML(v.sys)+' · '+escHTML(v.cat)+'</span>'+escHTML(v.name)+'</div>').join('')+'</div>';
+    if(a.orphans.length)body+='<div class="ca-flag"><div class="ca-flaghd">Orphaned mappings — video no longer in the catalog ('+a.orphans.length+')</div>'
+      +a.orphans.map(k=>'<div class="ca-row mono">'+escHTML(k)+'</div>').join('')+'</div>';
+    if(a.bcOrphans.length)body+='<div class="ca-flag"><div class="ca-flaghd">Orphaned Bootcamp sections ('+a.bcOrphans.length+')</div>'
+      +a.bcOrphans.map(k=>'<div class="ca-row mono">'+escHTML(k)+'</div>').join('')+'</div>';
+    a.weeks.forEach(w=>{
+      body+='<div class="ca-wk"><div class="ca-wkhd"><span class="ca-wkn">Week '+w.n+'</span><span class="ca-wklab">'+escHTML(w.label)+'</span><span class="ca-wkct">'+w.vids.length+' videos · '+fmtShort(w.start)+'</span></div>';
+      const byRes={};w.vids.forEach(v=>{(byRes[v.res]=byRes[v.res]||[]).push(v);});
+      RES_ORDER.forEach(r=>{if(!byRes[r])return;
+        body+='<div class="ca-resgrp"><div class="ca-reslab">'+resBadge(r)+' '+escHTML(resLabel(r))+' · '+byRes[r].length+'</div>';
+        const byCat={};byRes[r].forEach(v=>{(byCat[v.cat]=byCat[v.cat]||[]).push(v);});
+        Object.keys(byCat).forEach(cat=>{
+          body+='<div class="ca-cat">'+(cat?'<div class="ca-catnm">'+escHTML(cat)+'</div>':'')
+            +byCat[cat].map(v=>'<div class="ca-v'+(v.exp?"":" def")+'">'+escHTML(v.name)+(v.exp?"":' <span class="ca-deftag">defaulted</span>')+'</div>').join('')+'</div>';});
+        body+='</div>';});
+      body+='</div>';});
+    body+='</div>';});
+  body+='</div>';
+  app.innerHTML=chrome("")+body;
+  const bk=document.getElementById("ca_back");if(bk)bk.onclick=()=>render();
+  document.querySelectorAll("[data-cacsv]").forEach(b=>b.onclick=()=>auditCSV(b.dataset.cacsv));
+  wireChrome();
+}
+function auditCSV(blockId){
+  const blk=brodyBlockById(blockId);if(!blk)return;const a=auditBlock(blk);
+  const rows=[["block","week","week_label","resource","system","category","video","status"]];
+  a.weeks.forEach(w=>w.vids.forEach(v=>rows.push([blk.name,w.n,w.label,resLabel(v.res),v.sys,v.cat,v.name,v.exp?"mapped":"DEFAULTED"])));
+  a.orphans.forEach(k=>rows.push([blk.name,"","","","","",k,"ORPHANED_KEY"]));
+  a.bcOrphans.forEach(k=>rows.push([blk.name,"","","bootcamp","","",k,"ORPHANED_BC_SECTION"]));
+  const esc=c=>{c=String(c==null?"":c);return /[",\n]/.test(c)?'"'+c.replace(/"/g,'""')+'"':c;};
+  const csv=rows.map(r=>r.map(esc).join(",")).join("\n");
+  try{const blob=new Blob([csv],{type:"text/csv"});const url=URL.createObjectURL(blob);
+    const a2=document.createElement("a");a2.href=url;a2.download="brody-mapping-"+blk.id+".csv";document.body.appendChild(a2);a2.click();a2.remove();
+    setTimeout(()=>URL.revokeObjectURL(url),1500);toast("CSV downloaded ✓");}catch(e){toast("Couldn’t export CSV");}
 }
 function openPastUnits(){
   const pu=(S.settings&&S.settings.pastUnits)||[];
