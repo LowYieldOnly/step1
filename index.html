@@ -423,6 +423,9 @@ b{color:var(--ink)}
 .calcell .cd{font-family:var(--mono);font-size:13px;font-weight:700;color:var(--ink);line-height:1}
 .calcell .ci{font-family:var(--mono);font-size:9px;font-weight:700;color:var(--muted);line-height:1;letter-spacing:.02em}
 .calcell.past{opacity:.35}.calcell.past .cd{color:var(--muted)}
+.calcell.earlier{opacity:.7;background:var(--soft);border-style:dashed;border-color:var(--line2)}
+.calcell.earlier .cd{color:var(--muted)}.calcell.earlier .ci{color:var(--faint)}
+.pill.earlier{background:var(--soft);color:var(--faint)}
 .calcell.load{background:var(--phos-soft);border-color:var(--line2)}.calcell.load .ci{color:var(--phos)}
 .calcell.alldone{background:var(--accent-bg);border-color:var(--accent)}.calcell.alldone .ci{color:var(--accent);font-size:12px}
 .calcell.rest,.calcell.off{background:var(--warning-bg)}.calcell.rest .ci,.calcell.off .ci{color:var(--amber)}
@@ -825,9 +828,9 @@ b{color:var(--ink)}
   .studycalz .calgrid{grid-auto-rows:minmax(58px,auto)}
   /* big calendar: each study day grows to list its videos in small print, hours top-right */
   .studycalz .calcell{align-self:start}
-  .studycalz .calcell.load,.studycalz .calcell.alldone{aspect-ratio:auto;align-items:stretch;justify-content:flex-start;padding:6px 7px 7px;min-height:58px}
-  .studycalz .calcell.load .cd,.studycalz .calcell.alldone .cd{align-self:flex-start}
-  .studycalz .calcell.load .ci,.studycalz .calcell.alldone .ci{position:absolute;top:6px;right:8px}
+  .studycalz .calcell.load,.studycalz .calcell.alldone,.studycalz .calcell.earlier{aspect-ratio:auto;align-items:stretch;justify-content:flex-start;padding:6px 7px 7px;min-height:58px}
+  .studycalz .calcell.load .cd,.studycalz .calcell.alldone .cd,.studycalz .calcell.earlier .cd{align-self:flex-start}
+  .studycalz .calcell.load .ci,.studycalz .calcell.alldone .ci,.studycalz .calcell.earlier .ci{position:absolute;top:6px;right:8px}
   .studycalz .cvlist{display:flex;flex-direction:column;gap:1px;margin-top:5px;min-width:0;text-align:left}
   .studycalz .cv{font-family:var(--mono);font-size:8.5px;line-height:1.3;color:var(--text-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .studycalz .cv.done{color:var(--faint);text-decoration:line-through}
@@ -1187,11 +1190,39 @@ function brodyWeekOf(blk,iso){let n=0;for(let i=0;i<blk.weeks.length;i++){if(iso
    videos forward instead of silently deleting them. Stamped once (at plan creation,
    or lazily for plans saved before this existed) and kept for the block's life. */
 function brodyJoinWk(c,blk){
-  if(c&&c.brodyJoinWk!=null)return Math.max(1,Math.min(blk.weeks.length,c.brodyJoinWk));
+  if(c&&c.brodyJoinWk!=null){
+    if(c.brodyJoinDate==null)c.brodyJoinDate=blk.weeks[Math.max(0,Math.min(blk.weeks.length,c.brodyJoinWk)-1)].start; // backfill legacy plans to their join week's start
+    return Math.max(1,Math.min(blk.weeks.length,c.brodyJoinWk));
+  }
   const cursor=(todayISO()>blk.weeks[0].start)?todayISO():blk.weeks[0].start;
   const wk=Math.max(1,brodyWeekOf(blk,cursor));
-  if(c)c.brodyJoinWk=wk;
+  if(c){c.brodyJoinWk=wk;c.brodyJoinDate=cursor;}   // freeze the join DATE — the line between "missed" and "owed"
   return wk;
+}
+/* Videos that fall BEFORE the join date — the content a late joiner wasn't here for.
+   They're optional (never owed, never in the recommended pace) but visible and
+   checkable on their real past dates so a student can see what they skipped and go
+   back for any of it. On-time joiners (join date = block start) get an empty set,
+   so a student who merely falls behind still has their work roll forward as owed. */
+function brodyEarlierIds(c,blk){
+  const jd=(c&&c.brodyJoinDate)||blk.weeks[0].start;
+  if(jd<=blk.weeks[0].start)return {ids:new Set(),dayOf:{}};
+  const R=c.resources||{};const en={bnb:R.bnb,pathoma:R.pathoma,skmicro:R.sketchy,skpharm:R.sketchy,bootcamp:R.bootcamp};
+  const pathSel=en.pathoma?effectivePathChapters(c):new Set();
+  const rest=c.restDays||[0];const off=c.off||{};const cutoff=brodyReviewCutoff(c,blk);
+  const wkStart=blk.weeks.map(w=>w.start);const weekOf=iso=>{let n=0;for(let i=0;i<blk.weeks.length;i++){if(iso>=wkStart[i])n=blk.weeks[i].n;}return n;};
+  const wkDays={};blk.weeks.forEach(w=>wkDays[w.n]={all:[],before:[]});
+  {let dd=isoToDate(wkStart[0]),g=0;while(isoFromDate(dd)<blk.shelf&&g++<400){const iso=isoFromDate(dd),wd=dd.getDay(),wn=weekOf(iso);
+    if(wn&&!rest.includes(wd)&&!off[iso]&&iso<cutoff){wkDays[wn].all.push(iso);if(iso<jd)wkDays[wn].before.push(iso);}dd=addDays(dd,1);}}
+  const byWk={};blk.weeks.forEach(w=>byWk[w.n]=[]);
+  catVideos().forEach(v=>{if(!brodyInBlock(blk,v))return;if(!en[v.res])return;if(v.res==="pathoma"&&!pathSel.has(pathChapterOf(v)))return;
+    const w=brodyVideoWeek(blk,v);if(byWk[w])byWk[w].push(v);});
+  const ids=new Set(),dayOf={};
+  blk.weeks.forEach(w=>{const D=wkDays[w.n];const wv=byWk[w.n]||[];if(!D.before.length||!wv.length)return;
+    const share=D.all.length?Math.min(wv.length,Math.round(wv.length*D.before.length/D.all.length)):wv.length;
+    const perDay=Math.max(1,Math.ceil(share/D.before.length));
+    for(let i=0;i<share;i++){const id=itemId(wv[i]);ids.add(id);dayOf[id]=D.before[Math.min(D.before.length-1,Math.floor(i/perDay))];}});
+  return {ids,dayOf};
 }
 /* remaining = still owed. Videos checked off TODAY stay "owed" for pace math so the
    recommendation (and with it today's plate) can't shrink under you as you study —
@@ -1219,7 +1250,9 @@ function brodyWeekLoads(c,blk){
   // for intra-day stability) — a watched video is off the books, so the pace math
   // reflects the work ahead, not the whole unit over ever-fewer days.
   const load={},cnt={};blk.weeks.forEach(w=>{load[w.n]=0;cnt[w.n]=0;});
+  const earlier=brodyEarlierIds(c,blk).ids;   // pre-arrival videos are optional — never in the pace
   catVideos().forEach(v=>{if(!brodyInBlock(blk,v))return;if(!en[v.res])return;if(v.res==="pathoma"&&!pathSel.has(pathChapterOf(v)))return;
+    if(earlier.has(itemId(v)))return;
     if(!brodyRemains(itemId(v)))return;
     const w=brodyVideoWeek(blk,v);load[w]+=v.min;cnt[w]++;});
   const rest=c.restDays||[0];const off=c.off||{};
@@ -1281,11 +1314,18 @@ function reflowBrody(c,blk){
   // Weeks from your join onward stay in the plan even after they pass — falling
   // behind rolls the unwatched videos forward, it never silently deletes them.
   const joinWk=brodyJoinWk(c,blk);
-  const vidsAll=vids;const vids2=vidsAll.filter(v=>v.wk>=joinWk);vids.length=0;vids.push.apply(vids,vids2);
+  // Pre-arrival ("earlier") videos: the content from before the join date. Optional and
+  // never in the forward plan, but placed on their real past dates so a late joiner can
+  // see — and go back and check off — what they missed.
+  const EARLY=brodyEarlierIds(c,blk);const earlierSet=EARLY.ids;
+  const vidsAll=vids;const earlierByDay={};const earlierItems=[];
+  vidsAll.forEach(v=>{if(earlierSet.has(v.id)){const iso=EARLY.dayOf[v.id];if(iso){(earlierByDay[iso]=earlierByDay[iso]||[]).push(v);earlierItems.push(v);}}});
+  const vids2=vidsAll.filter(v=>v.wk>=joinWk&&!earlierSet.has(v.id));vids.length=0;vids.push.apply(vids,vids2);
   // order: week asc → resource → native (catalog) order (stable sort keeps native)
   const ri=r=>{const i=RES_ORDER.indexOf(r);return i<0?99:i;};
   vids.sort((a,b)=>(a.wk-b.wk)||(ri(a.res)-ri(b.res)));
   const byId={};const orderIndex={};vids.forEach((v,i)=>{byId[v.id]=v;orderIndex[v.id]=i;});
+  earlierItems.forEach((v,i)=>{if(byId[v.id]==null)byId[v.id]=v;if(orderIndex[v.id]==null)orderIndex[v.id]=1e6+i;});
   // Open study days, in order (respects rest days, off days, and the review buffer).
   const weekDays={};blk.weeks.forEach(w=>weekDays[w.n]=[]);
   const openDays=[];
@@ -1296,7 +1336,7 @@ function reflowBrody(c,blk){
   // minutes already completed on each day — they consume that day's budget, so
   // checking a video off never frees a slot that pulls a future video forward.
   const doneMinByDay={};const vdd=S.vdoneDate||{};
-  for(const id in vdd){const it=byId[id];if(it)doneMinByDay[vdd[id]]=(doneMinByDay[vdd[id]]||0)+it.min;}
+  for(const id in vdd){if(earlierSet.has(id))continue;const it=byId[id];if(it)doneMinByDay[vdd[id]]=(doneMinByDay[vdd[id]]||0)+it.min;}
   const dayItems={};
   const reserved=(c.ankiMinPerDay||0)+(c.uworldMinPerDay||0);
   const paceMin=Math.max(15,Math.round(brodyPace(c)*60)-reserved);   // recommended (or user-set) h/day
@@ -1321,14 +1361,17 @@ function reflowBrody(c,blk){
   const lastContentISO=lastFillIdx>=0?openDays[lastFillIdx]:null;
   const skippedWeeks=Math.max(0,joinWk-1);   // weeks that ended before you joined
   const donePins={};
-  for(const id in vdd){const it=byId[id];if(it){(donePins[vdd[id]]=donePins[vdd[id]]||[]).push(it);}}
-  const days=[];const dayMap={};
-  {let dd=isoToDate(cursorISO),g=0;while(isoFromDate(dd)<shelf&&g++<400){const iso=isoFromDate(dd),wd=dd.getDay();
+  for(const id in vdd){if(earlierSet.has(id))continue;const it=byId[id];if(it){(donePins[vdd[id]]=donePins[vdd[id]]||[]).push(it);}}
+  // Assemble days from the BLOCK START (not just today) so a late joiner's past days show
+  // the earlier videos they skipped; days before today are flagged past.
+  const days=[];const dayMap={};const todayI=todayISO_;
+  {let dd=isoToDate(wkStart[0]),g=0;while(isoFromDate(dd)<shelf&&g++<400){const iso=isoFromDate(dd),wd=dd.getDay();
+    const past=iso<todayI;
     const isRest=rest.includes(wd),isOff=!!off[iso];
-    const isReview=((iso>=reviewCutoff)||(lastContentISO&&iso>lastContentISO))&&!isRest&&!isOff;   // buffer, or finished-ahead tail
-    const packed=dayItems[iso]||[];const pinned=donePins[iso]||[];
-    const items=packed.concat(pinned).sort((a,b)=>((orderIndex[a.id]!=null?orderIndex[a.id]:1e9)-(orderIndex[b.id]!=null?orderIndex[b.id]:1e9)));
-    const row={iso,off:isOff,rest:isRest&&!isOff,review:isReview,items,brodyWeek:weekOf(iso),
+    const isReview=!past&&((iso>=reviewCutoff)||(lastContentISO&&iso>lastContentISO))&&!isRest&&!isOff;   // buffer, or finished-ahead tail
+    const packed=dayItems[iso]||[];const pinned=donePins[iso]||[];const early=earlierByDay[iso]||[];
+    const items=packed.concat(pinned).concat(early).sort((a,b)=>((orderIndex[a.id]!=null?orderIndex[a.id]:1e9)-(orderIndex[b.id]!=null?orderIndex[b.id]:1e9)));
+    const row={iso,past,earlier:early.length>0,off:isOff&&!past,rest:isRest&&!isOff&&!past,review:isReview,items,brodyWeek:weekOf(iso),
       min:items.reduce((a,b)=>a+b.min,0),todo:packed.reduce((a,b)=>a+b.min,0)};
     days.push(row);dayMap[iso]=row;dd=addDays(dd,1);}}
   // A week is "quiz-tight" if being fully ready for its Friday quiz would take more
@@ -2512,6 +2555,7 @@ function calCell(iso){
     if(row.off){cls+=" off";ind='<span class="ci">off</span>';}
     else if(row.rest){cls+=" rest";ind='<span class="ci">rest</span>';}
     else if(row.review){cls+=" review";ind='<span class="ci">UW</span>';}
+    else if(row.earlier){cls+=" past earlier";ind='<span class="ci">earlier</span>'+calVlist(row);}   // videos from before you joined — optional
     else if(row.items.length){const allDone=row.items.every(it=>isDone(it.id));cls+=allDone?" alldone":" load";ind='<span class="ci">'+(allDone?"✓ "+fmtH(row.min):fmtH(row.min))+'</span>'+calVlist(row);}
     else if(row.past){cls+=" past";}   // past day, nothing was checked off here
   } else if(iso<todayISO()){cls+=" past";}
@@ -2523,13 +2567,14 @@ function dayDetail(iso){
   const row=SCHED.dayMap[iso];const past=!!(row&&row.past);
   const head=fmtLong(iso)+(iso===todayISO()?" · today":(past?" · past":""));
   let h='<div class="card daydetail"><div class="cardhd">'+escHTML(head);
-  if(row&&!row.off&&!row.rest&&!row.review&&row.items.length){h+=' <span class="pill">'+fmtH(row.min)+'</span>';
+  if(row&&!row.off&&!row.rest&&!row.review&&row.items.length){h+=' <span class="pill'+(row.earlier?' earlier':'')+'">'+(row.earlier?'earlier':fmtH(row.min))+'</span>';
     if(row.items.some(it=>isDone(it.id)))h+='<button class="hdreset" data-dayreset="'+iso+'" title="Uncheck everything on this day">Uncheck all</button>';}
   h+='</div>';
   if(!row)h+='<p class="muted small">Outside your current plan window'+(iso<todayISO()?" (past)":"")+'.</p>';
   else if(row.off)h+='<p class="muted">Day off — no videos scheduled. <button class="link" id="d_unoff">Cancel day off</button></p>';
   else if(row.rest)h+='<p class="muted small">Weekly rest day. Enjoy the breather.</p>';
   else if(row.review)h+='<p class="muted small">Review window — timed UWorld blocks + Anki. No new videos.</p>';
+  else if(row.earlier)h+='<p class="muted small">From <b>before you joined</b> — not part of your plan and not counted against your pace. Optional, but if you want to go back for any of it, check it off here.</p>'+dayVlist(row);
   else if(past&&row.items.length)h+='<p class="muted small">What you checked off this day. Anything left unfinished re-flowed forward.</p>'+dayVlist(row);
   else if(past)h+='<p class="muted small">Nothing was checked off this day — that work re-flowed forward.</p>';
   else if(row.items.length)h+=dayVlist(row)+'<div class="rowtools"><button class="btn ghost" id="d_off">Take this day off</button></div>';
@@ -3416,7 +3461,7 @@ function enterHub(key){if(!S.cfgs[key]){startOnboard(key);return;}activate(key);
 let _ob=null;
 function defaultsForHub(key,fresh){const ex=fresh?null:S.cfgs[key];
   let o;
-  if(ex)o={hub:key,fresh:false,brody:ex.brody||null,brodyPace:ex.brodyPace||null,brodyJoinWk:(ex.brodyJoinWk!=null?ex.brodyJoinWk:undefined),brodyReviewDays:(ex.brodyReviewDays!=null?ex.brodyReviewDays:undefined),examLabel:ex.examLabel||"",examISO:ex.examISO||"",startISO:ex.startISO||todayISO(),wkdayHrs:ex.wkdayHrs,wkendHrs:ex.wkendHrs,restDays:(ex.restDays||[0]).slice(),reviewDays:ex.reviewDays,resources:Object.assign({bnb:true,pathoma:true,sketchy:true,fa:true,anking:true,uworld:true},ex.resources||{}),systems:(ex.systems||SYS).slice(),sysOrder:(ex.sysOrder&&ex.sysOrder.length===SYS.length?ex.sysOrder:SYS_ORDER_DEFAULT).slice(),pathChapters:(Array.isArray(ex.pathChapters)?ex.pathChapters.slice():undefined),threadTopics:(Array.isArray(ex.threadTopics)?ex.threadTopics.slice():undefined),weeklyQGoal:(ex.weeklyQGoal||0),step:0};
+  if(ex)o={hub:key,fresh:false,brody:ex.brody||null,brodyPace:ex.brodyPace||null,brodyJoinWk:(ex.brodyJoinWk!=null?ex.brodyJoinWk:undefined),brodyJoinDate:(ex.brodyJoinDate||undefined),brodyReviewDays:(ex.brodyReviewDays!=null?ex.brodyReviewDays:undefined),examLabel:ex.examLabel||"",examISO:ex.examISO||"",startISO:ex.startISO||todayISO(),wkdayHrs:ex.wkdayHrs,wkendHrs:ex.wkendHrs,restDays:(ex.restDays||[0]).slice(),reviewDays:ex.reviewDays,resources:Object.assign({bnb:true,pathoma:true,sketchy:true,fa:true,anking:true,uworld:true},ex.resources||{}),systems:(ex.systems||SYS).slice(),sysOrder:(ex.sysOrder&&ex.sysOrder.length===SYS.length?ex.sysOrder:SYS_ORDER_DEFAULT).slice(),pathChapters:(Array.isArray(ex.pathChapters)?ex.pathChapters.slice():undefined),threadTopics:(Array.isArray(ex.threadTopics)?ex.threadTopics.slice():undefined),weeklyQGoal:(ex.weeklyQGoal||0),step:0};
   // a brand-new plan starts with every resource unchecked — the student picks
   else o={hub:key,fresh:!!fresh,examLabel:key==="step1"?"Step 1":"",examISO:"",startISO:todayISO(),wkdayHrs:6,wkendHrs:4,restDays:[0],reviewDays:14,resources:{bnb:false,pathoma:false,sketchy:false,fa:false,anking:false,uworld:false},systems:(key==="nbme"?[]:SYS.slice()),sysOrder:SYS_ORDER_DEFAULT.slice(),threadTopics:[],weeklyQGoal:0,step:0};
   // NBME hub now selects individual systems (like Step 1); migrate any legacy block selection
@@ -3730,7 +3775,7 @@ function commitOnboard(){const ob=_ob;
   const prev=S.cfgs[key]?JSON.parse(JSON.stringify(S.cfgs[key])):null;
   const c=S.cfgs[key]||{};
   Object.assign(c,{examType:key,examLabel:key==="step1"?"Step 1":(brody?brody.name:(ob.examLabel||"Shelf exam")),
-    brody:(brody?brody.id:undefined),brodyPace:(brody?(ob.brodyPace||undefined):undefined),brodyJoinWk:(brody?(ob.brodyJoinWk!=null?ob.brodyJoinWk:undefined):undefined),brodyReviewDays:(brody?brodyReviewBuf(ob):undefined),
+    brody:(brody?brody.id:undefined),brodyPace:(brody?(ob.brodyPace||undefined):undefined),brodyJoinWk:(brody?(ob.brodyJoinWk!=null?ob.brodyJoinWk:undefined):undefined),brodyJoinDate:(brody?(ob.brodyJoinDate||todayISO()):undefined),brodyReviewDays:(brody?brodyReviewBuf(ob):undefined),
     examISO:(brody?brody.shelf:ob.examISO),startISO:(brody?brody.weeks[0].start:ob.startISO),wkdayHrs:ob.wkdayHrs,wkendHrs:ob.wkendHrs,restDays:ob.restDays.slice(),
     reviewDays:(brody?0:ob.reviewDays),resources:Object.assign({},ob.resources),systems:(brody?brody.systems.slice():ob.systems.slice()),sysOrder:(ob.sysOrder||SYS_ORDER_DEFAULT).slice(),pathChapters:(Array.isArray(ob.pathChapters)?ob.pathChapters.slice():undefined),threadTopics:(brody?undefined:(Array.isArray(ob.threadTopics)?ob.threadTopics.slice():undefined)),weeklyQGoal:(ob.weeklyQGoal>0?ob.weeklyQGoal:0)});
   c.off=c.off||{};
@@ -3772,7 +3817,7 @@ function doResetAll(){
     S.cfgs=snap.cfgs;S.active=snap.active;S.cfg=S.active?S.cfgs[S.active]:null;_prevSig=progressSig();save();
     if(S.cfg){reflow();render();}else renderWelcome();toast("Restored ✓");});
 }
-const BUILD="2026-07-20z";
+const BUILD="2026-07-21a";
 /* ---------- What's new (changelog) ----------
    Newest entry first. Bump the top entry's id whenever you add one and the
    pop-up shows once per person (tracked in synced settings.seenUpdate). */
