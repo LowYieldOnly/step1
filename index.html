@@ -996,7 +996,7 @@ function flatSys(blocks){let out=[];blocks.forEach(b=>{out=out.concat(blockSyste
    Video progress (vdone/vskip/...) is shared — a watched video is watched
    regardless of which exam you're prepping. S.cfg points at the active hub. */
 let S={active:null,cfgs:{step1:null,nbme:null},vdone:{},vskip:{},vdoneDate:{},akdone:{},notes:{},streak:{days:{}},settings:{},_updatedAt:0,cfg:null};
-function emptyState(){return {active:null,cfgs:{step1:null,nbme:null},vdone:{},vskip:{},vdoneDate:{},akdone:{},notes:{},streak:{days:{}},assessments:{},uworld:{total:null,blocks:{}},amboss:{total:null,blocks:{}},vshaky:{},settings:{},_updatedAt:0,_resetAt:0,cfg:null};}
+function emptyState(){return {active:null,cfgs:{step1:null,nbme:null},vdone:{},vskip:{},vdoneDate:{},akdone:{},notes:{},streak:{days:{}},assessments:{},uworld:{total:null,blocks:{}},amboss:{total:null,blocks:{}},scholarrx:{total:null,blocks:{}},vshaky:{},settings:{},_updatedAt:0,_resetAt:0,cfg:null};}
 function resetStateToEmpty(){Object.assign(S,emptyState());S.cfgs={step1:null,nbme:null};S.streak={days:{}};}
 /* load a specific account's cached state (empty if none yet) */
 function loadState(key){
@@ -1004,7 +1004,7 @@ function loadState(key){
   let raw={};try{raw=JSON.parse(store.get(key)||"{}");}catch(e){}
   S.vdone=raw.vdone||{};S.vskip=raw.vskip||{};S.vdoneDate=raw.vdoneDate||{};S.akdone=raw.akdone||{};
   S.notes=raw.notes||{};S.streak=raw.streak||{days:{}};S.streak.days=S.streak.days||{};
-  S.assessments=raw.assessments||{};S.uworld=raw.uworld||{total:null,blocks:{}};S.uworld.blocks=S.uworld.blocks||{};S.amboss=raw.amboss||{total:null,blocks:{}};S.amboss.blocks=S.amboss.blocks||{};S.vshaky=raw.vshaky||{};
+  S.assessments=raw.assessments||{};S.uworld=raw.uworld||{total:null,blocks:{}};S.uworld.blocks=S.uworld.blocks||{};S.amboss=raw.amboss||{total:null,blocks:{}};S.amboss.blocks=S.amboss.blocks||{};S.scholarrx=raw.scholarrx||{total:null,blocks:{}};S.scholarrx.blocks=S.scholarrx.blocks||{};S.vshaky=raw.vshaky||{};
   S.settings=raw.settings||{};S._updatedAt=raw._updatedAt||0;S._resetAt=raw._resetAt||0;
   if(raw.cfgs){S.cfgs={step1:raw.cfgs.step1||null,nbme:raw.cfgs.nbme||null};S.active=raw.active||null;}
   else if(raw.cfg){ // migrate the old single-plan shape into the matching hub
@@ -1038,7 +1038,7 @@ function activate(key){S.active=key;S.cfg=S.cfgs[key]||null;}
 function hubName(key){return key==="step1"?"STEP 1 Command Center":"M2 Scheduler";}
 let _prevSig=null;
 
-function persistObj(){return {active:S.active,cfgs:S.cfgs,vdone:S.vdone,vskip:S.vskip,vdoneDate:S.vdoneDate,akdone:S.akdone,notes:S.notes,streak:S.streak,assessments:S.assessments,uworld:S.uworld,amboss:S.amboss,vshaky:S.vshaky,settings:S.settings,_updatedAt:S._updatedAt,_resetAt:S._resetAt||0};}
+function persistObj(){return {active:S.active,cfgs:S.cfgs,vdone:S.vdone,vskip:S.vskip,vdoneDate:S.vdoneDate,akdone:S.akdone,notes:S.notes,streak:S.streak,assessments:S.assessments,uworld:S.uworld,amboss:S.amboss,scholarrx:S.scholarrx,vshaky:S.vshaky,settings:S.settings,_updatedAt:S._updatedAt,_resetAt:S._resetAt||0};}
 function save(){if(DEMO)return;S._updatedAt=Date.now();markStreakIfProgress();store.set(SKEY,JSON.stringify(persistObj()));Cloud.schedulePush();}
 
 /* ---------- streak (set of studied dates; merge-safe) ---------- */
@@ -1515,7 +1515,7 @@ function mergeState(a,b){a=a||{};b=b||{};
   // so its progress maps must not be union-merged back in (they'd resurrect
   // everything the user just cleared).
   const resetAt=Math.max(a._resetAt||0,b._resetAt||0);
-  const strip=s=>((s._updatedAt||0)>=resetAt)?s:Object.assign({},s,{vdone:{},vskip:{},vdoneDate:{},akdone:{},notes:{},streak:{days:{}},assessments:{},uworld:{total:null,blocks:{}},amboss:{total:null,blocks:{}},vshaky:{}});
+  const strip=s=>((s._updatedAt||0)>=resetAt)?s:Object.assign({},s,{vdone:{},vskip:{},vdoneDate:{},akdone:{},notes:{},streak:{days:{}},assessments:{},uworld:{total:null,blocks:{}},amboss:{total:null,blocks:{}},scholarrx:{total:null,blocks:{}},vshaky:{}});
   if(resetAt){a=strip(a);b=strip(b);}
   const aT=a._updatedAt||0,bT=b._updatedAt||0;const newer=bT>=aT?b:a,older=bT>=aT?a:b;
   const out={};
@@ -1531,6 +1531,7 @@ function mergeState(a,b){a=a||{};b=b||{};
   out.assessments=Object.assign({},a.assessments||{},b.assessments||{});
   out.uworld={total:((newer.uworld||{}).total!=null?(newer.uworld||{}).total:(older.uworld||{}).total),blocks:Object.assign({},(a.uworld||{}).blocks||{},(b.uworld||{}).blocks||{})};
   out.amboss={total:((newer.amboss||{}).total!=null?(newer.amboss||{}).total:(older.amboss||{}).total),blocks:Object.assign({},(a.amboss||{}).blocks||{},(b.amboss||{}).blocks||{})};
+  out.scholarrx={total:((newer.scholarrx||{}).total!=null?(newer.scholarrx||{}).total:(older.scholarrx||{}).total),blocks:Object.assign({},(a.scholarrx||{}).blocks||{},(b.scholarrx||{}).blocks||{})};
   out.vshaky=unionTrue(a.vshaky,b.vshaky);
   out.settings=Object.assign({},older.settings||{},newer.settings||{});
   out._updatedAt=Math.max(aT,bT);
@@ -1600,7 +1601,7 @@ Cloud.adopt=function(m){Cloud.applying=true;
   S.active=m.active||null;S.cfgs=m.cfgs||{step1:null,nbme:null};
   S.vdone=m.vdone||{};S.vskip=m.vskip||{};S.vdoneDate=m.vdoneDate||{};S.akdone=m.akdone||{};
   S.notes=m.notes||{};S.streak=m.streak||{days:{}};S.settings=m.settings||{};S._updatedAt=m._updatedAt||0;S._resetAt=m._resetAt||0;
-  S.assessments=m.assessments||{};S.uworld=m.uworld||{total:null,blocks:{}};S.uworld.blocks=S.uworld.blocks||{};S.amboss=m.amboss||{total:null,blocks:{}};S.amboss.blocks=S.amboss.blocks||{};S.vshaky=m.vshaky||{};
+  S.assessments=m.assessments||{};S.uworld=m.uworld||{total:null,blocks:{}};S.uworld.blocks=S.uworld.blocks||{};S.amboss=m.amboss||{total:null,blocks:{}};S.amboss.blocks=S.amboss.blocks||{};S.scholarrx=m.scholarrx||{total:null,blocks:{}};S.scholarrx.blocks=S.scholarrx.blocks||{};S.vshaky=m.vshaky||{};
   ["step1","nbme"].forEach(k=>{if(S.cfgs[k])normalizeCfg(S.cfgs[k],k);});
   S.cfg=S.active?S.cfgs[S.active]:null;_prevSig=progressSig();
   try{store.set(SKEY,JSON.stringify(persistObj()));}catch(e){}
@@ -1861,6 +1862,28 @@ function ambossRollup(scope){scope=scope||S.active;
 }
 function addAmbossBlock(o,scope){S.amboss=S.amboss||{total:null,blocks:{}};S.amboss.blocks=S.amboss.blocks||{};S.amboss.blocks[uid()]={hub:(scope||S.active),dateISO:o.dateISO||todayISO(),sys:o.sys||"",q:+o.q||0,correct:+o.correct||0,_t:Date.now()};save();}
 function setAmbossTotal(n){S.amboss=S.amboss||{total:null,blocks:{}};S.amboss.total=(n>0?n:null);save();}
+/* ScholarRx (Rx Qmax) log — same shape/rollup as UWorld & AMBOSS */
+function scholarrxRollup(scope){scope=scope||S.active;
+  const u=S.scholarrx||{total:null,blocks:{}};const blocks=u.blocks||{};
+  const mine=Object.keys(blocks).map(k=>blocks[k]).filter(b=>b&&b.hub===scope);
+  let done=0,correct=0;const bySys={};
+  mine.forEach(b=>{const q=+b.q||0,c=+b.correct||0;done+=q;correct+=c;
+    const key=b.sys||"Unspecified";const e=bySys[key]=bySys[key]||{done:0,correct:0};e.done+=q;e.correct+=c;});
+  Object.keys(bySys).forEach(s=>{const e=bySys[s];e.pct=e.done?Math.round(e.correct/e.done*100):null;});
+  return {total:u.total,done,correct,pct:done?Math.round(correct/done*100):null,bySys};
+}
+function addScholarrxBlock(o,scope){S.scholarrx=S.scholarrx||{total:null,blocks:{}};S.scholarrx.blocks=S.scholarrx.blocks||{};S.scholarrx.blocks[uid()]={hub:(scope||S.active),dateISO:o.dateISO||todayISO(),sys:o.sys||"",q:+o.q||0,correct:+o.correct||0,_t:Date.now()};save();}
+function setScholarrxTotal(n){S.scholarrx=S.scholarrx||{total:null,blocks:{}};S.scholarrx.total=(n>0?n:null);save();}
+/* the three practice-question sources, in one place so every roll-up, log form,
+   and reset stays in sync. Add a source here and it flows everywhere. */
+const PRACTICE_SOURCES=[["uworld","UWorld"],["amboss","AMBOSS"],["scholarrx","ScholarRx"]];
+function practiceLogs(){return [S.uworld,S.amboss,S.scholarrx];}
+function practiceSrcLabel(src){const m=PRACTICE_SOURCES.find(o=>o[0]===src);return m?m[1]:"UWorld";}
+function practiceSrcOptions(sel){return PRACTICE_SOURCES.map(o=>'<option value="'+o[0]+'"'+(sel===o[0]?' selected':'')+'>'+o[1]+'</option>').join('');}
+function addPracticeBlock(src,o,scope){if(src==="amboss")addAmbossBlock(o,scope);else if(src==="scholarrx")addScholarrxBlock(o,scope);else addUworldBlock(o,scope);}
+function setPracticeTotal(src,n){if(src==="amboss")setAmbossTotal(n);else if(src==="scholarrx")setScholarrxTotal(n);else setUworldTotal(n);}
+function practiceTotalOf(src){const log=src==="amboss"?S.amboss:(src==="scholarrx"?S.scholarrx:S.uworld);return (log&&log.total)||"";}
+function practiceBankPlaceholder(src){return src==="amboss"?"~2800":(src==="scholarrx"?"~2600":"~3300");}
 /* ---- Weekly practice-question goal (M2, opt-in) + subject confidence ----
    Off unless the student sets a target on the Plan page. UWorld AND AMBOSS
    blocks logged in this hub both count; the tally resets each Monday. */
@@ -1869,11 +1892,11 @@ const CONF_MASTERY=80; // % accuracy that counts as sufficient mastery
 function weekStartISO(iso){const d=isoToDate(iso);const wd=(d.getDay()+6)%7;return isoFromDate(addDays(d,-wd));}  // Monday-start of iso's week
 function weeklyGoal(c){c=c||S.cfg;return (c&&c.weeklyQGoal>0)?c.weeklyQGoal:0;}
 function weeklyQLogged(scope){scope=scope||S.active;const ws=weekStartISO(todayISO());const we=isoFromDate(addDays(isoToDate(ws),7));
-  let n=0;[S.uworld,S.amboss].forEach(log=>{const bl=(log&&log.blocks)||{};for(const k in bl){const b=bl[k];if(b&&b.hub===scope&&b.dateISO>=ws&&b.dateISO<we)n+=(+b.q||0);}});return n;}
-/* combined UWorld + AMBOSS accuracy per subject, each with a confidence tier (mastery = 80%).
+  let n=0;practiceLogs().forEach(log=>{const bl=(log&&log.blocks)||{};for(const k in bl){const b=bl[k];if(b&&b.hub===scope&&b.dateISO>=ws&&b.dateISO<we)n+=(+b.q||0);}});return n;}
+/* combined UWorld + AMBOSS + ScholarRx accuracy per subject, each with a confidence tier (mastery = 80%).
    Subjects below CONF_MIN_Q logged questions aren't rated yet. */
-function subjectConfidence(scope){scope=scope||S.active;const uw=uworldRollup(scope),am=ambossRollup(scope);const by={};
-  [uw,am].forEach(roll=>Object.keys(roll.bySys).forEach(s=>{if(s==="Unspecified")return;const e=roll.bySys[s];const t=by[s]=by[s]||{done:0,correct:0};t.done+=e.done;t.correct+=e.correct;}));
+function subjectConfidence(scope){scope=scope||S.active;const uw=uworldRollup(scope),am=ambossRollup(scope),rx=scholarrxRollup(scope);const by={};
+  [uw,am,rx].forEach(roll=>Object.keys(roll.bySys).forEach(s=>{if(s==="Unspecified")return;const e=roll.bySys[s];const t=by[s]=by[s]||{done:0,correct:0};t.done+=e.done;t.correct+=e.correct;}));
   return Object.keys(by).map(s=>{const done=by[s].done,pct=done?Math.round(by[s].correct/done*100):null,rated=done>=CONF_MIN_Q;
     return {sys:s,done,pct,rated,tier:!rated?"none":(pct>=CONF_MASTERY?"solid":(pct>=70?"dev":"weak"))};});}
 /* progress bar for the weekly goal — reused on Today and the Plan page.
@@ -1899,7 +1922,7 @@ function weeklyGoalChip(){if(S.active!=="nbme")return '';const goal=weeklyGoal()
 function weeklyQuickLogHTML(){
   const sysOpts=['<option value="">System…</option>'].concat(planSystems().map(s=>'<option'+(WQDRAFT.sys===s?' selected':'')+'>'+escHTML(s)+'</option>')).join('');
   return '<div class="wqlog">'
-    +'<select id="wq_src" class="wqsel" aria-label="source"><option value="uworld"'+(WQDRAFT.src!=="amboss"?' selected':'')+'>UWorld</option><option value="amboss"'+(WQDRAFT.src==="amboss"?' selected':'')+'>AMBOSS</option></select>'
+    +'<select id="wq_src" class="wqsel" aria-label="source">'+practiceSrcOptions(WQDRAFT.src||"uworld")+'</select>'
     +'<select id="wq_sys" class="wqsel" aria-label="system">'+sysOpts+'</select>'
     +'<input id="wq_q" class="wqnum" type="number" inputmode="numeric" min="1" placeholder="# Qs" aria-label="questions">'
     +'<input id="wq_c" class="wqnum" type="number" inputmode="numeric" min="0" placeholder="# right" aria-label="correct">'
@@ -1914,8 +1937,8 @@ function bindWeeklyQuickLog(){
     const sy=(document.getElementById("wq_sys")||{}).value||"";
     if(isNaN(q)||q<1){toast("How many questions?");return;}
     if(isNaN(cc)||cc<0||cc>q){toast("# correct can’t exceed the question count");return;}
-    if(s==="amboss")addAmbossBlock({sys:sy,q:q,correct:cc});else addUworldBlock({sys:sy,q:q,correct:cc});
-    WQDRAFT={src:s,sys:sy};toast((s==="amboss"?"AMBOSS":"UWorld")+" · "+q+" logged ✓");render();};}
+    addPracticeBlock(s,{sys:sy,q:q,correct:cc});
+    WQDRAFT={src:s,sys:sy};toast(practiceSrcLabel(s)+" · "+q+" logged ✓");render();};}
 /* Plan-page opt-in: toggle + target (off by default). M2 only. */
 function weeklyGoalSettingHTML(c){
   const on=weeklyGoal(c)>0;const goal=c.weeklyQGoal>0?c.weeklyQGoal:15;
@@ -1923,8 +1946,8 @@ function weeklyGoalSettingHTML(c){
     +'<div class="wgtoggle"><button type="button" class="tog '+(on?"on":"")+'" id="wg_toggle">'+(on?"On":"Off")+'</button>'
     +'<span class="muted small">Optional · off by default</span></div>';
   if(on)h+='<div class="form" style="margin-top:10px"><label>Questions per week <span class="opt">(15–20 recommended)</span><input type="number" id="wg_goal" min="1" step="1" value="'+goal+'"></label></div>'
-    +'<p class="muted small">UWorld or AMBOSS questions you log count toward this — it resets every Monday.</p>'+weeklyGoalProgressHTML(c);
-  else h+='<p class="muted small">Set a target number of UWorld / AMBOSS questions to do each week and track your progress toward it. 15–20 a week is a solid start.</p>';
+    +'<p class="muted small">UWorld, AMBOSS or ScholarRx questions you log count toward this — it resets every Monday.</p>'+weeklyGoalProgressHTML(c);
+  else h+='<p class="muted small">Set a target number of UWorld / AMBOSS / ScholarRx questions to do each week and track your progress toward it. 15–20 a week is a solid start.</p>';
   return h+'</div>';
 }
 function bindWeeklyGoal(c,apply){
@@ -1944,10 +1967,10 @@ function readinessChip(){
 }
 /* Today chip — block-phase UWorld progress (Brody is school-block focused) */
 function uworldChip(){
-  const r=uworldRollup();
+  const r=practiceRollup();   // UWorld + AMBOSS + ScholarRx combined
   if(!r.done)return '<button class="rchip rchip-info" data-gouworld="1">Log practice questions →</button>';
   const cls=r.pct>=70?"ok":(r.pct>=60?"warn":"bad");
-  return '<button class="rchip rchip-'+cls+'" data-gouworld="1"><span class="rchip-n">'+r.pct+'%</span><span class="rchip-t">UWorld · '+r.done+(r.total?(" / "+r.total):"")+' Qs correct</span></button>';
+  return '<button class="rchip rchip-'+cls+'" data-gouworld="1"><span class="rchip-n">'+r.pct+'%</span><span class="rchip-t">Practice · '+r.done+' Qs correct</span></button>';
 }
 function loadCaveat(){const a=(S.cfg&&S.cfg.ankiMinPerDay)||0,u=(S.cfg&&S.cfg.uworldMinPerDay)||0;if(!a&&!u)return '';const parts=[];if(a)parts.push('~'+(Math.round(a/60*10)/10)+' h Anki');if(u)parts.push('~'+(Math.round(u/60*10)/10)+' h UWorld');return '<p class="muted small hcav">Video time only — your day also reserves '+parts.join(' + ')+'.</p>';}
 /* ---- Ready view ---- */
@@ -1973,11 +1996,11 @@ function scoreTrend(list){
 function uworldForm(){
   const sysOpts=['<option value="">System (optional)…</option>'].concat(planSystems().map(s=>'<option'+(UDRAFT.sys===s?' selected':'')+'>'+s+'</option>')).join('');
   return '<div class="form2">'
-    +'<label>Source<select id="u_src"><option value="uworld"'+(UDRAFT.src!=="amboss"?' selected':'')+'>UWorld</option><option value="amboss"'+(UDRAFT.src==="amboss"?' selected':'')+'>AMBOSS</option></select></label>'
+    +'<label>Source<select id="u_src">'+practiceSrcOptions(UDRAFT.src||"uworld")+'</select></label>'
     +'<label>System<select id="u_sys">'+sysOpts+'</select></label>'
     +'<label>Questions<input id="u_q" type="number" inputmode="numeric" min="1" value="'+escAttr(UDRAFT.q)+'"></label>'
     +'<label># correct<input id="u_c" type="number" inputmode="numeric" min="0" value="'+escAttr(UDRAFT.correct)+'" placeholder="in that block"></label>'
-    +'<label>Qbank size <span class="opt">(confirm in UWorld)</span><input id="u_total" type="number" inputmode="numeric" min="0" value="'+escAttr((S.uworld&&S.uworld.total)||"")+'" placeholder="~3300"></label>'
+    +'<label>Qbank size <span class="opt">('+escHTML(practiceSrcLabel(UDRAFT.src||"uworld"))+' bank, optional)</span><input id="u_total" type="number" inputmode="numeric" min="0" value="'+escAttr(practiceTotalOf(UDRAFT.src||"uworld"))+'" placeholder="'+practiceBankPlaceholder(UDRAFT.src||"uworld")+'"></label>'
     +'<button class="btn ghost" id="u_save">Log block</button></div>';
 }
 function uworldCard(){
@@ -1995,17 +2018,18 @@ function uworldCard(){
 /* M2 practice-question block — combined UWorld + AMBOSS totals; the source is
    chosen per block at logging, and every block flows into Subject confidence
    above. Per-subject accuracy lives there, so this block stays a clean total. */
-function practiceRollup(scope){scope=scope||S.active;const uw=uworldRollup(scope),am=ambossRollup(scope);
-  const done=uw.done+am.done,correct=uw.correct+am.correct;
-  return {done,correct,pct:done?Math.round(correct/done*100):null,uw:uw.done,am:am.done};}
+function practiceRollup(scope){scope=scope||S.active;const uw=uworldRollup(scope),am=ambossRollup(scope),rx=scholarrxRollup(scope);
+  const done=uw.done+am.done+rx.done,correct=uw.correct+am.correct+rx.correct;
+  return {done,correct,pct:done?Math.round(correct/done*100):null,uw:uw.done,am:am.done,rx:rx.done};}
 function practiceCard(){
   const r=practiceRollup();const pctTxt=r.pct!=null?r.pct+'%':'—';
-  const doneTxt=r.done?(r.done+' Qs · '+r.uw+' UWorld / '+r.am+' AMBOSS'):'0 Qs';
+  const parts=[];if(r.uw)parts.push(r.uw+' UWorld');if(r.am)parts.push(r.am+' AMBOSS');if(r.rx)parts.push(r.rx+' ScholarRx');
+  const doneTxt=r.done?(r.done+' Qs · '+parts.join(' / ')):'0 Qs';
   const hasData=r.done>0;
   return '<div class="card"><div class="cardhd">Practice questions'+(hasData?'<button class="hdreset" id="rst_pr" title="Clear this hub’s practice-question log">Reset</button>':'')+'</div>'
     +'<div class="uwtop"><div class="uwbig">'+pctTxt+' <span>correct</span></div><div class="uwsub">'+doneTxt+'</div></div>'
     +fold("uwform","Log a block",uworldForm(),r.done===0)
-    +(hasData?'<p class="muted small">Pick <b>UWorld or AMBOSS</b> on each block. Per-subject accuracy — and whether you’ve hit mastery — is in <b>Subject confidence</b> above.</p>':'<p class="muted small">Log a block and choose <b>UWorld or AMBOSS</b> — it flows straight into your subject confidence above.</p>')
+    +(hasData?'<p class="muted small">Pick <b>UWorld, AMBOSS, or ScholarRx</b> on each block. Per-subject accuracy — and whether you’ve hit mastery — is in <b>Subject confidence</b> above.</p>':'<p class="muted small">Log a block and choose <b>UWorld, AMBOSS, or ScholarRx</b> — it flows straight into your subject confidence above.</p>')
     +'</div>';
 }
 function reviewCard(){
@@ -2026,7 +2050,7 @@ function confidenceCard(){
   const rated=list.filter(x=>x.rated).sort((a,b)=>a.pct-b.pct);
   const pending=list.filter(x=>!x.rated).sort((a,b)=>b.done-a.done);
   let h='<div class="card"><div class="cardhd">Subject confidence</div>'
-    +'<p class="muted small" style="margin-top:0">Your accuracy per subject on logged UWorld + AMBOSS questions. <b>'+CONF_MASTERY+'% = mastery.</b></p>';
+    +'<p class="muted small" style="margin-top:0">Your accuracy per subject on logged UWorld + AMBOSS + ScholarRx questions. <b>'+CONF_MASTERY+'% = mastery.</b></p>';
   if(rated.length){h+='<div class="bars">';
     rated.forEach(x=>{const col=x.tier==="solid"?'var(--success)':(x.tier==="dev"?'var(--warning)':'var(--danger)');
       const lab=x.tier==="solid"?'Confident':(x.tier==="dev"?'Developing':'Needs work');
@@ -2146,16 +2170,16 @@ function bindReady(){
   const rpr=document.getElementById("r_prob");if(rpr)rpr.onchange=()=>{RDRAFT.estProb=rpr.value;};
   const rs=document.getElementById("r_save");if(rs)rs.onclick=()=>{const pct=parseFloat(rp?rp.value:RDRAFT.pct);if(isNaN(pct)||pct<0||pct>100){toast("Enter a % between 0 and 100");return;}const prob=parseFloat(rpr?rpr.value:RDRAFT.estProb);addAssessment({form:(rf?rf.value:RDRAFT.form),dateISO:RDRAFT.dateISO,pct:Math.round(pct),estProb:isNaN(prob)?null:Math.round(prob)});RDRAFT={form:(rf?rf.value:RDRAFT.form),dateISO:todayISO(),pct:"",estProb:""};toast("Score logged \u2713");render();};
   document.querySelectorAll("[data-del]").forEach(b=>b.onclick=()=>{delAssessment(b.dataset.del);render();});
-  const usr=document.getElementById("u_src");if(usr)usr.onchange=()=>{UDRAFT.src=usr.value;};
+  const usr=document.getElementById("u_src");if(usr)usr.onchange=()=>{UDRAFT.src=usr.value;render();};   // re-render so the qbank-size field follows the source
   const us=document.getElementById("u_sys");if(us)us.onchange=()=>{UDRAFT.sys=us.value;};
   const uq=document.getElementById("u_q");if(uq)uq.onchange=()=>{UDRAFT.q=uq.value;};
   const uc=document.getElementById("u_c");if(uc)uc.onchange=()=>{UDRAFT.correct=uc.value;};
-  const ut=document.getElementById("u_total");if(ut)ut.onchange=()=>{const n=parseInt(ut.value,10);setUworldTotal(isNaN(n)?0:n);};
-  const usv=document.getElementById("u_save");if(usv)usv.onclick=()=>{const q=parseInt(uq?uq.value:UDRAFT.q,10),cc=parseInt(uc?uc.value:UDRAFT.correct,10);const src=(usr?usr.value:UDRAFT.src)||"uworld";if(isNaN(q)||q<1){toast("How many questions in the block?");return;}if(isNaN(cc)||cc<0||cc>q){toast("# correct can\u2019t exceed the question count");return;}const blk={sys:(us?us.value:UDRAFT.sys),q:q,correct:cc};if(src==="amboss")addAmbossBlock(blk);else addUworldBlock(blk);UDRAFT={sys:(us?us.value:UDRAFT.sys),q:"40",correct:"",src:src};toast((src==="amboss"?"AMBOSS":"UWorld")+" block logged \u2713");render();};
+  const ut=document.getElementById("u_total");if(ut)ut.onchange=()=>{const n=parseInt(ut.value,10);setPracticeTotal((usr?usr.value:UDRAFT.src)||"uworld",isNaN(n)?0:n);};
+  const usv=document.getElementById("u_save");if(usv)usv.onclick=()=>{const q=parseInt(uq?uq.value:UDRAFT.q,10),cc=parseInt(uc?uc.value:UDRAFT.correct,10);const src=(usr?usr.value:UDRAFT.src)||"uworld";if(isNaN(q)||q<1){toast("How many questions in the block?");return;}if(isNaN(cc)||cc<0||cc>q){toast("# correct can\u2019t exceed the question count");return;}addPracticeBlock(src,{sys:(us?us.value:UDRAFT.sys),q:q,correct:cc});UDRAFT={sys:(us?us.value:UDRAFT.sys),q:"40",correct:"",src:src};toast(practiceSrcLabel(src)+" block logged \u2713");render();};
   document.querySelectorAll("[data-unshaky]").forEach(b=>b.onclick=()=>{toggleShaky(b.dataset.unshaky);render();});
   const rsc=document.getElementById("rst_scores");if(rsc)rsc.onclick=()=>confirmClear("Clear all logged scores?","Removes every self-assessment score in this hub's log. You'll get one chance to undo.",clearScores);
   const ruw=document.getElementById("rst_uw");if(ruw)ruw.onclick=()=>confirmClear("Clear the UWorld log?","Removes every logged UWorld block and your qbank size. You'll get one chance to undo.",clearUworld);
-  const rprc=document.getElementById("rst_pr");if(rprc)rprc.onclick=()=>confirmClear("Clear the practice-question log?","Removes every UWorld and AMBOSS block logged in this hub — your subject confidence resets with it. You'll get one chance to undo.",()=>clearScopedPractice(S.active));
+  const rprc=document.getElementById("rst_pr");if(rprc)rprc.onclick=()=>confirmClear("Clear the practice-question log?","Removes every UWorld, AMBOSS and ScholarRx block logged in this hub — your subject confidence resets with it. You'll get one chance to undo.",()=>clearScopedPractice(S.active));
   const rfl=document.getElementById("rst_flags");if(rfl)rfl.onclick=()=>confirmClear("Clear all review flags?","Un-flags every video you marked as shaky. You'll get one chance to undo.",clearFlags);
   const rvd=document.getElementById("rst_vid");if(rvd)rvd.onclick=()=>confirmClear("Reset video progress?","Clears every video checkmark and daily Anki check across BOTH hubs. Scores, UWorld log, and flags stay. You'll get one chance to undo.",clearVideos);
   wireChrome();
@@ -2169,6 +2193,7 @@ const DSCOPE="step1";
 let SRDRAFT={form:"NBME 28",dateISO:todayISO(),pct:"",estProb:""};
 let SUDRAFT={sys:"",q:"40",correct:""};
 let SADRAFT={sys:"",q:"40",correct:""};
+let SXDRAFT={sys:"",q:"40",correct:""};   // ScholarRx dedicated qbank draft
 function stepScoreForm(){
   return '<div class="form2">'
     +'<label>Form<select id="sr_form">'+NBME_FORMS.map(f=>'<option'+(SRDRAFT.form===f?' selected':'')+'>'+f+'</option>').join('')+'</select></label>'
@@ -2196,7 +2221,7 @@ function qbankCard(title,pfx,roll,resetId){
   let bars='';const sysList=Object.keys(roll.bySys).sort((a,b)=>{if(a==="Unspecified")return 1;if(b==="Unspecified")return -1;return (roll.bySys[a].pct||0)-(roll.bySys[b].pct||0);});
   sysList.forEach(x=>{const e=roll.bySys[x];const col=e.pct==null?'var(--faint)':(e.pct>=70?'var(--success)':(e.pct>=60?'var(--warning)':'var(--danger)'));
     bars+='<div class="bar"><div class="barlab">'+escHTML(x)+'</div><div class="bartrack"><div class="barfill" style="width:'+(e.pct||0)+'%;background:'+col+'"></div></div><div class="barpct">'+(e.pct==null?'—':e.pct+'%')+'</div></div>';});
-  const draft=pfx==="su"?SUDRAFT:SADRAFT;
+  const draft=pfx==="su"?SUDRAFT:(pfx==="sx"?SXDRAFT:SADRAFT);
   return '<div class="card"><div class="cardhd">'+title+(roll.done?'<button class="hdreset" id="'+resetId+'">Reset</button>':'')+'</div>'
     +'<div class="uwtop"><div class="uwbig">'+pctTxt+' <span>correct</span></div><div class="uwsub">'+doneTxt+'</div></div>'
     +progHtml
@@ -2210,15 +2235,15 @@ function qbankCard(title,pfx,roll,resetId){
    weak-area signal — a semester of logged questions, not just the dedicated period. */
 function stepBlendAccuracy(){
   const by={};
-  [S.uworld,S.amboss].forEach(log=>{const bl=(log&&log.blocks)||{};for(const k in bl){const b=bl[k];if(!b)continue;
+  practiceLogs().forEach(log=>{const bl=(log&&log.blocks)||{};for(const k in bl){const b=bl[k];if(!b)continue;
     const sys=b.sys||"Unspecified";if(sys==="Unspecified")continue;
     const q=+b.q||0,c=+b.correct||0;const e=by[sys]=by[sys]||{done:0,correct:0,m2:0,ded:0};
     e.done+=q;e.correct+=c;if(b.hub===DSCOPE)e.ded+=q;else e.m2+=q;}});
   return Object.keys(by).map(s=>({sys:s,done:by[s].done,pct:by[s].done?Math.round(by[s].correct/by[s].done*100):null,m2:by[s].m2,ded:by[s].ded})).filter(x=>x.pct!=null);
 }
-/* combined UWorld+AMBOSS totals across every hub — the dedicated headline snapshot */
+/* combined UWorld+AMBOSS+ScholarRx totals across every hub — the dedicated headline snapshot */
 function stepBlendTotals(){let done=0,correct=0,m2=0,ded=0;
-  [S.uworld,S.amboss].forEach(log=>{const bl=(log&&log.blocks)||{};for(const k in bl){const b=bl[k];if(!b)continue;const q=+b.q||0;done+=q;correct+=+b.correct||0;if(b.hub===DSCOPE)ded+=q;else m2+=q;}});
+  practiceLogs().forEach(log=>{const bl=(log&&log.blocks)||{};for(const k in bl){const b=bl[k];if(!b)continue;const q=+b.q||0;done+=q;correct+=+b.correct||0;if(b.hub===DSCOPE)ded+=q;else m2+=q;}});
   return {done,correct,pct:done?Math.round(correct/done*100):null,m2,ded};}
 function stepFocusCard(){
   const list=stepBlendAccuracy();
@@ -2230,7 +2255,7 @@ function stepFocusCard(){
   h+=weak.length
     ? '<div class="status bad">Below 65%: '+weak.map(w=>escHTML(w.sys)+' <b>'+w.pct+'%</b>').join(' · ')+'. Prioritize these before your exam.</div>'
     : '<div class="status ok">No system under 65% (with ≥20 Qs) yet — keep logging to surface weak areas.</div>';
-  h+='<div class="uwhd">Combined UWorld + AMBOSS · weakest first'+(anyM2?' · includes your M2 semester':'')+'</div><div class="bars">';
+  h+='<div class="uwhd">Combined UWorld + AMBOSS + ScholarRx · weakest first'+(anyM2?' · includes your M2 semester':'')+'</div><div class="bars">';
   list.forEach(x=>{const col=x.pct>=70?'var(--success)':(x.pct>=60?'var(--warning)':'var(--danger)');
     const split=(x.m2>0&&x.ded>0)?(' <span class="srcsplit">'+x.m2+' M2·'+x.ded+' ded</span>'):(x.m2>0&&x.ded===0?' <span class="srcsplit">M2</span>':'');
     h+='<div class="bar"><div class="barlab">'+escHTML(x.sys)+split+'</div><div class="bartrack"><div class="barfill" style="width:'+x.pct+'%;background:'+col+'"></div></div><div class="barpct">'+x.pct+'% <span class="muted small">('+x.done+')</span></div></div>';});
@@ -2264,6 +2289,7 @@ function renderStepHub(){
   let colB='';
   colB+=qbankCard("UWorld — dedicated","su",uworldRollup(DSCOPE),"sst_uw");
   colB+=qbankCard("AMBOSS","sa",ambossRollup(DSCOPE),"sst_am");
+  colB+=qbankCard("ScholarRx","sx",scholarrxRollup(DSCOPE),"sst_sx");
   app.innerHTML=chrome("")+'<div class="wrap">'+hero+snap+stepFocusCard()+'<div class="cols"><div>'+colA+'</div><div>'+colB+'</div></div></div>';
   bindStep();
   const sd=document.getElementById("sd_date");if(sd)sd.onclick=()=>openDatePicker({value:iso||"",min:todayISO(),title:"Step 1 exam date",onPick:(d)=>{S.settings.stepExamISO=d;save();render();}});
@@ -2284,21 +2310,26 @@ function bindStep(){
   document.querySelectorAll("[data-sdel]").forEach(b=>b.onclick=()=>{delAssessment(b.dataset.sdel);render();});
   bindQbank("su",SUDRAFT,addUworldBlock,setUworldTotal);
   bindQbank("sa",SADRAFT,addAmbossBlock,setAmbossTotal);
+  bindQbank("sx",SXDRAFT,addScholarrxBlock,setScholarrxTotal);
   const z1=document.getElementById("sst_scores");if(z1)z1.onclick=()=>confirmClear("Clear dedicated NBME scores?","Removes every dedicated Step self-assessment. You'll get one chance to undo.",()=>clearScopedAssess(DSCOPE));
   const z2=document.getElementById("sst_uw");if(z2)z2.onclick=()=>confirmClear("Clear dedicated UWorld?","Removes every dedicated UWorld block. You'll get one chance to undo.",()=>clearScopedUworld(DSCOPE));
   const z3=document.getElementById("sst_am");if(z3)z3.onclick=()=>confirmClear("Clear AMBOSS log?","Removes every AMBOSS block. You'll get one chance to undo.",clearAmboss);
+  const z4=document.getElementById("sst_sx");if(z4)z4.onclick=()=>confirmClear("Clear dedicated ScholarRx?","Removes every dedicated ScholarRx block. You'll get one chance to undo.",()=>clearScopedScholarrx(DSCOPE));
   wireChrome();
 }
 function clearScopedAssess(scope){const snap=Object.assign({},S.assessments);Object.keys(S.assessments||{}).forEach(k=>{if(S.assessments[k].hub===scope)delete S.assessments[k];});bumpReset();save();render();toastUndo("Dedicated scores cleared.",()=>{S.assessments=snap;save();render();});}
 function clearScopedUworld(scope){const snap=JSON.parse(JSON.stringify(S.uworld||{total:null,blocks:{}}));const bl=(S.uworld||{}).blocks||{};Object.keys(bl).forEach(k=>{if(bl[k].hub===scope)delete bl[k];});bumpReset();save();render();toastUndo("Dedicated UWorld cleared.",()=>{S.uworld=snap;save();render();});}
-/* clear this hub's whole practice log — both UWorld and AMBOSS blocks (M2) */
+function clearScopedScholarrx(scope){const snap=JSON.parse(JSON.stringify(S.scholarrx||{total:null,blocks:{}}));const bl=(S.scholarrx||{}).blocks||{};Object.keys(bl).forEach(k=>{if(bl[k].hub===scope)delete bl[k];});bumpReset();save();render();toastUndo("Dedicated ScholarRx cleared.",()=>{S.scholarrx=snap;save();render();});}
+/* clear this hub's whole practice log — UWorld, AMBOSS and ScholarRx blocks (M2) */
 function clearScopedPractice(scope){scope=scope||S.active;
   const snapU=JSON.parse(JSON.stringify(S.uworld||{total:null,blocks:{}}));
   const snapA=JSON.parse(JSON.stringify(S.amboss||{total:null,blocks:{}}));
+  const snapR=JSON.parse(JSON.stringify(S.scholarrx||{total:null,blocks:{}}));
   const ub=(S.uworld||{}).blocks||{};Object.keys(ub).forEach(k=>{if(ub[k].hub===scope)delete ub[k];});
   const ab=(S.amboss||{}).blocks||{};Object.keys(ab).forEach(k=>{if(ab[k].hub===scope)delete ab[k];});
+  const rb=(S.scholarrx||{}).blocks||{};Object.keys(rb).forEach(k=>{if(rb[k].hub===scope)delete rb[k];});
   bumpReset();save();render();
-  toastUndo("Practice-question log cleared.",()=>{S.uworld=snapU;S.amboss=snapA;save();render();});}
+  toastUndo("Practice-question log cleared.",()=>{S.uworld=snapU;S.amboss=snapA;S.scholarrx=snapR;save();render();});}
 function clearAmboss(){const snap=JSON.parse(JSON.stringify(S.amboss||{total:null,blocks:{}}));S.amboss={total:null,blocks:{}};bumpReset();save();render();toastUndo("AMBOSS log cleared.",()=>{S.amboss=snap;save();render();});}
 
 /* ---------- daily encouragement (positive reinforcement, top of Today) ----------
@@ -3025,7 +3056,7 @@ function stepDHubCard(){
   S.settings=S.settings||{};const iso=S.settings.stepExamISO;
   const left=iso?Math.max(0,daysBetween(todayISO(),iso)):null;
   const list=assessList(DSCOPE);const la=list.length?list[list.length-1]:null;
-  const sub=(left!=null)?(left+" days to Step 1"):(la?("Latest NBME "+la.pct+"%"):"Dedicated NBME · UWorld · AMBOSS tracking");
+  const sub=(left!=null)?(left+" days to Step 1"):(la?("Latest NBME "+la.pct+"%"):"Dedicated NBME · UWorld · AMBOSS · ScholarRx tracking");
   return '<button class="hubcard set" data-stepd="1"><div class="hubname">Step 1 Dedicated</div>'
     +'<div class="hubsub">'+escHTML(sub)+'</div><div class="hubgo">Enter →</div></button>';
 }
@@ -3369,11 +3400,14 @@ function seedDemoStep(){
   setUworldTotal(3300);
   [["Immunology",30,20],["Musculoskeletal",30,24]].forEach((r,i)=>addAmbossBlock({dateISO:demoISO(-(7-i*2)),sys:r[0],q:r[1],correct:r[2]},DSCOPE));
   setAmbossTotal(2800);
+  [["Biochemistry",25,17],["Pharmacology",25,19]].forEach((r,i)=>addScholarrxBlock({dateISO:demoISO(-(6-i*2)),sys:r[0],q:r[1],correct:r[2]},DSCOPE));
+  setScholarrxTotal(2600);
   addAssessment({form:"NBME 25",dateISO:demoISO(-20),pct:58},DSCOPE);
   addAssessment({form:"NBME 27",dateISO:demoISO(-9),pct:64},DSCOPE);
   addAssessment({form:"NBME 28",dateISO:demoISO(-2),pct:69},DSCOPE);
   // a couple of blocks under the M2 hub too, so its practice-question tracker isn't empty
   [["Hematology",40,29],["Renal",40,26]].forEach((r,i)=>addUworldBlock({dateISO:demoISO(-(5-i*2)),sys:r[0],q:r[1],correct:r[2],mode:"system"},"nbme"));
+  addScholarrxBlock({dateISO:demoISO(-4),sys:"Hematology",q:20,correct:15},"nbme");
 }
 function showDemoBanner(){
   if(document.getElementById("demobar"))return;
@@ -3866,20 +3900,24 @@ function doResetAll(){
   // nuclear: wipe progress AND the saved plans, drop the user back to the
   // setup screen to craft a fresh plan. Tombstoned so sync can't resurrect it.
   Cloud.backupNow("before-reset");   // keep a recoverable snapshot beyond the in-session undo
-  const snap={vdone:S.vdone,vskip:S.vskip,vdoneDate:S.vdoneDate,akdone:S.akdone,notes:S.notes,assessments:S.assessments,uworld:S.uworld,amboss:S.amboss,vshaky:S.vshaky,streak:S.streak,cfgs:S.cfgs,active:S.active};
-  S.vdone={};S.vskip={};S.vdoneDate={};S.akdone={};S.notes={};S.assessments={};S.uworld={total:null,blocks:{}};S.amboss={total:null,blocks:{}};S.vshaky={};S.streak={days:{}};
+  const snap={vdone:S.vdone,vskip:S.vskip,vdoneDate:S.vdoneDate,akdone:S.akdone,notes:S.notes,assessments:S.assessments,uworld:S.uworld,amboss:S.amboss,scholarrx:S.scholarrx,vshaky:S.vshaky,streak:S.streak,cfgs:S.cfgs,active:S.active};
+  S.vdone={};S.vskip={};S.vdoneDate={};S.akdone={};S.notes={};S.assessments={};S.uworld={total:null,blocks:{}};S.amboss={total:null,blocks:{}};S.scholarrx={total:null,blocks:{}};S.vshaky={};S.streak={days:{}};
   S.cfgs={step1:null,nbme:null};S.active=null;S.cfg=null;_prevSig=0;S._resetAt=Date.now();save();
   renderWelcome();
   toastUndo("Everything cleared — build a new plan, or tap Undo to restore.",()=>{
-    S.vdone=snap.vdone;S.vskip=snap.vskip;S.vdoneDate=snap.vdoneDate;S.akdone=snap.akdone;S.notes=snap.notes;S.assessments=snap.assessments;S.uworld=snap.uworld;S.amboss=snap.amboss;S.vshaky=snap.vshaky;S.streak=snap.streak;
+    S.vdone=snap.vdone;S.vskip=snap.vskip;S.vdoneDate=snap.vdoneDate;S.akdone=snap.akdone;S.notes=snap.notes;S.assessments=snap.assessments;S.uworld=snap.uworld;S.amboss=snap.amboss;S.scholarrx=snap.scholarrx;S.vshaky=snap.vshaky;S.streak=snap.streak;
     S.cfgs=snap.cfgs;S.active=snap.active;S.cfg=S.active?S.cfgs[S.active]:null;_prevSig=progressSig();save();
     if(S.cfg){reflow();render();}else renderWelcome();toast("Restored ✓");});
 }
-const BUILD="2026-07-21f";
+const BUILD="2026-07-21g";
 /* ---------- What's new (changelog) ----------
    Newest entry first. Bump the top entry's id whenever you add one and the
    pop-up shows once per person (tracked in synced settings.seenUpdate). */
 const CHANGELOG=[
+  {id:"2026-07-29", date:"July 2026", title:"ScholarRx is now a practice-question source", items:[
+    "Log ScholarRx (Rx Qmax) blocks anywhere you log practice questions — the quick logger on Study, the M2 practice block, and the dedicated Step hub — right alongside UWorld and AMBOSS.",
+    "ScholarRx questions flow into everything the others do: your weekly goal, per-subject confidence, and the Step 1 dedicated hub’s blended weak-systems view. Log it in M2 and it still counts toward your dedicated weak-area picture.",
+  ]},
   {id:"2026-07-28", date:"July 2026", title:"Brody calendar: clearer pace + a plain-English how-it-works", items:[
     "The Brody plan editor now leads with the same big recommended-pace banner as the custom schedule: the h/day that keeps you ahead of every weekly quiz, an on-track / behind read-out, and a one-tap “set my pace to this.”",
     "It spells out your review buffer up front too — the exact date all your videos finish and how many video-free days that leaves before the shelf for UWorld and Anki.",
@@ -4143,8 +4181,9 @@ function wireFileInput(){
   const inp=document.getElementById("fileIn");
   if(inp)inp.onchange=(e)=>{const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=()=>{try{const o=JSON.parse(r.result);
     if(o.cfgs!==undefined)S.cfgs=o.cfgs;else if(o.cfg!==undefined){const key=(o.cfg.examType&&o.cfg.examType!=="step1")?"nbme":"step1";S.cfgs={step1:null,nbme:null};S.cfgs[key]=o.cfg;}
-    ["vdone","vskip","vdoneDate","akdone","notes","streak","assessments","uworld","amboss","vshaky","_resetAt"].forEach(k=>{if(o[k]!==undefined)S[k]=o[k];});
+    ["vdone","vskip","vdoneDate","akdone","notes","streak","assessments","uworld","amboss","scholarrx","vshaky","_resetAt"].forEach(k=>{if(o[k]!==undefined)S[k]=o[k];});
     S.uworld=S.uworld||{total:null,blocks:{}};S.uworld.blocks=S.uworld.blocks||{};
+    S.scholarrx=S.scholarrx||{total:null,blocks:{}};S.scholarrx.blocks=S.scholarrx.blocks||{};
     ["step1","nbme"].forEach(k=>{if(S.cfgs[k])normalizeCfg(S.cfgs[k],k);});
     S.active=null;S.cfg=null;_prevSig=progressSig();save();renderWelcome();toast("Backup restored");
   }catch(err){toast("Couldn't read that file");}};r.readAsText(f);};
