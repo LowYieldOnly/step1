@@ -654,6 +654,10 @@ b{color:var(--ink)}
 .pbok{color:var(--success);background:color-mix(in srgb,var(--success) 15%,transparent)}
 .pbwarn{color:var(--warning);background:color-mix(in srgb,var(--warning) 18%,transparent)}
 .pbbtn{margin-top:11px;width:100%}
+.pbbuf{font-size:12.5px;line-height:1.45;color:var(--text-2);margin-top:9px;padding-top:9px;border-top:1px solid color-mix(in srgb,var(--ink) 10%,transparent)}
+.pbbuf b{color:var(--ink)}
+.calhelp{flex:0 0 auto;width:30px;height:30px;display:inline-flex;align-items:center;justify-content:center;font-family:var(--font-display);font-weight:800;font-size:14px;color:var(--phos);background:var(--phos-soft);border:1px solid var(--phos-dim);border-radius:50%;cursor:pointer;transition:all .15s}
+.calhelp:hover{background:var(--phos);color:var(--on-accent)}
 .srcsplit{font-family:var(--mono);font-size:9.5px;font-weight:700;letter-spacing:.02em;color:var(--faint);margin-left:5px;white-space:nowrap}
 .rtile-s{display:block;font-family:var(--mono);font-size:8.5px;font-weight:700;letter-spacing:.02em;color:var(--faint);margin-top:2px;text-transform:none}
 /* Plan tab landing menu */
@@ -2461,7 +2465,9 @@ function studyCalendar(){
   let h='<div class="card studycal"><div class="calbar"><button class="calnav" id="calPrev" aria-label="previous month">‹</button>'
     +'<div class="calmon">'+CAL_MONTHS[p[1]-1]+' '+p[0]+'</div>'
     +'<button class="calnav" id="calNext" aria-label="next month">›</button>'
-    +'<button class="caltoday" id="calToday">Today</button></div>';
+    +'<button class="caltoday" id="calToday">Today</button>'
+    +((S.cfg&&S.cfg.brody)?'<button class="calhelp" id="brodyHelpBtn" title="How the Brody calendar works" aria-label="How the Brody calendar works">?</button>':'')
+    +'</div>';
   h+='<div class="calwk">'+["Su","Mo","Tu","We","Th","Fr","Sa"].map(d=>'<div>'+d+'</div>').join('')+'</div>';
   h+='<div class="calgrid">'+monthMatrix(CAL_YM).map(calCell).join('')+'</div>';
   h+='<div class="callegend"><span><i class="lg load"></i>study</span><span><i class="lg alldone"></i>done</span><span><i class="lg rest"></i>rest</span><span><i class="lg review"></i>review</span><span><i class="lg off"></i>off</span></div></div>';
@@ -2525,6 +2531,7 @@ function renderToday(){
   const pv=document.getElementById("calPrev");if(pv)pv.onclick=()=>{CAL_YM=ymShift(CAL_YM,-1);render();};
   const nx=document.getElementById("calNext");if(nx)nx.onclick=()=>{CAL_YM=ymShift(CAL_YM,1);render();};
   const ct=document.getElementById("calToday");if(ct)ct.onclick=()=>{CAL_YM=todayISO().slice(0,7);CAL_SEL=todayISO();render();};
+  const bhb=document.getElementById("brodyHelpBtn");if(bhb)bhb.onclick=()=>showBrodyHelp(false);
   document.querySelectorAll("[data-cal]").forEach(b=>b.onclick=()=>{CAL_SEL=b.dataset.cal;render();});
 }
 function toggleShakyItems(ids){const all=ids.every(isShaky);S.vshaky=S.vshaky||{};ids.forEach(id=>{if(all)delete S.vshaky[id];else S.vshaky[id]=true;});save();}
@@ -2763,13 +2770,15 @@ function renderAdjustBrody(c){
     +'<div><div class="kv">'+Math.round(st.remMin/60)+'h</div><div class="kvl">video time left</div></div>'
     +'<div><div class="kv">'+pace+'h</div><div class="kvl">daily pace</div></div>'
     +'<div><div class="kv">'+heavy.length+'</div><div class="kvl">firehose week'+(heavy.length===1?'':'s')+'</div></div></div></div>';
-  body+='<div class="card"><div class="cardhd">Study days &amp; pace</div><div class="form">'
+  body+='<div class="card"><div class="cardhd">Study days &amp; pace</div>'
+    +brodyPaceBanner(c)
+    +'<div class="form">'
     +'<div class="flab">No-video / rest days</div><div class="togrow">'+dows+'</div>'
     +'<div class="flab mt">Daily pace</div>'
     +'<div class="pacerow"><button type="button" class="pacebtn" data-fpace="dec" aria-label="less">−</button>'
     +'<div class="paceval"><b>'+pace+' h</b><span>per study day</span></div>'
     +'<button type="button" class="pacebtn" data-fpace="inc" aria-label="more">+</button></div>'
-    +'<p class="muted small" style="margin:9px 0 0">'+(heavy.length?('Week '+heavy.map(w=>w.n).join(', ')+' has more third-party than fits before its Friday quiz — even at a high pace. Trim a resource or prioritize the high-yield ones there; the rest still finishes by the exam.'):(function(){const nh=Math.max(0,...(SCHED.weekLoad||[]).filter(w=>isFinite(w.needH)).map(w=>w.needH||0));return nh>pace+0.05?('At '+pace+' h/day you’ll trail a quiz — ~'+(Math.ceil(nh*2)/2)+' h/day keeps you quiz-ready.'):('At '+pace+' h/day every week is done well before its quiz.');})())+'</p>'
+    +'<p class="muted small" style="margin:9px 0 0">Nudge to fine-tune — the banner above updates as you go.</p>'
     +'<div class="flab mt">Review buffer before the block exam</div>'
     +'<div class="pacerow"><button type="button" class="pacebtn" data-fbuf="dec" aria-label="fewer">−</button>'
     +'<div class="paceval"><b>'+brodyReviewBuf(c)+' day'+(brodyReviewBuf(c)===1?'':'s')+'</b><span>video-free for UWorld / review</span></div>'
@@ -2790,6 +2799,7 @@ function renderAdjustBrody(c){
   document.querySelectorAll("[data-dow]").forEach(b=>b.onclick=()=>{const i=+b.dataset.dow;c.restDays=c.restDays||[];const k=c.restDays.indexOf(i);if(k>=0)c.restDays.splice(k,1);else c.restDays.push(i);apply();});
   document.querySelectorAll("[data-res]").forEach(b=>b.onclick=()=>{c.resources=c.resources||{};c.resources[b.dataset.res]=!hasRes(b.dataset.res);apply();});
   document.querySelectorAll("[data-fpace]").forEach(b=>b.onclick=()=>{const cur=brodyPace(c);c.brodyPace=Math.max(0.5,cur+(b.dataset.fpace==="inc"?0.5:-0.5));apply();});
+  const bup=document.getElementById("brodyUsePace");if(bup)bup.onclick=()=>{c.brodyPace=brodyRecommendedPace(brodyWeekLoads(c,brodyBlock(c)||BRODY_BLOCKS[0]));apply();};
   document.querySelectorAll("[data-fbuf]").forEach(b=>b.onclick=()=>{const cur=brodyReviewBuf(c);c.brodyReviewDays=Math.max(0,Math.min(14,cur+(b.dataset.fbuf==="inc"?1:-1)));apply();});
   const nu=document.getElementById("newUnit");if(nu)nu.onclick=()=>{startOnboard("nbme",true);};
   const ab=document.getElementById("adjBack");if(ab)ab.onclick=()=>{ADJ_VIEW=null;render();};
@@ -2812,6 +2822,35 @@ function customPaceBanner(c,st){
         ?('<span class="pbok">On track</span> your plan ('+planned+') covers it — change anything below and this updates instantly.')
         :('<span class="pbwarn">Behind</span> you’ve planned '+planned+(atRisk?(' · '+atRisk+' video'+(atRisk===1?'':'s')+' don’t fit yet'):'')+'. Raise hours, move the exam date, or trim resources.'))+'</div>'
     +(rec!=null?'<button type="button" class="btn ghost pbbtn" id="usePace">Set my hours to '+rec+' h/day</button>':'')
+    +'</div>';
+}
+/* Brody twin of customPaceBanner. Brody is pace-driven (block dates + weekly
+   quizzes are fixed), so the big number is the RECOMMENDED h/day — the pace that
+   stays ahead of every quiz and finishes before the review buffer — with a one-tap
+   apply, an on-track/behind/firehose status, and the resulting buffer spelled out. */
+function brodyPaceBanner(c){
+  const blk=brodyBlock(c)||BRODY_BLOCKS[0];
+  const rec=brodyRecommendedPace(brodyWeekLoads(c,blk));
+  const cur=brodyPace(c);
+  const heavy=(SCHED.weekLoad||[]).filter(w=>w.heavy);
+  const nh=Math.max(0,...(SCHED.weekLoad||[]).filter(w=>isFinite(w.needH)).map(w=>w.needH||0));
+  const behind=!heavy.length&&nh>cur+0.05;
+  const ok=!heavy.length&&!behind;
+  const buf=brodyReviewBuf(c);
+  const diff=Math.abs(cur-rec)>=0.25;   // only offer the button when it would actually change your pace
+  let stat;
+  if(heavy.length)stat='<span class="pbwarn">Firehose</span> Week '+heavy.map(w=>w.n).join(', ')+' packs more third-party than fits before its quiz, even at a high pace — trim a resource there. Everything else still finishes by the exam.';
+  else if(behind)stat='<span class="pbwarn">Behind a quiz</span> you’re set to '+cur+' h/day — about <b>'+rec+' h/day</b> keeps you ahead of every weekly quiz.';
+  else stat='<span class="pbok">On track</span> you’re set to '+cur+' h/day — every week finishes before its quiz. Change anything below and this updates instantly.';
+  const bufTxt=buf>0
+    ? 'All videos finish by <b>'+fmtShort(SCHED.reviewCutoff)+'</b>, leaving <b>'+buf+' video-free day'+(buf===1?'':'s')+'</b> before the '+fmtShort(blk.shelf)+' exam for UWorld &amp; review.'
+    : 'Videos run right up to the '+fmtShort(blk.shelf)+' exam — no review buffer reserved.';
+  return '<div class="pacebanner '+(ok?'ok':'warn')+'">'
+    +'<div class="pbtop"><div class="pbnum">'+rec+'<i>h/day</i></div>'
+    +'<div class="pblab"><b>Recommended pace</b><span>to stay ahead of every weekly quiz and finish before your buffer</span></div></div>'
+    +'<div class="pbstat">'+stat+'</div>'
+    +'<div class="pbbuf">📅 '+bufTxt+'</div>'
+    +(diff?'<button type="button" class="btn ghost pbbtn" id="brodyUsePace">Set my pace to '+rec+' h/day</button>':'')
     +'</div>';
 }
 /* Plan tab landing — three plain choices instead of one dense editor, so the
@@ -3793,6 +3832,8 @@ function commitOnboard(){const ob=_ob;
   if(ob.fresh&&prev&&key==="nbme")archiveUnit(prev);   // keep the old unit reachable under Plan → Past units
   S.cfgs[key]=c;activate(key);S.active=key;
   save();reflow();VIEW="today";render();
+  // first-ever Brody plan → show the "how the Brody calendar works" explainer once
+  if(brody){S.settings=S.settings||{};if(!S.settings.seenBrodyHelp)showBrodyHelp(true);}
   if(prev)toastUndo(ob.fresh?"New unit started — undo to restore the last one.":"Plan updated.",()=>{
     if(ob.fresh&&key==="nbme"&&S.settings&&S.settings.pastUnits)S.settings.pastUnits.shift();  // drop the archive we just made
     S.cfgs[key]=prev;activate(key);save();reflow();render();});
@@ -3828,11 +3869,16 @@ function doResetAll(){
     S.cfgs=snap.cfgs;S.active=snap.active;S.cfg=S.active?S.cfgs[S.active]:null;_prevSig=progressSig();save();
     if(S.cfg){reflow();render();}else renderWelcome();toast("Restored ✓");});
 }
-const BUILD="2026-07-21d";
+const BUILD="2026-07-21e";
 /* ---------- What's new (changelog) ----------
    Newest entry first. Bump the top entry's id whenever you add one and the
    pop-up shows once per person (tracked in synced settings.seenUpdate). */
 const CHANGELOG=[
+  {id:"2026-07-28", date:"July 2026", title:"Brody calendar: clearer pace + a plain-English how-it-works", items:[
+    "The Brody plan editor now leads with the same big recommended-pace banner as the custom schedule: the h/day that keeps you ahead of every weekly quiz, an on-track / behind read-out, and a one-tap “set my pace to this.”",
+    "It spells out your review buffer up front too — the exact date all your videos finish and how many video-free days that leaves before the shelf for UWorld and Anki.",
+    "New explainer (shown once after you set up a Brody plan, and reopenable anytime from the ? on the calendar): how unwatched videos roll forward if you fall behind, and how joining a unit late works.",
+  ]},
   {id:"2026-07-26", date:"July 2026", title:"Jump to any date in two taps", items:[
     "The date picker now jumps straight to a month and year — tap the month/year label, pick the year, pick the month. No more clicking arrows month-by-month to reach an exam or Step date far in the future.",
   ]},
@@ -3904,6 +3950,32 @@ function showUpdates(limit){
   ov.querySelector('[data-c="ok"]').onclick=done;
 }
 function maybeShowUpdates(){if(!LATEST_UPDATE)return;S.settings=S.settings||{};if(S.settings.seenUpdate!==LATEST_UPDATE)showUpdates(2);}
+/* Plain-English explainer for the two Brody behaviors students find surprising:
+   unwatched videos rolling forward, and joining a unit late. Shown once right
+   after Brody setup, and reopenable anytime from the ? on the Brody calendar. */
+function brodyHelpHTML(){
+  return '<div class="chglog">'
+    +'<div class="chgentry"><div class="chgtitle">If you fall behind, nothing is lost</div><ul class="chglist">'
+      +'<li>Your calendar rebuilds from <b>today</b> every time you open it. Anything you didn’t check off never gets stuck on a past day and never disappears — it rolls forward and repacks onto today and the days ahead.</li>'
+      +'<li>That’s why a past day only shows what you actually finished. The rest slides into your remaining days, and your recommended pace ticks up to fit it.</li>'
+      +'<li>Each Brody week’s real deadline is <b>its quiz</b>. If you slip, the Study page tells you the h/day that gets you quiz-ready. Miss a quiz and those videos simply roll toward the next one — and ultimately the shelf — so you’re still covered for the exam.</li>'
+    +'</ul></div>'
+    +'<div class="chgentry"><div class="chgtitle">If you join late, you start at the current week</div><ul class="chglist">'
+      +'<li>The plan begins at the week you joined — you’re <b>never forced to catch up</b> on weeks that already passed.</li>'
+      +'<li>The videos from before you joined don’t vanish either: they show on their real past dates marked <i>earlier</i> — optional and checkable. Go back for any you want; they’re not counted against your pace.</li>'
+      +'<li>Everything from your join week onward is your actual plan, paced to stay ahead of each remaining quiz and finish before the shelf.</li>'
+    +'</ul></div>'
+  +'</div>';
+}
+function showBrodyHelp(markSeen){
+  if(document.getElementById("brodyhelp"))return;
+  const ov=document.createElement("div");ov.className="overlay";ov.id="brodyhelp";
+  ov.innerHTML='<div class="sheet"><div class="sheethd">How the Brody calendar works</div>'+brodyHelpHTML()+'<button class="mrow ctr" data-c="ok">Got it</button></div>';
+  const done=()=>{ov.remove();if(markSeen){S.settings=S.settings||{};if(!S.settings.seenBrodyHelp){S.settings.seenBrodyHelp=true;save();}}};
+  ov.onclick=(e)=>{if(e.target===ov)done();};
+  document.body.appendChild(ov);
+  ov.querySelector('[data-c="ok"]').onclick=done;
+}
 function openMenu(){
   const email=Cloud.user&&Cloud.user.email;
   const html='<div class="sheet"><div class="sheethd">Menu</div>'
