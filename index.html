@@ -687,7 +687,12 @@ b{color:var(--ink)}
 .ca-lect{font-size:12.5px;color:var(--ink);line-height:1.5}
 .ca-lect.muted{color:var(--faint);font-style:italic}
 .ca-resgrp{margin:8px 0 4px}
-.ca-reslab{display:flex;align-items:center;gap:7px;font-size:12px;font-weight:700;color:var(--text-2);margin:6px 0 3px}
+.ca-reslab{display:flex;align-items:center;gap:7px;font-size:12px;font-weight:700;color:var(--text-2);margin:6px 0 3px;cursor:pointer;list-style:none;user-select:none;padding:3px 0}
+.ca-reslab::-webkit-details-marker{display:none}
+.ca-reslab::before{content:"▸";color:var(--faint);font-size:9px;line-height:1;transition:transform .12s ease}
+details.ca-resgrp[open]>.ca-reslab::before{transform:rotate(90deg)}
+.ca-resct{font-family:var(--mono);font-size:10.5px;font-weight:700;color:var(--faint)}
+.ca-reslab:hover{color:var(--ink)}
 .ca-cat{margin:0 0 5px 4px}
 .ca-catnm{font-family:var(--mono);font-size:9.5px;font-weight:700;letter-spacing:.03em;text-transform:uppercase;color:var(--faint);margin:4px 0 2px}
 .ca-v{font-size:12.5px;color:var(--ink);line-height:1.45;padding:1px 0 1px 10px;border-left:2px solid var(--line)}
@@ -3823,7 +3828,7 @@ function doResetAll(){
     S.cfgs=snap.cfgs;S.active=snap.active;S.cfg=S.active?S.cfgs[S.active]:null;_prevSig=progressSig();save();
     if(S.cfg){reflow();render();}else renderWelcome();toast("Restored ✓");});
 }
-const BUILD="2026-07-21c";
+const BUILD="2026-07-21d";
 /* ---------- What's new (changelog) ----------
    Newest entry first. Bump the top entry's id whenever you add one and the
    pop-up shows once per person (tracked in synced settings.seenUpdate). */
@@ -3981,12 +3986,13 @@ function renderContentAudit(){
       body+='</div>';
       const byRes={};w.vids.forEach(v=>{(byRes[v.res]=byRes[v.res]||[]).push(v);});
       RES_ORDER.forEach(r=>{if(!byRes[r])return;
-        body+='<div class="ca-resgrp"><div class="ca-reslab">'+resBadge(r)+' '+escHTML(resLabel(r))+' · '+byRes[r].length+'</div>';
+        const hasDef=byRes[r].some(v=>!v.exp);   // auto-open a group that hides a flagged video
+        body+='<details class="ca-resgrp"'+(hasDef?' open':'')+'><summary class="ca-reslab">'+resBadge(r)+' '+escHTML(resLabel(r))+' <span class="ca-resct">'+byRes[r].length+'</span></summary>';
         const byCat={};byRes[r].forEach(v=>{(byCat[v.cat]=byCat[v.cat]||[]).push(v);});
         Object.keys(byCat).forEach(cat=>{
           body+='<div class="ca-cat">'+(cat?'<div class="ca-catnm">'+escHTML(cat)+'</div>':'')
             +byCat[cat].map(v=>'<div class="ca-v'+(v.exp?"":" def")+'">'+escHTML(v.name)+(v.exp?"":' <span class="ca-deftag">defaulted</span>')+'</div>').join('')+'</div>';});
-        body+='</div>';});
+        body+='</details>';});
       body+='</div>';});
     body+='</div>';});
   body+='</div>';
