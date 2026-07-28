@@ -656,6 +656,8 @@ b{color:var(--ink)}
 .pbbtn{margin-top:11px;width:100%}
 .pbbuf{font-size:12.5px;line-height:1.45;color:var(--text-2);margin-top:9px;padding-top:9px;border-top:1px solid color-mix(in srgb,var(--ink) 10%,transparent)}
 .pbbuf b{color:var(--ink)}
+.pbnote{font-size:12px;line-height:1.45;color:var(--text-2);margin-top:10px;padding:8px 11px;border-radius:9px;background:color-mix(in srgb,var(--phos) 10%,transparent);border:1px dashed color-mix(in srgb,var(--phos) 45%,transparent)}
+.pbnote b{color:var(--ink)}
 .calhelp{flex:0 0 auto;width:30px;height:30px;display:inline-flex;align-items:center;justify-content:center;font-family:var(--font-display);font-weight:800;font-size:14px;color:var(--phos);background:var(--phos-soft);border:1px solid var(--phos-dim);border-radius:50%;cursor:pointer;transition:all .15s}
 .calhelp:hover{background:var(--phos);color:var(--on-accent)}
 .srcsplit{font-family:var(--mono);font-size:9.5px;font-weight:700;letter-spacing:.02em;color:var(--faint);margin-left:5px;white-space:nowrap}
@@ -1793,17 +1795,17 @@ function paceHero(){const st=SCHED.stats;
     const sk=SCHED.skippedWeeks||0;
     const skTxt=sk?(" \u00b7 starting at week "+(sk+1)):"";
     if(st.remItems===0)return '<div class="herostat ok"><span class="hsdot"></span><span>All videos done \u2014 you\u2019re in sync with Brody.</span></div>';
-    if(tight.length)return '<div class="herostat warn"><span class="hsdot"></span><span>~'+SCHED.brodyPace+' h/day \u00b7 week '+tight.map(w=>w.n).join(", ")+' is more than fits before its quiz \u2014 trim a resource</span></div>';
+    if(tight.length)return '<div class="herostat warn"><span class="hsdot"></span><span>~'+SCHED.brodyPace+' h/day of video \u00b7 week '+tight.map(w=>w.n).join(", ")+' is more than fits before its quiz \u2014 trim a resource</span></div>';
     // a hand-set pace below what the quizzes now require must say so \u2014 "ahead of
     // every quiz" was a lie whenever the pinned pace couldn't actually get there
     const needH=Math.max(0,...(SCHED.weekLoad||[]).filter(w=>isFinite(w.needH)).map(w=>w.needH||0));
     if(needH>SCHED.brodyPace+0.05){const rec=Math.ceil(needH*2)/2;
-      return '<div class="herostat warn"><span class="hsdot"></span><span>Behind for a quiz at '+SCHED.brodyPace+' h/day \u2014 ~'+rec+' h/day gets you quiz-ready (raise it in Plan)</span></div>';}
-    return '<div class="herostat ok"><span class="hsdot"></span><span>On pace at ~'+SCHED.brodyPace+' h/day \u00b7 ahead of every quiz'+skTxt+'</span></div>';}
+      return '<div class="herostat warn"><span class="hsdot"></span><span>Behind for a quiz at '+SCHED.brodyPace+' h/day of video \u2014 ~'+rec+' h/day gets you quiz-ready (raise it in Plan)</span></div>';}
+    return '<div class="herostat ok"><span class="hsdot"></span><span>On pace at ~'+SCHED.brodyPace+' h/day of video \u00b7 ahead of every quiz'+skTxt+'</span></div>';}
   const hpd=Math.round(st.reqPerDay/60*10)/10;let cls,txt;
   if(st.remItems===0){cls="ok";txt="All videos done \u2014 UWorld & review from here.";}
-  else if(st.feasible){cls="ok";txt="On pace at ~"+hpd+" h/day"+(st.reviewDaysLeft>0?(" \u00b7 "+st.reviewDaysLeft+" review day"+(st.reviewDaysLeft===1?"":"s")+" to spare"):" \u00b7 right to the wire");}
-  else{cls="warn";txt="Behind \u2014 ~"+hpd+" h/day needed \u00b7 "+SCHED.atRisk.length+" video"+(SCHED.atRisk.length===1?"":"s")+" don\u2019t fit yet";}
+  else if(st.feasible){cls="ok";txt="On pace at ~"+hpd+" h/day of video"+(st.reviewDaysLeft>0?(" \u00b7 "+st.reviewDaysLeft+" review day"+(st.reviewDaysLeft===1?"":"s")+" to spare"):" \u00b7 right to the wire");}
+  else{cls="warn";txt="Behind \u2014 ~"+hpd+" h/day of video needed \u00b7 "+SCHED.atRisk.length+" video"+(SCHED.atRisk.length===1?"":"s")+" don\u2019t fit yet";}
   return '<div class="herostat '+cls+'"><span class="hsdot"></span><span>'+txt+'</span></div>';
 }
 function statusLine(){const st=SCHED.stats;
@@ -2768,7 +2770,7 @@ function renderAdjustBrody(c){
     +'<p class="muted small" style="margin:0"><b>'+escHTML(blk.name)+'</b> <span class="pill">Brody calendar</span> — weeks of '+fmtShort(blk.weeks[0].start)+' → block exam '+fmtShort(blk.shelf)+'.</p>'
     +'<div class="grid2" style="margin-top:12px"><div><div class="kv">'+st.remItems+'</div><div class="kvl">videos left</div></div>'
     +'<div><div class="kv">'+Math.round(st.remMin/60)+'h</div><div class="kvl">video time left</div></div>'
-    +'<div><div class="kv">'+pace+'h</div><div class="kvl">daily pace</div></div>'
+    +'<div><div class="kv">'+pace+'h</div><div class="kvl">video / day</div></div>'
     +'<div><div class="kv">'+heavy.length+'</div><div class="kvl">firehose week'+(heavy.length===1?'':'s')+'</div></div></div></div>';
   body+='<div class="card"><div class="cardhd">Study days &amp; pace</div>'
     +brodyPaceBanner(c)
@@ -2776,9 +2778,9 @@ function renderAdjustBrody(c){
     +'<div class="flab">No-video / rest days</div><div class="togrow">'+dows+'</div>'
     +'<div class="flab mt">Daily pace</div>'
     +'<div class="pacerow"><button type="button" class="pacebtn" data-fpace="dec" aria-label="less">−</button>'
-    +'<div class="paceval"><b>'+pace+' h</b><span>per study day</span></div>'
+    +'<div class="paceval"><b>'+pace+' h</b><span>of video · per day</span></div>'
     +'<button type="button" class="pacebtn" data-fpace="inc" aria-label="more">+</button></div>'
-    +'<p class="muted small" style="margin:9px 0 0">Nudge to fine-tune — the banner above updates as you go.</p>'
+    +'<p class="muted small" style="margin:9px 0 0">Hours of <b>video</b> per study day — not your total study time. Nudge to fine-tune; the banner above updates as you go.</p>'
     +'<div class="flab mt">Review buffer before the block exam</div>'
     +'<div class="pacerow"><button type="button" class="pacebtn" data-fbuf="dec" aria-label="fewer">−</button>'
     +'<div class="paceval"><b>'+brodyReviewBuf(c)+' day'+(brodyReviewBuf(c)===1?'':'s')+'</b><span>video-free for UWorld / review</span></div>'
@@ -2817,10 +2819,11 @@ function customPaceBanner(c,st){
   const ok=st.feasible;const atRisk=(SCHED&&SCHED.atRisk)?SCHED.atRisk.length:0;
   return '<div class="pacebanner '+(ok?'ok':'warn')+'">'
     +'<div class="pbtop"><div class="pbnum">'+(need!=null?need:'—')+'<i>h/day</i></div>'
-    +'<div class="pblab"><b>Recommended pace</b><span>to finish every video before your '+(c.reviewDays||0)+'-day review buffer</span></div></div>'
+    +'<div class="pblab"><b>Recommended pace</b><span>hours of <b>video to watch</b> per day to finish every video before your '+(c.reviewDays||0)+'-day review buffer</span></div></div>'
     +'<div class="pbstat">'+(ok
         ?('<span class="pbok">On track</span> your plan ('+planned+') covers it — change anything below and this updates instantly.')
         :('<span class="pbwarn">Behind</span> you’ve planned '+planned+(atRisk?(' · '+atRisk+' video'+(atRisk===1?'':'s')+' don’t fit yet'):'')+'. Raise hours, move the exam date, or trim resources.'))+'</div>'
+    +'<div class="pbnote">⏱ This pace is <b>video watch-time only</b> — the hours of third-party video to get through each day. Your Anki, UWorld, and review are <b>on top of this</b>, not included in it.</div>'
     +(rec!=null?'<button type="button" class="btn ghost pbbtn" id="usePace">Set my hours to '+rec+' h/day</button>':'')
     +'</div>';
 }
@@ -2847,9 +2850,10 @@ function brodyPaceBanner(c){
     : 'Videos run right up to the '+fmtShort(blk.shelf)+' exam — no review buffer reserved.';
   return '<div class="pacebanner '+(ok?'ok':'warn')+'">'
     +'<div class="pbtop"><div class="pbnum">'+rec+'<i>h/day</i></div>'
-    +'<div class="pblab"><b>Recommended pace</b><span>to stay ahead of every weekly quiz and finish before your buffer</span></div></div>'
+    +'<div class="pblab"><b>Recommended pace</b><span>hours of <b>video to watch</b> per day to stay ahead of every quiz and finish before your buffer</span></div></div>'
     +'<div class="pbstat">'+stat+'</div>'
     +'<div class="pbbuf">📅 '+bufTxt+'</div>'
+    +'<div class="pbnote">⏱ This is <b>video watch-time only</b> — the hours of third-party video scheduled that day. Your Brody lectures, Anki, UWorld, and review are <b>on top of this</b>, not included in it.</div>'
     +(diff?'<button type="button" class="btn ghost pbbtn" id="brodyUsePace">Set my pace to '+rec+' h/day</button>':'')
     +'</div>';
 }
@@ -2910,7 +2914,7 @@ function renderPlanEditor(){
     +'<div class="grid2"><div><div class="kv">'+st.contentDaysLeft+'</div><div class="kvl">study days for videos</div></div>'
     +'<div><div class="kv">'+(st.remItems)+'</div><div class="kvl">videos left</div></div>'
     +'<div><div class="kv">'+Math.round(st.remMin/60)+'h</div><div class="kvl">video time left</div></div>'
-    +'<div><div class="kv">'+(isFinite(st.reqPerDay)?(Math.round(st.reqPerDay/60*10)/10+'h'):'—')+'</div><div class="kvl">needed per study day</div></div></div></div>';
+    +'<div><div class="kv">'+(isFinite(st.reqPerDay)?(Math.round(st.reqPerDay/60*10)/10+'h'):'—')+'</div><div class="kvl">video needed / day</div></div></div></div>';
   colB+='<div class="card"><div class="cardhd">Resources</div><div class="togrow">'
     +resBtn("bnb","Boards &amp; Beyond")+resBtn("pathoma","Pathoma")+resBtn("sketchy","Sketchy")+resBtn("bootcamp","Bootcamp")+resBtn("fa","First Aid")+resBtn("anking","AnKing")+resBtn("uworld","UWorld")
     +'</div><p class="muted small">Pick the video resources to weave into this plan — turn any off you\'re not using.</p></div>';
@@ -3691,9 +3695,10 @@ function renderOnboard(){
         +'<div class="flab">No-video / rest days</div><div class="togrow">'+dows+'</div>'
         +'<div class="flab mt">Daily pace</div>'
         +'<div class="pacerow"><button type="button" class="pacebtn" data-opace="dec" aria-label="less">−</button>'
-        +'<div class="paceval"><b id="ob_paceval">'+brodyPace(ob)+' h</b><span>per study day</span></div>'
+        +'<div class="paceval"><b id="ob_paceval">'+brodyPace(ob)+' h</b><span>of video · per day</span></div>'
         +'<button type="button" class="pacebtn" data-opace="inc" aria-label="more">+</button></div>'
         +'<p class="muted small" id="ob_pacehelp" style="margin:9px 0 0">'+obPaceHelp(ob)+'</p>'
+        +'<p class="muted small" style="margin:5px 0 0">This is hours of <b>video</b> per study day — not your total study time. Anki, UWorld, and review sit on top.</p>'
         +'<div class="flab mt">Review buffer before the block exam</div>'
         +'<div class="pacerow"><button type="button" class="pacebtn" data-obuf="dec" aria-label="fewer">−</button>'
         +'<div class="paceval"><b>'+brodyReviewBuf(ob)+' day'+(brodyReviewBuf(ob)===1?'':'s')+'</b><span>video-free for UWorld / review</span></div>'
@@ -3809,7 +3814,8 @@ function obPreview(){const ob=_ob;
   const r=obReco();
   if(!r.ok)return '<p class="muted small" style="margin:0">'+r.msg+'</p>';
   const pd=Math.round(r.perDay*10)/10,pw=Math.round(r.perWeek);
-  let h='<p class="muted small" style="margin:0 0 8px"><b>'+r.nVids+' videos</b> \u00b7 '+r.totalH+' h across '+r.nSys+' system'+(r.nSys>1?"s":"")+', '+fmtShort(r.fromISO)+' \u2192 '+fmtShort(r.examISO)+'. To finish before your '+r.reviewDays+'-study-day question buffer, aim for about <b>'+pd+' h/day</b> on study days (\u2248 <b>'+pw+' h/week</b>).</p>';
+  let h='<p class="muted small" style="margin:0 0 8px"><b>'+r.nVids+' videos</b> \u00b7 '+r.totalH+' h across '+r.nSys+' system'+(r.nSys>1?"s":"")+', '+fmtShort(r.fromISO)+' \u2192 '+fmtShort(r.examISO)+'. To finish before your '+r.reviewDays+'-study-day question buffer, aim for about <b>'+pd+' h/day</b> of video on study days (\u2248 <b>'+pw+' h/week</b>).</p>'
+    +'<p class="muted small" style="margin:0 0 8px">That\u2019s <b>video watch-time</b> \u2014 Anki, UWorld, and review are on top of it.</p>';
   h+='<button type="button" class="btn ghost" id="o_usepace">Use this pace ('+Math.max(0.5,Math.ceil(r.perDay*2)/2)+' h/day)</button>';
   h+='<p class="small" style="margin:8px 0 0;color:'+(r.feasible?"var(--text-2)":"var(--warning)")+'">'+(r.feasible?("\u2713 Your hours ("+r.wd+" weekday / "+r.we+" weekend) cover this with room to spare \u2014 adjust anytime."):("\u26a0 Your hours ("+r.wd+" wd / "+r.we+" we) fall about "+Math.ceil(r.gap)+" h short. Raise your hours, lengthen the buffer, move the date, or trim resources."))+'</p>';
   return h;
@@ -3869,7 +3875,7 @@ function doResetAll(){
     S.cfgs=snap.cfgs;S.active=snap.active;S.cfg=S.active?S.cfgs[S.active]:null;_prevSig=progressSig();save();
     if(S.cfg){reflow();render();}else renderWelcome();toast("Restored ✓");});
 }
-const BUILD="2026-07-21e";
+const BUILD="2026-07-21f";
 /* ---------- What's new (changelog) ----------
    Newest entry first. Bump the top entry's id whenever you add one and the
    pop-up shows once per person (tracked in synced settings.seenUpdate). */
@@ -3878,6 +3884,7 @@ const CHANGELOG=[
     "The Brody plan editor now leads with the same big recommended-pace banner as the custom schedule: the h/day that keeps you ahead of every weekly quiz, an on-track / behind read-out, and a one-tap “set my pace to this.”",
     "It spells out your review buffer up front too — the exact date all your videos finish and how many video-free days that leaves before the shelf for UWorld and Anki.",
     "New explainer (shown once after you set up a Brody plan, and reopenable anytime from the ? on the calendar): how unwatched videos roll forward if you fall behind, and how joining a unit late works.",
+    "Made explicit everywhere: the daily pace is hours of video to watch that day — not your total study time. Your Anki, UWorld, and review sit on top of it.",
   ]},
   {id:"2026-07-26", date:"July 2026", title:"Jump to any date in two taps", items:[
     "The date picker now jumps straight to a month and year — tap the month/year label, pick the year, pick the month. No more clicking arrows month-by-month to reach an exam or Step date far in the future.",
