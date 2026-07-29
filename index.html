@@ -2819,9 +2819,11 @@ function renderAdjustBrody(c){
     +'<p class="muted small" style="margin:9px 0 0">'+(brodyReviewBuf(c)>0?('All videos finish by <b>'+fmtShort(SCHED.reviewCutoff)+'</b> — the last '+brodyReviewBuf(c)+' study day'+(brodyReviewBuf(c)===1?'':'s')+' before the block exam stay open for review. You still never fall behind Brody’s quizzes.'):'No buffer — content runs right up to the exam.')+'</p>'
     +'</div></div>';
   body+='<div class="card soft"><div class="cardhd">Weekly plan</div>'+brodyPreview(c)+'</div>';
-  colB+='<div class="card"><div class="cardhd">Resources</div><div class="togrow">'
-    +resBtn("bnb","Boards &amp; Beyond")+resBtn("pathoma","Pathoma")+resBtn("sketchy","Sketchy")+resBtn("bootcamp","Bootcamp")+resBtn("fa","First Aid")+resBtn("anking","AnKing")+resBtn("uworld","UWorld")
-    +'</div><p class="muted small">Turn on the resources you use — the plan re-flows live.</p></div>';
+  colB+='<div class="card"><div class="cardhd">Video resources</div><div class="togrow">'
+    +resBtn("bnb","Boards &amp; Beyond")+resBtn("pathoma","Pathoma")+resBtn("sketchy","Sketchy")+resBtn("bootcamp","Bootcamp")
+    +'</div><p class="muted small">Turn on the video resources you use — the plan re-flows live.</p>'
+    +'<div class="flab mt">Anki</div><div class="togrow">'+resBtn("anking","Daily AnKing tags")+'</div>'
+    +'<p class="muted small">Adds a copy-ready AnKing Browse search for each day’s videos to your Study page. Doesn’t change the schedule.</p></div>';
   colB+=weeklyGoalSettingHTML(c);
   colB+='<div class="card soft"><div class="cardhd">Different plan?</div><p class="muted small">Switch to an exam countdown or start a fresh unit.</p><button class="btn" id="newUnit">Start a new plan…</button></div>';
   colB+=pastUnitsCard();
@@ -2946,9 +2948,11 @@ function renderPlanEditor(){
     +'<div><div class="kv">'+(st.remItems)+'</div><div class="kvl">videos left</div></div>'
     +'<div><div class="kv">'+Math.round(st.remMin/60)+'h</div><div class="kvl">video time left</div></div>'
     +'<div><div class="kv">'+(isFinite(st.reqPerDay)?(Math.round(st.reqPerDay/60*10)/10+'h'):'—')+'</div><div class="kvl">video needed / day</div></div></div></div>';
-  colB+='<div class="card"><div class="cardhd">Resources</div><div class="togrow">'
-    +resBtn("bnb","Boards &amp; Beyond")+resBtn("pathoma","Pathoma")+resBtn("sketchy","Sketchy")+resBtn("bootcamp","Bootcamp")+resBtn("fa","First Aid")+resBtn("anking","AnKing")+resBtn("uworld","UWorld")
-    +'</div><p class="muted small">Pick the video resources to weave into this plan — turn any off you\'re not using.</p></div>';
+  colB+='<div class="card"><div class="cardhd">Video resources</div><div class="togrow">'
+    +resBtn("bnb","Boards &amp; Beyond")+resBtn("pathoma","Pathoma")+resBtn("sketchy","Sketchy")+resBtn("bootcamp","Bootcamp")
+    +'</div><p class="muted small">Pick the video resources to weave into this plan — turn any off you\'re not using.</p>'
+    +'<div class="flab mt">Anki</div><div class="togrow">'+resBtn("anking","Daily AnKing tags")+'</div>'
+    +'<p class="muted small">Adds a copy-ready AnKing Browse search for each day’s videos to your Study page. Doesn’t change the schedule.</p></div>';
   if(S.active==="nbme")colB+=weeklyGoalSettingHTML(c);
   const sysInner='<p class="muted small" style="margin-top:6px">'+(S.active==="nbme"
       ?'Pick the systems this shelf covers — immuno, micro, genetics and the rest are each selectable. Reorder with ▲▼ to set what’s studied first; the plan re-flows live.'
@@ -3711,9 +3715,11 @@ function renderOnboard(){
   if(key==="dates")body+='<div class="card"><div class="cardhd">Dates</div><div class="form">'
     +'<label>Exam date'+dateTriggerHTML("o_exam",ob.examISO,"Pick your exam date")+'</label>'
     +'<label>Start date'+dateTriggerHTML("o_start",ob.startISO,"Pick a start date")+'</label></div></div>';
-  if(key==="resources")body+='<div class="card"><div class="cardhd">Resources</div><div class="togrow">'
-    +resBtn("bnb","Boards &amp; Beyond")+resBtn("pathoma","Pathoma")+resBtn("sketchy","Sketchy")+resBtn("bootcamp","Bootcamp")+resBtn("fa","First Aid")+resBtn("anking","AnKing")+resBtn("uworld","UWorld")
-    +'</div><p class="muted small">Turn on the video resources you use — they interleave into '+(ob.brody?'each Brody week':'the plan')+'. First Aid, AnKing, and UWorld are companions, not scheduled videos.</p></div>';
+  if(key==="resources")body+='<div class="card"><div class="cardhd">Video resources</div><div class="togrow">'
+    +resBtn("bnb","Boards &amp; Beyond")+resBtn("pathoma","Pathoma")+resBtn("sketchy","Sketchy")+resBtn("bootcamp","Bootcamp")
+    +'</div><p class="muted small">Turn on the video resources you use — they interleave into '+(ob.brody?'each Brody week':'the plan')+'.</p>'
+    +'<div class="flab mt">Anki</div><div class="togrow">'+resBtn("anking","Daily AnKing tags")+'</div>'
+    +'<p class="muted small">Optional — adds a copy-ready AnKing Browse search for each day’s videos to your Study page. Doesn’t change the schedule.</p></div>';
   if(key==="systems"){const obSysInner='<p class="muted small" style="margin-top:6px">'+(obIsNbme()
       ?'Tap the systems this shelf covers. Reorder with ▲▼ to set what you study first.'
       :'The recommended Boards &amp; Beyond sequence. Reorder with ▲▼, and tap a system to include or drop it.')+'</p>'
@@ -3909,7 +3915,7 @@ function doResetAll(){
     S.cfgs=snap.cfgs;S.active=snap.active;S.cfg=S.active?S.cfgs[S.active]:null;_prevSig=progressSig();save();
     if(S.cfg){reflow();render();}else renderWelcome();toast("Restored ✓");});
 }
-const BUILD="2026-07-21g";
+const BUILD="2026-07-21h";
 /* ---------- What's new (changelog) ----------
    Newest entry first. Bump the top entry's id whenever you add one and the
    pop-up shows once per person (tracked in synced settings.seenUpdate). */
@@ -3917,6 +3923,7 @@ const CHANGELOG=[
   {id:"2026-07-29", date:"July 2026", title:"ScholarRx is now a practice-question source", items:[
     "Log ScholarRx (Rx Qmax) blocks anywhere you log practice questions — the quick logger on Study, the M2 practice block, and the dedicated Step hub — right alongside UWorld and AMBOSS.",
     "ScholarRx questions flow into everything the others do: your weekly goal, per-subject confidence, and the Step 1 dedicated hub’s blended weak-systems view. Log it in M2 and it still counts toward your dedicated weak-area picture.",
+    "Tidied the plan-maker resource picker: dropped the First Aid and UWorld toggles (they never affected the M2 schedule), and moved AnKing into its own labeled control — it turns the daily Anki tag card on your Study page on or off.",
   ]},
   {id:"2026-07-28", date:"July 2026", title:"Brody calendar: clearer pace + a plain-English how-it-works", items:[
     "The Brody plan editor now leads with the same big recommended-pace banner as the custom schedule: the h/day that keeps you ahead of every weekly quiz, an on-track / behind read-out, and a one-tap “set my pace to this.”",
