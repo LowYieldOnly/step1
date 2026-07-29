@@ -1118,6 +1118,24 @@ function threadUnconfigured(c){
   for(const sys of THREAD_SYS){if(!sel.has(sys))continue;const vids=threadVideos(c,sys);if(vids.length&&!vids.some(v=>picked.has(itemId(v))))return sys;}
   return null;
 }
+/* AnKing tag fixes. Boards & Beyond renamed/split some videos; the AnKing deck
+   hasn't updated its tags to the new titles, so the new title carries no tag in
+   the catalog and its cards never surface in a day's Anki search. Map the new
+   video (res|sys|cat|name, same key as brodyKey) to the OLD AnKing tag here.
+   The section NUMBER on a leaf is AnKing's, not ours — ankiSearch matches the
+   leaf regardless of its numeric prefix, so a renumber can't silently return
+   nothing. Add rows here as B&B updates land, system by system. */
+const ANKI_TAG_FIX={
+  // Hematology — from the 2026 B&B Heme update guide
+  "bnb|Hematology|Hemostasis|Thrombotic Microangiopathy":"#AK_Step1_v12::#B&B::12_Hematology::01_Hemostasis::05_Platelet_Disorders",   // split of Platelet Disorders
+  "bnb|Hematology|Hemostasis|Antiplatelets":"#AK_Step1_v12::#B&B::12_Hematology::01_Hemostasis::06_Antiplatelet_Drugs",               // was "Antiplatelet Drugs"
+  "bnb|Hematology|Red Blood Cells|Alpha Thalassemias":"#AK_Step1_v12::#B&B::12_Hematology::02_Red_Blood_Cells::05_Thalassemias",       // split of Thalassemias
+  "bnb|Hematology|Red Blood Cells|Beta Thalassemias":"#AK_Step1_v12::#B&B::12_Hematology::02_Red_Blood_Cells::05_Thalassemias",        // split of Thalassemias
+  "bnb|Hematology|Red Blood Cells|Sickle Cell Disease":"#AK_Step1_v12::#B&B::12_Hematology::02_Red_Blood_Cells::06_Sickle_Cell_Anemia",// was "Sickle Cell Anemia"
+  "bnb|Hematology|Cancer Drugs|Alkylating and Platinum Agents":"#AK_Step1_v12::#B&B::12_Hematology::04_Cancer_Drugs::02_Alkylating_Agents",              // was "Alkylating Agents"
+  "bnb|Hematology|Cancer Drugs|Antitumor Antibiotics and Topoisomerase Drugs":"#AK_Step1_v12::#B&B::12_Hematology::04_Cancer_Drugs::03_Antitumor_Antibiotics" // was "Antitumor Antibiotics"
+};
+function videoTag(v){return ANKI_TAG_FIX[brodyKey(v)]||v.tag||"";}
 function buildBacklog(){
   const c=S.cfg;const order=planSystems();const en=resEnabled();
   const pathSel=en.pathoma?effectivePathChapters(c):new Set();
@@ -1135,7 +1153,7 @@ function buildBacklog(){
   SYS_ORDER_DEFAULT.forEach(sn=>{if(!orderSet.has(sn)&&bySys[sn]&&bySys[sn].pathoma)visit.push(sn);});
   const out=[];
   visit.forEach(sn=>{const byRes=bySys[sn];if(!byRes)return;const isSel=orderSet.has(sn);
-    RES_ORDER.forEach(r=>{if(r!=="pathoma"&&!isSel)return;(byRes[r]||[]).forEach(v=>out.push({sys:sn,name:v.name,min:v.min,fa:v.cat||"",tag:v.tag||"",res:r,label:v.name,id:itemId(v)}));});
+    RES_ORDER.forEach(r=>{if(r!=="pathoma"&&!isSel)return;(byRes[r]||[]).forEach(v=>out.push({sys:sn,name:v.name,min:v.min,fa:v.cat||"",tag:videoTag(v),res:r,label:v.name,id:itemId(v)}));});
   });
   return out;
 }
@@ -1319,7 +1337,7 @@ function reflowBrody(c,blk){
     if(!en[v.res])return;
     if(v.res==="pathoma"&&!pathSel.has(pathChapterOf(v)))return;
     const wk=brodyVideoWeek(blk,v);
-    vids.push({sys:v.sys,name:v.name,min:v.min,fa:v.cat||"",tag:v.tag||"",res:v.res,label:v.name,id:itemId(v),wk});
+    vids.push({sys:v.sys,name:v.name,min:v.min,fa:v.cat||"",tag:videoTag(v),res:v.res,label:v.name,id:itemId(v),wk});
   });
   const wkStart=blk.weeks.map(w=>w.start);const shelf=blk.shelf;
   const cursorISO=(todayISO()>wkStart[0])?todayISO():wkStart[0];
@@ -1675,9 +1693,22 @@ function dayTagGroups(iso){
     tags.forEach(tg=>{if(!tg)return;const k=it.res+"|"+tg;if(seen[k])return;seen[k]=1;(byRes[it.res]=byRes[it.res]||[]).push([vName(it),tg]);});});
   return order.filter(r=>byRes[r]).map(r=>({res:r,label:resLabel(r),tags:byRes[r]}));
 }
-/* One Anki Browse search from a set of tags. Each tag also matches its subtree
-   (tag:X::*) so a section AnKing splits into parts is still caught in full. */
-function ankiSearch(tags){return (tags||[]).filter(Boolean).map(t=>'"tag:'+t+'" OR "tag:'+t+'::*"').join(" OR ");}
+/* One Anki Browse search from a set of tags. Each tag matches itself and its
+   subtree (tag:X::*). It also matches the same leaf under its parent regardless
+   of the leaf's numeric prefix (parent::*Leaf) — AnKing owns those section
+   numbers, so if one is off (e.g. a tag we mapped for a renamed B&B video), the
+   cards still surface instead of the tag silently returning nothing. Parent path
+   stays exact, so this never bleeds across systems. */
+function ankiSearch(tags){
+  const cl=[];
+  (tags||[]).filter(Boolean).forEach(t=>{
+    cl.push('"tag:'+t+'"');cl.push('"tag:'+t+'::*"');
+    const i=t.lastIndexOf("::");
+    if(i>=0){const parent=t.slice(0,i),leaf=t.slice(i+2).replace(/^\d+[_ ]*/,"");
+      if(leaf&&leaf!==t.slice(i+2)){cl.push('"tag:'+parent+'::*'+leaf+'"');cl.push('"tag:'+parent+'::*'+leaf+'::*"');}}
+  });
+  return cl.join(" OR ");
+}
 function ankiBlock(iso,openTags){if(!hasRes("anking"))return "";
   const groups=dayTagGroups(iso);const total=groups.reduce((a,g)=>a+g.tags.length,0);const on=!!(S.akdone&&S.akdone[iso]);
   let h='<div class="anki"><button class="chk akchk '+(on?"on":"")+'" data-akiso="'+iso+'" aria-label="anki reviews done">'+(on?"✓":"")+'</button>'
@@ -3915,11 +3946,15 @@ function doResetAll(){
     S.cfgs=snap.cfgs;S.active=snap.active;S.cfg=S.active?S.cfgs[S.active]:null;_prevSig=progressSig();save();
     if(S.cfg){reflow();render();}else renderWelcome();toast("Restored ✓");});
 }
-const BUILD="2026-07-21h";
+const BUILD="2026-07-21i";
 /* ---------- What's new (changelog) ----------
    Newest entry first. Bump the top entry's id whenever you add one and the
    pop-up shows once per person (tracked in synced settings.seenUpdate). */
 const CHANGELOG=[
+  {id:"2026-07-29b", date:"July 2026", title:"Fixed missing AnKing tags for updated Heme videos", items:[
+    "Boards & Beyond renamed and split several Hematology videos (e.g. Sickle Cell Anemia → Sickle Cell Disease, Thalassemias → Alpha/Beta), but the AnKing deck hasn’t updated its tags — so those videos were showing no Anki reviews on their day. They now pull the correct AnKing tags again.",
+    "The tag search is now tolerant of AnKing’s section numbering, so an updated video can’t silently come back with zero cards.",
+  ]},
   {id:"2026-07-29", date:"July 2026", title:"ScholarRx is now a practice-question source", items:[
     "Log ScholarRx (Rx Qmax) blocks anywhere you log practice questions — the quick logger on Study, the M2 practice block, and the dedicated Step hub — right alongside UWorld and AMBOSS.",
     "ScholarRx questions flow into everything the others do: your weekly goal, per-subject confidence, and the Step 1 dedicated hub’s blended weak-systems view. Log it in M2 and it still counts toward your dedicated weak-area picture.",
