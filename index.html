@@ -376,6 +376,11 @@ b{color:var(--ink)}
 .cpy{flex:0 0 auto;background:var(--panel2);border:1px solid var(--line2);color:var(--muted);border-radius:8px;padding:3px 8px;font-size:11.5px;font-weight:700;cursor:pointer;white-space:nowrap}
 .cpy:hover{color:var(--phos);border-color:var(--phos-dim)}
 .vmin{margin-left:auto;font-family:var(--mono);font-size:11px;color:var(--faint);flex:0 0 auto;padding-left:6px}
+/* qualified row: category sits on its own line under the name (see rowQualifiers) */
+.vnq{display:flex;flex-direction:column;gap:1px;min-width:0;flex:0 1 auto}
+.vnq .vn{max-width:100%}
+.vq{font-size:11px;line-height:1.25;color:var(--faint);padding-left:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
+.vrow.done .vq{opacity:.45;text-decoration:line-through}
 .badge{display:inline-block;font-size:9px;font-weight:800;padding:2px 5px;border-radius:5px;color:var(--on-accent)}
 .badge.bnb{background:var(--phos)}.badge.pa{background:var(--violet)}.badge.sk{background:var(--amber)}.badge.bc{background:var(--gold)}
 .anki{display:flex;align-items:center;gap:12px;margin-top:14px;padding-top:14px;border-top:1px solid var(--line)}
@@ -1698,13 +1703,38 @@ function resBadge(res){const m={bnb:["B&B","bnb"],pathoma:["Pa","pa"],skmicro:["
 function resLabel(res){return {bnb:"Boards & Beyond",pathoma:"Pathoma",skmicro:"Sketchy Micro",skpharm:"Sketchy Pharm",bootcamp:"Bootcamp"}[res]||"Videos";}
 function vName(it){let n=it.name;if(it.res==="pathoma")n=n.replace(/^\d+\.\d+(-\d+\.\d+)?\s*/,"");return n;}
 
-/* merge consecutive chunk items of the same label into one row */
-function mergeItems(items){const out=[],idx={};items.forEach(it=>{const k=it.res+"|"+it.name;if(idx[k]==null){idx[k]=out.length;out.push({res:it.res,name:it.name,min:it.min,ids:[it.id],sys:it.sys,fa:it.fa,tag:it.tag});}else{const m=out[idx[k]];m.min+=it.min;m.ids.push(it.id);}});return out;}
+/* One rendered row = exactly one video. Rows are keyed on the item's own id
+   (itemId) held in a Set — never on a string built by joining fields with a
+   delimiter. A joined key (res+"|"+name) is exactly what fused 372 distinct
+   Bootcamp videos onto shared checkboxes, and "|" already lives inside every
+   bootcamp id. The chunker this used to serve was deleted long ago; there are no
+   chunks left to merge. The only collapsing kept is defensive: if the same id
+   ever reaches one day twice, render it once and do NOT count its minutes
+   twice. An item with no id still gets its own row (realItemIds drops it
+   loudly rather than letting it vanish from the checklist). */
+function mergeItems(items){const out=[],seen=new Set();items.forEach(it=>{if(it.id!=null){if(seen.has(it.id))return;seen.add(it.id);}out.push({res:it.res,name:it.name,min:it.min,ids:[it.id],sys:it.sys,fa:it.fa,tag:it.tag});});return out;}
+
+/* Rows are no longer fused, so one resource group can legitimately show the
+   same video name several times (Bootcamp reuses "Board-style Question
+   Breakdown" across 110 categories). Where a displayed name repeats inside a
+   resource group, label every one of those rows with the catalog category that
+   tells them apart — falling back to "System · Category" when the category
+   alone still repeats or is blank. Rows whose name is already unique in their
+   group get nothing. Display only: reads it.fa/it.sys, never touches ids. */
+function rowQualifiers(rows){
+  const q=new Map(),byName=new Map();
+  rows.forEach(it=>{const n=vName(it);if(!byName.has(n))byName.set(n,[]);byName.get(n).push(it);});
+  byName.forEach(list=>{if(list.length<2)return;
+    const cats=list.map(it=>it.fa||"");
+    const needSys=cats.some(c=>!c)||new Set(cats).size<cats.length;
+    list.forEach(it=>{const lab=needSys?[it.sys||"",it.fa||""].filter(Boolean).join(" · "):(it.fa||"");if(lab)q.set(it,lab);});});
+  return q;}
 function itemRows(items,opts){opts=opts||{};if(!items.length)return '<div class="muted small">Nothing scheduled.</div>';
   const dayAttr=opts.iso?' data-day="'+escAttr(opts.iso)+'"':"";
   const order=["bnb","pathoma","skmicro","skpharm"];const merged=mergeItems(items);const groups={};merged.forEach(it=>{(groups[it.res]=groups[it.res]||[]).push(it);});
   const keys=order.filter(k=>groups[k]).concat(Object.keys(groups).filter(k=>order.indexOf(k)<0));
-  return keys.map(k=>'<div class="vgrp"><div class="vghdr">'+resLabel(k)+'</div>'+groups[k].map(it=>{
+  return keys.map(k=>{const qual=rowQualifiers(groups[k]);
+  return '<div class="vgrp"><div class="vghdr">'+resLabel(k)+'</div>'+groups[k].map(it=>{
     // ids ride as JSON (see idsAttrOf/idsFromAttr) — never joined on a delimiter:
     // commas live in 21 catalog names and "|" lives inside every bootcamp id
     // ("bc:"+sys+"|"+cat+"|"+name), so either one shreds the id on split and marks
@@ -1713,10 +1743,12 @@ function itemRows(items,opts){opts=opts||{};if(!items.length)return '<div class=
     const done=it.ids.every(isDone);const shaky=it.ids.some(isShaky);const idsAttr=idsAttrOf(it.ids);
     return '<div class="vrow '+(done?"done":"")+(shaky?" shaky":"")+'">'
       +'<button class="chk '+(done?"on":"")+'" data-ids="'+idsAttr+'"'+dayAttr+' aria-label="watched">'+(done?"✓":"")+'</button>'
-      +'<div class="vmeta"><span class="vn">'+escHTML(vName(it))+'</span>'
+      +'<div class="vmeta">'+(qual.get(it)
+        ? '<span class="vnq"><span class="vn">'+escHTML(vName(it))+'</span><span class="vq" title="'+escAttr(qual.get(it))+'">'+escHTML(qual.get(it))+'</span></span>'
+        : '<span class="vn">'+escHTML(vName(it))+'</span>')
       +'<span class="vmin">'+it.min+'m</span></div>'
       +'<button class="flagb '+(shaky?"on":"")+'" data-flag="'+idsAttr+'" aria-label="flag for review" title="Flag as shaky — collects in your review queue">⚑</button>'
-      +'</div>';}).join('')+'</div>').join('');}
+      +'</div>';}).join('')+'</div>';}).join('');}
 
 /* ---------- copy helpers + per-day Anki block ---------- */
 function fallbackCopy(t,msg){try{const ta=document.createElement("textarea");ta.value=t;ta.style.position="fixed";ta.style.opacity="0";document.body.appendChild(ta);ta.focus();ta.select();document.execCommand("copy");document.body.removeChild(ta);toast(msg||"Copied");}catch(e){toast("Copy failed — long-press to copy");}}
@@ -3988,11 +4020,15 @@ function doResetAll(){
     S.cfgs=snap.cfgs;S.active=snap.active;S.cfg=S.active?S.cfgs[S.active]:null;_prevSig=progressSig();save();
     if(S.cfg){reflow();render();}else renderWelcome();toast("Restored ✓");});
 }
-const BUILD="2026-07-21j";
+const BUILD="2026-07-21k";
 /* ---------- What's new (changelog) ----------
    Newest entry first. Bump the top entry's id whenever you add one and the
    pop-up shows once per person (tracked in synced settings.seenUpdate). */
 const CHANGELOG=[
+  {id:"2026-07-30b", date:"July 2026", title:"Fixed: one Bootcamp checkbox could cover several videos", items:[
+    "Bootcamp reuses the same title across many sections (“Board-style Question Breakdown” appears 113 times), and your daily list was grouping videos by title alone — so several different videos shared a single checkbox. Ticking it marked all of them watched, and un-ticking it cleared all of them. Every video now gets its own row and its own checkbox.",
+    "Where a title genuinely repeats in a day, the row now shows its section underneath so you can tell them apart. Nothing changes if you don’t use Bootcamp.",
+  ]},
   {id:"2026-07-30", date:"July 2026", title:"Fixed: Bootcamp videos wouldn’t check off", items:[
     "If Bootcamp was one of your resources, checking a video off on your daily plan did nothing — no checkmark, and the same for un-checking or flagging it for review. This affected every Bootcamp video, on the daily list, on past days, and when studying ahead. It’s fixed; your Bootcamp videos now check off like everything else.",
     "Anything you already marked off in the Checklist tab was never affected and is still there. Leftover junk from the failed clicks is cleaned up automatically the next time the app loads.",
