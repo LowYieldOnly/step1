@@ -932,7 +932,7 @@ function loadCatalog(cb){
   if(CATLOADING)return;
   CATLOADING=true;CATERR=false;
   fetch("catalog.json").then(r=>{if(!r.ok)throw 0;return r.json();})
-    .then(d=>{CATALOG=d;CATLOADING=false;cb&&cb();if(S.cfg){reflow();render();}})
+    .then(d=>{CATALOG=d;CATLOADING=false;scrubBcFragments();cb&&cb();if(S.cfg){reflow();render();}})
     .catch(()=>{CATLOADING=false;CATERR=true;if(S.cfg)render();});
 }
 const SYS=["Anesthesia", "Basic Pharmacology", "Behavioral Science", "Biochemistry", "Biostats/Epi", "Cardiology", "Cell Biology", "Dermatology", "Endocrinology", "Gastroenterology", "Genetics", "Hematology", "Immunology", "Infectious Disease", "Musculoskeletal", "Neurology", "Ophthalmology", "Pathology", "Psychiatry", "Pulmonary", "Renal", "Reproductive"];
@@ -950,6 +950,17 @@ function fmtLong(iso){const d=isoToDate(iso);return DOW[d.getDay()]+", "+MON[d.g
 function fmtShort(iso){const d=isoToDate(iso);return MON[d.getMonth()]+" "+d.getDate();}
 function escHTML(s){return (s==null?"":String(s)).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");}
 function escAttr(s){return (s==null?"":String(s)).replace(/&/g,"&amp;").replace(/"/g,"&quot;");}
+/* ---------- id-list transport (row attribute <-> JS array) ----------
+   NEVER join ids on a delimiter. That has now failed twice: "," shredded the
+   Pathoma names containing commas, and "|" shredded every Bootcamp id, which is
+   itself "bc:"+sys+"|"+cat+"|"+name. Whatever character gets reserved is one
+   catalog/id-format edit away from appearing inside a value.
+   The list rides as JSON instead: JSON.stringify escapes whatever the id holds,
+   escAttr escapes it for the double-quoted attribute, and the parser hands back
+   byte-identical strings. A malformed/legacy attribute decodes to [] so the click
+   is a no-op — a transport failure can never write a bogus progress key. */
+function idsAttrOf(ids){return escAttr(JSON.stringify(ids||[]));}
+function idsFromAttr(s){try{const a=JSON.parse(s||"[]");return Array.isArray(a)?a.filter(x=>typeof x==="string"&&x):[];}catch(e){return [];}}
 
 /* ---------- storage (local cache) ---------- */
 const store={ok:false,mem:{},init(){try{localStorage.setItem("__t","1");localStorage.removeItem("__t");this.ok=true;}catch(e){}},
@@ -1038,6 +1049,29 @@ function activate(key){S.active=key;S.cfg=S.cfgs[key]||null;}
 function hubName(key){return key==="step1"?"STEP 1 Command Center":"M2 Scheduler";}
 let _prevSig=null;
 
+/* ---------- cleanup of pre-fix pipe-shredded bootcamp keys ----------
+   The old build split every bootcamp id on the "|" inside it, writing fragments
+   ("bc:<sys>", "<cat>", "<name>") into vdone/vdoneDate/vshaky. They are inert for
+   display (every consumer resolves through a real id) but they inflate
+   progressSig() — which credits the streak and labels backup snapshots — and bloat
+   the synced blob. Predicate is exact, not heuristic: a key is removed only if the
+   catalog itself can produce it as a bootcamp-id fragment AND it is not a real item
+   id. Nothing outside that set is ever touched, so no real progress can be lost —
+   including legitimately orphaned keys from catalog renames. Idempotent: a union
+   merge from a stale device re-adds fragments, the next load/adopt removes them. */
+let _bcFrag=null,_bcFragSrc=null;
+function bcFragmentKeys(){if(_bcFragSrc===CATALOG&&_bcFrag)return _bcFrag;
+  const real=new Set(),frag=new Set();
+  catVideos().forEach(v=>{real.add(itemId(v));if(v.res==="bootcamp"){frag.add("bc:"+v.sys);frag.add(v.cat||"");frag.add(v.name);}});
+  real.forEach(id=>frag.delete(id));frag.delete("");
+  _bcFrag=frag;_bcFragSrc=CATALOG;return frag;}
+function scrubBcFragments(){if(!catReady())return 0;
+  const frag=bcFragmentKeys();let n=0;
+  ["vdone","vskip","vdoneDate","vshaky"].forEach(m=>{const o=S[m];if(!o)return;
+    Object.keys(o).forEach(k=>{if(frag.has(k)){delete o[k];n++;}});});
+  if(n){_prevSig=progressSig();               // don't credit a streak for the drop
+    try{store.set(SKEY,JSON.stringify(persistObj()));}catch(e){}}   // local only: no _updatedAt bump, no push
+  return n;}
 function persistObj(){return {active:S.active,cfgs:S.cfgs,vdone:S.vdone,vskip:S.vskip,vdoneDate:S.vdoneDate,akdone:S.akdone,notes:S.notes,streak:S.streak,assessments:S.assessments,uworld:S.uworld,amboss:S.amboss,scholarrx:S.scholarrx,vshaky:S.vshaky,settings:S.settings,_updatedAt:S._updatedAt,_resetAt:S._resetAt||0};}
 function save(){if(DEMO)return;S._updatedAt=Date.now();markStreakIfProgress();store.set(SKEY,JSON.stringify(persistObj()));Cloud.schedulePush();}
 
@@ -1621,7 +1655,7 @@ Cloud.adopt=function(m){Cloud.applying=true;
   S.notes=m.notes||{};S.streak=m.streak||{days:{}};S.settings=m.settings||{};S._updatedAt=m._updatedAt||0;S._resetAt=m._resetAt||0;
   S.assessments=m.assessments||{};S.uworld=m.uworld||{total:null,blocks:{}};S.uworld.blocks=S.uworld.blocks||{};S.amboss=m.amboss||{total:null,blocks:{}};S.amboss.blocks=S.amboss.blocks||{};S.scholarrx=m.scholarrx||{total:null,blocks:{}};S.scholarrx.blocks=S.scholarrx.blocks||{};S.vshaky=m.vshaky||{};
   ["step1","nbme"].forEach(k=>{if(S.cfgs[k])normalizeCfg(S.cfgs[k],k);});
-  S.cfg=S.active?S.cfgs[S.active]:null;_prevSig=progressSig();
+  S.cfg=S.active?S.cfgs[S.active]:null;scrubBcFragments();_prevSig=progressSig();
   try{store.set(SKEY,JSON.stringify(persistObj()));}catch(e){}
   if(S.cfg){reflow();render();}else{renderWelcome();}
   Cloud.applying=false;updateSyncUI();};
@@ -1671,11 +1705,12 @@ function itemRows(items,opts){opts=opts||{};if(!items.length)return '<div class=
   const order=["bnb","pathoma","skmicro","skpharm"];const merged=mergeItems(items);const groups={};merged.forEach(it=>{(groups[it.res]=groups[it.res]||[]).push(it);});
   const keys=order.filter(k=>groups[k]).concat(Object.keys(groups).filter(k=>order.indexOf(k)<0));
   return keys.map(k=>'<div class="vgrp"><div class="vghdr">'+resLabel(k)+'</div>'+groups[k].map(it=>{
-    // Join ids with "|" (never present in a video name — it's the reserved field
-    // delimiter used by brodyKey), NOT ",", because 21 catalog names contain commas
-    // (e.g. "2.1 Acute Inflammation (Parts 1, 2, & 3)"). A comma delimiter shredded
-    // those ids on split, so checking them off silently marked bogus keys and no ✓ appeared.
-    const done=it.ids.every(isDone);const shaky=it.ids.some(isShaky);const idsAttr=escAttr(it.ids.join("|"));
+    // ids ride as JSON (see idsAttrOf/idsFromAttr) — never joined on a delimiter:
+    // commas live in 21 catalog names and "|" lives inside every bootcamp id
+    // ("bc:"+sys+"|"+cat+"|"+name), so either one shreds the id on split and marks
+    // bogus progress keys instead of the video.
+    // One idsAttr feeds BOTH buttons below, so the checkbox and the flag can never disagree.
+    const done=it.ids.every(isDone);const shaky=it.ids.some(isShaky);const idsAttr=idsAttrOf(it.ids);
     return '<div class="vrow '+(done?"done":"")+(shaky?" shaky":"")+'">'
       +'<button class="chk '+(done?"on":"")+'" data-ids="'+idsAttr+'"'+dayAttr+' aria-label="watched">'+(done?"✓":"")+'</button>'
       +'<div class="vmeta"><span class="vn">'+escHTML(vName(it))+'</span>'
@@ -1743,7 +1778,14 @@ function bindExtras(){
   document.querySelectorAll("[data-akiso]").forEach(b=>b.onclick=(e)=>{e.stopPropagation();const iso=b.dataset.akiso;S.akdone=S.akdone||{};if(S.akdone[iso])delete S.akdone[iso];else S.akdone[iso]=true;save();const on=!!S.akdone[iso];b.classList.toggle("on",on);b.textContent=on?"✓":"";});
 }
 
-function toggleItems(ids,pinISO){const all=ids.every(isDone);const pin=pinISO||todayISO();S.vdoneDate=S.vdoneDate||{};ids.forEach(id=>{if(all){delete S.vdone[id];delete S.vdoneDate[id];}else{S.vdone[id]=true;delete S.vskip[id];S.vdoneDate[id]=pin;}});if(!all)markStudiedToday();save();reflow();render();}
+/* Both video togglers are reached only from bindVlist, whose ids always come from
+   a scheduled catalog item. Anything else is a transport bug — drop it loudly
+   instead of writing an unreachable key into synced progress. */
+let _realIds=null,_realIdsSrc=null;
+function realItemIds(ids){if(!catReady())return ids;
+  if(_realIdsSrc!==CATALOG){_realIds=new Set(catVideos().map(itemId));_realIdsSrc=CATALOG;}
+  return ids.filter(id=>{if(_realIds.has(id))return true;console.warn("dropped unknown item id:",id);return false;});}
+function toggleItems(ids,pinISO){ids=realItemIds(ids||[]);if(!ids.length)return;const all=ids.every(isDone);const pin=pinISO||todayISO();S.vdoneDate=S.vdoneDate||{};ids.forEach(id=>{if(all){delete S.vdone[id];delete S.vdoneDate[id];}else{S.vdone[id]=true;delete S.vskip[id];S.vdoneDate[id]=pin;}});if(!all)markStudiedToday();save();reflow();render();}
 
 /* ---------- collapsible sections (state survives re-renders) ---------- */
 const FOLDS={};
@@ -2598,9 +2640,9 @@ function renderToday(){
   const bhb=document.getElementById("brodyHelpBtn");if(bhb)bhb.onclick=()=>showBrodyHelp(false);
   document.querySelectorAll("[data-cal]").forEach(b=>b.onclick=()=>{CAL_SEL=b.dataset.cal;render();});
 }
-function toggleShakyItems(ids){const all=ids.every(isShaky);S.vshaky=S.vshaky||{};ids.forEach(id=>{if(all)delete S.vshaky[id];else S.vshaky[id]=true;});save();}
-function bindVlist(){document.querySelectorAll(".chk[data-ids]").forEach(b=>b.onclick=()=>toggleItems(b.dataset.ids.split("|"),b.dataset.day));
-  document.querySelectorAll(".flagb[data-flag]").forEach(b=>b.onclick=()=>{toggleShakyItems(b.dataset.flag.split("|"));render();});
+function toggleShakyItems(ids){ids=realItemIds(ids||[]);if(!ids.length)return;const all=ids.every(isShaky);S.vshaky=S.vshaky||{};ids.forEach(id=>{if(all)delete S.vshaky[id];else S.vshaky[id]=true;});save();}
+function bindVlist(){document.querySelectorAll(".chk[data-ids]").forEach(b=>b.onclick=()=>{const ids=idsFromAttr(b.dataset.ids);if(ids.length)toggleItems(ids,b.dataset.day);});
+  document.querySelectorAll(".flagb[data-flag]").forEach(b=>b.onclick=()=>{const ids=idsFromAttr(b.dataset.flag);if(!ids.length)return;toggleShakyItems(ids);render();});
   document.querySelectorAll("[data-dayreset]").forEach(b=>b.onclick=()=>uncheckDay(b.dataset.dayreset));}
 
 function setDayOff(iso,on){S.cfg.off=S.cfg.off||{};if(on)S.cfg.off[iso]=true;else delete S.cfg.off[iso];save();reflow();render();}
@@ -3946,11 +3988,15 @@ function doResetAll(){
     S.cfgs=snap.cfgs;S.active=snap.active;S.cfg=S.active?S.cfgs[S.active]:null;_prevSig=progressSig();save();
     if(S.cfg){reflow();render();}else renderWelcome();toast("Restored ✓");});
 }
-const BUILD="2026-07-21i";
+const BUILD="2026-07-21j";
 /* ---------- What's new (changelog) ----------
    Newest entry first. Bump the top entry's id whenever you add one and the
    pop-up shows once per person (tracked in synced settings.seenUpdate). */
 const CHANGELOG=[
+  {id:"2026-07-30", date:"July 2026", title:"Fixed: Bootcamp videos wouldn’t check off", items:[
+    "If Bootcamp was one of your resources, checking a video off on your daily plan did nothing — no checkmark, and the same for un-checking or flagging it for review. This affected every Bootcamp video, on the daily list, on past days, and when studying ahead. It’s fixed; your Bootcamp videos now check off like everything else.",
+    "Anything you already marked off in the Checklist tab was never affected and is still there. Leftover junk from the failed clicks is cleaned up automatically the next time the app loads.",
+  ]},
   {id:"2026-07-29b", date:"July 2026", title:"Fixed missing AnKing tags for updated Heme videos", items:[
     "Boards & Beyond renamed and split several Hematology videos (e.g. Sickle Cell Anemia → Sickle Cell Disease, Thalassemias → Alpha/Beta), but the AnKing deck hasn’t updated its tags — so those videos were showing no Anki reviews on their day. They now pull the correct AnKing tags again.",
     "The tag search is now tolerant of AnKing’s section numbering, so an updated video can’t silently come back with zero cards.",
