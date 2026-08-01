@@ -1368,6 +1368,14 @@ function brodyRecommendedPace(loads){
 }
 function brodyPace(c){if(c&&c.brodyPace)return c.brodyPace;const blk=brodyBlock(c)||BRODY_BLOCKS[0];return brodyRecommendedPace(brodyWeekLoads(c,blk));}
 function reflowBrody(c,blk){
+  // The pace belongs to the PLAN, not to your progress. Stamp it once so it stops
+  // being re-derived from remaining work on every check-off: that made completing a
+  // video shrink every day's capacity (the recommendation snaps to half-hours, so one
+  // short video could drop it 9.5h -> 9h), which pushed the day's leftovers to the
+  // next day and cascaded — you did extra work and the calendar moved work later.
+  // Locked, a check-off only ever empties a slot. The Plan banner still shows the
+  // live recommendation and offers one tap to adopt it, so adapting stays your call.
+  if(c.brody&&!c.brodyPace&&catReady())c.brodyPace=brodyRecommendedPace(brodyWeekLoads(c,blk));
   const en=resEnabled();const pathSel=en.pathoma?effectivePathChapters(c):new Set();
   const lastWk=blk.weeks.length;
   const vids=[];
@@ -3976,7 +3984,8 @@ function commitOnboard(){const ob=_ob;
   const prev=S.cfgs[key]?JSON.parse(JSON.stringify(S.cfgs[key])):null;
   const c=S.cfgs[key]||{};
   Object.assign(c,{examType:key,examLabel:key==="step1"?"Step 1":(brody?brody.name:(ob.examLabel||"Shelf exam")),
-    brody:(brody?brody.id:undefined),brodyPace:(brody?(ob.brodyPace||undefined):undefined),brodyJoinWk:(brody?(ob.brodyJoinWk!=null?ob.brodyJoinWk:undefined):undefined),brodyJoinDate:(brody?(ob.brodyJoinDate||todayISO()):undefined),brodyReviewDays:(brody?brodyReviewBuf(ob):undefined),
+    // brodyPace is locked to the plan at creation (reflowBrody stamps it if the catalog wasn't ready yet)
+    brody:(brody?brody.id:undefined),brodyPace:(brody?(ob.brodyPace||(catReady()?brodyPace(ob):undefined)):undefined),brodyJoinWk:(brody?(ob.brodyJoinWk!=null?ob.brodyJoinWk:undefined):undefined),brodyJoinDate:(brody?(ob.brodyJoinDate||todayISO()):undefined),brodyReviewDays:(brody?brodyReviewBuf(ob):undefined),
     examISO:(brody?brody.shelf:ob.examISO),startISO:(brody?brody.weeks[0].start:ob.startISO),wkdayHrs:ob.wkdayHrs,wkendHrs:ob.wkendHrs,restDays:ob.restDays.slice(),
     reviewDays:(brody?0:ob.reviewDays),resources:Object.assign({},ob.resources),systems:(brody?brody.systems.slice():ob.systems.slice()),sysOrder:(ob.sysOrder||SYS_ORDER_DEFAULT).slice(),pathChapters:(Array.isArray(ob.pathChapters)?ob.pathChapters.slice():undefined),threadTopics:(brody?undefined:(Array.isArray(ob.threadTopics)?ob.threadTopics.slice():undefined)),weeklyQGoal:(ob.weeklyQGoal>0?ob.weeklyQGoal:0)});
   c.off=c.off||{};
@@ -4020,11 +4029,16 @@ function doResetAll(){
     S.cfgs=snap.cfgs;S.active=snap.active;S.cfg=S.active?S.cfgs[S.active]:null;_prevSig=progressSig();save();
     if(S.cfg){reflow();render();}else renderWelcome();toast("Restored ✓");});
 }
-const BUILD="2026-07-21k";
+const BUILD="2026-07-21l";
 /* ---------- What's new (changelog) ----------
    Newest entry first. Bump the top entry's id whenever you add one and the
    pop-up shows once per person (tracked in synced settings.seenUpdate). */
 const CHANGELOG=[
+  {id:"2026-07-31", date:"July 2026", title:"Fixed: checking a video off could push other videos to the next day", items:[
+    "Your daily pace was being recalculated every time you checked a video off. Because it snaps to half-hours, finishing one short video could drop it (say 9.5 → 9 h/day), shrinking every day’s capacity — so the day you were working on shed videos onto the next day, and it cascaded. Working ahead moved work later, which is exactly backwards.",
+    "Your pace is now part of your plan and stays put. Checking videos off only ever empties slots, so the calendar holds still and you simply finish sooner. The Plan tab still shows the live recommended pace and lets you adopt it in one tap whenever you want.",
+    "This also fixes the check/uncheck “glitch” where a video seemed to re-check itself and tick the one below it — the list was silently re-shuffling between taps.",
+  ]},
   {id:"2026-07-30b", date:"July 2026", title:"Fixed: one Bootcamp checkbox could cover several videos", items:[
     "Bootcamp reuses the same title across many sections (“Board-style Question Breakdown” appears 113 times), and your daily list was grouping videos by title alone — so several different videos shared a single checkbox. Ticking it marked all of them watched, and un-ticking it cleared all of them. Every video now gets its own row and its own checkbox.",
     "Where a title genuinely repeats in a day, the row now shows its section underneath so you can tell them apart. Nothing changes if you don’t use Bootcamp.",
