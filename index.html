@@ -1609,19 +1609,24 @@ function mergeState(a,b){a=a||{};b=b||{};
   // Compare the check stamp against the uncheck stamp and keep the later one; both
   // absent (all pre-existing progress) ties at 0 and stays done, so nothing a
   // student earned can be dropped by this rule.
-  out.vdoneAt=maxMerge(a.vdoneAt,b.vdoneAt);
-  out.vundone=maxMerge(a.vundone,b.vundone);
+  // Stamps are computed first but ASSIGNED in persistObj()'s key order below —
+  // the sync layer compares JSON.stringify(merged) vs JSON.stringify(current), so
+  // emitting these keys in a different order reads as "changed" on every snapshot
+  // and loops adopt→push forever (the sync chip flickers saving/saved).
+  // Nothing here may prune or rewrite a value that persistObj() would keep, either:
+  // merging a state with itself has to return that state untouched, or the same
+  // loop reappears. Verified by C37.
+  const dAt=maxMerge(a.vdoneAt,b.vdoneAt);
+  const dUn=maxMerge(a.vundone,b.vundone);
   out.vdone={};
   const doneCand=unionTrue(a.vdone,b.vdone);
-  for(const id in doneCand)if((out.vdoneAt[id]||0)>=(out.vundone[id]||0))out.vdone[id]=true;
-  // A tombstone is kept for good — a device that has been offline for weeks can
-  // still show up with a stale "done" — but the check stamp only ever has to beat
-  // that tombstone, so it is dead weight once there is none to beat.
-  for(const id in out.vdoneAt)if(out.vundone[id]===undefined)delete out.vdoneAt[id];
+  for(const id in doneCand)if((dAt[id]||0)>=(dUn[id]||0))out.vdone[id]=true;
   out.vskip=unionTrue(a.vskip,b.vskip);
   for(const id in out.vdone)if(out.vskip[id])delete out.vskip[id];
   out.vdoneDate=Object.assign({},a.vdoneDate||{},b.vdoneDate||{});
   for(const id in out.vdoneDate)if(!out.vdone[id])delete out.vdoneDate[id];   // a pin without a check is a ghost row
+  out.vdoneAt=dAt;
+  out.vundone=dUn;
   out.akdone=unionTrue(a.akdone,b.akdone);
   out.notes=mergeNotes(older.notes,newer.notes);
   out.streak={days:unionTrue((a.streak||{}).days,(b.streak||{}).days)};
@@ -1702,7 +1707,11 @@ Cloud.adopt=function(m){Cloud.applying=true;
   ["step1","nbme"].forEach(k=>{if(S.cfgs[k])normalizeCfg(S.cfgs[k],k);});
   S.cfg=S.active?S.cfgs[S.active]:null;scrubBcFragments();_prevSig=progressSig();
   try{store.set(SKEY,JSON.stringify(persistObj()));}catch(e){}
-  if(S.cfg){reflow();render();}else{renderWelcome();}
+  // A snapshot must never repaint over a wizard the student is filling in — render()
+  // has no notion of onboarding, so it would replace the form with the hub and the
+  // "Start a new plan" button would look dead. State is already updated above.
+  if(_ob){/* wizard open — leave it on screen */}
+  else if(S.cfg){reflow();render();}else{renderWelcome();}
   Cloud.applying=false;updateSyncUI();};
 Cloud.schedulePush=function(){if(!Cloud.user||!Cloud.db||Cloud.applying)return;clearTimeout(Cloud.pushT);Cloud.pushT=setTimeout(Cloud.push,1000);};
 Cloud.setSync=function(s){if(Cloud.syncState===s)return;Cloud.syncState=s;updateSyncUI();};
@@ -3832,7 +3841,7 @@ function obReviewHTML(ob){
 }
 function obNext(){const ob=_ob;const steps=obSteps(ob);const key=steps[ob.step];if(obStepValid(ob,key)!==true)return;if(ob.step>=steps.length-1){commitOnboard();return;}_obDir=1;ob.step++;renderOnboard();}
 function obPrev(){const ob=_ob;if(ob.step<=0){obCancel();return;}_obDir=-1;ob.step--;renderOnboard();}
-function obCancel(){const ob=_ob;if(S.cfgs[ob.hub]){activate(ob.hub);S.active=ob.hub;VIEW="today";reflow();render();}else renderWelcome();}
+function obCancel(){const ob=_ob;_ob=null;if(S.cfgs[ob.hub]){activate(ob.hub);S.active=ob.hub;VIEW="today";reflow();render();}else renderWelcome();}
 function renderOnboard(){
   if(!_ob)_ob=defaultsForHub("step1");
   const ob=_ob;
@@ -4022,7 +4031,7 @@ function commitOnboard(){const ob=_ob;
     reviewDays:(brody?0:ob.reviewDays),resources:Object.assign({},ob.resources),systems:(brody?brody.systems.slice():ob.systems.slice()),sysOrder:(ob.sysOrder||SYS_ORDER_DEFAULT).slice(),pathChapters:(Array.isArray(ob.pathChapters)?ob.pathChapters.slice():undefined),threadTopics:(brody?undefined:(Array.isArray(ob.threadTopics)?ob.threadTopics.slice():undefined)),weeklyQGoal:(ob.weeklyQGoal>0?ob.weeklyQGoal:0)});
   c.off=c.off||{};
   if(ob.fresh&&prev&&key==="nbme")archiveUnit(prev);   // keep the old unit reachable under Plan → Past units
-  S.cfgs[key]=c;activate(key);S.active=key;
+  S.cfgs[key]=c;activate(key);S.active=key;_ob=null;
   save();reflow();VIEW="today";render();
   // first-ever Brody plan → show the "how the Brody calendar works" explainer once
   if(brody){S.settings=S.settings||{};if(!S.settings.seenBrodyHelp)showBrodyHelp(true);}
@@ -4061,11 +4070,15 @@ function doResetAll(){
     S.cfgs=snap.cfgs;S.active=snap.active;S.cfg=S.active?S.cfgs[S.active]:null;_prevSig=progressSig();save();
     if(S.cfg){reflow();render();}else renderWelcome();toast("Restored ✓");});
 }
-const BUILD="2026-07-21m";
+const BUILD="2026-07-21n";
 /* ---------- What's new (changelog) ----------
    Newest entry first. Bump the top entry's id whenever you add one and the
    pop-up shows once per person (tracked in synced settings.seenUpdate). */
 const CHANGELOG=[
+  {id:"2026-08-01b", date:"August 2026", title:"Fixed: sync light flickering, and \u201cStart a new plan\u201d bouncing back", items:[
+    "The save indicator was flipping between saving and saved nonstop. Your device and the cloud disagreed about the shape of your data, so they kept re-saving it to each other in a loop.",
+    "That loop was also refreshing the screen constantly \u2014 which is why \u201cStart a new plan\u201d appeared broken: the setup page opened and was wiped away instantly. Both are fixed, and the setup page is now protected from background refreshes so it can never be cleared while you\u2019re filling it in.",
+  ]},
   {id:"2026-08-01", date:"August 2026", title:"Fixed: unchecking a video could undo itself", items:[
     "If you unchecked a video, it could pop straight back to checked a moment later. Your progress syncs by combining what\u2019s on each of your devices, and that combining step could only ever ADD videos \u2014 so an unchecked one came right back from the copy in the cloud that still had it.",
     "Unchecking now sticks, on every device. Everything you\u2019ve already checked off is untouched, and if you check something again later that still wins.",
