@@ -1011,14 +1011,14 @@ function flatSys(blocks){let out=[];blocks.forEach(b=>{out=out.concat(blockSyste
    Two hubs (step1, nbme) each with their OWN config (S.cfgs[key]).
    Video progress (vdone/vskip/...) is shared — a watched video is watched
    regardless of which exam you're prepping. S.cfg points at the active hub. */
-let S={active:null,cfgs:{step1:null,nbme:null},vdone:{},vskip:{},vdoneDate:{},akdone:{},notes:{},streak:{days:{}},settings:{},_updatedAt:0,cfg:null};
-function emptyState(){return {active:null,cfgs:{step1:null,nbme:null},vdone:{},vskip:{},vdoneDate:{},akdone:{},notes:{},streak:{days:{}},assessments:{},uworld:{total:null,blocks:{}},amboss:{total:null,blocks:{}},scholarrx:{total:null,blocks:{}},vshaky:{},settings:{},_updatedAt:0,_resetAt:0,cfg:null};}
+let S={active:null,cfgs:{step1:null,nbme:null},vdone:{},vskip:{},vdoneDate:{},vdoneAt:{},vundone:{},akdone:{},notes:{},streak:{days:{}},settings:{},_updatedAt:0,cfg:null};
+function emptyState(){return {active:null,cfgs:{step1:null,nbme:null},vdone:{},vskip:{},vdoneDate:{},vdoneAt:{},vundone:{},akdone:{},notes:{},streak:{days:{}},assessments:{},uworld:{total:null,blocks:{}},amboss:{total:null,blocks:{}},scholarrx:{total:null,blocks:{}},vshaky:{},settings:{},_updatedAt:0,_resetAt:0,cfg:null};}
 function resetStateToEmpty(){Object.assign(S,emptyState());S.cfgs={step1:null,nbme:null};S.streak={days:{}};}
 /* load a specific account's cached state (empty if none yet) */
 function loadState(key){
   resetStateToEmpty();
   let raw={};try{raw=JSON.parse(store.get(key)||"{}");}catch(e){}
-  S.vdone=raw.vdone||{};S.vskip=raw.vskip||{};S.vdoneDate=raw.vdoneDate||{};S.akdone=raw.akdone||{};
+  S.vdone=raw.vdone||{};S.vskip=raw.vskip||{};S.vdoneDate=raw.vdoneDate||{};S.vdoneAt=raw.vdoneAt||{};S.vundone=raw.vundone||{};S.akdone=raw.akdone||{};
   S.notes=raw.notes||{};S.streak=raw.streak||{days:{}};S.streak.days=S.streak.days||{};
   S.assessments=raw.assessments||{};S.uworld=raw.uworld||{total:null,blocks:{}};S.uworld.blocks=S.uworld.blocks||{};S.amboss=raw.amboss||{total:null,blocks:{}};S.amboss.blocks=S.amboss.blocks||{};S.scholarrx=raw.scholarrx||{total:null,blocks:{}};S.scholarrx.blocks=S.scholarrx.blocks||{};S.vshaky=raw.vshaky||{};
   S.settings=raw.settings||{};S._updatedAt=raw._updatedAt||0;S._resetAt=raw._resetAt||0;
@@ -1077,7 +1077,7 @@ function scrubBcFragments(){if(!catReady())return 0;
   if(n){_prevSig=progressSig();               // don't credit a streak for the drop
     try{store.set(SKEY,JSON.stringify(persistObj()));}catch(e){}}   // local only: no _updatedAt bump, no push
   return n;}
-function persistObj(){return {active:S.active,cfgs:S.cfgs,vdone:S.vdone,vskip:S.vskip,vdoneDate:S.vdoneDate,akdone:S.akdone,notes:S.notes,streak:S.streak,assessments:S.assessments,uworld:S.uworld,amboss:S.amboss,scholarrx:S.scholarrx,vshaky:S.vshaky,settings:S.settings,_updatedAt:S._updatedAt,_resetAt:S._resetAt||0};}
+function persistObj(){return {active:S.active,cfgs:S.cfgs,vdone:S.vdone,vskip:S.vskip,vdoneDate:S.vdoneDate,vdoneAt:S.vdoneAt,vundone:S.vundone,akdone:S.akdone,notes:S.notes,streak:S.streak,assessments:S.assessments,uworld:S.uworld,amboss:S.amboss,scholarrx:S.scholarrx,vshaky:S.vshaky,settings:S.settings,_updatedAt:S._updatedAt,_resetAt:S._resetAt||0};}
 function save(){if(DEMO)return;S._updatedAt=Date.now();markStreakIfProgress();store.set(SKEY,JSON.stringify(persistObj()));Cloud.schedulePush();}
 
 /* ---------- streak (set of studied dates; merge-safe) ---------- */
@@ -1214,6 +1214,23 @@ function checklistVideos(){
 let SCHED=null;   // {days:[{iso,off,rest,review,items,min}], atRisk:[items], stats:{...}, byId:{}}
 function dayBudgetMin(d){const we=(d.getDay()===0||d.getDay()===6);const total=Math.max(15,Math.round((we?S.cfg.wkendHrs:S.cfg.wkdayHrs)*60));const reserved=(S.cfg.ankiMinPerDay||0)+(S.cfg.uworldMinPerDay||0);return Math.max(15,total-reserved);}
 function isDone(id){return !!S.vdone[id];}
+/* ---------- check-off as a per-item last-writer-wins register ----------
+   vdone is UNION-merged across devices so two devices can each contribute
+   progress — but a union can never express a deletion, so an unchecked video
+   came straight back from any cloud copy that still had it and appeared to
+   re-check itself. Every toggle now stamps the clock: markUndone records WHEN a
+   video was cleared, markDone records when it was checked again, and mergeState
+   keeps whichever happened last. Items carrying no stamp at all — everything
+   saved before this change — tie at 0 and stay done, exactly as before, so this
+   can only ever remove a video the student explicitly unchecked. */
+function markDone(id,pin){S.vdone=S.vdone||{};S.vskip=S.vskip||{};S.vdoneDate=S.vdoneDate||{};
+  S.vdoneAt=S.vdoneAt||{};S.vundone=S.vundone||{};
+  S.vdone[id]=true;delete S.vskip[id];S.vdoneDate[id]=pin||todayISO();
+  S.vdoneAt[id]=Date.now();delete S.vundone[id];}
+function markUndone(id){S.vdone=S.vdone||{};S.vdoneDate=S.vdoneDate||{};
+  S.vdoneAt=S.vdoneAt||{};S.vundone=S.vundone||{};
+  delete S.vdone[id];delete S.vdoneDate[id];delete S.vdoneAt[id];
+  S.vundone[id]=Date.now();}
 function isSkip(id){return !!S.vskip[id];}
 /* ============================================================
    BRODY-CALENDAR SCHEDULER (optional plan type). Videos are bucketed into
@@ -1574,22 +1591,37 @@ function sysProgress(){const by={};buildBacklog().forEach(it=>{const k=it.sys;(b
    ============================================================ */
 const FB_CONFIG={apiKey:"AIzaSyCzdsBV5UUnngsqXni9IdSD6tIMTKzNPGE",authDomain:"step1-command-center.firebaseapp.com",projectId:"step1-command-center",storageBucket:"step1-command-center.firebasestorage.app",messagingSenderId:"87587621964",appId:"1:87587621964:web:e0342f057167ac457538e9"};
 function unionTrue(x,y){const o={};x=x||{};y=y||{};for(const k in x)if(x[k])o[k]=true;for(const k in y)if(y[k])o[k]=true;return o;}
+function maxMerge(x,y){const o={};x=x||{};y=y||{};for(const k in x)o[k]=x[k];for(const k in y)if(!(o[k]>=y[k]))o[k]=y[k];return o;}   // latest stamp per id
 function mergeNotes(older,newer){const o=Object.assign({},older||{});const n=newer||{};for(const k in n){if(n[k]&&n[k].length)o[k]=n[k];else if(o[k]==null)o[k]=n[k];}return o;}
 function mergeState(a,b){a=a||{};b=b||{};
   // a reset is a tombstone: any copy last saved BEFORE the reset predates it,
   // so its progress maps must not be union-merged back in (they'd resurrect
   // everything the user just cleared).
   const resetAt=Math.max(a._resetAt||0,b._resetAt||0);
-  const strip=s=>((s._updatedAt||0)>=resetAt)?s:Object.assign({},s,{vdone:{},vskip:{},vdoneDate:{},akdone:{},notes:{},streak:{days:{}},assessments:{},uworld:{total:null,blocks:{}},amboss:{total:null,blocks:{}},scholarrx:{total:null,blocks:{}},vshaky:{}});
+  const strip=s=>((s._updatedAt||0)>=resetAt)?s:Object.assign({},s,{vdone:{},vskip:{},vdoneDate:{},vdoneAt:{},vundone:{},akdone:{},notes:{},streak:{days:{}},assessments:{},uworld:{total:null,blocks:{}},amboss:{total:null,blocks:{}},scholarrx:{total:null,blocks:{}},vshaky:{}});
   if(resetAt){a=strip(a);b=strip(b);}
   const aT=a._updatedAt||0,bT=b._updatedAt||0;const newer=bT>=aT?b:a,older=bT>=aT?a:b;
   const out={};
   out.active=(newer.active!==undefined?newer.active:older.active)||null;
   out.cfgs={};["step1","nbme"].forEach(k=>{out.cfgs[k]=(newer.cfgs&&newer.cfgs[k])||(older.cfgs&&older.cfgs[k])||null;});
-  out.vdone=unionTrue(a.vdone,b.vdone);
+  // Per-item last-writer-wins so an UNCHECK survives. A plain union can only ever
+  // add, so a video the student cleared came back from whichever copy still had it.
+  // Compare the check stamp against the uncheck stamp and keep the later one; both
+  // absent (all pre-existing progress) ties at 0 and stays done, so nothing a
+  // student earned can be dropped by this rule.
+  out.vdoneAt=maxMerge(a.vdoneAt,b.vdoneAt);
+  out.vundone=maxMerge(a.vundone,b.vundone);
+  out.vdone={};
+  const doneCand=unionTrue(a.vdone,b.vdone);
+  for(const id in doneCand)if((out.vdoneAt[id]||0)>=(out.vundone[id]||0))out.vdone[id]=true;
+  // A tombstone is kept for good — a device that has been offline for weeks can
+  // still show up with a stale "done" — but the check stamp only ever has to beat
+  // that tombstone, so it is dead weight once there is none to beat.
+  for(const id in out.vdoneAt)if(out.vundone[id]===undefined)delete out.vdoneAt[id];
   out.vskip=unionTrue(a.vskip,b.vskip);
   for(const id in out.vdone)if(out.vskip[id])delete out.vskip[id];
   out.vdoneDate=Object.assign({},a.vdoneDate||{},b.vdoneDate||{});
+  for(const id in out.vdoneDate)if(!out.vdone[id])delete out.vdoneDate[id];   // a pin without a check is a ghost row
   out.akdone=unionTrue(a.akdone,b.akdone);
   out.notes=mergeNotes(older.notes,newer.notes);
   out.streak={days:unionTrue((a.streak||{}).days,(b.streak||{}).days)};
@@ -1664,7 +1696,7 @@ function offerLegacyImportIfAny(){
 function importLegacy(raw){const cur=persistObj();const m=mergeState(cur,normalizeBlob(raw));Cloud.adopt(m);save();toast("Progress imported ✓");}
 Cloud.adopt=function(m){Cloud.applying=true;
   S.active=m.active||null;S.cfgs=m.cfgs||{step1:null,nbme:null};
-  S.vdone=m.vdone||{};S.vskip=m.vskip||{};S.vdoneDate=m.vdoneDate||{};S.akdone=m.akdone||{};
+  S.vdone=m.vdone||{};S.vskip=m.vskip||{};S.vdoneDate=m.vdoneDate||{};S.vdoneAt=m.vdoneAt||{};S.vundone=m.vundone||{};S.akdone=m.akdone||{};
   S.notes=m.notes||{};S.streak=m.streak||{days:{}};S.settings=m.settings||{};S._updatedAt=m._updatedAt||0;S._resetAt=m._resetAt||0;
   S.assessments=m.assessments||{};S.uworld=m.uworld||{total:null,blocks:{}};S.uworld.blocks=S.uworld.blocks||{};S.amboss=m.amboss||{total:null,blocks:{}};S.amboss.blocks=S.amboss.blocks||{};S.scholarrx=m.scholarrx||{total:null,blocks:{}};S.scholarrx.blocks=S.scholarrx.blocks||{};S.vshaky=m.vshaky||{};
   ["step1","nbme"].forEach(k=>{if(S.cfgs[k])normalizeCfg(S.cfgs[k],k);});
@@ -1825,7 +1857,7 @@ let _realIds=null,_realIdsSrc=null;
 function realItemIds(ids){if(!catReady())return ids;
   if(_realIdsSrc!==CATALOG){_realIds=new Set(catVideos().map(itemId));_realIdsSrc=CATALOG;}
   return ids.filter(id=>{if(_realIds.has(id))return true;console.warn("dropped unknown item id:",id);return false;});}
-function toggleItems(ids,pinISO){ids=realItemIds(ids||[]);if(!ids.length)return;const all=ids.every(isDone);const pin=pinISO||todayISO();S.vdoneDate=S.vdoneDate||{};ids.forEach(id=>{if(all){delete S.vdone[id];delete S.vdoneDate[id];}else{S.vdone[id]=true;delete S.vskip[id];S.vdoneDate[id]=pin;}});if(!all)markStudiedToday();save();reflow();render();}
+function toggleItems(ids,pinISO){ids=realItemIds(ids||[]);if(!ids.length)return;const all=ids.every(isDone);const pin=pinISO||todayISO();S.vdoneDate=S.vdoneDate||{};ids.forEach(id=>{if(all)markUndone(id);else markDone(id,pin);});if(!all)markStudiedToday();save();reflow();render();}
 
 /* ---------- collapsible sections (state survives re-renders) ---------- */
 const FOLDS={};
@@ -1837,8 +1869,8 @@ function bindFolds(){document.querySelectorAll("[data-fold]").forEach(d=>{d.onto
    sync can't resurrect what was just cleared) ---------- */
 function bumpReset(){S._resetAt=Date.now();}
 function confirmClear(title,msg,fn){modalSheet({title:title,danger:true,okLabel:"Clear",cancel:true,msg:msg,onOk:fn});}
-function clearVideos(){const snap={vdone:S.vdone,vskip:S.vskip,vdoneDate:S.vdoneDate,akdone:S.akdone};
-  S.vdone={};S.vskip={};S.vdoneDate={};S.akdone={};bumpReset();save();reflow();render();
+function clearVideos(){const snap={vdone:S.vdone,vskip:S.vskip,vdoneDate:S.vdoneDate,vdoneAt:S.vdoneAt,vundone:S.vundone,akdone:S.akdone};
+  S.vdone={};S.vskip={};S.vdoneDate={};S.vdoneAt={};S.vundone={};S.akdone={};bumpReset();save();reflow();render();
   toastUndo("Video progress cleared.",()=>{Object.assign(S,snap);save();reflow();render();});}
 function clearScores(){const snap=S.assessments;S.assessments={};bumpReset();save();render();
   toastUndo("Assessment scores cleared.",()=>{S.assessments=snap;save();render();});}
@@ -1848,10 +1880,10 @@ function clearFlags(){const snap=S.vshaky;S.vshaky={};bumpReset();save();render(
   toastUndo("Review flags cleared.",()=>{S.vshaky=snap;save();render();});}
 function uncheckDay(iso){const row=SCHED&&SCHED.dayMap[iso];if(!row||!row.items.length)return;
   const snap={vdone:Object.assign({},S.vdone),vdoneDate:Object.assign({},S.vdoneDate),ak:!!(S.akdone&&S.akdone[iso])};
-  row.items.forEach(it=>{delete S.vdone[it.id];delete S.vdoneDate[it.id];});
+  row.items.forEach(it=>markUndone(it.id));
   if(S.akdone)delete S.akdone[iso];
   save();reflow();render();
-  toastUndo(fmtShort(iso)+" unchecked.",()=>{S.vdone=snap.vdone;S.vdoneDate=snap.vdoneDate;if(snap.ak){S.akdone=S.akdone||{};S.akdone[iso]=true;}save();reflow();render();});}
+  toastUndo(fmtShort(iso)+" unchecked.",()=>{S.vdone=snap.vdone;S.vdoneDate=snap.vdoneDate;row.items.forEach(it=>{if(snap.vdone[it.id])markDone(it.id,snap.vdoneDate[it.id]);});if(snap.ak){S.akdone=S.akdone||{};S.akdone[iso]=true;}save();reflow();render();});}
 
 /* ---------- top bar + nav ---------- */
 function chrome(active){
@@ -2255,8 +2287,8 @@ function renderChecklist(){
 function clToggle(btn){
   const id=btn.dataset.clid;const nowDone=!isDone(id);
   S.vdone=S.vdone||{};S.vskip=S.vskip||{};S.vdoneDate=S.vdoneDate||{};
-  if(nowDone){S.vdone[id]=true;delete S.vskip[id];S.vdoneDate[id]=todayISO();markStudiedToday();}
-  else{delete S.vdone[id];delete S.vdoneDate[id];}
+  if(nowDone){markDone(id,todayISO());markStudiedToday();}
+  else markUndone(id);
   save();reflow();
   btn.classList.toggle('done',nowDone);
   const chk=btn.querySelector('.clchk');if(chk){chk.classList.toggle('on',nowDone);chk.textContent=nowDone?'✓':'';}
@@ -3179,8 +3211,8 @@ function stepDHubCard(){
 }
 function m1CourseStat(c){let t=0,d=0;c.collections.forEach(C=>C.sets.forEach(s=>s.bricks.forEach(b=>{t++;if(S.vdone[b.id])d++;})));return {total:t,done:d,pct:t?Math.round(d/t*100):0};}
 function m1Overall(){let t=0,d=0;if(M1DATA)M1DATA.courses.forEach(c=>c.collections.forEach(C=>C.sets.forEach(s=>s.bricks.forEach(b=>{t++;if(S.vdone[b.id])d++;}))));return {total:t,done:d,pct:t?Math.round(d/t*100):0};}
-function toggleM1(id){S.vdone=S.vdone||{};if(S.vdone[id]){delete S.vdone[id];if(S.vdoneDate)delete S.vdoneDate[id];}
-  else{S.vdone[id]=true;S.vdoneDate=S.vdoneDate||{};S.vdoneDate[id]=todayISO();markStudiedToday();}
+function toggleM1(id){S.vdone=S.vdone||{};if(S.vdone[id])markUndone(id);
+  else{markDone(id,todayISO());markStudiedToday();}
   save();render();}
 function m1RefRow(disp,full){return '<button class="m1ref" data-copyref="'+escAttr(full)+'" title="Copy this reference">'+escHTML(disp)+'</button>';}
 function m1Brick(b,courseName){
@@ -4020,20 +4052,24 @@ function doResetAll(){
   // nuclear: wipe progress AND the saved plans, drop the user back to the
   // setup screen to craft a fresh plan. Tombstoned so sync can't resurrect it.
   Cloud.backupNow("before-reset");   // keep a recoverable snapshot beyond the in-session undo
-  const snap={vdone:S.vdone,vskip:S.vskip,vdoneDate:S.vdoneDate,akdone:S.akdone,notes:S.notes,assessments:S.assessments,uworld:S.uworld,amboss:S.amboss,scholarrx:S.scholarrx,vshaky:S.vshaky,streak:S.streak,cfgs:S.cfgs,active:S.active};
-  S.vdone={};S.vskip={};S.vdoneDate={};S.akdone={};S.notes={};S.assessments={};S.uworld={total:null,blocks:{}};S.amboss={total:null,blocks:{}};S.scholarrx={total:null,blocks:{}};S.vshaky={};S.streak={days:{}};
+  const snap={vdone:S.vdone,vskip:S.vskip,vdoneDate:S.vdoneDate,vdoneAt:S.vdoneAt,vundone:S.vundone,akdone:S.akdone,notes:S.notes,assessments:S.assessments,uworld:S.uworld,amboss:S.amboss,scholarrx:S.scholarrx,vshaky:S.vshaky,streak:S.streak,cfgs:S.cfgs,active:S.active};
+  S.vdone={};S.vskip={};S.vdoneDate={};S.vdoneAt={};S.vundone={};S.akdone={};S.notes={};S.assessments={};S.uworld={total:null,blocks:{}};S.amboss={total:null,blocks:{}};S.scholarrx={total:null,blocks:{}};S.vshaky={};S.streak={days:{}};
   S.cfgs={step1:null,nbme:null};S.active=null;S.cfg=null;_prevSig=0;S._resetAt=Date.now();save();
   renderWelcome();
   toastUndo("Everything cleared — build a new plan, or tap Undo to restore.",()=>{
-    S.vdone=snap.vdone;S.vskip=snap.vskip;S.vdoneDate=snap.vdoneDate;S.akdone=snap.akdone;S.notes=snap.notes;S.assessments=snap.assessments;S.uworld=snap.uworld;S.amboss=snap.amboss;S.scholarrx=snap.scholarrx;S.vshaky=snap.vshaky;S.streak=snap.streak;
+    S.vdone=snap.vdone;S.vskip=snap.vskip;S.vdoneDate=snap.vdoneDate;S.vdoneAt=snap.vdoneAt;S.vundone=snap.vundone;S.akdone=snap.akdone;S.notes=snap.notes;S.assessments=snap.assessments;S.uworld=snap.uworld;S.amboss=snap.amboss;S.scholarrx=snap.scholarrx;S.vshaky=snap.vshaky;S.streak=snap.streak;
     S.cfgs=snap.cfgs;S.active=snap.active;S.cfg=S.active?S.cfgs[S.active]:null;_prevSig=progressSig();save();
     if(S.cfg){reflow();render();}else renderWelcome();toast("Restored ✓");});
 }
-const BUILD="2026-07-21l";
+const BUILD="2026-07-21m";
 /* ---------- What's new (changelog) ----------
    Newest entry first. Bump the top entry's id whenever you add one and the
    pop-up shows once per person (tracked in synced settings.seenUpdate). */
 const CHANGELOG=[
+  {id:"2026-08-01", date:"August 2026", title:"Fixed: unchecking a video could undo itself", items:[
+    "If you unchecked a video, it could pop straight back to checked a moment later. Your progress syncs by combining what\u2019s on each of your devices, and that combining step could only ever ADD videos \u2014 so an unchecked one came right back from the copy in the cloud that still had it.",
+    "Unchecking now sticks, on every device. Everything you\u2019ve already checked off is untouched, and if you check something again later that still wins.",
+  ]},
   {id:"2026-07-31", date:"July 2026", title:"Fixed: checking a video off could push other videos to the next day", items:[
     "Your daily pace was being recalculated every time you checked a video off. Because it snaps to half-hours, finishing one short video could drop it (say 9.5 → 9 h/day), shrinking every day’s capacity — so the day you were working on shed videos onto the next day, and it cascaded. Working ahead moved work later, which is exactly backwards.",
     "Your pace is now part of your plan and stays put. Checking videos off only ever empties slots, so the calendar holds still and you simply finish sooner. The Plan tab still shows the live recommended pace and lets you adopt it in one tap whenever you want.",
@@ -4319,7 +4355,7 @@ function wireFileInput(){
   const inp=document.getElementById("fileIn");
   if(inp)inp.onchange=(e)=>{const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=()=>{try{const o=JSON.parse(r.result);
     if(o.cfgs!==undefined)S.cfgs=o.cfgs;else if(o.cfg!==undefined){const key=(o.cfg.examType&&o.cfg.examType!=="step1")?"nbme":"step1";S.cfgs={step1:null,nbme:null};S.cfgs[key]=o.cfg;}
-    ["vdone","vskip","vdoneDate","akdone","notes","streak","assessments","uworld","amboss","scholarrx","vshaky","_resetAt"].forEach(k=>{if(o[k]!==undefined)S[k]=o[k];});
+    ["vdone","vskip","vdoneDate","vdoneAt","vundone","akdone","notes","streak","assessments","uworld","amboss","scholarrx","vshaky","_resetAt"].forEach(k=>{if(o[k]!==undefined)S[k]=o[k];});
     S.uworld=S.uworld||{total:null,blocks:{}};S.uworld.blocks=S.uworld.blocks||{};
     S.scholarrx=S.scholarrx||{total:null,blocks:{}};S.scholarrx.blocks=S.scholarrx.blocks||{};
     ["step1","nbme"].forEach(k=>{if(S.cfgs[k])normalizeCfg(S.cfgs[k],k);});
