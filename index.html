@@ -1927,6 +1927,14 @@ function renderCatLoading(){
   wireChrome();
   const rt=document.getElementById("catRetry");if(rt)rt.onclick=()=>{CATERR=false;loadCatalog();render();};
 }
+/* The plan editor rebuilds all of app.innerHTML on every toggle, so the document
+   momentarily collapses to its new height and the browser clamps the scroll to the
+   top — which reads as a blink on each click. Hold the scroll across the swap. */
+function renderKeepScroll(fn){
+  const y=window.scrollY||window.pageYOffset||0;
+  fn();
+  if(y)window.scrollTo(0,y);
+}
 function render(){
   if(S.active==="m1"){renderM1();return;}
   if(S.active==="stepd"){renderStepHub();return;}
@@ -2699,7 +2707,7 @@ function renderToday(){
     }
     if(row && row.items.length){
       const anyDone=row.items.some(it=>isDone(it.id));
-      colB+='<div class="card"><div class="cardhd">'+escHTML(heading)+' <span class="pill">'+row.min+' min</span>'+(anyDone?'<button class="hdreset" data-dayreset="'+row.iso+'" title="Uncheck everything on this day">Uncheck all</button>':'')+'</div>'
+      colB+='<div class="card"><div class="cardhd">'+escHTML(heading)+' <span class="pill">'+dayTimeLabel(row)+'</span>'+(anyDone?'<button class="hdreset" data-dayreset="'+row.iso+'" title="Uncheck everything on this day">Uncheck all</button>':'')+'</div>'
         +dayVlist(row)
         +'<div class="rowtools">'+(todayRow&&!isOffToday?'<button class="btn ghost" id="offToday">Take today off</button>':'')+'</div></div>';
     } else if(!isOffToday&&!(todayRow&&todayRow.review)){
@@ -2734,6 +2742,16 @@ let CAL_YM=null, CAL_SEL=null;
 const CAL_MONTHS=["January","February","March","April","May","June","July","August","September","October","November","December"];
 function pad2(n){return (n<10?"0":"")+n;}
 function fmtH(min){if(min<60)return min+"m";return (Math.round(min/60*10)/10)+"h";}
+/* A day's time badge. Once videos are checked off — especially when studying ahead
+   — the number that matters is what's LEFT on that day, not what it originally
+   held. row.todo is the unwatched minutes; row.min is the day's full load. */
+function dayTimeLabel(row){
+  const total=row.min||0,left=(row.todo!=null?row.todo:total);
+  if(total<=0)return "";
+  if(left<=0)return "✓ "+fmtH(total);
+  if(left<total)return fmtH(left)+" left";
+  return fmtH(total);
+}
 function ymShift(ym,delta){let p=ym.split("-").map(Number),y=p[0],m=p[1];m+=delta;while(m<1){m+=12;y--;}while(m>12){m-=12;y++;}return y+"-"+pad2(m);}
 function monthMatrix(ym){const p=ym.split("-").map(Number),y=p[0],m=p[1];
   const startDow=new Date(y,m-1,1).getDay();const dim=new Date(y,m,0).getDate();const cells=[];
@@ -2761,7 +2779,7 @@ function calCell(iso){
     else if(row.rest){cls+=" rest";ind='<span class="ci">rest</span>';}
     else if(row.review){cls+=" review";ind='<span class="ci">UW</span>';}
     else if(row.earlier){cls+=" past earlier";ind='<span class="ci">earlier</span>'+calVlist(row);}   // videos from before you joined — optional
-    else if(row.items.length){const allDone=row.items.every(it=>isDone(it.id));cls+=allDone?" alldone":" load";ind='<span class="ci">'+(allDone?"✓ "+fmtH(row.min):fmtH(row.min))+'</span>'+calVlist(row);}
+    else if(row.items.length){const allDone=row.items.every(it=>isDone(it.id));cls+=allDone?" alldone":" load";ind='<span class="ci">'+dayTimeLabel(row)+'</span>'+calVlist(row);}
     else if(row.past){cls+=" past";}   // past day, nothing was checked off here
   } else if(iso<todayISO()){cls+=" past";}
   if(iso===todayISO())cls+=" today";
@@ -2772,7 +2790,7 @@ function dayDetail(iso){
   const row=SCHED.dayMap[iso];const past=!!(row&&row.past);
   const head=fmtLong(iso)+(iso===todayISO()?" · today":(past?" · past":""));
   let h='<div class="card daydetail"><div class="cardhd">'+escHTML(head);
-  if(row&&!row.off&&!row.rest&&!row.review&&row.items.length){h+=' <span class="pill'+(row.earlier?' earlier':'')+'">'+(row.earlier?'earlier':fmtH(row.min))+'</span>';
+  if(row&&!row.off&&!row.rest&&!row.review&&row.items.length){h+=' <span class="pill'+(row.earlier?' earlier':'')+'">'+(row.earlier?'earlier':dayTimeLabel(row))+'</span>';
     if(row.items.some(it=>isDone(it.id)))h+='<button class="hdreset" data-dayreset="'+iso+'" title="Uncheck everything on this day">Uncheck all</button>';}
   h+='</div>';
   if(!row)h+='<p class="muted small">Outside your current plan window'+(iso<todayISO()?" (past)":"")+'.</p>';
@@ -2983,7 +3001,7 @@ function renderAdjustBrody(c){
   colB+=pastUnitsCard();
   colB+='<div class="card soft"><button class="btn" id="saveDone">Done — back to Study</button><p class="muted small center" style="margin-top:10px">Every change here saves and re-flows your plan instantly.</p></div>';
   app.innerHTML=chrome("adjust")+'<div class="wrap"><button class="link pmback" id="adjBack">‹ Plan</button><div class="cols"><div>'+body+'</div><div>'+colB+'</div></div></div>';
-  const apply=()=>{save();reflow();renderAdjust();};
+  const apply=()=>{save();reflow();renderKeepScroll(renderAdjust);};   // hold scroll so a toggle doesn't blink the page
   bindWeeklyGoal(c,apply);
   document.querySelectorAll("[data-dow]").forEach(b=>b.onclick=()=>{const i=+b.dataset.dow;c.restDays=c.restDays||[];const k=c.restDays.indexOf(i);if(k>=0)c.restDays.splice(k,1);else c.restDays.push(i);apply();});
   document.querySelectorAll("[data-res]").forEach(b=>b.onclick=()=>{c.resources=c.resources||{};c.resources[b.dataset.res]=!hasRes(b.dataset.res);apply();});
@@ -3124,7 +3142,7 @@ function renderPlanEditor(){
   colB+='<div class="card soft"><button class="btn" id="saveDone">Done — back to Today</button><p class="muted small center" style="margin-top:10px">Every change here saves and re-flows your plan instantly.</p></div>';
   app.innerHTML=chrome("adjust")+'<div class="wrap"><button class="link pmback" id="adjBack">‹ Plan</button><div class="cols"><div>'+body+'</div><div>'+colB+'</div></div></div>';
   // live-apply
-  const apply=()=>{save();reflow();renderAdjust();};
+  const apply=()=>{save();reflow();renderKeepScroll(renderAdjust);};   // hold scroll so a toggle doesn't blink the page
   bindWeeklyGoal(c,apply);
   const bindNum=(id,key,mul)=>{const e=document.getElementById(id);if(e)e.onchange=()=>{let v=parseFloat(e.value);if(isNaN(v))v=0;c[key]=v;apply();};};
   const fe=document.getElementById("f_exam");if(fe)fe.onclick=()=>openDatePicker({value:c.examISO,min:todayISO(),title:"Exam date",onPick:(iso)=>{c.examISO=iso;apply();}});
@@ -4070,11 +4088,16 @@ function doResetAll(){
     S.cfgs=snap.cfgs;S.active=snap.active;S.cfg=S.active?S.cfgs[S.active]:null;_prevSig=progressSig();save();
     if(S.cfg){reflow();render();}else renderWelcome();toast("Restored ✓");});
 }
-const BUILD="2026-07-21n";
+const BUILD="2026-07-21o";
 /* ---------- What's new (changelog) ----------
    Newest entry first. Bump the top entry's id whenever you add one and the
    pop-up shows once per person (tracked in synced settings.seenUpdate). */
 const CHANGELOG=[
+  {id:"2026-08-02", date:"August 2026", title:"Days now show the time you have LEFT", items:[
+    "Check videos off \u2014 including when you work ahead \u2014 and the day\u2019s time drops to what\u2019s still left, both next to the date and on the calendar. Finish a day and it reads as done instead of still showing the full total.",
+    "A day you haven\u2019t started still shows its full load, so nothing changes until you actually check something off.",
+    "Fixed the flicker when changing anything in the Plan tab \u2014 the page no longer jumps back to the top on every tap.",
+  ]},
   {id:"2026-08-01b", date:"August 2026", title:"Fixed: sync light flickering, and \u201cStart a new plan\u201d bouncing back", items:[
     "The save indicator was flipping between saving and saved nonstop. Your device and the cloud disagreed about the shape of your data, so they kept re-saving it to each other in a loop.",
     "That loop was also refreshing the screen constantly \u2014 which is why \u201cStart a new plan\u201d appeared broken: the setup page opened and was wiped away instantly. Both are fixed, and the setup page is now protected from background refreshes so it can never be cleared while you\u2019re filling it in.",
