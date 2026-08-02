@@ -455,6 +455,9 @@ b{color:var(--ink)}
 .bartrack{flex:1;height:8px;background:var(--bg2);border-radius:999px;overflow:hidden}
 .barfill{height:100%;border-radius:999px;background:var(--accent);transition:width .5s cubic-bezier(.5,1.2,.4,1)}
 .barpct{flex:0 0 auto;font-family:var(--mono);font-size:12px;color:var(--muted);width:38px;text-align:right}
+/* the lowest-accuracy systems in the focus card — emphasis by rank, not by a pass mark */
+.bar.focus .barlab{font-weight:700;color:var(--ink)}
+.bar.focus .barfill{background:var(--phos)}
 .barpct.conf{width:80px;flex:0 0 80px;line-height:1.2}
 .barpct.conf b{color:var(--ink);font-weight:700}
 /* master checklist */
@@ -2120,7 +2123,17 @@ function bindWeeklyGoal(c,apply){
 /* confidence flags + review queue (Change 4) */
 function isShaky(id){return !!(S.vshaky&&S.vshaky[id]);}
 function toggleShaky(id){S.vshaky=S.vshaky||{};if(S.vshaky[id])delete S.vshaky[id];else S.vshaky[id]=true;save();}
-function weakSystems(target,scope){return subjectConfidence(scope).filter(x=>x.pct!=null&&x.done>=20&&x.pct<(target||65)).map(x=>({sys:x.sys,pct:x.pct})).sort((a,b)=>a.pct-b.pct);}
+/* Where you're weakest RELATIVE to your own other systems — no pass mark. A cutoff
+   like "under 65%" invents a standard the app can't justify: it calls a 64% student
+   deficient and tells a student sitting at 68% across the board that nothing needs
+   work. Ranking against yourself is always true and always actionable. Needs a few
+   rated systems before "lowest" means anything at all. */
+const FOCUS_N=3;         // how many systems to surface
+const FOCUS_MIN_SYS=3;   // below this, "your lowest" is just "your only"
+function lowestSystems(scope,n){
+  const rated=subjectConfidence(scope).filter(x=>x.pct!=null&&x.done>=CONF_MIN_Q).sort((a,b)=>a.pct-b.pct);
+  if(rated.length<FOCUS_MIN_SYS)return [];
+  return rated.slice(0,Math.min(n||FOCUS_N,rated.length)).map(x=>({sys:x.sys,pct:x.pct,done:x.done}));}
 /* small readiness chip for the Today hero */
 function readinessChip(){
   const la=latestAssess();
@@ -2132,8 +2145,7 @@ function readinessChip(){
 function uworldChip(){
   const r=practiceRollup();   // UWorld + AMBOSS + ScholarRx combined
   if(!r.done)return '<button class="rchip rchip-info" data-gouworld="1">Log practice questions →</button>';
-  const cls=r.pct>=70?"ok":(r.pct>=60?"warn":"bad");
-  return '<button class="rchip rchip-'+cls+'" data-gouworld="1"><span class="rchip-n">'+r.pct+'%</span><span class="rchip-t">Practice · '+r.done+' Qs correct</span></button>';
+  return '<button class="rchip rchip-info" data-gouworld="1"><span class="rchip-n">'+r.pct+'%</span><span class="rchip-t">Practice · '+r.done+' Qs correct</span></button>';
 }
 function loadCaveat(){const a=(S.cfg&&S.cfg.ankiMinPerDay)||0,u=(S.cfg&&S.cfg.uworldMinPerDay)||0;if(!a&&!u)return '';const parts=[];if(a)parts.push('~'+(Math.round(a/60*10)/10)+' h Anki');if(u)parts.push('~'+(Math.round(u/60*10)/10)+' h UWorld');return '<p class="muted small hcav">Video time only — your day also reserves '+parts.join(' + ')+'.</p>';}
 /* ---- Ready view ---- */
@@ -2169,13 +2181,13 @@ function uworldForm(){
 function uworldCard(){
   const r=uworldRollup();const pctTxt=r.pct!=null?r.pct+'%':'—';const doneTxt=r.done+(r.total?(' / '+r.total):'')+' Qs';
   let bars='';const sysList=Object.keys(r.bySys).sort((a,b)=>(r.bySys[a].pct||0)-(r.bySys[b].pct||0));
-  sysList.forEach(s=>{const e=r.bySys[s];const col=e.pct==null?'#777':(e.pct>=70?'var(--phos)':(e.pct>=60?'var(--amber)':'var(--red)'));
-    bars+='<div class="bar"><div class="barlab">'+escHTML(s)+'</div><div class="bartrack"><div class="barfill" style="width:'+(e.pct||0)+'%;background:'+col+'"></div></div><div class="barpct">'+(e.pct==null?'—':e.pct+'%')+'</div></div>';});
+  sysList.forEach(s=>{const e=r.bySys[s];
+    bars+='<div class="bar"><div class="barlab">'+escHTML(s)+'</div><div class="bartrack"><div class="barfill" style="width:'+(e.pct||0)+'%"></div></div><div class="barpct">'+(e.pct==null?'—':e.pct+'%')+'</div></div>';});
   const hasData=r.done>0||r.total;
   return '<div class="card"><div class="cardhd">UWorld'+(hasData?'<button class="hdreset" id="rst_uw" title="Clear the UWorld log">Reset</button>':'')+'</div>'
     +'<div class="uwtop"><div class="uwbig">'+pctTxt+' <span>correct</span></div><div class="uwsub">'+doneTxt+'</div></div>'
     +fold("uwform","Log a block",uworldForm(),r.done===0)
-    +(bars?('<div class="uwhd">By system — accuracy</div><div class="bars">'+bars+'</div><p class="muted small">Systems under 65% feed your review queue below.</p>'):'<p class="muted small">Log a block to start tracking per-system accuracy — the most actionable weak-area signal you have.</p>')
+    +(bars?('<div class="uwhd">By system — accuracy</div><div class="bars">'+bars+'</div><p class="muted small">Your lowest-accuracy systems surface in the review queue below.</p>'):'<p class="muted small">Log a block to start tracking per-system accuracy — the most actionable weak-area signal you have.</p>')
     +'</div>';
 }
 /* M2 practice-question block — combined UWorld + AMBOSS totals; the source is
@@ -2197,10 +2209,10 @@ function practiceCard(){
 }
 function reviewCard(){
   const shaky=[];buildBacklog().forEach(it=>{if(isShaky(it.id))shaky.push(it);});
-  const weak=weakSystems(65);
+  const weak=lowestSystems();
   if(!shaky.length&&!weak.length)return '';
   let body='<div class="card soft"><div class="cardhd">Review queue'+(shaky.length?'<button class="hdreset" id="rst_flags" title="Clear every review flag">Reset</button>':'')+'</div>';
-  if(weak.length)body+='<p class="muted small">Weak systems (&lt; 65%): '+weak.map(w=>escHTML(w.sys)+' <b>'+w.pct+'%</b>').join(', ')+'</p>';
+  if(weak.length)body+='<p class="muted small">Your lowest accuracy right now: '+weak.map(w=>escHTML(w.sys)+' <b>'+w.pct+'%</b>').join(', ')+'</p>';
   if(shaky.length){body+='<div class="alist">'+shaky.slice(0,40).map(it=>'<div class="arow"><span class="adot warn"></span><span class="aform">'+escHTML(vName(it))+'</span><button class="alink" data-unshaky="'+escAttr(it.id)+'">clear</button></div>').join('')+'</div>';if(shaky.length>40)body+='<p class="muted small">+'+(shaky.length-40)+' more flagged.</p>';}
   body+='</div>';return body;
 }
@@ -2381,8 +2393,8 @@ function qbankCard(title,pfx,roll,resetId){
   const progHtml=roll.done?('<div class="uwprog"><div class="uwproglab"><span><b>'+roll.done+'</b> questions done'+(roll.total?(' of '+roll.total):'')+'</span>'+(prog!=null?('<span>'+prog+'% of bank</span>'):'')+'</div>'+(prog!=null?('<div class="bartrack big"><div class="barfill" style="width:'+prog+'%"></div></div>'):'')+'</div>'):'';
   // per-system accuracy — untagged blocks fall into an "Unspecified" bar, sorted last
   let bars='';const sysList=Object.keys(roll.bySys).sort((a,b)=>{if(a==="Unspecified")return 1;if(b==="Unspecified")return -1;return (roll.bySys[a].pct||0)-(roll.bySys[b].pct||0);});
-  sysList.forEach(x=>{const e=roll.bySys[x];const col=e.pct==null?'var(--faint)':(e.pct>=70?'var(--success)':(e.pct>=60?'var(--warning)':'var(--danger)'));
-    bars+='<div class="bar"><div class="barlab">'+escHTML(x)+'</div><div class="bartrack"><div class="barfill" style="width:'+(e.pct||0)+'%;background:'+col+'"></div></div><div class="barpct">'+(e.pct==null?'—':e.pct+'%')+'</div></div>';});
+  sysList.forEach(x=>{const e=roll.bySys[x];
+    bars+='<div class="bar"><div class="barlab">'+escHTML(x)+'</div><div class="bartrack"><div class="barfill" style="width:'+(e.pct||0)+'%"></div></div><div class="barpct">'+(e.pct==null?'—':e.pct+'%')+'</div></div>';});
   const draft=pfx==="su"?SUDRAFT:(pfx==="sx"?SXDRAFT:SADRAFT);
   return '<div class="card"><div class="cardhd">'+title+(roll.done?'<button class="hdreset" id="'+resetId+'">Reset</button>':'')+'</div>'
     +'<div class="uwtop"><div class="uwbig">'+pctTxt+' <span>correct</span></div><div class="uwsub">'+doneTxt+'</div></div>'
@@ -2409,18 +2421,21 @@ function stepBlendTotals(){let done=0,correct=0,m2=0,ded=0;
   return {done,correct,pct:done?Math.round(correct/done*100):null,m2,ded};}
 function stepFocusCard(){
   const list=stepBlendAccuracy();
-  if(!list.length)return '<div class="card"><div class="cardhd">Weak systems — where to focus</div><p class="muted small">Log practice blocks with a <b>system</b> tagged — in M2 all semester, or here — and your weakest areas surface, worst-first. Every question you log during M2 counts toward this.</p></div>';
+  if(!list.length)return '<div class="card"><div class="cardhd">Where to focus</div><p class="muted small">Log practice blocks with a <b>system</b> tagged — in M2 all semester, or here — and your lowest-accuracy areas surface, weakest first. Every question you log during M2 counts toward this.</p></div>';
   list.sort((a,b)=>(a.pct-b.pct)||(b.done-a.done));
-  const weak=list.filter(x=>x.done>=20&&x.pct<65);
+  // relative, not a pass mark: your own lowest systems, once there are enough to compare
+  const rated=list.filter(x=>x.done>=CONF_MIN_Q);
+  const weak=rated.length>=FOCUS_MIN_SYS?rated.slice(0,FOCUS_N):[];
   const anyM2=list.some(x=>x.m2>0);
-  let h='<div class="card"><div class="cardhd">Weak systems — where to focus</div>';
+  let h='<div class="card"><div class="cardhd">Where to focus</div>';
   h+=weak.length
-    ? '<div class="status bad">Below 65%: '+weak.map(w=>escHTML(w.sys)+' <b>'+w.pct+'%</b>').join(' · ')+'. Prioritize these before your exam.</div>'
-    : '<div class="status ok">No system under 65% (with ≥20 Qs) yet — keep logging to surface weak areas.</div>';
+    ? '<div class="status">Your lowest '+weak.length+' right now: '+weak.map(w=>escHTML(w.sys)+' <b>'+w.pct+'%</b>').join(' · ')+'. Worth prioritizing before your exam.</div>'
+    : '<div class="status ok">Log questions across at least '+FOCUS_MIN_SYS+' systems ('+CONF_MIN_Q+'+ each) and your lowest ones surface here.</div>';
   h+='<div class="uwhd">Combined UWorld + AMBOSS + ScholarRx · weakest first'+(anyM2?' · includes your M2 semester':'')+'</div><div class="bars">';
-  list.forEach(x=>{const col=x.pct>=70?'var(--success)':(x.pct>=60?'var(--warning)':'var(--danger)');
+  const focusSet=new Set(weak.map(w=>w.sys));
+  list.forEach(x=>{
     const split=(x.m2>0&&x.ded>0)?(' <span class="srcsplit">'+x.m2+' M2·'+x.ded+' ded</span>'):(x.m2>0&&x.ded===0?' <span class="srcsplit">M2</span>':'');
-    h+='<div class="bar"><div class="barlab">'+escHTML(x.sys)+split+'</div><div class="bartrack"><div class="barfill" style="width:'+x.pct+'%;background:'+col+'"></div></div><div class="barpct">'+x.pct+'% <span class="muted small">('+x.done+')</span></div></div>';});
+    h+='<div class="bar'+(focusSet.has(x.sys)?' focus':'')+'"><div class="barlab">'+escHTML(x.sys)+split+'</div><div class="bartrack"><div class="barfill" style="width:'+x.pct+'%"></div></div><div class="barpct">'+x.pct+'% <span class="muted small">('+x.done+')</span></div></div>';});
   h+='</div>';
   if(anyM2)h+='<p class="muted small"><b>M2</b> = logged during the block phase · <b>ded</b> = logged here in dedicated. Both count toward each system’s accuracy.</p>';
   h+='</div>';return h;
@@ -2434,11 +2449,10 @@ function renderStepHub(){
   // readiness snapshot — latest NBME plus the whole semester's practice accuracy and
   // question count (M2 + dedicated blended), so the hub isn't empty on day one of dedicated
   const blend=stepBlendTotals();
-  const band=pct=>pct==null?"":(pct>=70?"ok":(pct>=60?"warn":"bad"));
   const rtile=(lab,val,cls,sub)=>'<div class="rtile '+(cls||"")+'"><div class="rtile-v">'+val+'</div><div class="rtile-l">'+lab+(sub?'<span class="rtile-s">'+sub+'</span>':'')+'</div></div>';
   const snap='<div class="readysnap">'
     +rtile("Latest NBME",la?la.pct+"%":"—",la?v.cls:"")
-    +rtile("Practice",blend.pct!=null?blend.pct+"%":"—",band(blend.pct),blend.m2>0?"incl. M2":"")
+    +rtile("Practice",blend.pct!=null?blend.pct+"%":"—","",blend.m2>0?"incl. M2":"")
     +rtile("Questions",blend.done||"—","",blend.m2>0?(blend.m2+" M2 · "+blend.ded+" ded"):"")
     +'</div>';
   let colA='';
@@ -4088,11 +4102,16 @@ function doResetAll(){
     S.cfgs=snap.cfgs;S.active=snap.active;S.cfg=S.active?S.cfgs[S.active]:null;_prevSig=progressSig();save();
     if(S.cfg){reflow();render();}else renderWelcome();toast("Restored ✓");});
 }
-const BUILD="2026-07-21p";
+const BUILD="2026-07-21q";
 /* ---------- What's new (changelog) ----------
    Newest entry first. Bump the top entry's id whenever you add one and the
    pop-up shows once per person (tracked in synced settings.seenUpdate). */
 const CHANGELOG=[
+  {id:"2026-08-03b", date:"August 2026", title:"\u201cWeak systems\u201d is now relative to you", items:[
+    "The app used to call a system weak if you were under 65% \u2014 another invented number. It told a student at 64% they were deficient, and a student sitting at 68% across the board that nothing needed work.",
+    "It now shows your lowest three systems, whatever your numbers are, so there\u2019s always a useful answer to \u201cwhere do I go next?\u201d. Practice-accuracy bars are no longer coloured pass/fail anywhere \u2014 they just show your number and rank.",
+    "NBME self-assessment bands (65 / 70) are unchanged \u2014 those come from published score data, not from us.",
+  ]},
   {id:"2026-08-03", date:"August 2026", title:"No more 80% \u201cmastery\u201d mark", items:[
     "Subject confidence graded you against 80% correct and labelled each subject Confident / Developing / Needs work. That number was arbitrary \u2014 what counts as a good percentage depends on the qbank, the phase, and the student \u2014 so it\u2019s gone.",
     "The card is now \u201cAccuracy by subject\u201d: your real accuracy per subject, ranked weakest first, with the number of questions behind it. Same data, no invented pass mark.",
