@@ -457,7 +457,6 @@ b{color:var(--ink)}
 .barpct{flex:0 0 auto;font-family:var(--mono);font-size:12px;color:var(--muted);width:38px;text-align:right}
 .barpct.conf{width:80px;flex:0 0 80px;line-height:1.2}
 .barpct.conf b{color:var(--ink);font-weight:700}
-.barpct.conf .conftier{display:block;font-family:var(--sans);font-size:10.5px;color:var(--muted);white-space:nowrap}
 /* master checklist */
 .clwrap{max-width:800px;margin:0 auto}
 .clhead .cltop{display:flex;justify-content:space-between;align-items:baseline;margin:6px 0 9px}
@@ -2049,18 +2048,20 @@ function practiceBankPlaceholder(src){return src==="amboss"?"~2800":(src==="scho
 /* ---- Weekly practice-question goal (M2, opt-in) + subject confidence ----
    Off unless the student sets a target on the Plan page. UWorld AND AMBOSS
    blocks logged in this hub both count; the tally resets each Monday. */
-const CONF_MIN_Q=10;   // questions in a subject before it earns a confidence rating
-const CONF_MASTERY=80; // % accuracy that counts as sufficient mastery
+const CONF_MIN_Q=10;   // questions in a subject before its % is worth showing (sample size, not a target)
 function weekStartISO(iso){const d=isoToDate(iso);const wd=(d.getDay()+6)%7;return isoFromDate(addDays(d,-wd));}  // Monday-start of iso's week
 function weeklyGoal(c){c=c||S.cfg;return (c&&c.weeklyQGoal>0)?c.weeklyQGoal:0;}
 function weeklyQLogged(scope){scope=scope||S.active;const ws=weekStartISO(todayISO());const we=isoFromDate(addDays(isoToDate(ws),7));
   let n=0;practiceLogs().forEach(log=>{const bl=(log&&log.blocks)||{};for(const k in bl){const b=bl[k];if(b&&b.hub===scope&&b.dateISO>=ws&&b.dateISO<we)n+=(+b.q||0);}});return n;}
-/* combined UWorld + AMBOSS + ScholarRx accuracy per subject, each with a confidence tier (mastery = 80%).
-   Subjects below CONF_MIN_Q logged questions aren't rated yet. */
+/* combined UWorld + AMBOSS + ScholarRx accuracy per subject. No pass mark: a
+   "good" percentage depends on the qbank, the phase and the student, so we report
+   the number and rank it against your OWN other subjects instead of grading it
+   against an invented threshold. Subjects under CONF_MIN_Q questions are too small
+   a sample to show a percentage for. */
 function subjectConfidence(scope){scope=scope||S.active;const uw=uworldRollup(scope),am=ambossRollup(scope),rx=scholarrxRollup(scope);const by={};
   [uw,am,rx].forEach(roll=>Object.keys(roll.bySys).forEach(s=>{if(s==="Unspecified")return;const e=roll.bySys[s];const t=by[s]=by[s]||{done:0,correct:0};t.done+=e.done;t.correct+=e.correct;}));
   return Object.keys(by).map(s=>{const done=by[s].done,pct=done?Math.round(by[s].correct/done*100):null,rated=done>=CONF_MIN_Q;
-    return {sys:s,done,pct,rated,tier:!rated?"none":(pct>=CONF_MASTERY?"solid":(pct>=70?"dev":"weak"))};});}
+    return {sys:s,done,pct,rated};});}
 /* progress bar for the weekly goal — reused on Today and the Plan page.
    Going OVER the target is a good thing: the bar fills to 100% and the
    surplus is called out ("+N beyond goal") rather than silently capped. */
@@ -2191,7 +2192,7 @@ function practiceCard(){
   return '<div class="card"><div class="cardhd">Practice questions'+(hasData?'<button class="hdreset" id="rst_pr" title="Clear this hub’s practice-question log">Reset</button>':'')+'</div>'
     +'<div class="uwtop"><div class="uwbig">'+pctTxt+' <span>correct</span></div><div class="uwsub">'+doneTxt+'</div></div>'
     +fold("uwform","Log a block",uworldForm(),r.done===0)
-    +(hasData?'<p class="muted small">Pick <b>UWorld, AMBOSS, or ScholarRx</b> on each block. Per-subject accuracy — and whether you’ve hit mastery — is in <b>Subject confidence</b> above.</p>':'<p class="muted small">Log a block and choose <b>UWorld, AMBOSS, or ScholarRx</b> — it flows straight into your subject confidence above.</p>')
+    +(hasData?'<p class="muted small">Pick <b>UWorld, AMBOSS, or ScholarRx</b> on each block. Per-subject accuracy is in <b>Accuracy by subject</b> above.</p>':'<p class="muted small">Log a block and choose <b>UWorld, AMBOSS, or ScholarRx</b> — it flows straight into your accuracy by subject above.</p>')
     +'</div>';
 }
 function reviewCard(){
@@ -2203,23 +2204,22 @@ function reviewCard(){
   if(shaky.length){body+='<div class="alist">'+shaky.slice(0,40).map(it=>'<div class="arow"><span class="adot warn"></span><span class="aform">'+escHTML(vName(it))+'</span><button class="alink" data-unshaky="'+escAttr(it.id)+'">clear</button></div>').join('')+'</div>';if(shaky.length>40)body+='<p class="muted small">+'+(shaky.length-40)+' more flagged.</p>';}
   body+='</div>';return body;
 }
-/* Subject confidence — combined UWorld+AMBOSS accuracy per subject, 80% = mastery.
+/* Accuracy by subject — combined UWorld+AMBOSS+ScholarRx accuracy per subject.
    Answers "am I actually ready in this subject, or just doing questions?" */
 function confidenceCard(){
   const list=subjectConfidence();
-  if(!list.length)return '<div class="card"><div class="cardhd">Subject confidence</div>'
-    +'<p class="muted small" style="margin-top:0">Log practice blocks with a <b>system</b> tagged and each subject earns a confidence rating from your accuracy — <b>'+CONF_MASTERY+'% is the mastery mark</b>. Nothing rated yet.</p></div>';
+  if(!list.length)return '<div class="card"><div class="cardhd">Accuracy by subject</div>'
+    +'<p class="muted small" style="margin-top:0">Log practice blocks with a <b>system</b> tagged and your accuracy per subject shows up here, weakest first. Nothing logged yet.</p></div>';
   const rated=list.filter(x=>x.rated).sort((a,b)=>a.pct-b.pct);
   const pending=list.filter(x=>!x.rated).sort((a,b)=>b.done-a.done);
-  let h='<div class="card"><div class="cardhd">Subject confidence</div>'
-    +'<p class="muted small" style="margin-top:0">Your accuracy per subject on logged UWorld + AMBOSS + ScholarRx questions. <b>'+CONF_MASTERY+'% = mastery.</b></p>';
+  let h='<div class="card"><div class="cardhd">Accuracy by subject</div>'
+    +'<p class="muted small" style="margin-top:0">Your accuracy per subject on logged UWorld + AMBOSS + ScholarRx questions, weakest first. There\u2019s no target score \u2014 what counts as \u201cgood\u201d depends on the qbank and where you are in the block.</p>';
   if(rated.length){h+='<div class="bars">';
-    rated.forEach(x=>{const col=x.tier==="solid"?'var(--success)':(x.tier==="dev"?'var(--warning)':'var(--danger)');
-      const lab=x.tier==="solid"?'Confident':(x.tier==="dev"?'Developing':'Needs work');
-      h+='<div class="bar"><div class="barlab">'+escHTML(x.sys)+'</div><div class="bartrack"><div class="barfill" style="width:'+x.pct+'%;background:'+col+'"></div></div><div class="barpct conf"><b>'+x.pct+'%</b><span class="conftier">'+lab+'</span></div></div>';});
+    rated.forEach(x=>{
+      h+='<div class="bar"><div class="barlab">'+escHTML(x.sys)+'</div><div class="bartrack"><div class="barfill" style="width:'+x.pct+'%"></div></div><div class="barpct"><b>'+x.pct+'%</b> <span class="muted small">('+x.done+')</span></div></div>';});
     h+='</div>';}
-  else h+='<p class="muted small">No subject has enough logged questions for a rating yet — '+CONF_MIN_Q+'+ in a subject unlocks one.</p>';
-  if(pending.length)h+='<p class="muted small">Building toward a rating: '+pending.map(x=>escHTML(x.sys)+' <b>'+x.done+'</b>/'+CONF_MIN_Q).join(' · ')+'.</p>';
+  else h+='<p class="muted small">Not enough questions logged in any one subject yet — '+CONF_MIN_Q+'+ makes the percentage meaningful.</p>';
+  if(pending.length)h+='<p class="muted small">Too few questions to show a percentage yet: '+pending.map(x=>escHTML(x.sys)+' <b>'+x.done+'</b>/'+CONF_MIN_Q).join(' · ')+'.</p>';
   return h+'</div>';
 }
 function readinessCards(){return S.active==="nbme"?brodyStatsCards():stepReadinessCards();}
@@ -2257,7 +2257,7 @@ function videoCards(){
   let body='<div class="hero"><div class="hero-l">'+ring(o.pct,72)+'</div><div class="hero-r"><div class="big">'+o.done+' <span>/ '+o.total+' videos</span></div><div class="sub">'+SCHED.stats.remItems+' remaining · '+currentStreak()+'-day streak</div></div></div>';
   body+=pacingChart();
   body+='<div class="card"><div class="cardhd">Video completion by subject'+(o.done?'<button class="hdreset" id="rst_vid" title="Clear every video checkmark">Reset</button>':'')+'</div>'
-    +'<p class="muted small" style="margin-top:0">How much of each subject’s videos you’ve watched — not question accuracy (that’s <b>Subject confidence</b>).</p><div class="bars">';
+    +'<p class="muted small" style="margin-top:0">How much of each subject’s videos you’ve watched — not question accuracy (that’s <b>Accuracy by subject</b>).</p><div class="bars">';
   const rows=[]; planSystems().forEach(s=>{if(by[s]&&by[s].t)rows.push(s);});
   rows.forEach(s=>{const x=by[s];const pct=Math.round(x.d/x.t*100);
     body+='<div class="bar"><div class="barlab">'+escHTML(s)+'</div><div class="bartrack"><div class="barfill" style="width:'+pct+'%"></div></div><div class="barpct">'+pct+'% <span class="muted small">'+x.d+'/'+x.t+'</span></div></div>';});
@@ -2341,7 +2341,7 @@ function bindReady(){
   document.querySelectorAll("[data-unshaky]").forEach(b=>b.onclick=()=>{toggleShaky(b.dataset.unshaky);render();});
   const rsc=document.getElementById("rst_scores");if(rsc)rsc.onclick=()=>confirmClear("Clear all logged scores?","Removes every self-assessment score in this hub's log. You'll get one chance to undo.",clearScores);
   const ruw=document.getElementById("rst_uw");if(ruw)ruw.onclick=()=>confirmClear("Clear the UWorld log?","Removes every logged UWorld block and your qbank size. You'll get one chance to undo.",clearUworld);
-  const rprc=document.getElementById("rst_pr");if(rprc)rprc.onclick=()=>confirmClear("Clear the practice-question log?","Removes every UWorld, AMBOSS and ScholarRx block logged in this hub — your subject confidence resets with it. You'll get one chance to undo.",()=>clearScopedPractice(S.active));
+  const rprc=document.getElementById("rst_pr");if(rprc)rprc.onclick=()=>confirmClear("Clear the practice-question log?","Removes every UWorld, AMBOSS and ScholarRx block logged in this hub — your per-subject accuracy resets with it. You'll get one chance to undo.",()=>clearScopedPractice(S.active));
   const rfl=document.getElementById("rst_flags");if(rfl)rfl.onclick=()=>confirmClear("Clear all review flags?","Un-flags every video you marked as shaky. You'll get one chance to undo.",clearFlags);
   const rvd=document.getElementById("rst_vid");if(rvd)rvd.onclick=()=>confirmClear("Reset video progress?","Clears every video checkmark and daily Anki check across BOTH hubs. Scores, UWorld log, and flags stay. You'll get one chance to undo.",clearVideos);
   wireChrome();
@@ -4088,11 +4088,15 @@ function doResetAll(){
     S.cfgs=snap.cfgs;S.active=snap.active;S.cfg=S.active?S.cfgs[S.active]:null;_prevSig=progressSig();save();
     if(S.cfg){reflow();render();}else renderWelcome();toast("Restored ✓");});
 }
-const BUILD="2026-07-21o";
+const BUILD="2026-07-21p";
 /* ---------- What's new (changelog) ----------
    Newest entry first. Bump the top entry's id whenever you add one and the
    pop-up shows once per person (tracked in synced settings.seenUpdate). */
 const CHANGELOG=[
+  {id:"2026-08-03", date:"August 2026", title:"No more 80% \u201cmastery\u201d mark", items:[
+    "Subject confidence graded you against 80% correct and labelled each subject Confident / Developing / Needs work. That number was arbitrary \u2014 what counts as a good percentage depends on the qbank, the phase, and the student \u2014 so it\u2019s gone.",
+    "The card is now \u201cAccuracy by subject\u201d: your real accuracy per subject, ranked weakest first, with the number of questions behind it. Same data, no invented pass mark.",
+  ]},
   {id:"2026-08-02", date:"August 2026", title:"Days now show the time you have LEFT", items:[
     "Check videos off \u2014 including when you work ahead \u2014 and the day\u2019s time drops to what\u2019s still left, both next to the date and on the calendar. Finish a day and it reads as done instead of still showing the full total.",
     "A day you haven\u2019t started still shows its full load, so nothing changes until you actually check something off.",
