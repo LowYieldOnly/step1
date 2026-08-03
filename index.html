@@ -2053,9 +2053,19 @@ function practiceBankPlaceholder(src){return src==="amboss"?"~2800":(src==="scho
    blocks logged in this hub both count; the tally resets each Monday. */
 const CONF_MIN_Q=10;   // questions in a subject before its % is worth showing (sample size, not a target)
 function weekStartISO(iso){const d=isoToDate(iso);const wd=(d.getDay()+6)%7;return isoFromDate(addDays(d,-wd));}  // Monday-start of iso's week
-function weeklyGoal(c){c=c||S.cfg;return (c&&c.weeklyQGoal>0)?c.weeklyQGoal:0;}
-function weeklyQLogged(scope){scope=scope||S.active;const ws=weekStartISO(todayISO());const we=isoFromDate(addDays(isoToDate(ws),7));
-  let n=0;practiceLogs().forEach(log=>{const bl=(log&&log.blocks)||{};for(const k in bl){const b=bl[k];if(b&&b.hub===scope&&b.dateISO>=ws&&b.dateISO<we)n+=(+b.q||0);}});return n;}
+/* The goal can run per DAY or per WEEK. weeklyQGoal stays the persisted number
+   (so existing plans keep theirs); qGoalPer says what window it applies to and
+   defaults to "week", which is what every plan made before this had. */
+function qGoalPer(c){c=c||S.cfg;return (c&&c.qGoalPer==="day")?"day":"week";}
+function qGoalPeriod(c){const per=qGoalPer(c),t=todayISO();
+  if(per==="day")return {per,start:t,end:isoFromDate(addDays(isoToDate(t),1))};
+  const ws=weekStartISO(t);return {per,start:ws,end:isoFromDate(addDays(isoToDate(ws),7))};}
+function qPerWord(c,cap){return qGoalPer(c)==="day"?(cap?"Today":"today"):(cap?"This week":"this week");}
+function qPerEach(c){return qGoalPer(c)==="day"?"day":"week";}
+function qGoal(c){c=c||S.cfg;return (c&&c.weeklyQGoal>0)?c.weeklyQGoal:0;}
+function qGoalDefault(per){return per==="day"?5:15;}
+function qGoalLogged(scope,c){scope=scope||S.active;const p=qGoalPeriod(c);
+  let n=0;practiceLogs().forEach(log=>{const bl=(log&&log.blocks)||{};for(const k in bl){const b=bl[k];if(b&&b.hub===scope&&b.dateISO>=p.start&&b.dateISO<p.end)n+=(+b.q||0);}});return n;}
 /* combined UWorld + AMBOSS + ScholarRx accuracy per subject. No pass mark: a
    "good" percentage depends on the qbank, the phase and the student, so we report
    the number and rank it against your OWN other subjects instead of grading it
@@ -2068,18 +2078,19 @@ function subjectConfidence(scope){scope=scope||S.active;const uw=uworldRollup(sc
 /* progress bar for the weekly goal — reused on Today and the Plan page.
    Going OVER the target is a good thing: the bar fills to 100% and the
    surplus is called out ("+N beyond goal") rather than silently capped. */
-function weeklyGoalProgressHTML(c){const goal=weeklyGoal(c);if(!goal)return '';
-  const done=weeklyQLogged();const pct=Math.min(100,Math.round(done/goal*100));const met=done>=goal;const over=done-goal;
+function weeklyGoalProgressHTML(c){const goal=qGoal(c);if(!goal)return '';
+  const done=qGoalLogged(null,c);const pct=Math.min(100,Math.round(done/goal*100));const met=done>=goal;const over=done-goal;
   const right=met?('Goal met ✓'+(over>0?' · +'+over+' beyond':'')):(pct+'%');
-  return '<div class="uwprog"><div class="uwproglab"><span><b>'+done+'</b> / '+goal+' questions this week</span><span'+(met?' class="wgmet"':'')+'>'+right+'</span></div>'
+  return '<div class="uwprog"><div class="uwproglab"><span><b>'+done+'</b> / '+goal+' questions '+qPerWord(c)+'</span><span'+(met?' class="wgmet"':'')+'>'+right+'</span></div>'
     +'<div class="bartrack big"><div class="barfill'+(over>0?' over':'')+'" style="width:'+pct+'%'+(met?';background:var(--success)':'')+'"></div></div></div>';}
 /* compact Today-hero chip — running weekly tally, a plain-English "N left / N
    over" line that updates every day, and an inline quick-logger. Anything
    logged here lands in the same block log the Stats page reads. */
-function weeklyGoalChip(){if(S.active!=="nbme")return '';const goal=weeklyGoal();if(!goal)return '';
-  const done=weeklyQLogged();const pct=Math.min(100,Math.round(done/goal*100));const met=done>=goal;const over=done-goal;const left=goal-done;
-  const status=met?(over>0?('You’re <b>'+over+'</b> over your weekly goal — nice.'):'Weekly goal met ✓'):('<b>'+left+'</b> question'+(left===1?'':'s')+' left this week');
-  return '<div class="card wgcard"><div class="wgrow"><span class="wglab">Practice questions · this week</span><span class="wgn'+(met?' met':'')+'">'+done+' / '+goal+(met?' ✓':'')+'</span></div>'
+function weeklyGoalChip(){if(S.active!=="nbme")return '';const goal=qGoal();if(!goal)return '';
+  const c=S.cfg;const done=qGoalLogged(null,c);const pct=Math.min(100,Math.round(done/goal*100));const met=done>=goal;const over=done-goal;const left=goal-done;
+  const per=qPerEach(c);
+  const status=met?(over>0?('You’re <b>'+over+'</b> over your '+per+'ly goal — nice.'):(qPerWord(c,true)+'’s goal met ✓')):('<b>'+left+'</b> question'+(left===1?'':'s')+' left '+qPerWord(c));
+  return '<div class="card wgcard"><div class="wgrow"><span class="wglab">Practice questions · '+qPerWord(c)+'</span><span class="wgn'+(met?' met':'')+'">'+done+' / '+goal+(met?' ✓':'')+'</span></div>'
     +'<div class="bartrack"><div class="barfill'+(over>0?' over':'')+'" style="width:'+pct+'%'+(met?';background:var(--success)':'')+'"></div></div>'
     +'<div class="wgstatus'+(met?' met':'')+'">'+status+'</div>'
     +weeklyQuickLogHTML()+'</div>';}
@@ -2107,18 +2118,24 @@ function bindWeeklyQuickLog(){
     WQDRAFT={src:s,sys:sy};toast(practiceSrcLabel(s)+" · "+q+" logged ✓");render();};}
 /* Plan-page opt-in: toggle + target (off by default). M2 only. */
 function weeklyGoalSettingHTML(c){
-  const on=weeklyGoal(c)>0;const goal=c.weeklyQGoal>0?c.weeklyQGoal:15;
-  let h='<div class="card"><div class="cardhd">Weekly practice-question goal</div>'
+  const on=qGoal(c)>0;const per=qGoalPer(c);const goal=c.weeklyQGoal>0?c.weeklyQGoal:qGoalDefault(per);
+  const perBtn=(k,lab)=>'<button type="button" class="tog '+(per===k?"on":"")+'" data-wgper="'+k+'">'+lab+'</button>';
+  let h='<div class="card"><div class="cardhd">Practice-question goal</div>'
     +'<div class="wgtoggle"><button type="button" class="tog '+(on?"on":"")+'" id="wg_toggle">'+(on?"On":"Off")+'</button>'
     +'<span class="muted small">Optional · off by default</span></div>';
-  if(on)h+='<div class="form" style="margin-top:10px"><label>Questions per week <span class="opt">(15–20 recommended)</span><input type="number" id="wg_goal" min="1" step="1" value="'+goal+'"></label></div>'
-    +'<p class="muted small">UWorld, AMBOSS or ScholarRx questions you log count toward this — it resets every Monday.</p>'+weeklyGoalProgressHTML(c);
-  else h+='<p class="muted small">Set a target number of UWorld / AMBOSS / ScholarRx questions to do each week and track your progress toward it. 15–20 a week is a solid start.</p>';
+  if(on)h+='<div class="flab mt">Count them by</div><div class="togrow">'+perBtn("day","Daily")+perBtn("week","Weekly")+'</div>'
+    +'<div class="form" style="margin-top:10px"><label>Questions per '+per+'<input type="number" id="wg_goal" min="1" step="1" value="'+goal+'"></label></div>'
+    +'<p class="muted small">UWorld, AMBOSS or ScholarRx questions you log count toward this — it resets '+(per==="day"?"every day":"every Monday")+'.</p>'+weeklyGoalProgressHTML(c);
+  else h+='<p class="muted small">Set a target number of UWorld / AMBOSS / ScholarRx questions and track your progress toward it — counted <b>daily</b> or <b>weekly</b>, whichever suits how you study.</p>';
   return h+'</div>';
 }
 function bindWeeklyGoal(c,apply){
-  const t=document.getElementById("wg_toggle");if(t)t.onclick=()=>{c.weeklyQGoal=(weeklyGoal(c)>0)?0:15;apply();};
+  const t=document.getElementById("wg_toggle");if(t)t.onclick=()=>{c.weeklyQGoal=(qGoal(c)>0)?0:qGoalDefault(qGoalPer(c));apply();};
   const g=document.getElementById("wg_goal");if(g)g.onchange=()=>{let v=parseInt(g.value,10);if(isNaN(v)||v<1)v=1;c.weeklyQGoal=v;apply();};
+  // Switching the window keeps whatever number you set — 20 a week and 20 a day are
+  // both things people mean, so we don't silently rescale it. The progress bar right
+  // below updates immediately, which makes the new meaning obvious.
+  document.querySelectorAll("[data-wgper]").forEach(b=>b.onclick=()=>{c.qGoalPer=b.dataset.wgper;apply();});
 }
 /* confidence flags + review queue (Change 4) */
 function isShaky(id){return !!(S.vshaky&&S.vshaky[id]);}
@@ -3739,9 +3756,9 @@ function enterHub(key){if(!S.cfgs[key]){startOnboard(key);return;}activate(key);
 let _ob=null;
 function defaultsForHub(key,fresh){const ex=fresh?null:S.cfgs[key];
   let o;
-  if(ex)o={hub:key,fresh:false,brody:ex.brody||null,brodyPace:ex.brodyPace||null,brodyJoinWk:(ex.brodyJoinWk!=null?ex.brodyJoinWk:undefined),brodyJoinDate:(ex.brodyJoinDate||undefined),brodyReviewDays:(ex.brodyReviewDays!=null?ex.brodyReviewDays:undefined),examLabel:ex.examLabel||"",examISO:ex.examISO||"",startISO:ex.startISO||todayISO(),wkdayHrs:ex.wkdayHrs,wkendHrs:ex.wkendHrs,restDays:(ex.restDays||[0]).slice(),reviewDays:ex.reviewDays,resources:Object.assign({bnb:true,pathoma:true,sketchy:true,fa:true,anking:true,uworld:true},ex.resources||{}),systems:(ex.systems||SYS).slice(),sysOrder:(ex.sysOrder&&ex.sysOrder.length===SYS.length?ex.sysOrder:SYS_ORDER_DEFAULT).slice(),pathChapters:(Array.isArray(ex.pathChapters)?ex.pathChapters.slice():undefined),threadTopics:(Array.isArray(ex.threadTopics)?ex.threadTopics.slice():undefined),weeklyQGoal:(ex.weeklyQGoal||0),step:0};
+  if(ex)o={hub:key,fresh:false,brody:ex.brody||null,brodyPace:ex.brodyPace||null,brodyJoinWk:(ex.brodyJoinWk!=null?ex.brodyJoinWk:undefined),brodyJoinDate:(ex.brodyJoinDate||undefined),brodyReviewDays:(ex.brodyReviewDays!=null?ex.brodyReviewDays:undefined),examLabel:ex.examLabel||"",examISO:ex.examISO||"",startISO:ex.startISO||todayISO(),wkdayHrs:ex.wkdayHrs,wkendHrs:ex.wkendHrs,restDays:(ex.restDays||[0]).slice(),reviewDays:ex.reviewDays,resources:Object.assign({bnb:true,pathoma:true,sketchy:true,fa:true,anking:true,uworld:true},ex.resources||{}),systems:(ex.systems||SYS).slice(),sysOrder:(ex.sysOrder&&ex.sysOrder.length===SYS.length?ex.sysOrder:SYS_ORDER_DEFAULT).slice(),pathChapters:(Array.isArray(ex.pathChapters)?ex.pathChapters.slice():undefined),threadTopics:(Array.isArray(ex.threadTopics)?ex.threadTopics.slice():undefined),weeklyQGoal:(ex.weeklyQGoal||0),qGoalPer:(ex.qGoalPer||"week"),step:0};
   // a brand-new plan starts with every resource unchecked — the student picks
-  else o={hub:key,fresh:!!fresh,examLabel:key==="step1"?"Step 1":"",examISO:"",startISO:todayISO(),wkdayHrs:6,wkendHrs:4,restDays:[0],reviewDays:14,resources:{bnb:false,pathoma:false,sketchy:false,fa:false,anking:false,uworld:false},systems:(key==="nbme"?[]:SYS.slice()),sysOrder:SYS_ORDER_DEFAULT.slice(),threadTopics:[],weeklyQGoal:0,step:0};
+  else o={hub:key,fresh:!!fresh,examLabel:key==="step1"?"Step 1":"",examISO:"",startISO:todayISO(),wkdayHrs:6,wkendHrs:4,restDays:[0],reviewDays:14,resources:{bnb:false,pathoma:false,sketchy:false,fa:false,anking:false,uworld:false},systems:(key==="nbme"?[]:SYS.slice()),sysOrder:SYS_ORDER_DEFAULT.slice(),threadTopics:[],weeklyQGoal:0,qGoalPer:"week",step:0};
   // NBME hub now selects individual systems (like Step 1); migrate any legacy block selection
   if(key==="nbme"&&ex&&(!ex.systems||!ex.systems.length)&&Array.isArray(ex.blocks)&&ex.blocks.length){
     const set=new Set(ex.blocks);o.systems=flatSys((ex.blockOrder||blockNames()).filter(b=>set.has(b)));
@@ -3865,7 +3882,7 @@ function obReviewHTML(ob){
   else rows.push(["Study hours",ob.wkdayHrs+" h weekday / "+ob.wkendHrs+" h weekend"]);
   rows.push(["Rest days",ob.restDays.length?ob.restDays.map(i=>DOW[i]).join(", "):"none"]);
   rows.push(["Review buffer",(brody?brodyReviewBuf(ob):ob.reviewDays)+" day"+(((brody?brodyReviewBuf(ob):ob.reviewDays))===1?"":"s")]);
-  rows.push(["Weekly Q goal",weeklyGoal(ob)>0?(weeklyGoal(ob)+" / week"):"off"]);
+  rows.push(["Practice Q goal",qGoal(ob)>0?(qGoal(ob)+" / "+qPerEach(ob)):"off"]);
   let h='<div class="card"><div class="cardhd">Your plan</div><div class="wizreview">'
     +rows.map(r=>'<div class="wrv"><span class="wrv-k">'+escHTML(r[0])+'</span><span class="wrv-v">'+escHTML(r[1])+'</span></div>').join('')+'</div></div>';
   h+='<div class="card soft" id="o_reco"><div class="cardhd">The plan at a glance</div>'+obPreview()+'</div>';
@@ -4060,7 +4077,7 @@ function commitOnboard(){const ob=_ob;
     // brodyPace is locked to the plan at creation (reflowBrody stamps it if the catalog wasn't ready yet)
     brody:(brody?brody.id:undefined),brodyPace:(brody?(ob.brodyPace||(catReady()?brodyPace(ob):undefined)):undefined),brodyJoinWk:(brody?(ob.brodyJoinWk!=null?ob.brodyJoinWk:undefined):undefined),brodyJoinDate:(brody?(ob.brodyJoinDate||todayISO()):undefined),brodyReviewDays:(brody?brodyReviewBuf(ob):undefined),
     examISO:(brody?brody.shelf:ob.examISO),startISO:(brody?brody.weeks[0].start:ob.startISO),wkdayHrs:ob.wkdayHrs,wkendHrs:ob.wkendHrs,restDays:ob.restDays.slice(),
-    reviewDays:(brody?0:ob.reviewDays),resources:Object.assign({},ob.resources),systems:(brody?brody.systems.slice():ob.systems.slice()),sysOrder:(ob.sysOrder||SYS_ORDER_DEFAULT).slice(),pathChapters:(Array.isArray(ob.pathChapters)?ob.pathChapters.slice():undefined),threadTopics:(brody?undefined:(Array.isArray(ob.threadTopics)?ob.threadTopics.slice():undefined)),weeklyQGoal:(ob.weeklyQGoal>0?ob.weeklyQGoal:0)});
+    reviewDays:(brody?0:ob.reviewDays),resources:Object.assign({},ob.resources),systems:(brody?brody.systems.slice():ob.systems.slice()),sysOrder:(ob.sysOrder||SYS_ORDER_DEFAULT).slice(),pathChapters:(Array.isArray(ob.pathChapters)?ob.pathChapters.slice():undefined),threadTopics:(brody?undefined:(Array.isArray(ob.threadTopics)?ob.threadTopics.slice():undefined)),weeklyQGoal:(ob.weeklyQGoal>0?ob.weeklyQGoal:0),qGoalPer:qGoalPer(ob)});
   c.off=c.off||{};
   if(ob.fresh&&prev&&key==="nbme")archiveUnit(prev);   // keep the old unit reachable under Plan → Past units
   S.cfgs[key]=c;activate(key);S.active=key;_ob=null;
@@ -4102,11 +4119,15 @@ function doResetAll(){
     S.cfgs=snap.cfgs;S.active=snap.active;S.cfg=S.active?S.cfgs[S.active]:null;_prevSig=progressSig();save();
     if(S.cfg){reflow();render();}else renderWelcome();toast("Restored ✓");});
 }
-const BUILD="2026-07-21q";
+const BUILD="2026-07-21r";
 /* ---------- What's new (changelog) ----------
    Newest entry first. Bump the top entry's id whenever you add one and the
    pop-up shows once per person (tracked in synced settings.seenUpdate). */
 const CHANGELOG=[
+  {id:"2026-08-04", date:"August 2026", title:"Practice-question goal: daily or weekly", items:[
+    "The optional practice-question goal can now be counted per day instead of per week \u2014 pick Daily or Weekly in the Plan tab. Daily resets each morning; weekly still resets Monday.",
+    "Your Study screen follows whichever you pick, so it reads \u201c3 questions left today\u201d or \u201cleft this week\u201d. Existing goals stay weekly exactly as they were.",
+  ]},
   {id:"2026-08-03b", date:"August 2026", title:"\u201cWeak systems\u201d is now relative to you", items:[
     "The app used to call a system weak if you were under 65% \u2014 another invented number. It told a student at 64% they were deficient, and a student sitting at 68% across the board that nothing needed work.",
     "It now shows your lowest three systems, whatever your numbers are, so there\u2019s always a useful answer to \u201cwhere do I go next?\u201d. Practice-accuracy bars are no longer coloured pass/fail anywhere \u2014 they just show your number and rank.",
