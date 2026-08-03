@@ -624,6 +624,24 @@ b{color:var(--ink)}
 .sysrow.on{opacity:1;background:var(--surface-sunken)}
 .sysinc{flex:0 0 auto;width:24px;height:24px;border-radius:7px;border:1.5px solid var(--line2);background:transparent;color:var(--on-accent);font-size:13px;font-weight:800;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .14s}
 .sysrow.on .sysinc{background:var(--phos);border-color:var(--phos)}
+.qzrow{border:1px solid var(--line);border-radius:12px;padding:10px 11px;margin:8px 0}
+.qzhd{display:flex;align-items:center;gap:8px}
+.qzdate{flex:0 0 auto;font-family:var(--mono);font-size:12px;font-weight:700;color:var(--phos);background:var(--phos-soft);border:1px solid var(--phos-dim);border-radius:9px;padding:6px 10px;cursor:pointer}
+.qzlab{flex:1;min-width:0;font-size:13px;padding:6px 9px;border:1px solid var(--line);border-radius:9px;background:var(--surface);color:var(--ink)}
+.qzdel{flex:0 0 auto;width:28px;height:28px;border:none;background:none;color:var(--faint);font-size:14px;cursor:pointer;border-radius:8px}
+.qzdel:hover{color:var(--danger);background:var(--surface-2)}
+.qzstat{font-size:12px;line-height:1.45;color:var(--text-2);margin-top:8px}
+.qzstat.ok{color:var(--success)}
+.qzstat.warn{color:var(--warning)}
+.qztoggle{display:block;margin-top:8px;font-size:12px;font-weight:700;color:var(--text-2);background:none;border:none;padding:2px 0;cursor:pointer;text-align:left}
+.qzpick{margin-top:8px;padding:8px 10px;background:var(--surface-2);border-radius:10px}
+.qzsys{display:flex;align-items:center;gap:8px;margin:8px 0 4px}
+.qzsysall{width:20px;height:20px;flex:0 0 auto;border:1.5px solid var(--line2);border-radius:6px;background:var(--surface);color:var(--on-accent);font-size:11px;cursor:pointer}
+.qzsysall.on{background:var(--phos);border-color:var(--phos)}
+.qzsysnm{font-size:12.5px;font-weight:700;color:var(--ink)}
+.qzcats{display:flex;flex-wrap:wrap;gap:5px;margin-left:28px}
+.qzcat{display:inline-flex;align-items:center;gap:5px;font-size:11.5px;padding:4px 8px;border:1px solid var(--line);border-radius:999px;background:var(--surface);color:var(--text-2);cursor:pointer}
+.qzcat.on{border-color:var(--phos);background:var(--phos-soft);color:var(--phos);font-weight:700}
 .catdis{transition:transform .12s ease}
 .catdis.open{transform:rotate(90deg)}
 .catord{margin:0 0 8px 34px;padding:8px 10px;border-left:2px solid var(--line);border-radius:0 8px 8px 0;background:var(--surface-2)}
@@ -1108,6 +1126,27 @@ function currentStreak(){const set=new Set(studyDays());let d=isoToDate(todayISO
    because they carve the same system up differently ("Red Blood Cells" vs "Red
    Blood Cell Disorders"), and inventing an equivalence between them would be a
    guess we'd have to maintain forever. */
+/* ---------- user-defined quiz dates (custom planner) ----------
+   A quiz is a date plus the categories that must be finished by it. The quiz date
+   itself is the LAST day those videos may land on. Assigning a category pulls it
+   FORWARD: the backlog is emitted quiz group by quiz group (earliest date first),
+   then everything unassigned — each group still in your chosen system/category
+   order. If a group can't fit before its date we say so plainly rather than
+   quietly inflating the pace, the same way the Brody calendar flags a firehose
+   week. Keys are JSON, not a delimited string: category names are free text. */
+function qcatKey(res,sys,cat){return JSON.stringify([res,sys,cat||""]);}
+function quizList(c){c=c||S.cfg;const q=(c&&Array.isArray(c.quizzes))?c.quizzes:[];
+  return q.filter(x=>x&&x.iso).slice().sort((a,b)=>a.iso<b.iso?-1:(a.iso>b.iso?1:0));}
+function quizGroupOf(c){const m={};quizList(c).forEach((q,i)=>{(q.cats||[]).forEach(k=>{if(m[k]==null)m[k]=i;});});return m;}
+function quizHasCat(q,res,sys,cat){return !!(q&&q.cats&&q.cats.indexOf(qcatKey(res,sys,cat))>=0);}
+function quizToggleCat(c,qi,res,sys,cat,on){
+  const q=(c.quizzes||[])[qi];if(!q)return;q.cats=q.cats||[];
+  const k=qcatKey(res,sys,cat),at=q.cats.indexOf(k);
+  if(on&&at<0){ (c.quizzes||[]).forEach(o=>{if(o!==q&&o.cats){const j=o.cats.indexOf(k);if(j>=0)o.cats.splice(j,1);}});   // a category belongs to one quiz
+    q.cats.push(k);}
+  else if(!on&&at>=0)q.cats.splice(at,1);}
+function quizSysCats(c,sys){const out=[];["bnb","pathoma"].forEach(r=>{if(!(c.resources&&c.resources[r]))return;
+  catsFor(r,sys).forEach(cat=>out.push({res:r,cat}));});return out;}
 function catKeyOf(res,sys){return res+"|"+sys;}
 function catsFor(res,sys){                       // catalog order, first appearance wins
   const out=[],seen=new Set();
@@ -1226,7 +1265,7 @@ function buildBacklog(){
   // chapter (so a picked chapter still schedules even if its system isn't selected)
   const orderSet=new Set(order);const visit=order.slice();
   SYS_ORDER_DEFAULT.forEach(sn=>{if(!orderSet.has(sn)&&bySys[sn]&&bySys[sn].pathoma)visit.push(sn);});
-  const out=[];
+  let out=[];
   visit.forEach(sn=>{const byRes=bySys[sn];if(!byRes)return;const isSel=orderSet.has(sn);
     RES_ORDER.forEach(r=>{if(r!=="pathoma"&&!isSel)return;
       let list=byRes[r]||[];
@@ -1237,8 +1276,36 @@ function buildBacklog(){
       }
       list.forEach(v=>out.push({sys:sn,name:v.name,min:v.min,fa:v.cat||"",tag:videoTag(v),res:r,label:v.name,id:itemId(v)}));});
   });
+  // quiz dates win over the manual order — pull each quiz's categories forward,
+  // preserving your ordering inside each group and for everything unassigned
+  const qg=quizGroupOf(c);
+  if(Object.keys(qg).length){
+    const n=quizList(c).length;
+    out=out.map((it,i)=>{const g=qg[qcatKey(it.res,it.sys,it.fa)];return {it,i,g:(g!=null?g:n)};})
+           .sort((a,b)=>(a.g-b.g)||(a.i-b.i)).map(x=>x.it);
+  }
   return out;
 }
+/* Per-quiz readiness, read off the built schedule. Cumulative on purpose: an
+   earlier quiz's leftovers still have to be watched before a later one. */
+function quizReport(c){c=c||S.cfg;const qs=quizList(c);const out=[];
+  if(!qs.length||!SCHED)return out;
+  const grp=quizGroupOf(c);const dateOf={};
+  SCHED.days.forEach(d=>d.items.forEach(it=>{dateOf[it.id]=d.iso;}));
+  const backlog=buildBacklog();const t=todayISO();
+  const openBy=iso=>((SCHED.contentDates||[]).filter(d=>d>=t&&d<=iso)).length;   // quiz day itself counts
+  let cumMin=0;
+  qs.forEach((q,i)=>{
+    const mine=backlog.filter(it=>grp[qcatKey(it.res,it.sys,it.fa)]===i);
+    const remain=mine.filter(it=>!isDone(it.id)&&!isSkip(it.id));
+    cumMin+=remain.reduce((a,x)=>a+x.min,0);
+    const late=remain.filter(it=>{const d=dateOf[it.id];return !d||d>q.iso;});
+    const days=openBy(q.iso);
+    const needH=days>0?(cumMin/days/60):(cumMin>0?Infinity:0);
+    out.push({i,iso:q.iso,label:q.label||("Quiz "+(i+1)),total:mine.length,remain:remain.length,
+      late:late.length,days,needH,ok:late.length===0,past:q.iso<t});
+  });
+  return out;}
 /* The WHOLE third-party catalog, normalized for the master checklist — every
    B&B, Pathoma, and Sketchy video across every system, not just the current
    plan. Ordered resource → system (recommended order) → catalog order. */
@@ -1781,6 +1848,7 @@ Cloud.signOut=function(){try{firebase.auth().signOut();}catch(e){}};
    ============================================================ */
 const app=document.getElementById("app");
 let VIEW="today";
+let QZOPEN={};   // which quiz rows have their topic picker open
 let CATOPEN={};   // which systems have their topic-order list expanded
 let ADJ_VIEW=null;   // Plan tab landing: null = 3-button menu, "edit" = editor, "old" = past plans
 const toEl=document.getElementById("toast");let toT=null;
@@ -3206,6 +3274,7 @@ function renderPlanEditor(){
     + '<button class="link" id="sordReset">↺ Reset to recommended order</button>';
   colB+='<div class="card"><div class="cardhd">'+(S.active==="nbme"?'Units &amp; study order':'Study order &amp; systems')+'</div>'
     + fold("adj_sys",(c.systems||SYS).length+' of '+SYS.length+' systems selected — edit / reorder',sysInner,false)+'</div>';
+  colB+=quizzesHTML(c,"adjqz");
   colB+=pathChaptersHTML(c,"adj_path");
   colB+=threadTopicsHTML(c,"adj");
   if(S.active==="nbme"){
@@ -3232,6 +3301,7 @@ function renderPlanEditor(){
   bindThreadTopics(c,apply);
   document.querySelectorAll("[data-sup]").forEach(b=>b.onclick=()=>{const i=+b.dataset.sup;const a=c.sysOrder=(c.sysOrder||SYS_ORDER_DEFAULT).slice();if(i>0){const t=a[i-1];a[i-1]=a[i];a[i]=t;apply();}});
   document.querySelectorAll("[data-sdn]").forEach(b=>b.onclick=()=>{const i=+b.dataset.sdn;const a=c.sysOrder=(c.sysOrder||SYS_ORDER_DEFAULT).slice();if(i<a.length-1){const t=a[i+1];a[i+1]=a[i];a[i]=t;apply();}});
+  bindQuizzes(c,apply,"adjqz");
   bindCatOrder(c,apply);
   const sr=document.getElementById("sordReset");if(sr)sr.onclick=()=>{c.sysOrder=SYS_ORDER_DEFAULT.slice();apply();};
   const nu=document.getElementById("newUnit");if(nu)nu.onclick=()=>{startOnboard("nbme",true);};
@@ -3799,9 +3869,9 @@ function enterHub(key){if(!S.cfgs[key]){startOnboard(key);return;}activate(key);
 let _ob=null;
 function defaultsForHub(key,fresh){const ex=fresh?null:S.cfgs[key];
   let o;
-  if(ex)o={hub:key,fresh:false,brody:ex.brody||null,brodyPace:ex.brodyPace||null,brodyJoinWk:(ex.brodyJoinWk!=null?ex.brodyJoinWk:undefined),brodyJoinDate:(ex.brodyJoinDate||undefined),brodyReviewDays:(ex.brodyReviewDays!=null?ex.brodyReviewDays:undefined),examLabel:ex.examLabel||"",examISO:ex.examISO||"",startISO:ex.startISO||todayISO(),wkdayHrs:ex.wkdayHrs,wkendHrs:ex.wkendHrs,restDays:(ex.restDays||[0]).slice(),reviewDays:ex.reviewDays,resources:Object.assign({bnb:true,pathoma:true,sketchy:true,fa:true,anking:true,uworld:true},ex.resources||{}),systems:(ex.systems||SYS).slice(),sysOrder:(ex.sysOrder&&ex.sysOrder.length===SYS.length?ex.sysOrder:SYS_ORDER_DEFAULT).slice(),pathChapters:(Array.isArray(ex.pathChapters)?ex.pathChapters.slice():undefined),threadTopics:(Array.isArray(ex.threadTopics)?ex.threadTopics.slice():undefined),weeklyQGoal:(ex.weeklyQGoal||0),qGoalPer:(ex.qGoalPer||"week"),catOrder:(ex.catOrder?JSON.parse(JSON.stringify(ex.catOrder)):undefined),step:0};
+  if(ex)o={hub:key,fresh:false,brody:ex.brody||null,brodyPace:ex.brodyPace||null,brodyJoinWk:(ex.brodyJoinWk!=null?ex.brodyJoinWk:undefined),brodyJoinDate:(ex.brodyJoinDate||undefined),brodyReviewDays:(ex.brodyReviewDays!=null?ex.brodyReviewDays:undefined),examLabel:ex.examLabel||"",examISO:ex.examISO||"",startISO:ex.startISO||todayISO(),wkdayHrs:ex.wkdayHrs,wkendHrs:ex.wkendHrs,restDays:(ex.restDays||[0]).slice(),reviewDays:ex.reviewDays,resources:Object.assign({bnb:true,pathoma:true,sketchy:true,fa:true,anking:true,uworld:true},ex.resources||{}),systems:(ex.systems||SYS).slice(),sysOrder:(ex.sysOrder&&ex.sysOrder.length===SYS.length?ex.sysOrder:SYS_ORDER_DEFAULT).slice(),pathChapters:(Array.isArray(ex.pathChapters)?ex.pathChapters.slice():undefined),threadTopics:(Array.isArray(ex.threadTopics)?ex.threadTopics.slice():undefined),weeklyQGoal:(ex.weeklyQGoal||0),qGoalPer:(ex.qGoalPer||"week"),catOrder:(ex.catOrder?JSON.parse(JSON.stringify(ex.catOrder)):undefined),quizzes:(Array.isArray(ex.quizzes)?JSON.parse(JSON.stringify(ex.quizzes)):[]),step:0};
   // a brand-new plan starts with every resource unchecked — the student picks
-  else o={hub:key,fresh:!!fresh,examLabel:key==="step1"?"Step 1":"",examISO:"",startISO:todayISO(),wkdayHrs:6,wkendHrs:4,restDays:[0],reviewDays:14,resources:{bnb:false,pathoma:false,sketchy:false,fa:false,anking:false,uworld:false},systems:(key==="nbme"?[]:SYS.slice()),sysOrder:SYS_ORDER_DEFAULT.slice(),threadTopics:[],weeklyQGoal:0,qGoalPer:"week",catOrder:undefined,step:0};
+  else o={hub:key,fresh:!!fresh,examLabel:key==="step1"?"Step 1":"",examISO:"",startISO:todayISO(),wkdayHrs:6,wkendHrs:4,restDays:[0],reviewDays:14,resources:{bnb:false,pathoma:false,sketchy:false,fa:false,anking:false,uworld:false},systems:(key==="nbme"?[]:SYS.slice()),sysOrder:SYS_ORDER_DEFAULT.slice(),threadTopics:[],weeklyQGoal:0,qGoalPer:"week",catOrder:undefined,quizzes:[],step:0};
   // NBME hub now selects individual systems (like Step 1); migrate any legacy block selection
   if(key==="nbme"&&ex&&(!ex.systems||!ex.systems.length)&&Array.isArray(ex.blocks)&&ex.blocks.length){
     const set=new Set(ex.blocks);o.systems=flatSys((ex.blockOrder||blockNames()).filter(b=>set.has(b)));
@@ -3829,6 +3899,63 @@ function bindCatOrder(c,apply){
     let p=null;try{p=JSON.parse(b.dataset.cmove);}catch(e){}
     if(!Array.isArray(p)||p.length!==4)return;
     if(moveCatOrder(c,p[0],p[1],p[2],p[3]))apply();});}
+/* Quiz-date editor, shared by the onboarding step and the Plan tab. Each quiz is
+   a date plus the topics due by it; assign a whole system in one tap or open it
+   and tick individual categories. Status is stated, never acted on. */
+function quizzesHTML(c,idp){
+  idp=idp||"qz";
+  const qs=(c.quizzes||[]);const rep=quizReport(c);const repBy={};rep.forEach(r=>repBy[r.iso]=r);
+  const sysList=(c.systems&&c.systems.length)?planSystems():[];
+  let h='<div class="card"><div class="cardhd">Quizzes before your exam</div>'
+    +'<p class="muted small" style="margin-top:0">Optional. Add a quiz date and tick what has to be done by it — those topics get pulled to the front of your plan. The quiz date is the last day its videos can land on.</p>';
+  if(!qs.length)h+='<p class="muted small">No quiz dates yet.</p>';
+  qs.forEach((q,qi)=>{
+    const r=repBy[q.iso];const open=!!(QZOPEN&&QZOPEN[qi]);
+    const nCats=(q.cats||[]).length;
+    h+='<div class="qzrow"><div class="qzhd">'
+      +'<button type="button" class="qzdate" data-qzdate="'+qi+'">'+(q.iso?fmtShort(q.iso):"Pick a date")+'</button>'
+      +'<input type="text" class="qzlab" data-qzlab="'+qi+'" value="'+escAttr(q.label||"")+'" placeholder="Quiz '+(qi+1)+'">'
+      +'<button type="button" class="qzdel" data-qzdel="'+qi+'" aria-label="remove quiz">✕</button></div>';
+    if(r){
+      h+= r.past ? '<div class="qzstat">Already passed.</div>'
+        : (r.remain===0 ? '<div class="qzstat ok">✓ Everything for this quiz is done.</div>'
+        : (r.ok ? '<div class="qzstat ok">✓ On track — all '+r.remain+' video'+(r.remain===1?'':'s')+' land by '+fmtShort(q.iso)+'.</div>'
+        : '<div class="qzstat warn">⚠ '+r.late+' video'+(r.late===1?'':'s')+' land after '+fmtShort(q.iso)+'. '
+          +(isFinite(r.needH)?('About <b>'+(Math.ceil(r.needH*2)/2)+' h/day</b> of video would get you there.'):'No study days left before it.')
+          +'</div>'));
+    }
+    h+='<button type="button" class="qztoggle" data-qzopen="'+qi+'">'+(open?"▾":"▸")+' '+(nCats?(nCats+' topic'+(nCats===1?'':'s')+' due'):'Choose topics')+'</button>';
+    if(open){
+      h+='<div class="qzpick">';
+      if(!sysList.length)h+='<p class="muted small" style="margin:0">Pick your systems first.</p>';
+      sysList.forEach(sys=>{
+        const cats=quizSysCats(c,sys);if(!cats.length)return;
+        const all=cats.every(x=>quizHasCat(q,x.res,sys,x.cat));
+        h+='<div class="qzsys"><button type="button" class="qzsysall'+(all?" on":"")+'" data-qzall="'+escAttr(JSON.stringify([qi,sys,!all]))+'">'+(all?"✓":"")+'</button>'
+          +'<span class="qzsysnm">'+escHTML(sys)+'</span></div><div class="qzcats">'
+          +cats.map(x=>{const on=quizHasCat(q,x.res,sys,x.cat);
+            return '<button type="button" class="qzcat'+(on?" on":"")+'" data-qzcat="'+escAttr(JSON.stringify([qi,x.res,sys,x.cat,!on]))+'">'
+              +(on?"✓ ":"")+resBadge(x.res)+' '+escHTML(x.cat||"(uncategorised)")+'</button>';}).join('')
+          +'</div>';});
+      h+='</div>';
+    }
+    h+='</div>';});
+  h+='<button type="button" class="btn ghost" id="'+idp+'_add">+ Add a quiz date</button>';
+  return h+'</div>';}
+function bindQuizzes(c,apply,idp){
+  idp=idp||"qz";
+  const add=document.getElementById(idp+"_add");
+  if(add)add.onclick=()=>{c.quizzes=c.quizzes||[];c.quizzes.push({iso:"",label:"",cats:[]});QZOPEN[c.quizzes.length-1]=true;apply();};
+  document.querySelectorAll("[data-qzdel]").forEach(b=>b.onclick=()=>{const i=+b.dataset.qzdel;(c.quizzes||[]).splice(i,1);QZOPEN={};apply();});
+  document.querySelectorAll("[data-qzopen]").forEach(b=>b.onclick=()=>{const i=+b.dataset.qzopen;QZOPEN[i]=!QZOPEN[i];apply();});
+  document.querySelectorAll("[data-qzlab]").forEach(b=>b.onchange=()=>{const i=+b.dataset.qzlab;if((c.quizzes||[])[i])c.quizzes[i].label=b.value;apply();});
+  document.querySelectorAll("[data-qzdate]").forEach(b=>b.onclick=()=>{const i=+b.dataset.qzdate;const q=(c.quizzes||[])[i];if(!q)return;
+    openDatePicker({value:q.iso||todayISO(),min:todayISO(),max:c.examISO||undefined,title:"Quiz date",onPick:(iso)=>{q.iso=iso;apply();}});});
+  document.querySelectorAll("[data-qzcat]").forEach(b=>b.onclick=()=>{let p=null;try{p=JSON.parse(b.dataset.qzcat);}catch(e){}
+    if(!Array.isArray(p))return;quizToggleCat(c,p[0],p[1],p[2],p[3],p[4]);apply();});
+  document.querySelectorAll("[data-qzall]").forEach(b=>b.onclick=()=>{let p=null;try{p=JSON.parse(b.dataset.qzall);}catch(e){}
+    if(!Array.isArray(p))return;const [qi,sys,on]=p;
+    quizSysCats(c,sys).forEach(x=>quizToggleCat(c,qi,x.res,sys,x.cat,on));apply();});}
 function orderedSysHTML(order,included,c){const set=new Set(included);c=c||S.cfg||{};
   return '<div class="sysord">'+order.map((s,i)=>{const on=set.has(s);
     const open=!!(CATOPEN&&CATOPEN[s]);
@@ -3911,7 +4038,7 @@ function obSteps(ob){
   const nbme=ob.hub==="nbme";
   if(ob.brody)return (nbme?["plan"]:[]).concat(["block","resources","routine","practice","review"]);
   const s=[];if(nbme)s.push("plan","name");
-  s.push("dates","resources","systems","routine","practice","review");
+  s.push("dates","resources","systems","quizzes","routine","practice","review");
   return s;
 }
 const OB_STEP_META={
@@ -3922,7 +4049,8 @@ const OB_STEP_META={
   resources:["Pick your resources","Which video series do you actually use?"],
   systems:["Systems & study order","What does this shelf cover — and in what order?"],
   routine:["Your routine","How much can you study, and how fast?"],
-  practice:["Practice questions","Optionally set a weekly question goal."],
+  quizzes:["Quizzes","Any quizzes before the exam? Optional."],
+  practice:["Practice questions","Optionally set a practice-question goal."],
   review:["Review & start","One last look before you build it."]
 };
 function obHasVideoRes(ob){return !!(ob.resources&&["bnb","pathoma","sketchy","bootcamp"].some(k=>ob.resources[k]));}
@@ -4023,6 +4151,7 @@ function renderOnboard(){
     }
     body+='<div class="card soft" id="o_reco"><div class="cardhd">The plan at a glance</div>'+obPreview()+'</div>';
   }
+  if(key==="quizzes")body+=quizzesHTML(ob,"obqz");
   if(key==="practice")body+=weeklyGoalSettingHTML(ob);
   if(key==="review")body+=obReviewHTML(ob);
   body+='</div>';
@@ -4053,6 +4182,7 @@ function renderOnboard(){
   document.querySelectorAll("[data-sup]").forEach(b=>b.onclick=()=>{const i=+b.dataset.sup;if(i>0){const a=ob.sysOrder;const t=a[i-1];a[i-1]=a[i];a[i]=t;renderOnboard();}});
   document.querySelectorAll("[data-sdn]").forEach(b=>b.onclick=()=>{const i=+b.dataset.sdn;const a=ob.sysOrder;if(i<a.length-1){const t=a[i+1];a[i+1]=a[i];a[i]=t;renderOnboard();}});
   const sr=document.getElementById("sordReset");if(sr)sr.onclick=()=>{ob.sysOrder=SYS_ORDER_DEFAULT.slice();renderOnboard();};
+  bindQuizzes(ob,()=>renderOnboard(),"obqz");
   bindWeeklyGoal(ob,()=>renderOnboard());
   const nx=document.getElementById("o_next");if(nx)nx.onclick=obNext;
   const pv=document.getElementById("o_prev");if(pv)pv.onclick=obPrev;
@@ -4143,7 +4273,7 @@ function commitOnboard(){const ob=_ob;
     // brodyPace is locked to the plan at creation (reflowBrody stamps it if the catalog wasn't ready yet)
     brody:(brody?brody.id:undefined),brodyPace:(brody?(ob.brodyPace||(catReady()?brodyPace(ob):undefined)):undefined),brodyJoinWk:(brody?(ob.brodyJoinWk!=null?ob.brodyJoinWk:undefined):undefined),brodyJoinDate:(brody?(ob.brodyJoinDate||todayISO()):undefined),brodyReviewDays:(brody?brodyReviewBuf(ob):undefined),
     examISO:(brody?brody.shelf:ob.examISO),startISO:(brody?brody.weeks[0].start:ob.startISO),wkdayHrs:ob.wkdayHrs,wkendHrs:ob.wkendHrs,restDays:ob.restDays.slice(),
-    reviewDays:(brody?0:ob.reviewDays),resources:Object.assign({},ob.resources),systems:(brody?brody.systems.slice():ob.systems.slice()),sysOrder:(ob.sysOrder||SYS_ORDER_DEFAULT).slice(),pathChapters:(Array.isArray(ob.pathChapters)?ob.pathChapters.slice():undefined),threadTopics:(brody?undefined:(Array.isArray(ob.threadTopics)?ob.threadTopics.slice():undefined)),weeklyQGoal:(ob.weeklyQGoal>0?ob.weeklyQGoal:0),qGoalPer:qGoalPer(ob),catOrder:(ob.catOrder?JSON.parse(JSON.stringify(ob.catOrder)):undefined)});
+    reviewDays:(brody?0:ob.reviewDays),resources:Object.assign({},ob.resources),systems:(brody?brody.systems.slice():ob.systems.slice()),sysOrder:(ob.sysOrder||SYS_ORDER_DEFAULT).slice(),pathChapters:(Array.isArray(ob.pathChapters)?ob.pathChapters.slice():undefined),threadTopics:(brody?undefined:(Array.isArray(ob.threadTopics)?ob.threadTopics.slice():undefined)),weeklyQGoal:(ob.weeklyQGoal>0?ob.weeklyQGoal:0),qGoalPer:qGoalPer(ob),catOrder:(ob.catOrder?JSON.parse(JSON.stringify(ob.catOrder)):undefined),quizzes:(Array.isArray(ob.quizzes)?ob.quizzes.filter(q=>q&&q.iso):[])});
   c.off=c.off||{};
   if(ob.fresh&&prev&&key==="nbme")archiveUnit(prev);   // keep the old unit reachable under Plan → Past units
   S.cfgs[key]=c;activate(key);S.active=key;_ob=null;
@@ -4185,11 +4315,16 @@ function doResetAll(){
     S.cfgs=snap.cfgs;S.active=snap.active;S.cfg=S.active?S.cfgs[S.active]:null;_prevSig=progressSig();save();
     if(S.cfg){reflow();render();}else renderWelcome();toast("Restored ✓");});
 }
-const BUILD="2026-07-21s";
+const BUILD="2026-07-21t";
 /* ---------- What's new (changelog) ----------
    Newest entry first. Bump the top entry's id whenever you add one and the
    pop-up shows once per person (tracked in synced settings.seenUpdate). */
 const CHANGELOG=[
+  {id:"2026-08-06", date:"August 2026", title:"Add your quiz dates", items:[
+    "Setting up a custom plan now asks whether you have quizzes before the exam. Add a date, tick what\u2019s due by it \u2014 a whole system in one tap, or open it and pick individual topics \u2014 and those move to the front of your plan automatically.",
+    "The quiz date is the last day its videos can land on. If everything won\u2019t fit in time we tell you so, and tell you the daily video time that would \u2014 we never quietly change your pace behind your back.",
+    "Editable later in the Plan tab, and optional \u2014 skip the step if you don\u2019t have quizzes.",
+  ]},
   {id:"2026-08-05", date:"August 2026", title:"Order the topics inside a system", items:[
     "In the custom planner you could already drag a system to the top. Now tap the \u25b8 next to any system to open it and order the topics inside it too \u2014 so you can do Red Blood Cells before Hemostasis, not just Hematology before Renal.",
     "Boards & Beyond and Pathoma get their own list, because they split a system up differently. Anything you don\u2019t touch keeps its normal order.",
