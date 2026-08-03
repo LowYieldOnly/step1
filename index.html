@@ -624,6 +624,13 @@ b{color:var(--ink)}
 .sysrow.on{opacity:1;background:var(--surface-sunken)}
 .sysinc{flex:0 0 auto;width:24px;height:24px;border-radius:7px;border:1.5px solid var(--line2);background:transparent;color:var(--on-accent);font-size:13px;font-weight:800;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .14s}
 .sysrow.on .sysinc{background:var(--phos);border-color:var(--phos)}
+.catdis{transition:transform .12s ease}
+.catdis.open{transform:rotate(90deg)}
+.catord{margin:0 0 8px 34px;padding:8px 10px;border-left:2px solid var(--line);border-radius:0 8px 8px 0;background:var(--surface-2)}
+.catgrp+.catgrp{margin-top:10px}
+.catreslab{display:flex;align-items:center;gap:6px;font-size:11px;font-weight:700;color:var(--text-2);margin-bottom:4px}
+.catrow{display:flex;align-items:center;gap:8px;padding:2px 0}
+.catnm{flex:1;font-size:12.5px;color:var(--ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .sysnm{flex:1;min-width:0;font-size:13.5px;border-left:3px solid;padding-left:9px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .ordbtns{flex:0 0 auto;display:flex;gap:4px}
 .ordbtn{width:30px;height:28px;border-radius:8px;border:1px solid var(--line2);background:var(--panel2);color:var(--muted);font-size:12px;cursor:pointer;transition:all .14s}
@@ -1093,6 +1100,33 @@ function currentStreak(){const set=new Set(studyDays());let d=isoToDate(todayISO
    BACKLOG — ordered list of items from the chosen resources.
    Item ids match the original scheme so prior progress carries over.
    ============================================================ */
+/* ---------- per-resource category order within a system ----------
+   sysOrder decides which SYSTEM comes first; this decides the order of the
+   categories inside one. Stored sparsely as catOrder["bnb|Hematology"] = [cat,...]
+   — a system you never reorder has no entry and keeps catalog order exactly as
+   before, so no existing plan changes. B&B and Pathoma are ordered independently
+   because they carve the same system up differently ("Red Blood Cells" vs "Red
+   Blood Cell Disorders"), and inventing an equivalence between them would be a
+   guess we'd have to maintain forever. */
+function catKeyOf(res,sys){return res+"|"+sys;}
+function catsFor(res,sys){                       // catalog order, first appearance wins
+  const out=[],seen=new Set();
+  catVideos().forEach(v=>{if(v.res!==res||v.sys!==sys)return;const c=v.cat||"";if(seen.has(c))return;seen.add(c);out.push(c);});
+  return out;}
+function catOrderFor(c,res,sys){                 // saved order, reconciled against the live catalog
+  const live=catsFor(res,sys);
+  const saved=(c&&c.catOrder&&c.catOrder[catKeyOf(res,sys)])||null;
+  if(!saved)return live;
+  const liveSet=new Set(live);
+  const kept=saved.filter(x=>liveSet.has(x));                  // drop categories the catalog no longer has
+  const keptSet=new Set(kept);
+  return kept.concat(live.filter(x=>!keptSet.has(x)));         // append anything new at the end
+}
+function setCatOrder(c,res,sys,arr){c.catOrder=c.catOrder||{};c.catOrder[catKeyOf(res,sys)]=arr.slice();}
+function moveCatOrder(c,res,sys,i,dir){
+  const a=catOrderFor(c,res,sys).slice();const j=i+dir;
+  if(j<0||j>=a.length)return false;
+  const t=a[j];a[j]=a[i];a[i]=t;setCatOrder(c,res,sys,a);return true;}
 function planSystems(){const c=S.cfg;const sel=new Set((c.systems&&c.systems.length)?c.systems:SYS);const ord=(c.sysOrder&&c.sysOrder.length)?c.sysOrder:SYS_ORDER_DEFAULT;return ord.filter(s=>sel.has(s));}
 function hasRes(k){const r=S.cfg&&S.cfg.resources;if(!r)return (k==="fa"||k==="anking");return !!r[k];}
 /* which catalog resources each toggle enables (Sketchy covers Micro + Pharm,
@@ -1194,7 +1228,14 @@ function buildBacklog(){
   SYS_ORDER_DEFAULT.forEach(sn=>{if(!orderSet.has(sn)&&bySys[sn]&&bySys[sn].pathoma)visit.push(sn);});
   const out=[];
   visit.forEach(sn=>{const byRes=bySys[sn];if(!byRes)return;const isSel=orderSet.has(sn);
-    RES_ORDER.forEach(r=>{if(r!=="pathoma"&&!isSel)return;(byRes[r]||[]).forEach(v=>out.push({sys:sn,name:v.name,min:v.min,fa:v.cat||"",tag:videoTag(v),res:r,label:v.name,id:itemId(v)}));});
+    RES_ORDER.forEach(r=>{if(r!=="pathoma"&&!isSel)return;
+      let list=byRes[r]||[];
+      // honour a chosen category order; within a category, catalog order is preserved
+      if(c.catOrder&&c.catOrder[catKeyOf(r,sn)]){
+        const idx={};catOrderFor(c,r,sn).forEach((cat,i)=>idx[cat]=i);
+        list=list.map((v,i)=>({v,i})).sort((a,b)=>((idx[a.v.cat||""]!=null?idx[a.v.cat||""]:999)-(idx[b.v.cat||""]!=null?idx[b.v.cat||""]:999))||(a.i-b.i)).map(x=>x.v);
+      }
+      list.forEach(v=>out.push({sys:sn,name:v.name,min:v.min,fa:v.cat||"",tag:videoTag(v),res:r,label:v.name,id:itemId(v)}));});
   });
   return out;
 }
@@ -1740,6 +1781,7 @@ Cloud.signOut=function(){try{firebase.auth().signOut();}catch(e){}};
    ============================================================ */
 const app=document.getElementById("app");
 let VIEW="today";
+let CATOPEN={};   // which systems have their topic-order list expanded
 let ADJ_VIEW=null;   // Plan tab landing: null = 3-button menu, "edit" = editor, "old" = past plans
 const toEl=document.getElementById("toast");let toT=null;
 function toast(m){toEl.textContent=m;toEl.classList.add("show");clearTimeout(toT);toT=setTimeout(()=>toEl.classList.remove("show"),2400);}
@@ -3160,7 +3202,7 @@ function renderPlanEditor(){
   const sysInner='<p class="muted small" style="margin-top:6px">'+(S.active==="nbme"
       ?'Pick the systems this shelf covers — immuno, micro, genetics and the rest are each selectable. Reorder with ▲▼ to set what’s studied first; the plan re-flows live.'
       :'Recommended Boards &amp; Beyond sequence. Reorder with ▲▼ or tap to include/drop — the plan re-flows live.')+'</p>'
-    + orderedSysHTML(c.sysOrder||SYS_ORDER_DEFAULT,c.systems||SYS)
+    + orderedSysHTML(c.sysOrder||SYS_ORDER_DEFAULT,c.systems||SYS,c)
     + '<button class="link" id="sordReset">↺ Reset to recommended order</button>';
   colB+='<div class="card"><div class="cardhd">'+(S.active==="nbme"?'Units &amp; study order':'Study order &amp; systems')+'</div>'
     + fold("adj_sys",(c.systems||SYS).length+' of '+SYS.length+' systems selected — edit / reorder',sysInner,false)+'</div>';
@@ -3190,6 +3232,7 @@ function renderPlanEditor(){
   bindThreadTopics(c,apply);
   document.querySelectorAll("[data-sup]").forEach(b=>b.onclick=()=>{const i=+b.dataset.sup;const a=c.sysOrder=(c.sysOrder||SYS_ORDER_DEFAULT).slice();if(i>0){const t=a[i-1];a[i-1]=a[i];a[i]=t;apply();}});
   document.querySelectorAll("[data-sdn]").forEach(b=>b.onclick=()=>{const i=+b.dataset.sdn;const a=c.sysOrder=(c.sysOrder||SYS_ORDER_DEFAULT).slice();if(i<a.length-1){const t=a[i+1];a[i+1]=a[i];a[i]=t;apply();}});
+  bindCatOrder(c,apply);
   const sr=document.getElementById("sordReset");if(sr)sr.onclick=()=>{c.sysOrder=SYS_ORDER_DEFAULT.slice();apply();};
   const nu=document.getElementById("newUnit");if(nu)nu.onclick=()=>{startOnboard("nbme",true);};
   const ab=document.getElementById("adjBack");if(ab)ab.onclick=()=>{ADJ_VIEW=null;render();};
@@ -3756,9 +3799,9 @@ function enterHub(key){if(!S.cfgs[key]){startOnboard(key);return;}activate(key);
 let _ob=null;
 function defaultsForHub(key,fresh){const ex=fresh?null:S.cfgs[key];
   let o;
-  if(ex)o={hub:key,fresh:false,brody:ex.brody||null,brodyPace:ex.brodyPace||null,brodyJoinWk:(ex.brodyJoinWk!=null?ex.brodyJoinWk:undefined),brodyJoinDate:(ex.brodyJoinDate||undefined),brodyReviewDays:(ex.brodyReviewDays!=null?ex.brodyReviewDays:undefined),examLabel:ex.examLabel||"",examISO:ex.examISO||"",startISO:ex.startISO||todayISO(),wkdayHrs:ex.wkdayHrs,wkendHrs:ex.wkendHrs,restDays:(ex.restDays||[0]).slice(),reviewDays:ex.reviewDays,resources:Object.assign({bnb:true,pathoma:true,sketchy:true,fa:true,anking:true,uworld:true},ex.resources||{}),systems:(ex.systems||SYS).slice(),sysOrder:(ex.sysOrder&&ex.sysOrder.length===SYS.length?ex.sysOrder:SYS_ORDER_DEFAULT).slice(),pathChapters:(Array.isArray(ex.pathChapters)?ex.pathChapters.slice():undefined),threadTopics:(Array.isArray(ex.threadTopics)?ex.threadTopics.slice():undefined),weeklyQGoal:(ex.weeklyQGoal||0),qGoalPer:(ex.qGoalPer||"week"),step:0};
+  if(ex)o={hub:key,fresh:false,brody:ex.brody||null,brodyPace:ex.brodyPace||null,brodyJoinWk:(ex.brodyJoinWk!=null?ex.brodyJoinWk:undefined),brodyJoinDate:(ex.brodyJoinDate||undefined),brodyReviewDays:(ex.brodyReviewDays!=null?ex.brodyReviewDays:undefined),examLabel:ex.examLabel||"",examISO:ex.examISO||"",startISO:ex.startISO||todayISO(),wkdayHrs:ex.wkdayHrs,wkendHrs:ex.wkendHrs,restDays:(ex.restDays||[0]).slice(),reviewDays:ex.reviewDays,resources:Object.assign({bnb:true,pathoma:true,sketchy:true,fa:true,anking:true,uworld:true},ex.resources||{}),systems:(ex.systems||SYS).slice(),sysOrder:(ex.sysOrder&&ex.sysOrder.length===SYS.length?ex.sysOrder:SYS_ORDER_DEFAULT).slice(),pathChapters:(Array.isArray(ex.pathChapters)?ex.pathChapters.slice():undefined),threadTopics:(Array.isArray(ex.threadTopics)?ex.threadTopics.slice():undefined),weeklyQGoal:(ex.weeklyQGoal||0),qGoalPer:(ex.qGoalPer||"week"),catOrder:(ex.catOrder?JSON.parse(JSON.stringify(ex.catOrder)):undefined),step:0};
   // a brand-new plan starts with every resource unchecked — the student picks
-  else o={hub:key,fresh:!!fresh,examLabel:key==="step1"?"Step 1":"",examISO:"",startISO:todayISO(),wkdayHrs:6,wkendHrs:4,restDays:[0],reviewDays:14,resources:{bnb:false,pathoma:false,sketchy:false,fa:false,anking:false,uworld:false},systems:(key==="nbme"?[]:SYS.slice()),sysOrder:SYS_ORDER_DEFAULT.slice(),threadTopics:[],weeklyQGoal:0,qGoalPer:"week",step:0};
+  else o={hub:key,fresh:!!fresh,examLabel:key==="step1"?"Step 1":"",examISO:"",startISO:todayISO(),wkdayHrs:6,wkendHrs:4,restDays:[0],reviewDays:14,resources:{bnb:false,pathoma:false,sketchy:false,fa:false,anking:false,uworld:false},systems:(key==="nbme"?[]:SYS.slice()),sysOrder:SYS_ORDER_DEFAULT.slice(),threadTopics:[],weeklyQGoal:0,qGoalPer:"week",catOrder:undefined,step:0};
   // NBME hub now selects individual systems (like Step 1); migrate any legacy block selection
   if(key==="nbme"&&ex&&(!ex.systems||!ex.systems.length)&&Array.isArray(ex.blocks)&&ex.blocks.length){
     const set=new Set(ex.blocks);o.systems=flatSys((ex.blockOrder||blockNames()).filter(b=>set.has(b)));
@@ -3766,14 +3809,36 @@ function defaultsForHub(key,fresh){const ex=fresh?null:S.cfgs[key];
   return o;
 }
 /* ordered, includable, reorderable system list (shared by onboarding + Adjust) */
-function orderedSysHTML(order,included){const set=new Set(included);
+/* System list with a disclosure per row: open one to reorder the categories
+   inside it, one list per resource (see catOrderFor). Only resources actually on
+   the plan are shown, and a system with a single category has nothing to order. */
+function catOrderHTML(c,sys){
+  const on=[];["bnb","pathoma"].forEach(r=>{if(c.resources&&c.resources[r]&&catsFor(r,sys).length>1)on.push(r);});
+  if(!on.length)return '<div class="catord"><p class="muted small" style="margin:0">Nothing to reorder in this system.</p></div>';
+  return '<div class="catord">'+on.map(r=>{
+    const cats=catOrderFor(c,r,sys);
+    return '<div class="catgrp"><div class="catreslab">'+resBadge(r)+' '+escHTML(resLabel(r))+'</div>'
+      +cats.map((cat,i)=>{const mv=d=>escAttr(JSON.stringify([r,sys,i,d]));   // JSON, never a delimiter: system names are free text
+        return '<div class="catrow"><span class="catnm">'+escHTML(cat||"(uncategorised)")+'</span>'
+        +'<span class="ordbtns"><button type="button" class="ordbtn" data-cmove="'+mv(-1)+'"'+(i===0?' disabled':'')+' aria-label="move up">▲</button>'
+        +'<button type="button" class="ordbtn" data-cmove="'+mv(1)+'"'+(i===cats.length-1?' disabled':'')+' aria-label="move down">▼</button></span></div>';}).join('')
+      +'</div>';}).join('')+'</div>';}
+function bindCatOrder(c,apply){
+  document.querySelectorAll("[data-catopen]").forEach(b=>b.onclick=()=>{const k=b.dataset.catopen;CATOPEN[k]=!CATOPEN[k];apply();});
+  document.querySelectorAll("[data-cmove]").forEach(b=>b.onclick=()=>{
+    let p=null;try{p=JSON.parse(b.dataset.cmove);}catch(e){}
+    if(!Array.isArray(p)||p.length!==4)return;
+    if(moveCatOrder(c,p[0],p[1],p[2],p[3]))apply();});}
+function orderedSysHTML(order,included,c){const set=new Set(included);c=c||S.cfg||{};
   return '<div class="sysord">'+order.map((s,i)=>{const on=set.has(s);
+    const open=!!(CATOPEN&&CATOPEN[s]);
     return '<div class="sysrow '+(on?"on":"")+'">'
       +'<button type="button" class="sysinc" data-sinc="'+escAttr(s)+'" aria-label="include">'+(on?"✓":"")+'</button>'
       +'<span class="sysnm" style="border-color:'+(SYS_COLOR[s]||"#999")+'">'+escHTML(s)+'</span>'
-      +'<span class="ordbtns"><button type="button" class="ordbtn" data-sup="'+i+'"'+(i===0?' disabled':'')+' aria-label="move up">▲</button>'
+      +'<span class="ordbtns"><button type="button" class="ordbtn catdis'+(open?" open":"")+'" data-catopen="'+escAttr(s)+'" aria-label="reorder topics inside" title="Order the topics inside this system">▸</button>'
+      +'<button type="button" class="ordbtn" data-sup="'+i+'"'+(i===0?' disabled':'')+' aria-label="move up">▲</button>'
       +'<button type="button" class="ordbtn" data-sdn="'+i+'"'+(i===order.length-1?' disabled':'')+' aria-label="move down">▼</button></span>'
-      +'</div>';}).join('')+'</div>';}
+      +'</div>'+(open?catOrderHTML(c,s):'');}).join('')+'</div>';}
 /* Pathoma chapter picker — each chapter individually selectable, tagged with
    the organ system it studies under. Shown only when Pathoma is a chosen resource. */
 function pathChaptersHTML(c,foldId){
@@ -3926,7 +3991,7 @@ function renderOnboard(){
   if(key==="systems"){const obSysInner='<p class="muted small" style="margin-top:6px">'+(obIsNbme()
       ?'Tap the systems this shelf covers. Reorder with ▲▼ to set what you study first.'
       :'The recommended Boards &amp; Beyond sequence. Reorder with ▲▼, and tap a system to include or drop it.')+'</p>'
-    + orderedSysHTML(ob.sysOrder,ob.systems)
+    + orderedSysHTML(ob.sysOrder,ob.systems,ob)
     + '<button class="link" id="sordReset">↺ Reset to recommended order</button>';
     body+='<div class="card"><div class="cardhd">'+(obIsNbme()?'Units &amp; study order':'Study order &amp; systems')+'</div>'
       + fold("ob_sys",ob.systems.length+' of '+SYS.length+' systems selected — edit / reorder',obSysInner,true)+'</div>';
@@ -3984,6 +4049,7 @@ function renderOnboard(){
   document.querySelectorAll("[data-sinc]").forEach(b=>b.onclick=()=>{const s=b.dataset.sinc;const k=ob.systems.indexOf(s);if(k>=0){if(ob.systems.length>1)ob.systems.splice(k,1);}else ob.systems.push(s);renderOnboard();});
   document.querySelectorAll("[data-pathch]").forEach(b=>b.onclick=()=>{togglePathCh(ob,+b.dataset.pathch);renderOnboard();});
   bindThreadTopics(ob,()=>renderOnboard());
+  bindCatOrder(ob,()=>renderOnboard());
   document.querySelectorAll("[data-sup]").forEach(b=>b.onclick=()=>{const i=+b.dataset.sup;if(i>0){const a=ob.sysOrder;const t=a[i-1];a[i-1]=a[i];a[i]=t;renderOnboard();}});
   document.querySelectorAll("[data-sdn]").forEach(b=>b.onclick=()=>{const i=+b.dataset.sdn;const a=ob.sysOrder;if(i<a.length-1){const t=a[i+1];a[i+1]=a[i];a[i]=t;renderOnboard();}});
   const sr=document.getElementById("sordReset");if(sr)sr.onclick=()=>{ob.sysOrder=SYS_ORDER_DEFAULT.slice();renderOnboard();};
@@ -4077,7 +4143,7 @@ function commitOnboard(){const ob=_ob;
     // brodyPace is locked to the plan at creation (reflowBrody stamps it if the catalog wasn't ready yet)
     brody:(brody?brody.id:undefined),brodyPace:(brody?(ob.brodyPace||(catReady()?brodyPace(ob):undefined)):undefined),brodyJoinWk:(brody?(ob.brodyJoinWk!=null?ob.brodyJoinWk:undefined):undefined),brodyJoinDate:(brody?(ob.brodyJoinDate||todayISO()):undefined),brodyReviewDays:(brody?brodyReviewBuf(ob):undefined),
     examISO:(brody?brody.shelf:ob.examISO),startISO:(brody?brody.weeks[0].start:ob.startISO),wkdayHrs:ob.wkdayHrs,wkendHrs:ob.wkendHrs,restDays:ob.restDays.slice(),
-    reviewDays:(brody?0:ob.reviewDays),resources:Object.assign({},ob.resources),systems:(brody?brody.systems.slice():ob.systems.slice()),sysOrder:(ob.sysOrder||SYS_ORDER_DEFAULT).slice(),pathChapters:(Array.isArray(ob.pathChapters)?ob.pathChapters.slice():undefined),threadTopics:(brody?undefined:(Array.isArray(ob.threadTopics)?ob.threadTopics.slice():undefined)),weeklyQGoal:(ob.weeklyQGoal>0?ob.weeklyQGoal:0),qGoalPer:qGoalPer(ob)});
+    reviewDays:(brody?0:ob.reviewDays),resources:Object.assign({},ob.resources),systems:(brody?brody.systems.slice():ob.systems.slice()),sysOrder:(ob.sysOrder||SYS_ORDER_DEFAULT).slice(),pathChapters:(Array.isArray(ob.pathChapters)?ob.pathChapters.slice():undefined),threadTopics:(brody?undefined:(Array.isArray(ob.threadTopics)?ob.threadTopics.slice():undefined)),weeklyQGoal:(ob.weeklyQGoal>0?ob.weeklyQGoal:0),qGoalPer:qGoalPer(ob),catOrder:(ob.catOrder?JSON.parse(JSON.stringify(ob.catOrder)):undefined)});
   c.off=c.off||{};
   if(ob.fresh&&prev&&key==="nbme")archiveUnit(prev);   // keep the old unit reachable under Plan → Past units
   S.cfgs[key]=c;activate(key);S.active=key;_ob=null;
@@ -4119,11 +4185,15 @@ function doResetAll(){
     S.cfgs=snap.cfgs;S.active=snap.active;S.cfg=S.active?S.cfgs[S.active]:null;_prevSig=progressSig();save();
     if(S.cfg){reflow();render();}else renderWelcome();toast("Restored ✓");});
 }
-const BUILD="2026-07-21r";
+const BUILD="2026-07-21s";
 /* ---------- What's new (changelog) ----------
    Newest entry first. Bump the top entry's id whenever you add one and the
    pop-up shows once per person (tracked in synced settings.seenUpdate). */
 const CHANGELOG=[
+  {id:"2026-08-05", date:"August 2026", title:"Order the topics inside a system", items:[
+    "In the custom planner you could already drag a system to the top. Now tap the \u25b8 next to any system to open it and order the topics inside it too \u2014 so you can do Red Blood Cells before Hemostasis, not just Hematology before Renal.",
+    "Boards & Beyond and Pathoma get their own list, because they split a system up differently. Anything you don\u2019t touch keeps its normal order.",
+  ]},
   {id:"2026-08-04", date:"August 2026", title:"Practice-question goal: daily or weekly", items:[
     "The optional practice-question goal can now be counted per day instead of per week \u2014 pick Daily or Weekly in the Plan tab. Daily resets each morning; weekly still resets Monday.",
     "Your Study screen follows whichever you pick, so it reads \u201c3 questions left today\u201d or \u201cleft this week\u201d. Existing goals stay weekly exactly as they were.",
