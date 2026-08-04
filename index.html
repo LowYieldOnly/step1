@@ -1596,10 +1596,22 @@ function reflowBrody(c,blk){
   // A day's budget already counts what you've completed there, so finishing a day's
   // videos doesn't refill it — the leftover work slides to future days, and content
   // flows across week boundaries so light days pick up the next week (studying ahead).
+  const dayIndex={};openDays.forEach((iso,i)=>dayIndex[iso]=i);
   let lastFillIdx=-1;
   {let di=0;
-   vids.filter(v=>!doneOrSkip(v.id)).forEach(it=>{
+   vids.forEach(it=>{
      if(!openDays.length)return;
+     if(doneOrSkip(it.id)){
+       // A finished video KEEPS ITS PLACE in the pour. It isn't packed (it's pinned
+       // to the day it was done, below), but the cursor moves past that day so no
+       // later video can land before it. Dropping it from the sequence instead let
+       // check-offs reshuffle the plan: studying ahead and ticking the top video on
+       // a future day freed room on the day BEFORE it, and the video underneath slid
+       // backwards into it — reading out of order in the calendar.
+       const dd=vdd[it.id];
+       if(dd!=null&&dayIndex[dd]!=null)di=Math.max(di,dayIndex[dd]);
+       return;
+     }
      // skip past days already full (from completed work or earlier packing)
      while(di<openDays.length-1&&dayUsed(openDays[di])>0&&dayUsed(openDays[di])+it.min>paceMin+10)di++;
      const iso=openDays[di];
@@ -4370,11 +4382,14 @@ function doResetAll(){
     S.cfgs=snap.cfgs;S.active=snap.active;S.cfg=S.active?S.cfgs[S.active]:null;_prevSig=progressSig();save();
     if(S.cfg){reflow();render();}else renderWelcome();toast("Restored ✓");});
 }
-const BUILD="2026-07-21v";
+const BUILD="2026-07-21w";
 /* ---------- What's new (changelog) ----------
    Newest entry first. Bump the top entry's id whenever you add one and the
    pop-up shows once per person (tracked in synced settings.seenUpdate). */
 const CHANGELOG=[
+  {id:"2026-08-08", date:"August 2026", title:"Studying ahead no longer shuffles the Brody plan", items:[
+    "Checking off a video on a future day could pull the video below it back onto an earlier day, so the calendar read out of order. Fixed — a finished video now holds its place in the sequence, and checking anything off moves nothing else.",
+  ]},
   {id:"2026-08-07", date:"August 2026", title:"Rapid Reference", items:[
     "New Rapid Reference tab: an outline of every Boards & Beyond Hematology video — 32 videos, 280 topics. Open a video to see its topics, open a topic to see the points.",
     "Search runs across every topic and point at once, so you can find where thrombin or aspirin actually gets covered instead of scrubbing through videos.",
