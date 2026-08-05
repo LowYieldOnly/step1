@@ -1653,10 +1653,15 @@ function reflowBrody(c,blk){
 
     return {n:w.n,label:w.label,start:w.start,load,deadline:dl,needH:needH,cap:odbd*paceMin,heavy:(!dead&&needH>BRODY_QUIZ_MAX),past,days:weekDays[w.n].length};});
   const remaining=vids.filter(v=>!doneOrSkip(v.id));const remMin=remaining.reduce((a,b)=>a+b.min,0);
-  SCHED={days,dayMap,atRisk:[],byId,reviewDates:days.filter(d=>d.review).map(d=>d.iso),contentDates:days.filter(d=>!d.rest&&!d.off&&!d.review).map(d=>d.iso),brody:blk,weekLoad,brodyPace:brodyPace(c),currentWeek:currentWk,skippedWeeks:skippedWeeks,reviewBuf:brodyReviewBuf(c),reviewCutoff:reviewCutoff,
+  // planItems is the authoritative "what's in this plan" list every progress figure
+  // reads from — the curated Brody set here, the backlog on the custom path. Before
+  // this, the hero counted these while the per-subject bars counted buildBacklog(),
+  // so one card could show two different totals for the same plan.
+  SCHED={days,dayMap,atRisk:[],byId,planItems:vids,reviewDates:days.filter(d=>d.review).map(d=>d.iso),contentDates:days.filter(d=>!d.rest&&!d.off&&!d.review).map(d=>d.iso),brody:blk,weekLoad,brodyPace:brodyPace(c),currentWeek:currentWk,skippedWeeks:skippedWeeks,reviewBuf:brodyReviewBuf(c),reviewCutoff:reviewCutoff,
     stats:{remMin,availMin:0,examDaysLeft:Math.max(0,daysBetween(todayISO(),shelf)),reqPerDay:0,feasible:!weekLoad.some(w=>w.heavy),
       contentDaysLeft:days.filter(d=>!d.rest&&!d.off&&!d.review).length,reviewDaysLeft:days.filter(d=>d.review).length,
-      totalItems:vids.length,doneItems:vids.filter(v=>isDone(v.id)).length,remItems:remaining.length}};
+      totalItems:vids.length,doneItems:vids.filter(v=>isDone(v.id)).length,remItems:remaining.length,
+      totalMin:vids.reduce((a,v)=>a+v.min,0),doneMin:vids.reduce((a,v)=>a+(isDone(v.id)?v.min:0),0)}};
 }
 function reflow(){
   const c=S.cfg; if(!c){SCHED=null;return;}
@@ -1738,16 +1743,37 @@ function reflow(){
   const availMin=contentDates.reduce((a,iso)=>a+dayBudgetMin(isoToDate(iso)),0);
   const examDaysLeft=Math.max(0,daysBetween(todayISO(),examISO));
   const reqPerDay=contentDates.length?Math.ceil(remMin/contentDates.length):Infinity;
-  SCHED={days,dayMap,atRisk,byId,reviewDates,contentDates,
+  SCHED={days,dayMap,atRisk,byId,planItems:backlog,reviewDates,contentDates,
     stats:{remMin,availMin,examDaysLeft,reqPerDay,feasible:remMin<=availMin,
            contentDaysLeft:contentDates.length,reviewDaysLeft:reviewDates.length,
            totalItems:backlog.length,doneItems:backlog.filter(it=>isDone(it.id)).length,
-           remItems:remaining.length}};
+           remItems:remaining.length,
+           totalMin:backlog.reduce((a,it)=>a+it.min,0),doneMin:backlog.reduce((a,it)=>a+(isDone(it.id)?it.min:0),0)}};
 }
 
-/* ---------- progress ---------- */
-function overall(){if(!SCHED)return {pct:0,done:0,total:0};const t=SCHED.stats.totalItems,dn=SCHED.stats.doneItems;return {pct:t?Math.round(dn/t*100):0,done:dn,total:t};}
-function sysProgress(){const by={};buildBacklog().forEach(it=>{const k=it.sys;(by[k]=by[k]||{d:0,t:0});by[k].t++;if(isDone(it.id))by[k].d++;});return by;}
+/* ---------- progress ----------
+   Videos vary a lot in length — a 9-minute video and a 40-minute one count the
+   same by headcount — so progress can be read either way. The choice is one
+   app-wide setting (it's the same number in every place it appears) with the
+   control on Stats, where you're actually looking at it. */
+function progBy(){return (S.settings&&S.settings.progBy==="time")?"time":"videos";}
+function setProgBy(k){S.settings=S.settings||{};S.settings.progBy=(k==="time")?"time":"videos";save();}
+function overall(){
+  if(!SCHED)return {pct:0,done:0,total:0,doneMin:0,totalMin:0,byTime:false};
+  const st=SCHED.stats,t=st.totalItems,dn=st.doneItems,tm=st.totalMin||0,dm=st.doneMin||0;
+  const byTime=progBy()==="time";
+  return {pct:byTime?(tm?Math.round(dm/tm*100):0):(t?Math.round(dn/t*100):0),
+          done:dn,total:t,doneMin:dm,totalMin:tm,byTime};
+}
+/* Both halves of a fraction take the unit the TOTAL is in, so a barely-started
+   subject reads "0h/12.2h" rather than the jarring "0m/12.2h". */
+function fmtHlike(min,ref){return (ref<60)?(min+"m"):((Math.round(min/60*10)/10)+"h");}
+/* "3 / 12 videos" or "1.4h / 6h" — whichever the reader chose */
+function progLabel(o){return o.byTime?(fmtHlike(o.doneMin,o.totalMin)+' / '+fmtH(o.totalMin)):(o.done+' / '+o.total+' videos');}
+function planItems(){return (SCHED&&SCHED.planItems)||[];}
+function sysProgress(){const by={};planItems().forEach(it=>{const k=it.sys;(by[k]=by[k]||{d:0,t:0,dm:0,tm:0});by[k].t++;by[k].tm+=it.min;if(isDone(it.id)){by[k].d++;by[k].dm+=it.min;}});return by;}
+function sysPct(x){return progBy()==="time"?(x.tm?Math.round(x.dm/x.tm*100):0):(x.t?Math.round(x.d/x.t*100):0);}
+function sysFrac(x){return progBy()==="time"?(fmtHlike(x.dm,x.tm)+'/'+fmtH(x.tm)):(x.d+'/'+x.t);}
 
 /* ============================================================
    DURABLE CLOUD PROFILE  (anonymous + Google, safe-merge)
@@ -2460,13 +2486,25 @@ function stepReadinessCards(){
 }
 function videoCards(){
   const by=sysProgress();const o=overall();
-  let body='<div class="hero"><div class="hero-l">'+ring(o.pct,72)+'</div><div class="hero-r"><div class="big">'+o.done+' <span>/ '+o.total+' videos</span></div><div class="sub">'+SCHED.stats.remItems+' remaining · '+currentStreak()+'-day streak</div></div></div>';
+  const remLab=o.byTime?(fmtH(Math.max(0,o.totalMin-o.doneMin))+' remaining'):(SCHED.stats.remItems+' remaining');
+  let body='<div class="hero"><div class="hero-l">'+ring(o.pct,72)+'</div><div class="hero-r"><div class="big">'
+    +(o.byTime?fmtHlike(o.doneMin,o.totalMin)+' <span>/ '+fmtH(o.totalMin)+' of video</span>':o.done+' <span>/ '+o.total+' videos</span>')
+    +'</div><div class="sub">'+remLab+' · '+currentStreak()+'-day streak</div></div></div>';
   body+=pacingChart();
+  const pbBtn=(k,lab)=>'<button type="button" class="tog '+(progBy()===k?"on":"")+'" data-progby="'+k+'">'+lab+'</button>';
   body+='<div class="card"><div class="cardhd">Video completion by subject'+(o.done?'<button class="hdreset" id="rst_vid" title="Clear every video checkmark">Reset</button>':'')+'</div>'
-    +'<p class="muted small" style="margin-top:0">How much of each subject’s videos you’ve watched — not question accuracy (that’s <b>Accuracy by subject</b>).</p><div class="bars">';
+    +'<p class="muted small" style="margin-top:0">How much of each subject’s videos you’ve watched — not question accuracy (that’s <b>Accuracy by subject</b>).</p>'
+    +'<div class="flab">Measure progress by</div><div class="togrow">'+pbBtn("videos","Videos")+pbBtn("time","Time")+'</div>'
+    +'<p class="muted small" style="margin:7px 0 0">'+(progBy()==="time"
+      ? 'Counting minutes of video. A 40-minute lecture moves the bar more than a 9-minute one.'
+      : 'Counting videos watched. Every video counts the same, however long it runs.')+'</p>'
+    +'<div class="bars">';
+  // planSystems() is the custom planner's chosen list; a Brody unit can also carry
+  // videos from outside it. Append those so the bars add up to the hero's total.
   const rows=[]; planSystems().forEach(s=>{if(by[s]&&by[s].t)rows.push(s);});
-  rows.forEach(s=>{const x=by[s];const pct=Math.round(x.d/x.t*100);
-    body+='<div class="bar"><div class="barlab">'+escHTML(s)+'</div><div class="bartrack"><div class="barfill" style="width:'+pct+'%"></div></div><div class="barpct">'+pct+'% <span class="muted small">'+x.d+'/'+x.t+'</span></div></div>';});
+  Object.keys(by).sort().forEach(s=>{if(by[s].t&&rows.indexOf(s)<0)rows.push(s);});
+  rows.forEach(s=>{const x=by[s];const pct=sysPct(x);
+    body+='<div class="bar"><div class="barlab">'+escHTML(s)+'</div><div class="bartrack"><div class="barfill" style="width:'+pct+'%"></div></div><div class="barpct">'+pct+'% <span class="muted small">'+sysFrac(x)+'</span></div></div>';});
   body+='</div></div>';
   return body;
 }
@@ -2550,6 +2588,9 @@ function bindReady(){
   const rprc=document.getElementById("rst_pr");if(rprc)rprc.onclick=()=>confirmClear("Clear the practice-question log?","Removes every UWorld, AMBOSS and ScholarRx block logged in this hub — your per-subject accuracy resets with it. You'll get one chance to undo.",()=>clearScopedPractice(S.active));
   const rfl=document.getElementById("rst_flags");if(rfl)rfl.onclick=()=>confirmClear("Clear all review flags?","Un-flags every video you marked as shaky. You'll get one chance to undo.",clearFlags);
   const rvd=document.getElementById("rst_vid");if(rvd)rvd.onclick=()=>confirmClear("Reset video progress?","Clears every video checkmark and daily Anki check across BOTH hubs. Scores, UWorld log, and flags stay. You'll get one chance to undo.",clearVideos);
+  // hold the scroll: the toggle sits well down the page, and a full repaint would
+  // otherwise snap you back to the top on every switch
+  document.querySelectorAll("[data-progby]").forEach(b=>b.onclick=()=>{setProgBy(b.dataset.progby);renderKeepScroll(render);});
   wireChrome();
 }
 /* ============================================================
@@ -2896,7 +2937,7 @@ function renderToday(){
   // UPPER-LEFT — three stacked blocks: countdown, log practice questions, quote
   colA+='<div class="hero">'
     +'<div class="big">'+examLeft+' <span>days to '+escHTML(S.cfg.examLabel||(S.cfg.examType==="step1"?"Step 1":"your exam"))+'</span></div>'
-    +'<div class="sub">'+overall().done+' / '+overall().total+' videos'+(cs>0?' · '+cs+'-day streak':' · '+overall().pct+'% complete')+'</div>'
+    +'<div class="sub">'+progLabel(overall())+(cs>0?' · '+cs+'-day streak':' · '+overall().pct+'% complete')+'</div>'
     +paceHero()+'</div>';
   colA+=loadCaveat();
   colA+=brodyChip(focusISO);
@@ -4382,11 +4423,16 @@ function doResetAll(){
     S.cfgs=snap.cfgs;S.active=snap.active;S.cfg=S.active?S.cfgs[S.active]:null;_prevSig=progressSig();save();
     if(S.cfg){reflow();render();}else renderWelcome();toast("Restored ✓");});
 }
-const BUILD="2026-07-21w";
+const BUILD="2026-07-21x";
 /* ---------- What's new (changelog) ----------
    Newest entry first. Bump the top entry's id whenever you add one and the
    pop-up shows once per person (tracked in synced settings.seenUpdate). */
 const CHANGELOG=[
+  {id:"2026-08-09", date:"August 2026", title:"Measure progress by time, not just video count", items:[
+    "Videos vary a lot in length, so a headcount can undersell a heavy day. On Stats you can now switch \u201cMeasure progress by\u201d to Time \u2014 the headline percent and every subject bar then count minutes of video instead of videos watched.",
+    "Your choice follows you everywhere the percent appears, and syncs across devices. Leave it alone and nothing changes: video count is still the default.",
+    "Also fixed: on a Brody plan the headline total and the subject bars were counting different sets of videos, so they could disagree. They now read from the same list.",
+  ]},
   {id:"2026-08-08", date:"August 2026", title:"Studying ahead no longer shuffles the Brody plan", items:[
     "Checking off a video on a future day could pull the video below it back onto an earlier day, so the calendar read out of order. Fixed — a finished video now holds its place in the sequence, and checking anything off moves nothing else.",
   ]},
