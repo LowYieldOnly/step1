@@ -1079,8 +1079,22 @@ function flatSys(blocks){let out=[];blocks.forEach(b=>{out=out.concat(blockSyste
    Two hubs (step1, nbme) each with their OWN config (S.cfgs[key]).
    Video progress (vdone/vskip/...) is shared — a watched video is watched
    regardless of which exam you're prepping. S.cfg points at the active hub. */
+/* The practice-question sources, in one place. This list is the ONLY place a
+   source is named: state, persistence, cloud merge, roll-ups, the log form, the
+   goal tally, the dedicated-hub cards and every reset all iterate it. Add a row
+   and it really does flow everywhere — the previous version made that claim but
+   still had the key hardcoded in a dozen chained ternaries. `key` doubles as the
+   state slot (S[key] = {total, blocks}), so it must never change once shipped.
+   `bank` is only a placeholder hint; leave it "" rather than invent a number. */
+const PRACTICE_SOURCES=[
+  {key:"uworld",   label:"UWorld",          bank:"~3300"},
+  {key:"amboss",   label:"AMBOSS",          bank:"~2800"},
+  {key:"scholarrx",label:"ScholarRx",       bank:"~2600"},
+  {key:"bnbq",     label:"Boards & Beyond", bank:""},
+];
+const PRACTICE_KEYS=PRACTICE_SOURCES.map(o=>o.key);
 let S={active:null,cfgs:{step1:null,nbme:null},vdone:{},vskip:{},vdoneDate:{},vdoneAt:{},vundone:{},akdone:{},notes:{},streak:{days:{}},settings:{},_updatedAt:0,cfg:null};
-function emptyState(){return {active:null,cfgs:{step1:null,nbme:null},vdone:{},vskip:{},vdoneDate:{},vdoneAt:{},vundone:{},akdone:{},notes:{},streak:{days:{}},assessments:{},uworld:{total:null,blocks:{}},amboss:{total:null,blocks:{}},scholarrx:{total:null,blocks:{}},vshaky:{},settings:{},_updatedAt:0,_resetAt:0,cfg:null};}
+function emptyState(){return {active:null,cfgs:{step1:null,nbme:null},vdone:{},vskip:{},vdoneDate:{},vdoneAt:{},vundone:{},akdone:{},notes:{},streak:{days:{}},assessments:{},uworld:{total:null,blocks:{}},amboss:{total:null,blocks:{}},scholarrx:{total:null,blocks:{}},bnbq:{total:null,blocks:{}},vshaky:{},settings:{},_updatedAt:0,_resetAt:0,cfg:null};}
 function resetStateToEmpty(){Object.assign(S,emptyState());S.cfgs={step1:null,nbme:null};S.streak={days:{}};}
 /* load a specific account's cached state (empty if none yet) */
 function loadState(key){
@@ -1088,7 +1102,7 @@ function loadState(key){
   let raw={};try{raw=JSON.parse(store.get(key)||"{}");}catch(e){}
   S.vdone=raw.vdone||{};S.vskip=raw.vskip||{};S.vdoneDate=raw.vdoneDate||{};S.vdoneAt=raw.vdoneAt||{};S.vundone=raw.vundone||{};S.akdone=raw.akdone||{};
   S.notes=raw.notes||{};S.streak=raw.streak||{days:{}};S.streak.days=S.streak.days||{};
-  S.assessments=raw.assessments||{};S.uworld=raw.uworld||{total:null,blocks:{}};S.uworld.blocks=S.uworld.blocks||{};S.amboss=raw.amboss||{total:null,blocks:{}};S.amboss.blocks=S.amboss.blocks||{};S.scholarrx=raw.scholarrx||{total:null,blocks:{}};S.scholarrx.blocks=S.scholarrx.blocks||{};S.vshaky=raw.vshaky||{};
+  S.assessments=raw.assessments||{};PRACTICE_KEYS.forEach(k=>{S[k]=raw[k]||{total:null,blocks:{}};S[k].blocks=S[k].blocks||{};});S.vshaky=raw.vshaky||{};
   S.settings=raw.settings||{};S._updatedAt=raw._updatedAt||0;S._resetAt=raw._resetAt||0;
   if(raw.cfgs){S.cfgs={step1:raw.cfgs.step1||null,nbme:raw.cfgs.nbme||null};S.active=raw.active||null;}
   else if(raw.cfg){ // migrate the old single-plan shape into the matching hub
@@ -1145,7 +1159,19 @@ function scrubBcFragments(){if(!catReady())return 0;
   if(n){_prevSig=progressSig();               // don't credit a streak for the drop
     try{store.set(SKEY,JSON.stringify(persistObj()));}catch(e){}}   // local only: no _updatedAt bump, no push
   return n;}
-function persistObj(){return {active:S.active,cfgs:S.cfgs,vdone:S.vdone,vskip:S.vskip,vdoneDate:S.vdoneDate,vdoneAt:S.vdoneAt,vundone:S.vundone,akdone:S.akdone,notes:S.notes,streak:S.streak,assessments:S.assessments,uworld:S.uworld,amboss:S.amboss,scholarrx:S.scholarrx,vshaky:S.vshaky,settings:S.settings,_updatedAt:S._updatedAt,_resetAt:S._resetAt||0};}
+/* The practice logs are emitted from PRACTICE_KEYS here and in mergeState() by
+   the same loop, so adding a source can't put the two out of key order — a
+   mismatch reads as "changed" on every snapshot and loops adopt->push. */
+function persistObj(){const o={active:S.active,
+  // cfgs is normalised to the canonical {step1, nbme} shape and order, because
+  // mergeState() normalises it too. Emitting S.cfgs raw meant a profile missing a
+  // slot (a hand-edited or older backup restored through Import) never matched its
+  // own merge — which the sync layer reads as "changed" forever and loops.
+  cfgs:{step1:(S.cfgs&&S.cfgs.step1)||null,nbme:(S.cfgs&&S.cfgs.nbme)||null},
+  vdone:S.vdone,vskip:S.vskip,vdoneDate:S.vdoneDate,vdoneAt:S.vdoneAt,vundone:S.vundone,akdone:S.akdone,notes:S.notes,streak:S.streak,assessments:S.assessments};
+  PRACTICE_KEYS.forEach(k=>{o[k]=S[k];});
+  o.vshaky=S.vshaky;o.settings=S.settings;o._updatedAt=S._updatedAt;o._resetAt=S._resetAt||0;
+  return o;}
 function save(){if(DEMO)return;S._updatedAt=Date.now();markStreakIfProgress();store.set(SKEY,JSON.stringify(persistObj()));Cloud.schedulePush();}
 
 /* ---------- streak (set of studied dates; merge-safe) ---------- */
@@ -1787,7 +1813,7 @@ function mergeState(a,b){a=a||{};b=b||{};
   // so its progress maps must not be union-merged back in (they'd resurrect
   // everything the user just cleared).
   const resetAt=Math.max(a._resetAt||0,b._resetAt||0);
-  const strip=s=>((s._updatedAt||0)>=resetAt)?s:Object.assign({},s,{vdone:{},vskip:{},vdoneDate:{},vdoneAt:{},vundone:{},akdone:{},notes:{},streak:{days:{}},assessments:{},uworld:{total:null,blocks:{}},amboss:{total:null,blocks:{}},scholarrx:{total:null,blocks:{}},vshaky:{}});
+  const strip=s=>((s._updatedAt||0)>=resetAt)?s:Object.assign({},s,{vdone:{},vskip:{},vdoneDate:{},vdoneAt:{},vundone:{},akdone:{},notes:{},streak:{days:{}},assessments:{},uworld:{total:null,blocks:{}},amboss:{total:null,blocks:{}},scholarrx:{total:null,blocks:{}},bnbq:{total:null,blocks:{}},vshaky:{}});
   if(resetAt){a=strip(a);b=strip(b);}
   const aT=a._updatedAt||0,bT=b._updatedAt||0;const newer=bT>=aT?b:a,older=bT>=aT?a:b;
   const out={};
@@ -1820,9 +1846,14 @@ function mergeState(a,b){a=a||{};b=b||{};
   out.notes=mergeNotes(older.notes,newer.notes);
   out.streak={days:unionTrue((a.streak||{}).days,(b.streak||{}).days)};
   out.assessments=Object.assign({},a.assessments||{},b.assessments||{});
-  out.uworld={total:((newer.uworld||{}).total!=null?(newer.uworld||{}).total:(older.uworld||{}).total),blocks:Object.assign({},(a.uworld||{}).blocks||{},(b.uworld||{}).blocks||{})};
-  out.amboss={total:((newer.amboss||{}).total!=null?(newer.amboss||{}).total:(older.amboss||{}).total),blocks:Object.assign({},(a.amboss||{}).blocks||{},(b.amboss||{}).blocks||{})};
-  out.scholarrx={total:((newer.scholarrx||{}).total!=null?(newer.scholarrx||{}).total:(older.scholarrx||{}).total),blocks:Object.assign({},(a.scholarrx||{}).blocks||{},(b.scholarrx||{}).blocks||{})};
+  // block logs are append-only, so a plain union is right; the bank size is a
+  // single value, so the newer copy wins. Same loop/order as persistObj().
+  PRACTICE_KEYS.forEach(k=>{const nt=(newer[k]||{}).total,ot=(older[k]||{}).total;
+    // normalise to null, never undefined: a source absent from BOTH copies (an
+    // older profile saved before it existed) would otherwise emit {blocks:{}}
+    // with the total silently dropped by JSON.stringify
+    out[k]={total:(nt!=null?nt:(ot!=null?ot:null)),
+      blocks:Object.assign({},(a[k]||{}).blocks||{},(b[k]||{}).blocks||{})};});
   out.vshaky=unionTrue(a.vshaky,b.vshaky);
   out.settings=Object.assign({},older.settings||{},newer.settings||{});
   out._updatedAt=Math.max(aT,bT);
@@ -1892,7 +1923,7 @@ Cloud.adopt=function(m){Cloud.applying=true;
   S.active=m.active||null;S.cfgs=m.cfgs||{step1:null,nbme:null};
   S.vdone=m.vdone||{};S.vskip=m.vskip||{};S.vdoneDate=m.vdoneDate||{};S.vdoneAt=m.vdoneAt||{};S.vundone=m.vundone||{};S.akdone=m.akdone||{};
   S.notes=m.notes||{};S.streak=m.streak||{days:{}};S.settings=m.settings||{};S._updatedAt=m._updatedAt||0;S._resetAt=m._resetAt||0;
-  S.assessments=m.assessments||{};S.uworld=m.uworld||{total:null,blocks:{}};S.uworld.blocks=S.uworld.blocks||{};S.amboss=m.amboss||{total:null,blocks:{}};S.amboss.blocks=S.amboss.blocks||{};S.scholarrx=m.scholarrx||{total:null,blocks:{}};S.scholarrx.blocks=S.scholarrx.blocks||{};S.vshaky=m.vshaky||{};
+  S.assessments=m.assessments||{};PRACTICE_KEYS.forEach(k=>{S[k]=m[k]||{total:null,blocks:{}};S[k].blocks=S[k].blocks||{};});S.vshaky=m.vshaky||{};
   ["step1","nbme"].forEach(k=>{if(S.cfgs[k])normalizeCfg(S.cfgs[k],k);});
   S.cfg=S.active?S.cfgs[S.active]:null;scrubBcFragments();_prevSig=progressSig();
   try{store.set(SKEY,JSON.stringify(persistObj()));}catch(e){}
@@ -2205,9 +2236,37 @@ function assessList(scope){scope=scope||S.active;const a=S.assessments||{};retur
 function latestAssess(scope){const l=assessList(scope);return l.length?l[l.length-1]:null;}
 function addAssessment(o,scope){S.assessments=S.assessments||{};S.assessments[uid()]={hub:(scope||S.active),form:o.form,dateISO:o.dateISO,pct:o.pct,estProb:(o.estProb!=null?o.estProb:null),note:o.note||"",_t:Date.now()};save();}
 function delAssessment(id){if(S.assessments&&S.assessments[id]){delete S.assessments[id];save();}}
-/* UWorld rollups derived from the append-only block log */
-function uworldRollup(scope){scope=scope||S.active;
-  const u=S.uworld||{total:null,blocks:{}};const blocks=u.blocks||{};
+/* Per-source helpers. All three were byte-identical roll-ups over the same block
+   shape, so they're now thin names over the generic one below (kept because the
+   call sites and regression harnesses use them). */
+function uworldRollup(scope){return practiceRollupOf("uworld",scope);}
+function ambossRollup(scope){return practiceRollupOf("amboss",scope);}
+function scholarrxRollup(scope){return practiceRollupOf("scholarrx",scope);}
+function bnbqRollup(scope){return practiceRollupOf("bnbq",scope);}
+function addUworldBlock(o,scope){const log=practiceLog("uworld");
+  log.blocks[uid()]={hub:(scope||S.active),dateISO:o.dateISO||todayISO(),sys:o.sys||"",q:+o.q||0,correct:+o.correct||0,mode:o.mode||"random",_t:Date.now()};save();}
+function addAmbossBlock(o,scope){addPracticeBlock("amboss",o,scope);}
+function addScholarrxBlock(o,scope){addPracticeBlock("scholarrx",o,scope);}
+function addBnbqBlock(o,scope){addPracticeBlock("bnbq",o,scope);}
+function setUworldTotal(n){setPracticeTotal("uworld",n);}
+function setAmbossTotal(n){setPracticeTotal("amboss",n);}
+function setScholarrxTotal(n){setPracticeTotal("scholarrx",n);}
+function setBnbqTotal(n){setPracticeTotal("bnbq",n);}
+function isPracticeSrc(src){return PRACTICE_KEYS.indexOf(src)>=0;}
+function practiceSrcOf(src){return isPracticeSrc(src)?src:"uworld";}
+/* the state slot for a source, created on demand so an older profile that
+   predates a source reads as an empty log rather than throwing */
+function practiceLog(src){const k=practiceSrcOf(src);S[k]=S[k]||{total:null,blocks:{}};S[k].blocks=S[k].blocks||{};return S[k];}
+function practiceLogs(){return PRACTICE_KEYS.map(k=>practiceLog(k));}
+function practiceSrcLabel(src){const m=PRACTICE_SOURCES.find(o=>o.key===src);return m?m.label:"UWorld";}
+function practiceSrcOptions(sel){return PRACTICE_SOURCES.map(o=>'<option value="'+o.key+'"'+(sel===o.key?' selected':'')+'>'+escHTML(o.label)+'</option>').join('');}
+function addPracticeBlock(src,o,scope){const log=practiceLog(src);
+  log.blocks[uid()]={hub:(scope||S.active),dateISO:o.dateISO||todayISO(),sys:o.sys||"",q:+o.q||0,correct:+o.correct||0,_t:Date.now()};save();}
+function setPracticeTotal(src,n){practiceLog(src).total=(n>0?n:null);save();}
+function practiceTotalOf(src){return practiceLog(src).total||"";}
+function practiceBankPlaceholder(src){const m=PRACTICE_SOURCES.find(o=>o.key===src);return (m&&m.bank)||"";}
+function practiceRollupOf(src,scope){scope=scope||S.active;
+  const u=practiceLog(src);const blocks=u.blocks||{};
   const mine=Object.keys(blocks).map(k=>blocks[k]).filter(b=>b&&b.hub===scope);
   let done=0,correct=0;const bySys={};
   mine.forEach(b=>{const q=+b.q||0,c=+b.correct||0;done+=q;correct+=c;
@@ -2215,42 +2274,7 @@ function uworldRollup(scope){scope=scope||S.active;
   Object.keys(bySys).forEach(s=>{const e=bySys[s];e.pct=e.done?Math.round(e.correct/e.done*100):null;});
   return {total:u.total,done,correct,pct:done?Math.round(correct/done*100):null,bySys};
 }
-function addUworldBlock(o,scope){S.uworld=S.uworld||{total:null,blocks:{}};S.uworld.blocks=S.uworld.blocks||{};S.uworld.blocks[uid()]={hub:(scope||S.active),dateISO:o.dateISO||todayISO(),sys:o.sys||"",q:+o.q||0,correct:+o.correct||0,mode:o.mode||"random",_t:Date.now()};save();}
-function setUworldTotal(n){S.uworld=S.uworld||{total:null,blocks:{}};S.uworld.total=(n>0?n:null);save();}
-/* AMBOSS log — same shape/rollup as UWorld (dedicated STEP prep) */
-function ambossRollup(scope){scope=scope||S.active;
-  const u=S.amboss||{total:null,blocks:{}};const blocks=u.blocks||{};
-  const mine=Object.keys(blocks).map(k=>blocks[k]).filter(b=>b&&b.hub===scope);
-  let done=0,correct=0;const bySys={};
-  mine.forEach(b=>{const q=+b.q||0,c=+b.correct||0;done+=q;correct+=c;
-    const key=b.sys||"Unspecified";const e=bySys[key]=bySys[key]||{done:0,correct:0};e.done+=q;e.correct+=c;});
-  Object.keys(bySys).forEach(s=>{const e=bySys[s];e.pct=e.done?Math.round(e.correct/e.done*100):null;});
-  return {total:u.total,done,correct,pct:done?Math.round(correct/done*100):null,bySys};
-}
-function addAmbossBlock(o,scope){S.amboss=S.amboss||{total:null,blocks:{}};S.amboss.blocks=S.amboss.blocks||{};S.amboss.blocks[uid()]={hub:(scope||S.active),dateISO:o.dateISO||todayISO(),sys:o.sys||"",q:+o.q||0,correct:+o.correct||0,_t:Date.now()};save();}
-function setAmbossTotal(n){S.amboss=S.amboss||{total:null,blocks:{}};S.amboss.total=(n>0?n:null);save();}
-/* ScholarRx (Rx Qmax) log — same shape/rollup as UWorld & AMBOSS */
-function scholarrxRollup(scope){scope=scope||S.active;
-  const u=S.scholarrx||{total:null,blocks:{}};const blocks=u.blocks||{};
-  const mine=Object.keys(blocks).map(k=>blocks[k]).filter(b=>b&&b.hub===scope);
-  let done=0,correct=0;const bySys={};
-  mine.forEach(b=>{const q=+b.q||0,c=+b.correct||0;done+=q;correct+=c;
-    const key=b.sys||"Unspecified";const e=bySys[key]=bySys[key]||{done:0,correct:0};e.done+=q;e.correct+=c;});
-  Object.keys(bySys).forEach(s=>{const e=bySys[s];e.pct=e.done?Math.round(e.correct/e.done*100):null;});
-  return {total:u.total,done,correct,pct:done?Math.round(correct/done*100):null,bySys};
-}
-function addScholarrxBlock(o,scope){S.scholarrx=S.scholarrx||{total:null,blocks:{}};S.scholarrx.blocks=S.scholarrx.blocks||{};S.scholarrx.blocks[uid()]={hub:(scope||S.active),dateISO:o.dateISO||todayISO(),sys:o.sys||"",q:+o.q||0,correct:+o.correct||0,_t:Date.now()};save();}
-function setScholarrxTotal(n){S.scholarrx=S.scholarrx||{total:null,blocks:{}};S.scholarrx.total=(n>0?n:null);save();}
-/* the three practice-question sources, in one place so every roll-up, log form,
-   and reset stays in sync. Add a source here and it flows everywhere. */
-const PRACTICE_SOURCES=[["uworld","UWorld"],["amboss","AMBOSS"],["scholarrx","ScholarRx"]];
-function practiceLogs(){return [S.uworld,S.amboss,S.scholarrx];}
-function practiceSrcLabel(src){const m=PRACTICE_SOURCES.find(o=>o[0]===src);return m?m[1]:"UWorld";}
-function practiceSrcOptions(sel){return PRACTICE_SOURCES.map(o=>'<option value="'+o[0]+'"'+(sel===o[0]?' selected':'')+'>'+o[1]+'</option>').join('');}
-function addPracticeBlock(src,o,scope){if(src==="amboss")addAmbossBlock(o,scope);else if(src==="scholarrx")addScholarrxBlock(o,scope);else addUworldBlock(o,scope);}
-function setPracticeTotal(src,n){if(src==="amboss")setAmbossTotal(n);else if(src==="scholarrx")setScholarrxTotal(n);else setUworldTotal(n);}
-function practiceTotalOf(src){const log=src==="amboss"?S.amboss:(src==="scholarrx"?S.scholarrx:S.uworld);return (log&&log.total)||"";}
-function practiceBankPlaceholder(src){return src==="amboss"?"~2800":(src==="scholarrx"?"~2600":"~3300");}
+function practiceRollups(scope){return PRACTICE_SOURCES.map(o=>Object.assign({src:o.key,label:o.label},practiceRollupOf(o.key,scope)));}
 /* ---- Weekly practice-question goal (M2, opt-in) + subject confidence ----
    Off unless the student sets a target on the Plan page. UWorld AND AMBOSS
    blocks logged in this hub both count; the tally resets each Monday. */
@@ -2269,13 +2293,13 @@ function qGoal(c){c=c||S.cfg;return (c&&c.weeklyQGoal>0)?c.weeklyQGoal:0;}
 function qGoalDefault(per){return per==="day"?5:15;}
 function qGoalLogged(scope,c){scope=scope||S.active;const p=qGoalPeriod(c);
   let n=0;practiceLogs().forEach(log=>{const bl=(log&&log.blocks)||{};for(const k in bl){const b=bl[k];if(b&&b.hub===scope&&b.dateISO>=p.start&&b.dateISO<p.end)n+=(+b.q||0);}});return n;}
-/* combined UWorld + AMBOSS + ScholarRx accuracy per subject. No pass mark: a
+/* combined accuracy per subject across every practice source. No pass mark: a
    "good" percentage depends on the qbank, the phase and the student, so we report
    the number and rank it against your OWN other subjects instead of grading it
    against an invented threshold. Subjects under CONF_MIN_Q questions are too small
    a sample to show a percentage for. */
-function subjectConfidence(scope){scope=scope||S.active;const uw=uworldRollup(scope),am=ambossRollup(scope),rx=scholarrxRollup(scope);const by={};
-  [uw,am,rx].forEach(roll=>Object.keys(roll.bySys).forEach(s=>{if(s==="Unspecified")return;const e=roll.bySys[s];const t=by[s]=by[s]||{done:0,correct:0};t.done+=e.done;t.correct+=e.correct;}));
+function subjectConfidence(scope){scope=scope||S.active;const by={};
+  practiceRollups(scope).forEach(roll=>Object.keys(roll.bySys).forEach(s=>{if(s==="Unspecified")return;const e=roll.bySys[s];const t=by[s]=by[s]||{done:0,correct:0};t.done+=e.done;t.correct+=e.correct;}));
   return Object.keys(by).map(s=>{const done=by[s].done,pct=done?Math.round(by[s].correct/done*100):null,rated=done>=CONF_MIN_Q;
     return {sys:s,done,pct,rated};});}
 /* progress bar for the weekly goal — reused on Today and the Plan page.
@@ -2328,8 +2352,8 @@ function weeklyGoalSettingHTML(c){
     +'<span class="muted small">Optional · off by default</span></div>';
   if(on)h+='<div class="flab mt">Count them by</div><div class="togrow">'+perBtn("day","Daily")+perBtn("week","Weekly")+'</div>'
     +'<div class="form" style="margin-top:10px"><label>Questions per '+per+'<input type="number" id="wg_goal" min="1" step="1" value="'+goal+'"></label></div>'
-    +'<p class="muted small">UWorld, AMBOSS or ScholarRx questions you log count toward this — it resets '+(per==="day"?"every day":"every Monday")+'.</p>'+weeklyGoalProgressHTML(c);
-  else h+='<p class="muted small">Set a target number of UWorld / AMBOSS / ScholarRx questions and track your progress toward it — counted <b>daily</b> or <b>weekly</b>, whichever suits how you study.</p>';
+    +'<p class="muted small">'+escHTML(practiceSrcList())+' questions you log count toward this — it resets '+(per==="day"?"every day":"every Monday")+'.</p>'+weeklyGoalProgressHTML(c);
+  else h+='<p class="muted small">Set a target number of '+escHTML(practiceSrcList())+' questions and track your progress toward it — counted <b>daily</b> or <b>weekly</b>, whichever suits how you study.</p>';
   return h+'</div>';
 }
 function bindWeeklyGoal(c,apply){
@@ -2363,7 +2387,7 @@ function readinessChip(){
 }
 /* Today chip — block-phase UWorld progress (Brody is school-block focused) */
 function uworldChip(){
-  const r=practiceRollup();   // UWorld + AMBOSS + ScholarRx combined
+  const r=practiceRollup();   // every practice source combined
   if(!r.done)return '<button class="rchip rchip-info" data-gouworld="1">Log practice questions →</button>';
   return '<button class="rchip rchip-info" data-gouworld="1"><span class="rchip-n">'+r.pct+'%</span><span class="rchip-t">Practice · '+r.done+' Qs correct</span></button>';
 }
@@ -2413,18 +2437,21 @@ function uworldCard(){
 /* M2 practice-question block — combined UWorld + AMBOSS totals; the source is
    chosen per block at logging, and every block flows into Subject confidence
    above. Per-subject accuracy lives there, so this block stays a clean total. */
-function practiceRollup(scope){scope=scope||S.active;const uw=uworldRollup(scope),am=ambossRollup(scope),rx=scholarrxRollup(scope);
-  const done=uw.done+am.done+rx.done,correct=uw.correct+am.correct+rx.correct;
-  return {done,correct,pct:done?Math.round(correct/done*100):null,uw:uw.done,am:am.done,rx:rx.done};}
+function practiceRollup(scope){scope=scope||S.active;const rolls=practiceRollups(scope);
+  let done=0,correct=0;rolls.forEach(r=>{done+=r.done;correct+=r.correct;});
+  const out={done,correct,pct:done?Math.round(correct/done*100):null,bySrc:rolls};
+  out.uw=practiceRollupOf("uworld",scope).done;out.am=practiceRollupOf("amboss",scope).done;
+  out.rx=practiceRollupOf("scholarrx",scope).done;out.bnbq=practiceRollupOf("bnbq",scope).done;
+  return out;}
 function practiceCard(){
   const r=practiceRollup();const pctTxt=r.pct!=null?r.pct+'%':'—';
-  const parts=[];if(r.uw)parts.push(r.uw+' UWorld');if(r.am)parts.push(r.am+' AMBOSS');if(r.rx)parts.push(r.rx+' ScholarRx');
+  const parts=r.bySrc.filter(x=>x.done).map(x=>x.done+' '+x.label);
   const doneTxt=r.done?(r.done+' Qs · '+parts.join(' / ')):'0 Qs';
   const hasData=r.done>0;
   return '<div class="card"><div class="cardhd">Practice questions'+(hasData?'<button class="hdreset" id="rst_pr" title="Clear this hub’s practice-question log">Reset</button>':'')+'</div>'
     +'<div class="uwtop"><div class="uwbig">'+pctTxt+' <span>correct</span></div><div class="uwsub">'+doneTxt+'</div></div>'
     +fold("uwform","Log a block",uworldForm(),r.done===0)
-    +(hasData?'<p class="muted small">Pick <b>UWorld, AMBOSS, or ScholarRx</b> on each block. Per-subject accuracy is in <b>Accuracy by subject</b> above.</p>':'<p class="muted small">Log a block and choose <b>UWorld, AMBOSS, or ScholarRx</b> — it flows straight into your accuracy by subject above.</p>')
+    +(hasData?'<p class="muted small">Pick <b>'+escHTML(practiceSrcList())+'</b> on each block. Per-subject accuracy is in <b>Accuracy by subject</b> above.</p>':'<p class="muted small">Log a block and choose <b>'+escHTML(practiceSrcList())+'</b> — it flows straight into your accuracy by subject above.</p>')
     +'</div>';
 }
 function reviewCard(){
@@ -2436,7 +2463,7 @@ function reviewCard(){
   if(shaky.length){body+='<div class="alist">'+shaky.slice(0,40).map(it=>'<div class="arow"><span class="adot warn"></span><span class="aform">'+escHTML(vName(it))+'</span><button class="alink" data-unshaky="'+escAttr(it.id)+'">clear</button></div>').join('')+'</div>';if(shaky.length>40)body+='<p class="muted small">+'+(shaky.length-40)+' more flagged.</p>';}
   body+='</div>';return body;
 }
-/* Accuracy by subject — combined UWorld+AMBOSS+ScholarRx accuracy per subject.
+/* Accuracy by subject — combined accuracy per subject across every source.
    Answers "am I actually ready in this subject, or just doing questions?" */
 function confidenceCard(){
   const list=subjectConfidence();
@@ -2445,7 +2472,7 @@ function confidenceCard(){
   const rated=list.filter(x=>x.rated).sort((a,b)=>a.pct-b.pct);
   const pending=list.filter(x=>!x.rated).sort((a,b)=>b.done-a.done);
   let h='<div class="card"><div class="cardhd">Accuracy by subject</div>'
-    +'<p class="muted small" style="margin-top:0">Your accuracy per subject on logged UWorld + AMBOSS + ScholarRx questions, weakest first. There\u2019s no target score \u2014 what counts as \u201cgood\u201d depends on the qbank and where you are in the block.</p>';
+    +'<p class="muted small" style="margin-top:0">Your accuracy per subject on logged '+escHTML(practiceSrcList("and"))+' questions, weakest first. There\u2019s no target score \u2014 what counts as \u201cgood\u201d depends on the qbank and where you are in the block.</p>';
   if(rated.length){h+='<div class="bars">';
     rated.forEach(x=>{
       h+='<div class="bar"><div class="barlab">'+escHTML(x.sys)+'</div><div class="bartrack"><div class="barfill" style="width:'+x.pct+'%"></div></div><div class="barpct"><b>'+x.pct+'%</b> <span class="muted small">('+x.done+')</span></div></div>';});
@@ -2585,7 +2612,7 @@ function bindReady(){
   document.querySelectorAll("[data-unshaky]").forEach(b=>b.onclick=()=>{toggleShaky(b.dataset.unshaky);render();});
   const rsc=document.getElementById("rst_scores");if(rsc)rsc.onclick=()=>confirmClear("Clear all logged scores?","Removes every self-assessment score in this hub's log. You'll get one chance to undo.",clearScores);
   const ruw=document.getElementById("rst_uw");if(ruw)ruw.onclick=()=>confirmClear("Clear the UWorld log?","Removes every logged UWorld block and your qbank size. You'll get one chance to undo.",clearUworld);
-  const rprc=document.getElementById("rst_pr");if(rprc)rprc.onclick=()=>confirmClear("Clear the practice-question log?","Removes every UWorld, AMBOSS and ScholarRx block logged in this hub — your per-subject accuracy resets with it. You'll get one chance to undo.",()=>clearScopedPractice(S.active));
+  const rprc=document.getElementById("rst_pr");if(rprc)rprc.onclick=()=>confirmClear("Clear the practice-question log?","Removes every "+practiceSrcList("and")+" block logged in this hub — your per-subject accuracy resets with it. You'll get one chance to undo.",()=>clearScopedPractice(S.active));
   const rfl=document.getElementById("rst_flags");if(rfl)rfl.onclick=()=>confirmClear("Clear all review flags?","Un-flags every video you marked as shaky. You'll get one chance to undo.",clearFlags);
   const rvd=document.getElementById("rst_vid");if(rvd)rvd.onclick=()=>confirmClear("Reset video progress?","Clears every video checkmark and daily Anki check across BOTH hubs. Scores, UWorld log, and flags stay. You'll get one chance to undo.",clearVideos);
   // hold the scroll: the toggle sits well down the page, and a full repaint would
@@ -2600,9 +2627,18 @@ function bindReady(){
    ============================================================ */
 const DSCOPE="step1";
 let SRDRAFT={form:"NBME 28",dateISO:todayISO(),pct:"",estProb:""};
-let SUDRAFT={sys:"",q:"40",correct:""};
-let SADRAFT={sys:"",q:"40",correct:""};
-let SXDRAFT={sys:"",q:"40",correct:""};   // ScholarRx dedicated qbank draft
+/* One dedicated-hub qbank card per practice source. The DOM id prefix is pinned
+   per source rather than derived, so an existing card's element ids never shift
+   when a new source is added to the list. */
+const DQ_PFX={uworld:"su",amboss:"sa",scholarrx:"sx",bnbq:"sb"};
+/* "UWorld, AMBOSS, ScholarRx or Boards & Beyond" — built from the list so the
+   copy can't fall out of step with what the dropdown actually offers. */
+function practiceSrcList(joiner){const l=PRACTICE_SOURCES.map(o=>o.label);
+  return l.slice(0,-1).join(", ")+" "+(joiner||"or")+" "+l[l.length-1];}
+function dqPfx(src){return DQ_PFX[practiceSrcOf(src)]||("s_"+practiceSrcOf(src));}
+const DQ_DRAFTS={};
+function dqDraft(src){const k=practiceSrcOf(src);return DQ_DRAFTS[k]=DQ_DRAFTS[k]||{sys:"",q:"40",correct:""};}
+function dqSrcOfPfx(pfx){const m=PRACTICE_KEYS.find(k=>dqPfx(k)===pfx);return m||"uworld";}
 function stepScoreForm(){
   return '<div class="form2">'
     +'<label>Form<select id="sr_form">'+NBME_FORMS.map(f=>'<option'+(SRDRAFT.form===f?' selected':'')+'>'+f+'</option>').join('')+'</select></label>'
@@ -2630,7 +2666,7 @@ function qbankCard(title,pfx,roll,resetId){
   let bars='';const sysList=Object.keys(roll.bySys).sort((a,b)=>{if(a==="Unspecified")return 1;if(b==="Unspecified")return -1;return (roll.bySys[a].pct||0)-(roll.bySys[b].pct||0);});
   sysList.forEach(x=>{const e=roll.bySys[x];
     bars+='<div class="bar"><div class="barlab">'+escHTML(x)+'</div><div class="bartrack"><div class="barfill" style="width:'+(e.pct||0)+'%"></div></div><div class="barpct">'+(e.pct==null?'—':e.pct+'%')+'</div></div>';});
-  const draft=pfx==="su"?SUDRAFT:(pfx==="sx"?SXDRAFT:SADRAFT);
+  const draft=dqDraft(dqSrcOfPfx(pfx));
   return '<div class="card"><div class="cardhd">'+title+(roll.done?'<button class="hdreset" id="'+resetId+'">Reset</button>':'')+'</div>'
     +'<div class="uwtop"><div class="uwbig">'+pctTxt+' <span>correct</span></div><div class="uwsub">'+doneTxt+'</div></div>'
     +progHtml
@@ -2650,7 +2686,7 @@ function stepBlendAccuracy(){
     e.done+=q;e.correct+=c;if(b.hub===DSCOPE)e.ded+=q;else e.m2+=q;}});
   return Object.keys(by).map(s=>({sys:s,done:by[s].done,pct:by[s].done?Math.round(by[s].correct/by[s].done*100):null,m2:by[s].m2,ded:by[s].ded})).filter(x=>x.pct!=null);
 }
-/* combined UWorld+AMBOSS+ScholarRx totals across every hub — the dedicated headline snapshot */
+/* combined practice-source totals across every hub — the dedicated headline snapshot */
 function stepBlendTotals(){let done=0,correct=0,m2=0,ded=0;
   practiceLogs().forEach(log=>{const bl=(log&&log.blocks)||{};for(const k in bl){const b=bl[k];if(!b)continue;const q=+b.q||0;done+=q;correct+=+b.correct||0;if(b.hub===DSCOPE)ded+=q;else m2+=q;}});
   return {done,correct,pct:done?Math.round(correct/done*100):null,m2,ded};}
@@ -2666,7 +2702,7 @@ function stepFocusCard(){
   h+=weak.length
     ? '<div class="status">Your lowest '+weak.length+' right now: '+weak.map(w=>escHTML(w.sys)+' <b>'+w.pct+'%</b>').join(' · ')+'. Worth prioritizing before your exam.</div>'
     : '<div class="status ok">Log questions across at least '+FOCUS_MIN_SYS+' systems ('+CONF_MIN_Q+'+ each) and your lowest ones surface here.</div>';
-  h+='<div class="uwhd">Combined UWorld + AMBOSS + ScholarRx · weakest first'+(anyM2?' · includes your M2 semester':'')+'</div><div class="bars">';
+  h+='<div class="uwhd">Combined '+escHTML(PRACTICE_SOURCES.map(o=>o.label).join(' + '))+' · weakest first'+(anyM2?' · includes your M2 semester':'')+'</div><div class="bars">';
   const focusSet=new Set(weak.map(w=>w.sys));
   list.forEach(x=>{
     const split=(x.m2>0&&x.ded>0)?(' <span class="srcsplit">'+x.m2+' M2·'+x.ded+' ded</span>'):(x.m2>0&&x.ded===0?' <span class="srcsplit">M2</span>':'');
@@ -2698,9 +2734,7 @@ function renderStepHub(){
     +(list.length?('<div class="uwhd">Logged scores</div><div class="alist">'+list.slice().reverse().map(x=>{const vv=readinessVerdict(x.pct);return '<div class="arow"><span class="adot '+vv.cls+'"></span><span class="aform">'+escHTML(x.form)+'</span><span class="apct">'+x.pct+'%</span><span class="adate">'+fmtShort(x.dateISO)+'</span><button class="alink" data-sdel="'+escAttr(x.id)+'">remove</button></div>';}).join('')+'</div>'):'')
     +'<p class="muted small">Bands (65 / 70) are common guidance, not guarantees — trend matters more than any one score.</p></div>';
   let colB='';
-  colB+=qbankCard("UWorld — dedicated","su",uworldRollup(DSCOPE),"sst_uw");
-  colB+=qbankCard("AMBOSS","sa",ambossRollup(DSCOPE),"sst_am");
-  colB+=qbankCard("ScholarRx","sx",scholarrxRollup(DSCOPE),"sst_sx");
+  PRACTICE_SOURCES.forEach(o=>{colB+=qbankCard(o.key==="uworld"?"UWorld — dedicated":o.label,dqPfx(o.key),practiceRollupOf(o.key,DSCOPE),"sst_"+dqPfx(o.key));});
   app.innerHTML=chrome("")+'<div class="wrap">'+hero+snap+stepFocusCard()+'<div class="cols"><div>'+colA+'</div><div>'+colB+'</div></div></div>';
   bindStep();
   const sd=document.getElementById("sd_date");if(sd)sd.onclick=()=>openDatePicker({value:iso||"",min:todayISO(),title:"Step 1 exam date",onPick:(d)=>{S.settings.stepExamISO=d;save();render();}});
@@ -2719,28 +2753,29 @@ function bindStep(){
   const rpr=document.getElementById("sr_prob");if(rpr)rpr.onchange=()=>{SRDRAFT.estProb=rpr.value;};
   const rs=document.getElementById("sr_save");if(rs)rs.onclick=()=>{const pct=parseFloat(rp?rp.value:SRDRAFT.pct);if(isNaN(pct)||pct<0||pct>100){toast("Enter a % between 0 and 100");return;}const prob=parseFloat(rpr?rpr.value:SRDRAFT.estProb);addAssessment({form:(rf?rf.value:SRDRAFT.form),dateISO:SRDRAFT.dateISO,pct:Math.round(pct),estProb:isNaN(prob)?null:Math.round(prob)},DSCOPE);SRDRAFT={form:(rf?rf.value:SRDRAFT.form),dateISO:todayISO(),pct:"",estProb:""};toast("Score logged ✓");render();};
   document.querySelectorAll("[data-sdel]").forEach(b=>b.onclick=()=>{delAssessment(b.dataset.sdel);render();});
-  bindQbank("su",SUDRAFT,addUworldBlock,setUworldTotal);
-  bindQbank("sa",SADRAFT,addAmbossBlock,setAmbossTotal);
-  bindQbank("sx",SXDRAFT,addScholarrxBlock,setScholarrxTotal);
+  PRACTICE_SOURCES.forEach(o=>{const k=o.key;
+    bindQbank(dqPfx(k),dqDraft(k),(blk,sc)=>addPracticeBlock(k,blk,sc),n=>setPracticeTotal(k,n));});
   const z1=document.getElementById("sst_scores");if(z1)z1.onclick=()=>confirmClear("Clear dedicated NBME scores?","Removes every dedicated Step self-assessment. You'll get one chance to undo.",()=>clearScopedAssess(DSCOPE));
   const z2=document.getElementById("sst_uw");if(z2)z2.onclick=()=>confirmClear("Clear dedicated UWorld?","Removes every dedicated UWorld block. You'll get one chance to undo.",()=>clearScopedUworld(DSCOPE));
   const z3=document.getElementById("sst_am");if(z3)z3.onclick=()=>confirmClear("Clear AMBOSS log?","Removes every AMBOSS block. You'll get one chance to undo.",clearAmboss);
-  const z4=document.getElementById("sst_sx");if(z4)z4.onclick=()=>confirmClear("Clear dedicated ScholarRx?","Removes every dedicated ScholarRx block. You'll get one chance to undo.",()=>clearScopedScholarrx(DSCOPE));
+  PRACTICE_SOURCES.forEach(o=>{if(o.key==="uworld"||o.key==="amboss")return;   // those two have their own wording above
+    const z=document.getElementById("sst_"+dqPfx(o.key));
+    if(z)z.onclick=()=>confirmClear("Clear dedicated "+o.label+"?","Removes every dedicated "+o.label+" block. You'll get one chance to undo.",()=>clearScopedSrc(o.key,DSCOPE));});
   wireChrome();
 }
 function clearScopedAssess(scope){const snap=Object.assign({},S.assessments);Object.keys(S.assessments||{}).forEach(k=>{if(S.assessments[k].hub===scope)delete S.assessments[k];});bumpReset();save();render();toastUndo("Dedicated scores cleared.",()=>{S.assessments=snap;save();render();});}
 function clearScopedUworld(scope){const snap=JSON.parse(JSON.stringify(S.uworld||{total:null,blocks:{}}));const bl=(S.uworld||{}).blocks||{};Object.keys(bl).forEach(k=>{if(bl[k].hub===scope)delete bl[k];});bumpReset();save();render();toastUndo("Dedicated UWorld cleared.",()=>{S.uworld=snap;save();render();});}
-function clearScopedScholarrx(scope){const snap=JSON.parse(JSON.stringify(S.scholarrx||{total:null,blocks:{}}));const bl=(S.scholarrx||{}).blocks||{};Object.keys(bl).forEach(k=>{if(bl[k].hub===scope)delete bl[k];});bumpReset();save();render();toastUndo("Dedicated ScholarRx cleared.",()=>{S.scholarrx=snap;save();render();});}
-/* clear this hub's whole practice log — UWorld, AMBOSS and ScholarRx blocks (M2) */
+function clearScopedSrc(src,scope){const k=practiceSrcOf(src),lab=practiceSrcLabel(k);
+  const snap=JSON.parse(JSON.stringify(practiceLog(k)));const bl=practiceLog(k).blocks;
+  Object.keys(bl).forEach(x=>{if(bl[x].hub===scope)delete bl[x];});bumpReset();save();render();
+  toastUndo("Dedicated "+lab+" cleared.",()=>{S[k]=snap;save();render();});}
+function clearScopedScholarrx(scope){clearScopedSrc("scholarrx",scope);}
+/* clear this hub's whole practice log — every source's blocks (M2) */
 function clearScopedPractice(scope){scope=scope||S.active;
-  const snapU=JSON.parse(JSON.stringify(S.uworld||{total:null,blocks:{}}));
-  const snapA=JSON.parse(JSON.stringify(S.amboss||{total:null,blocks:{}}));
-  const snapR=JSON.parse(JSON.stringify(S.scholarrx||{total:null,blocks:{}}));
-  const ub=(S.uworld||{}).blocks||{};Object.keys(ub).forEach(k=>{if(ub[k].hub===scope)delete ub[k];});
-  const ab=(S.amboss||{}).blocks||{};Object.keys(ab).forEach(k=>{if(ab[k].hub===scope)delete ab[k];});
-  const rb=(S.scholarrx||{}).blocks||{};Object.keys(rb).forEach(k=>{if(rb[k].hub===scope)delete rb[k];});
+  const snaps={};PRACTICE_KEYS.forEach(k=>{snaps[k]=JSON.parse(JSON.stringify(practiceLog(k)));});
+  PRACTICE_KEYS.forEach(k=>{const bl=practiceLog(k).blocks;Object.keys(bl).forEach(x=>{if(bl[x].hub===scope)delete bl[x];});});
   bumpReset();save();render();
-  toastUndo("Practice-question log cleared.",()=>{S.uworld=snapU;S.amboss=snapA;S.scholarrx=snapR;save();render();});}
+  toastUndo("Practice-question log cleared.",()=>{PRACTICE_KEYS.forEach(k=>{S[k]=snaps[k];});save();render();});}
 function clearAmboss(){const snap=JSON.parse(JSON.stringify(S.amboss||{total:null,blocks:{}}));S.amboss={total:null,blocks:{}};bumpReset();save();render();toastUndo("AMBOSS log cleared.",()=>{S.amboss=snap;save();render();});}
 
 /* ---------- daily encouragement (positive reinforcement, top of Today) ----------
@@ -4414,20 +4449,23 @@ function doResetAll(){
   // nuclear: wipe progress AND the saved plans, drop the user back to the
   // setup screen to craft a fresh plan. Tombstoned so sync can't resurrect it.
   Cloud.backupNow("before-reset");   // keep a recoverable snapshot beyond the in-session undo
-  const snap={vdone:S.vdone,vskip:S.vskip,vdoneDate:S.vdoneDate,vdoneAt:S.vdoneAt,vundone:S.vundone,akdone:S.akdone,notes:S.notes,assessments:S.assessments,uworld:S.uworld,amboss:S.amboss,scholarrx:S.scholarrx,vshaky:S.vshaky,streak:S.streak,cfgs:S.cfgs,active:S.active};
-  S.vdone={};S.vskip={};S.vdoneDate={};S.vdoneAt={};S.vundone={};S.akdone={};S.notes={};S.assessments={};S.uworld={total:null,blocks:{}};S.amboss={total:null,blocks:{}};S.scholarrx={total:null,blocks:{}};S.vshaky={};S.streak={days:{}};
+  const snap={vdone:S.vdone,vskip:S.vskip,vdoneDate:S.vdoneDate,vdoneAt:S.vdoneAt,vundone:S.vundone,akdone:S.akdone,notes:S.notes,assessments:S.assessments,uworld:S.uworld,amboss:S.amboss,scholarrx:S.scholarrx,bnbq:S.bnbq,vshaky:S.vshaky,streak:S.streak,cfgs:S.cfgs,active:S.active};
+  S.vdone={};S.vskip={};S.vdoneDate={};S.vdoneAt={};S.vundone={};S.akdone={};S.notes={};S.assessments={};PRACTICE_KEYS.forEach(k=>{S[k]={total:null,blocks:{}};});S.vshaky={};S.streak={days:{}};
   S.cfgs={step1:null,nbme:null};S.active=null;S.cfg=null;_prevSig=0;S._resetAt=Date.now();save();
   renderWelcome();
   toastUndo("Everything cleared — build a new plan, or tap Undo to restore.",()=>{
-    S.vdone=snap.vdone;S.vskip=snap.vskip;S.vdoneDate=snap.vdoneDate;S.vdoneAt=snap.vdoneAt;S.vundone=snap.vundone;S.akdone=snap.akdone;S.notes=snap.notes;S.assessments=snap.assessments;S.uworld=snap.uworld;S.amboss=snap.amboss;S.scholarrx=snap.scholarrx;S.vshaky=snap.vshaky;S.streak=snap.streak;
+    S.vdone=snap.vdone;S.vskip=snap.vskip;S.vdoneDate=snap.vdoneDate;S.vdoneAt=snap.vdoneAt;S.vundone=snap.vundone;S.akdone=snap.akdone;S.notes=snap.notes;S.assessments=snap.assessments;PRACTICE_KEYS.forEach(k=>{S[k]=snap[k];});S.vshaky=snap.vshaky;S.streak=snap.streak;
     S.cfgs=snap.cfgs;S.active=snap.active;S.cfg=S.active?S.cfgs[S.active]:null;_prevSig=progressSig();save();
     if(S.cfg){reflow();render();}else renderWelcome();toast("Restored ✓");});
 }
-const BUILD="2026-07-21x";
+const BUILD="2026-07-21y";
 /* ---------- What's new (changelog) ----------
    Newest entry first. Bump the top entry's id whenever you add one and the
    pop-up shows once per person (tracked in synced settings.seenUpdate). */
 const CHANGELOG=[
+  {id:"2026-08-10", date:"August 2026", title:"Boards & Beyond questions", items:[
+    "Boards & Beyond joins UWorld, AMBOSS and ScholarRx as a practice-question source. Pick it when you log a block \u2014 on Stats, in the Today quick-logger, or on the dedicated hub \u2014 and it feeds your accuracy by subject and your question goal like any other bank.",
+  ]},
   {id:"2026-08-09", date:"August 2026", title:"Measure progress by time, not just video count", items:[
     "Videos vary a lot in length, so a headcount can undersell a heavy day. On Stats you can now switch \u201cMeasure progress by\u201d to Time \u2014 the headline percent and every subject bar then count minutes of video instead of videos watched.",
     "Your choice follows you everywhere the percent appears, and syncs across devices. Leave it alone and nothing changes: video count is still the default.",
@@ -4894,9 +4932,9 @@ function wireFileInput(){
   const inp=document.getElementById("fileIn");
   if(inp)inp.onchange=(e)=>{const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=()=>{try{const o=JSON.parse(r.result);
     if(o.cfgs!==undefined)S.cfgs=o.cfgs;else if(o.cfg!==undefined){const key=(o.cfg.examType&&o.cfg.examType!=="step1")?"nbme":"step1";S.cfgs={step1:null,nbme:null};S.cfgs[key]=o.cfg;}
-    ["vdone","vskip","vdoneDate","vdoneAt","vundone","akdone","notes","streak","assessments","uworld","amboss","scholarrx","vshaky","_resetAt"].forEach(k=>{if(o[k]!==undefined)S[k]=o[k];});
+    ["vdone","vskip","vdoneDate","vdoneAt","vundone","akdone","notes","streak","assessments","vshaky","_resetAt"].concat(PRACTICE_KEYS).forEach(k=>{if(o[k]!==undefined)S[k]=o[k];});
     S.uworld=S.uworld||{total:null,blocks:{}};S.uworld.blocks=S.uworld.blocks||{};
-    S.scholarrx=S.scholarrx||{total:null,blocks:{}};S.scholarrx.blocks=S.scholarrx.blocks||{};
+    PRACTICE_KEYS.forEach(k=>{S[k]=S[k]||{total:null,blocks:{}};S[k].blocks=S[k].blocks||{};});
     ["step1","nbme"].forEach(k=>{if(S.cfgs[k])normalizeCfg(S.cfgs[k],k);});
     S.active=null;S.cfg=null;_prevSig=progressSig();save();renderWelcome();toast("Backup restored");
   }catch(err){toast("Couldn't read that file");}};r.readAsText(f);};
