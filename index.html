@@ -777,6 +777,78 @@ ul.rritems{list-style:none;margin:0;padding:1px 0 9px 14px}
 ul.rritems li{position:relative;padding:3.5px 0 3.5px 14px;color:var(--text-2);font-size:13px;line-height:1.5}
 ul.rritems li::before{content:"";position:absolute;left:0;top:10px;width:5px;height:1px;background:var(--line2)}
 .rrempty{color:var(--faint);font-size:13.5px;padding:18px 0}
+/* extra resources — tap-to-reveal diagnostic algorithms.
+   The four box colours are a legend, not decoration, so they keep their meaning
+   (finding / next step / diagnosis / management) while being re-toned to the
+   app's palette. Dark-mode values ride the same tokens. */
+/* M3 hub: shelf and unit cards */
+.m3grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:12px;margin:14px 0 26px}
+.m3card{text-align:left;font:inherit;font-family:var(--sans);background:var(--panel);border:1px solid var(--line);
+  border-radius:var(--r);padding:16px 17px;cursor:pointer;display:flex;flex-direction:column;gap:5px;color:var(--ink);
+  transition:border-color .14s,box-shadow .14s}
+.m3card:hover{border-color:var(--phos);box-shadow:var(--shadow)}
+.m3card:focus-visible{outline:2px solid var(--phos);outline-offset:2px}
+.m3card.soon{cursor:default;background:var(--surface-2);border-style:dashed;opacity:.72}
+.m3card.soon:hover{border-color:var(--line);box-shadow:none}
+.m3top{display:block}
+/* the tag always sits under the name, so a one-word shelf and a two-line one line up */
+.m3top .soontag{display:inline-block;margin-top:7px}
+.m3name{font-size:15.5px;font-weight:700;letter-spacing:-.01em}
+.m3sub{font-size:12.5px;color:var(--text-2)}
+.m3card .hubgo{margin-top:4px;font-size:12px;font-weight:700;color:var(--phos)}
+.m3crumb{font-size:11.5px;color:var(--faint);letter-spacing:.04em;margin:2px 0 -4px}
+.exbanner{display:flex;align-items:baseline;gap:11px;padding:0 0 8px;border-bottom:2px solid var(--phos);margin:6px 0 14px}
+.exbanner h2{margin:0;font-size:19px;font-weight:800;letter-spacing:-.01em;color:var(--phos)}
+.exbanner .exct{font-size:11.5px;color:var(--faint);margin-left:auto}
+.expick{display:flex;flex-wrap:wrap;gap:7px;margin:0 0 12px}
+.exbar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:0 0 10px}
+.extick{font-size:12px;color:var(--faint);margin-left:auto}
+.exzoom{display:flex;align-items:center;gap:5px}
+.exzlab{font-size:11.5px;color:var(--faint);min-width:40px;text-align:center}
+@media(max-width:820px){.exzoom{display:none}}   /* outline mode needs no scaling */
+.exhint{font-size:12.5px;color:var(--text-2);margin:0 0 14px;max-width:64ch}
+.excanvas{overflow-x:auto;overflow-y:hidden;padding:6px 0 18px;-webkit-overflow-scrolling:touch}
+.exstage{display:inline-block;min-width:100%}
+.extree ul{position:relative;display:flex;justify-content:center;list-style:none;margin:0;padding:22px 0 0}
+.extree>ul{padding-top:0}
+.extree li{position:relative;display:flex;flex-direction:column;align-items:center;padding:22px 5px 0}
+.extree li::before,.extree li::after{content:"";position:absolute;top:0;right:50%;width:50%;height:22px;border-top:1.5px solid var(--line2)}
+.extree li::after{right:auto;left:50%;border-left:1.5px solid var(--line2)}
+.extree li:only-child::before,.extree li:only-child::after{display:none}
+.extree li:first-child::before,.extree li:last-child::after{border:0 none}
+.extree li:last-child::before{border-right:1.5px solid var(--line2)}
+.extree ul ul::before{content:"";position:absolute;top:0;left:50%;width:0;height:22px;border-left:1.5px solid var(--line2)}
+.exbox{width:162px;min-height:46px;cursor:pointer;font:inherit;font-family:var(--sans);font-size:12.5px;line-height:1.35;
+  padding:9px;border-radius:var(--radius);text-align:center;display:flex;align-items:center;justify-content:center;
+  background:var(--panel);border:1.5px solid var(--line2);color:var(--ink)}
+.exbox:hover{box-shadow:0 0 0 2px var(--phos-soft)}
+.exbox:focus-visible{outline:2px solid var(--phos);outline-offset:2px}
+.exbox.finding{background:var(--success-bg);border-color:var(--success)}
+.exbox.test{background:var(--surface-2);border-color:var(--border-strong)}
+.exbox.tx{background:var(--info-bg);border-color:var(--info)}
+.exbox.dx{background:var(--gold-soft);border-color:var(--gold);font-weight:700}
+.exbox.stem{background:var(--success-bg);border-color:var(--success);font-weight:700;width:auto;padding:11px 20px;font-size:13.5px;cursor:default}
+.exbox.stem:hover{box-shadow:none}
+.exbox.blank{background:var(--panel);border-style:dashed;border-color:var(--border-strong);color:var(--faint);font-style:italic;font-size:12px;font-weight:400}
+.exkey{display:inline-block;width:24px;height:11px;border-radius:2px;vertical-align:-1px;margin:0 5px 0 12px;border:1.5px solid}
+.exkey:first-child{margin-left:0}
+.exkey.f{background:var(--success-bg);border-color:var(--success)}
+.exkey.t{background:var(--surface-2);border-color:var(--border-strong)}
+.exkey.d{background:var(--gold-soft);border-color:var(--gold)}
+.exkey.x{background:var(--info-bg);border-color:var(--info)}
+.exfoot{font-size:11.5px;color:var(--faint);line-height:2;padding:2px 0 10px}
+/* Phones: a ten-deep branching tree is unreadable shrunk to fit, so the same
+   markup lays out as an indented outline instead — one DOM, two layouts. */
+@media(max-width:820px){
+  .excanvas{overflow-x:visible}
+  .exstage{display:block}
+  .extree ul{display:block;padding:0 0 0 15px;border-left:1.5px solid var(--line)}
+  .extree>ul{padding-left:0;border-left:0}
+  .extree li{display:block;align-items:stretch;padding:5px 0 0}
+  .extree li::before,.extree li::after,.extree ul ul::before{display:none}
+  .exbox{width:100%;text-align:left;justify-content:flex-start;min-height:0;padding:10px 12px}
+  .exbox.stem{width:100%;text-align:left;justify-content:flex-start}
+}
 /* onboarding step wizard */
 .onboard.wiz{max-width:560px;margin:0 auto}
 .wizhead{margin-bottom:22px}
@@ -1133,7 +1205,7 @@ function normalizeCfg(c,key){
   if(Array.isArray(c.systems))c.systems=c.systems.filter(s=>SYS.indexOf(s)>=0);
 }
 function activate(key){S.active=key;S.cfg=S.cfgs[key]||null;}
-function hubName(key){return key==="step1"?"STEP 1 Command Center":"M2 Scheduler";}
+function hubName(key){return key==="step1"?"STEP 1 Command Center":(key==="m3"?"M3 Resource Hub":"M2 Scheduler");}
 let _prevSig=null;
 
 /* ---------- cleanup of pre-fix pipe-shredded bootcamp keys ----------
@@ -1959,6 +2031,10 @@ Cloud.signOut=function(){try{firebase.auth().signOut();}catch(e){}};
 const app=document.getElementById("app");
 let VIEW="today";
 let RR_DATA=null,RR_LOADING=false,RR_ERR=false;   // rapidref.json — reference content, loaded on first open
+let EX_DATA=null,EX_LOADING=false,EX_ERR=false;   // extras.json — the diagnostic algorithms
+let EX_CUR=null,EX_SHOWN={};                      // which algorithm is open, and which boxes are revealed
+let M3SHELF=null,M3UNIT=null;                     // M3 drill-down: shelf → unit → resource
+let EX_ZOOM=1;                                    // wide trees are scaled to fit; phones use the outline instead
 let RR_Q="",RR_OPEN={},RR_TOPEN={};               // search text + which video / topic nodes are expanded
 let QZOPEN={};   // which quiz rows have their topic picker open
 let CATOPEN={};   // which systems have their topic-order list expanded
@@ -2122,10 +2198,10 @@ function uncheckDay(iso){const row=SCHED&&SCHED.dayMap[iso];if(!row||!row.items.
 function chrome(active){
   let tabs;
   if(S.active==="m1"){tabs=[["browse","Browse"],["daily","Daily"],["grades","Grades"],["progress","Progress"]];}
-  else if(S.active==="stepd"){tabs=[];}
+  else if(S.active==="stepd"||S.active==="m3"){tabs=[];}
   else if(S.active==="nbme"){tabs=[["today","Study"],["stats","Stats"],["grades","Grades"],["adjust","Plan"],["ref","Rapid Reference"],["checklist","Checklist"]];}
   else{tabs=[["today","Study"],["stats","Stats"],["ref","Rapid Reference"],["adjust","Plan"]];}
-  const nm=(S.active==="nbme"||S.active==="m1"||S.active==="stepd")?"Home":hubName(S.active||"step1");
+  const nm=(S.active==="nbme"||S.active==="m1"||S.active==="stepd"||S.active==="m3")?"Home":hubName(S.active||"step1");
   return '<div class="topbar'+(tabs.length?'':' solo')+'">'+'<button class="brandbtn" id="brandBtn" title="Switch hub">‹ <span class="brandnm">'+escHTML(nm)+'</span></button>'
    +(tabs.length?'<div class="nav">'+tabs.map(t=>'<button class="navb '+(active===t[0]?"on":"")+'" data-view="'+t[0]+'">'+t[1]+'</button>').join('')+'</div>':'')
    +'<div class="topright">'+syncChipHTML()+'<button class="iconbtn" id="menuBtn" aria-label="menu">⋮</button></div>'
@@ -2172,6 +2248,7 @@ function renderKeepScroll(fn){
 }
 function render(){
   if(S.active==="m1"){renderM1();return;}
+  if(S.active==="m3"){renderM3();return;}
   if(S.active==="stepd"){renderStepHub();return;}
   if(!S.cfg){renderWelcome();return;}
   if(!catReady()){loadCatalog();renderCatLoading();return;}   // fetch the video catalog before planning
@@ -3959,7 +4036,7 @@ function renderWelcome(){
   if(S.active){S.active=null;S.cfg=null;save();}
   let body='<div class="welcome"><div class="wbrand">BRODY MODE</div>'
     +'<div class="wservire"><span>SERVIRE</span></div>'
-    +'<div class="hubs">'+hubCard("nbme")+m1HubCard()+stepDHubCard()+'</div>'
+    +'<div class="hubs">'+hubCard("nbme")+m3HubCard()+m1HubCard()+stepDHubCard()+'</div>'
     +'<div class="wfoot">'+((Cloud.user&&Cloud.user.email)?('<div class="acct">Signed in as '+escHTML(Cloud.user.email)+'</div>'):'')+'<button class="wfootlink" id="w_about">Governing Body</button><button class="wfootlink" id="w_step1">Step 1 Command Center (legacy)</button><button class="wfootlink" id="w_restore">Restore a backup</button>'+((Cloud.user&&Cloud.user.email)?'<button class="wfootlink" id="w_signout">Sign out</button>':'')+'</div>'
     +'</div>';
   app.innerHTML='<div class="wrap welcomewrap">'+body+'</div>';
@@ -3967,6 +4044,7 @@ function renderWelcome(){
   document.querySelectorAll("[data-setup]").forEach(b=>b.onclick=()=>startOnboard(b.dataset.setup));
   document.querySelectorAll("[data-m1enter]").forEach(b=>b.onclick=enterM1);
   document.querySelectorAll("[data-stepd]").forEach(b=>b.onclick=enterStepD);
+  document.querySelectorAll("[data-m3enter]").forEach(b=>b.onclick=enterM3);
   const wso=document.getElementById("w_signout");if(wso)wso.onclick=confirmSignOut;
   const ws=document.getElementById("w_step1");if(ws)ws.onclick=()=>enterHub("step1");
   const wr=document.getElementById("w_restore");if(wr)wr.onclick=()=>{const inp=document.getElementById("fileIn");if(inp){inp.value="";inp.click();}};
@@ -4458,11 +4536,16 @@ function doResetAll(){
     S.cfgs=snap.cfgs;S.active=snap.active;S.cfg=S.active?S.cfgs[S.active]:null;_prevSig=progressSig();save();
     if(S.cfg){reflow();render();}else renderWelcome();toast("Restored ✓");});
 }
-const BUILD="2026-07-21y";
+const BUILD="2026-07-21z";
 /* ---------- What's new (changelog) ----------
    Newest entry first. Bump the top entry's id whenever you add one and the
    pop-up shows once per person (tracked in synced settings.seenUpdate). */
 const CHANGELOG=[
+  {id:"2026-08-11", date:"August 2026", title:"New: the M3 Resource Hub", items:[
+    "A new hub on the home screen for clerkship resources, filed by shelf and then by unit. First up: Internal Medicine \u2192 Hematology/Oncology, with diagnostic algorithms for normocytic non-hemolytic anemia, lymphoma and leukemia.",
+    "Every box in an algorithm starts blank with a short question. Tap it to check your answer, or reveal the whole tree at once. It\u2019s a self-quiz, not a checklist: nothing here is graded or tracked.",
+    "The other shelves are listed and waiting \u2014 adding a unit or a resource is a content update, not an app update.",
+  ]},
   {id:"2026-08-10", date:"August 2026", title:"Boards & Beyond questions", items:[
     "Boards & Beyond joins UWorld, AMBOSS and ScholarRx as a practice-question source. Pick it when you log a block \u2014 on Stats, in the Today quick-logger, or on the dedicated hub \u2014 and it feeds your accuracy by subject and your question goal like any other bank.",
   ]},
@@ -4821,6 +4904,180 @@ function renderRapidRef(){
   const cl=document.getElementById("rr_clear");
   if(cl)cl.onclick=()=>{RR_Q="";renderRapidRef();const q2=document.getElementById("rr_q");if(q2)q2.focus();};
   bindRapidRefNodes();
+}
+
+/* ============================================================
+   M3 RESOURCE HUB — clerkship resources, filed shelf → unit →
+   resource. Currently the diagnostic algorithms: every box starts
+   blank showing a short question, and tapping it flips to the
+   answer. Static content in its own file, fetched on first open.
+   Like Rapid Reference it never touches S/persistObj — which box
+   you've revealed is scratch state that lives as long as the hub
+   is open. Adding a shelf or a unit is a data edit, not a code one.
+   ============================================================ */
+function loadExtras(cb){
+  if(EX_DATA){cb&&cb();return;}
+  if(EX_LOADING)return;
+  EX_LOADING=true;EX_ERR=false;
+  fetch("extras.json").then(r=>{if(!r.ok)throw 0;return r.json();})
+    .then(d=>{EX_DATA=d;exAssignIds();EX_LOADING=false;cb&&cb();if(S.active==="m3")render();})
+    .catch(()=>{EX_LOADING=false;EX_ERR=true;if(S.active==="m3")render();});
+}
+/* stable per-node ids, assigned once at load — the reveal state is keyed on them */
+function exAssignIds(){let i=0;
+  exAllAlgos().forEach(a=>{(function walk(n){n._id="x"+(i++);(n.c||[]).forEach(walk);})(a.root);});}
+function exShelves(){return (EX_DATA&&EX_DATA.shelves)||[];}
+function exUnits(sh){return (sh&&sh.units)||[];}
+function exAlgos(u){return (u&&u.algos)||[];}
+function exShelfById(id){return exShelves().find(x=>x.id===id)||null;}
+function exUnitById(sh,id){return exUnits(sh).find(x=>x.id===id)||null;}
+function exAllAlgos(){const out=[];exShelves().forEach(sh=>exUnits(sh).forEach(u=>exAlgos(u).forEach(a=>out.push(a))));return out;}
+function exShelfCount(sh){return exUnits(sh).reduce((a,u)=>a+exAlgos(u).length,0);}
+function exCurrentUnit(){const sh=exShelfById(M3SHELF);return sh?exUnitById(sh,M3UNIT):null;}
+function exCurrent(){const u=exCurrentUnit();if(!u)return null;const all=exAlgos(u);return all.find(a=>a.id===EX_CUR)||all[0]||null;}
+/* every box that carries a question — the stem has none, it's the presentation */
+function exAskable(a){const out=[];if(!a)return out;
+  (function walk(n){if(n.q)out.push(n);(n.c||[]).forEach(walk);})(a.root);return out;}
+function exShown(n){return !!EX_SHOWN[n._id];}
+function exNodeHTML(n){
+  const shown=exShown(n),ask=!!n.q;
+  const label=(ask&&!shown)?n.q:n.t;
+  const cls="exbox "+n.k+((ask&&!shown)?" blank":"");
+  const box=ask
+    ? '<button class="'+cls+'" data-exbox="'+escAttr(n._id)+'" aria-pressed="'+(shown?"true":"false")+'">'+escHTML(label)+'</button>'
+    : '<div class="'+cls+'">'+escHTML(label)+'</div>';
+  return '<li>'+box+(n.c&&n.c.length?'<ul>'+n.c.map(exNodeHTML).join('')+'</ul>':'')+'</li>';
+}
+function exTreeHTML(a){return '<div class="extree"><ul>'+exNodeHTML(a.root)+'</ul></div>';}
+function exCountHTML(a){const set=exAskable(a),n=set.filter(exShown).length;return n+' / '+set.length+' revealed';}
+function exAllShown(a){const set=exAskable(a);return set.length>0&&set.every(exShown);}
+/* A full algorithm is far wider than any screen. On desktop we scale it down to
+   fit (floored, so it never becomes unreadable) and leave the canvas scrollable
+   past that; phones switch to the indented outline instead, where scaling would
+   only hurt. Guarded on `zoom` support — without it the canvas just scrolls. */
+function exOutlineMode(){return window.matchMedia&&window.matchMedia("(max-width:820px)").matches;}
+function exZoomable(){return !exOutlineMode()&&typeof document.body.style.zoom==="string";}
+function exApplyZoom(){const st=document.getElementById("ex_stage");if(!st)return;
+  st.style.zoom=exZoomable()?EX_ZOOM:"";
+  const lab=document.getElementById("ex_zlab");if(lab)lab.textContent=Math.round(EX_ZOOM*100)+"%";}
+function exFit(){
+  const c=document.getElementById("ex_canvas"),st=document.getElementById("ex_stage");
+  if(!c||!st)return;
+  if(!exZoomable()){EX_ZOOM=1;exApplyZoom();return;}
+  st.style.zoom="";                                  // measure at true size
+  const need=st.scrollWidth,have=c.clientWidth;
+  EX_ZOOM=(need>have&&have>0)?Math.max(.4,Math.floor(have/need*100)/100):1;
+  exApplyZoom();
+}
+function exZoomBy(d){if(!exZoomable())return;
+  EX_ZOOM=Math.min(1.6,Math.max(.3,Math.round((EX_ZOOM+d)*100)/100));exApplyZoom();}
+/* Repaint just the diagram. A full render() would bounce the page to the top on
+   every tap — the same reason the plan editor and the reference search repaint
+   in place. */
+function exRefresh(){
+  const a=exCurrent();if(!a)return;
+  const host=document.getElementById("ex_stage");if(!host)return;
+  host.innerHTML=exTreeHTML(a);
+  const t=document.getElementById("ex_tick");if(t)t.textContent=exCountHTML(a);
+  const b=document.getElementById("ex_all");if(b)b.textContent=exAllShown(a)?"Cover all":"Reveal all";
+  bindExBoxes();
+  exApplyZoom();   // the stage survives the repaint; keep whatever scale is set
+}
+function bindExBoxes(){
+  document.querySelectorAll("[data-exbox]").forEach(b=>b.onclick=()=>{
+    const k=b.dataset.exbox;if(EX_SHOWN[k])delete EX_SHOWN[k];else EX_SHOWN[k]=true;exRefresh();});
+}
+function exSetAll(show){const a=exCurrent();if(!a)return;
+  exAskable(a).forEach(n=>{if(show)EX_SHOWN[n._id]=true;else delete EX_SHOWN[n._id];});exRefresh();}
+
+/* rotating a phone into landscape crosses the outline/tree boundary — re-fit */
+window.addEventListener("resize",()=>{if(S.active==="m3"&&document.getElementById("ex_stage"))exFit();});
+function enterM3(){S.active="m3";S.cfg=null;M3SHELF=null;M3UNIT=null;save();loadExtras();render();}
+function m3HubCard(){
+  const n=EX_DATA?exAllAlgos().length:0;
+  const sub=n?(n+" clerkship resources across your shelves"):"Clerkship resources, shelf by shelf";
+  return '<button class="hubcard set" data-m3enter="1"><div class="hubname">M3 Resource Hub</div>'
+    +'<div class="hubsub">'+escHTML(sub)+'</div><div class="hubgo">Enter →</div></button>';
+}
+function m3Shell(body){app.innerHTML=chrome("")+'<div class="wrap">'+body+'</div>';wireChrome();}
+function renderM3(){
+  if(!EX_DATA){
+    loadExtras();
+    m3Shell(EX_ERR
+      ? '<div class="m1soon"><span class="m1soon-tag">Offline</span><div class="cardhd">Couldn’t load the M3 resources</div><p class="muted small">Check your connection and try again.</p><button class="btn ghost" id="exRetry" style="margin-top:14px">Retry</button></div>'
+      : '<div class="m1soon"><span class="m1soon-tag">Loading</span><div class="cardhd">Opening the M3 hub…</div><p class="muted small">Fetching the resources.</p><div class="authspin"></div></div>');
+    const rt=document.getElementById("exRetry");if(rt)rt.onclick=()=>{EX_ERR=false;loadExtras();render();};
+    return;
+  }
+  const sh=exShelfById(M3SHELF);
+  if(!sh){renderM3Shelves();return;}
+  const u=exUnitById(sh,M3UNIT);
+  if(!u){renderM3Units(sh);return;}
+  renderM3Unit(sh,u);
+}
+/* level 1 — the shelves */
+function renderM3Shelves(){
+  let body='<h1 class="pmhd">M3 Resource Hub</h1>'
+    +'<p class="exhint">Clerkship resources, filed by shelf. Pick a shelf to see its units.</p><div class="m3grid">';
+  exShelves().forEach(shf=>{
+    const n=exShelfCount(shf),units=exUnits(shf).length;
+    body+=n
+      ? '<button class="m3card" data-m3shelf="'+escAttr(shf.id)+'"><div class="m3name">'+escHTML(shf.name)+'</div>'
+        +'<div class="m3sub">'+units+' unit'+(units===1?"":"s")+' · '+n+' resource'+(n===1?"":"s")+'</div><div class="hubgo">Open →</div></button>'
+      : '<div class="m3card soon" aria-disabled="true"><div class="m3top"><div class="m3name">'+escHTML(shf.name)+'</div><span class="soontag">Coming soon</span></div>'
+        +'<div class="m3sub">No resources added yet.</div></div>';
+  });
+  body+='</div>';
+  m3Shell(body);
+  document.querySelectorAll("[data-m3shelf]").forEach(b=>b.onclick=()=>{M3SHELF=b.dataset.m3shelf;M3UNIT=null;render();window.scrollTo(0,0);});
+}
+/* level 2 — the units inside a shelf */
+function renderM3Units(sh){
+  let body='<button class="link pmback" id="m3_back">‹ All shelves</button>'
+    +'<h1 class="pmhd">'+escHTML(sh.name)+'</h1>';
+  const units=exUnits(sh);
+  if(!units.length)body+='<div class="rrempty">No units added to this shelf yet.</div>';
+  else{body+='<div class="m3grid">';
+    units.forEach(u=>{const n=exAlgos(u).length;
+      body+=n
+        ? '<button class="m3card" data-m3unit="'+escAttr(u.id)+'"><div class="m3name">'+escHTML(u.name)+'</div>'
+          +'<div class="m3sub">'+n+' resource'+(n===1?"":"s")+'</div><div class="hubgo">Open →</div></button>'
+        : '<div class="m3card soon" aria-disabled="true"><div class="m3top"><div class="m3name">'+escHTML(u.name)+'</div><span class="soontag">Coming soon</span></div>'
+          +'<div class="m3sub">No resources added yet.</div></div>';});
+    body+='</div>';}
+  m3Shell(body);
+  const bk=document.getElementById("m3_back");if(bk)bk.onclick=()=>{M3SHELF=null;M3UNIT=null;render();window.scrollTo(0,0);};
+  document.querySelectorAll("[data-m3unit]").forEach(b=>b.onclick=()=>{M3UNIT=b.dataset.m3unit;EX_CUR=null;render();window.scrollTo(0,0);});
+}
+/* level 3 — a unit's resources */
+function renderM3Unit(sh,u){
+  const a=exCurrent();
+  let body='<button class="link pmback" id="m3_back">‹ '+escHTML(sh.name)+'</button>'
+    +'<div class="m3crumb">'+escHTML(sh.name)+' › '+escHTML(u.name)+'</div>'
+    +'<h1 class="pmhd">'+escHTML(u.name)+'</h1>';
+  if(!a){m3Shell(body+'<div class="rrempty">No resources here yet.</div>');
+    const bk0=document.getElementById("m3_back");if(bk0)bk0.onclick=()=>{M3UNIT=null;render();window.scrollTo(0,0);};return;}
+  const algos=exAlgos(u);
+  body+='<p class="exhint">Diagnostic algorithms you can quiz yourself on. Every box starts blank with a short question — tap it to check your answer, or reveal the whole tree at once. Nothing here is graded or tracked.</p>'
+    +'<div class="expick">'+algos.map(x=>'<button type="button" class="tog '+(x.id===a.id?"on":"")+'" data-exalgo="'+escAttr(x.id)+'">'+escHTML(x.name)+'</button>').join('')+'</div>'
+    +'<div class="exbar"><button class="btn ghost sm" id="ex_all">'+(exAllShown(a)?"Cover all":"Reveal all")+'</button>'
+    +'<span class="exzoom"><button class="btn ghost sm" id="ex_zout" aria-label="zoom out">\u2212</button>'
+    +'<span class="exzlab" id="ex_zlab">100%</span>'
+    +'<button class="btn ghost sm" id="ex_zin" aria-label="zoom in">+</button>'
+    +'<button class="btn ghost sm" id="ex_zfit">Fit</button></span>'
+    +'<span class="extick" id="ex_tick">'+exCountHTML(a)+'</span></div>'
+    +'<div class="excanvas" id="ex_canvas"><div class="exstage" id="ex_stage">'+exTreeHTML(a)+'</div></div>'
+    +'<div class="exfoot"><span class="exkey f"></span>finding <span class="exkey t"></span>next step '
+    +'<span class="exkey d"></span>diagnosis <span class="exkey x"></span>management</div>';
+  m3Shell(body);
+  const bk=document.getElementById("m3_back");if(bk)bk.onclick=()=>{M3UNIT=null;render();window.scrollTo(0,0);};
+  document.querySelectorAll("[data-exalgo]").forEach(b=>b.onclick=()=>{EX_CUR=b.dataset.exalgo;renderKeepScroll(render);});
+  const all=document.getElementById("ex_all");if(all)all.onclick=()=>exSetAll(!exAllShown(exCurrent()));
+  const zi=document.getElementById("ex_zin");if(zi)zi.onclick=()=>exZoomBy(.12);
+  const zo=document.getElementById("ex_zout");if(zo)zo.onclick=()=>exZoomBy(-.12);
+  const zf=document.getElementById("ex_zfit");if(zf)zf.onclick=exFit;
+  bindExBoxes();
+  exFit();
 }
 
 function renderContentAudit(){
