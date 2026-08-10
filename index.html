@@ -848,6 +848,27 @@ ul.rritems li::before{content:"";position:absolute;left:0;top:10px;width:5px;hei
 .exnotes>summary:hover{color:var(--ink)}
 .exnotes ul{margin:0;padding:0 0 14px 18px}
 .exnotes li{font-size:13px;line-height:1.6;color:var(--text-2);margin-bottom:9px}
+/* opt out of individual videos — resource ▸ system ▸ videos */
+.skhead{font-size:13px;color:var(--text-2);margin:0 0 10px}
+.skgrp{border-top:1px solid var(--line)}
+.skgrp.sub{border-top:1px solid var(--line-soft,var(--line));margin-left:12px}
+.sksum{display:flex;align-items:center;gap:10px;cursor:pointer;list-style:none;user-select:none;padding:10px 2px;font-size:13.5px;font-weight:700;color:var(--ink)}
+.sksum::-webkit-details-marker{display:none}
+.sksum::before{content:"▸";color:var(--faint);font-size:10px;transition:transform .12s;flex:none}
+.skgrp[open]>.sksum::before{transform:rotate(90deg)}
+.sksum:hover{color:var(--phos)}
+.skgrp.sub>.sksum{font-weight:600;font-size:13px}
+.sklab{flex:1 1 auto}
+.skct{font-size:11.5px;font-weight:600;color:var(--faint);white-space:nowrap}
+.skbulk{padding:2px 0 8px 18px}
+.skcat{font-size:10px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--faint);margin:9px 0 3px 18px}
+.skrow{display:flex;align-items:center;gap:10px;padding:6px 6px 6px 18px;border-radius:8px;cursor:pointer;font-size:13px}
+.skrow:hover{background:var(--surface-2)}
+.skrow input{flex:none;width:17px;height:17px;accent-color:var(--phos);cursor:pointer}
+.skname{flex:1 1 auto;color:var(--ink)}
+.skmin{flex:none;font-size:11.5px;color:var(--faint)}
+.skrow.out .skname{color:var(--faint);text-decoration:line-through}
+.skrow.out .skmin{opacity:.5}
 /* Phones keep the branching tree — flattening it to an outline loses exactly the
    thing these diagrams are for. Instead it opens at a scale where the shape and
    the connectors read, and tapping a box zooms in and centres it. */
@@ -1362,6 +1383,111 @@ function togglePathCh(c,n){const sel=effectivePathChapters(c);if(sel.has(n))sel.
    a legacy/pre-feature plan (everything included, back-compat) until first edited. */
 const THREAD_SYS=new Set(["Psychiatry","Behavioral Science"]);
 function resEnabledFor(c){const R=(c&&c.resources)||{};return {bnb:!!R.bnb,pathoma:!!R.pathoma,skmicro:!!R.sketchy,skpharm:!!R.sketchy,bootcamp:!!R.bootcamp};}
+/* ============================================================
+   OPT OUT OF SPECIFIC VIDEOS
+   The skip set lives on the CONFIG, not in global state. It's part of
+   the plan — like the systems and resources it follows from — so it
+   travels with the plan, doesn't leak between hubs, and merges the way
+   configs do (newest whole config wins). Putting it in S.vskip would
+   have inherited that map's union merge, under which UN-skipping a
+   video silently reverts on the next sync — the same trap that made an
+   uncheck bounce back before it was given per-item stamps.
+   ============================================================ */
+function skipMap(c){return (c&&c.skip)||{};}
+function isSkippedIn(c,id){return !!skipMap(c)[id];}
+function setSkipId(c,id,on){c.skip=c.skip||{};if(on)c.skip[id]=true;else delete c.skip[id];}
+/* Every video a config would schedule. Driven off a passed config rather than
+   S.cfg so the wizard can show the list before the plan exists. */
+function planVideosFor(c){
+  if(!catReady()||!c)return [];
+  const en=resEnabledFor(c);
+  const pathSel=en.pathoma?effectivePathChapters(c):new Set();
+  if(c.brody){
+    const blk=brodyBlockById(c.brody);if(!blk)return [];
+    return catVideos().filter(v=>brodyInBlock(blk,v)&&en[v.res]
+      &&(v.res!=="pathoma"||pathSel.has(pathChapterOf(v))));
+  }
+  const sel=new Set((c.systems&&c.systems.length)?c.systems:SYS);
+  return catVideos().filter(v=>en[v.res]
+    &&(v.res==="pathoma"?pathSel.has(pathChapterOf(v)):sel.has(v.sys)));
+}
+function skipStats(c){
+  const vids=planVideosFor(c);let n=0,skipMin=0,totMin=0;
+  vids.forEach(v=>{totMin+=v.min;if(isSkippedIn(c,itemId(v))){n++;skipMin+=v.min;}});
+  return {total:vids.length,skipped:n,skipMin,totMin,keptMin:totMin-skipMin};
+}
+let SKOPEN={};   // which resource/system groups are expanded
+function skGroupKey(res,sys){return JSON.stringify([res,sys||""]);}
+/* resource → system → videos, every level collapsed until opened */
+function skipPickerHTML(c,idp){
+  idp=idp||"sk";
+  if(!catReady())return '<p class="muted small">Loading the video catalog…</p>';
+  const vids=planVideosFor(c);
+  if(!vids.length)return '<p class="muted small">Choose your resources'
+    +(c&&c.brody?'':' and systems')+' first — the video list follows from them.</p>';
+  const st=skipStats(c);
+  const byRes={};const resOrder=[];
+  vids.forEach(v=>{if(!byRes[v.res]){byRes[v.res]=[];resOrder.push(v.res);}byRes[v.res].push(v);});
+  let h='<div class="skhead">'+(st.skipped
+      ? '<b>'+st.skipped+'</b> of '+st.total+' videos left out · '+fmtH(st.skipMin)+' removed, '+fmtH(st.keptMin)+' still scheduled'
+      : 'All '+st.total+' videos included · '+fmtH(st.totMin))+'</div>';
+  RES_ORDER.filter(r=>byRes[r]).concat(resOrder.filter(r=>RES_ORDER.indexOf(r)<0)).forEach(r=>{
+    const list=byRes[r];const rk=skGroupKey(r,"");
+    const rs=list.filter(v=>isSkippedIn(c,itemId(v))).length;
+    h+='<details class="skgrp"'+(SKOPEN[rk]?' open':'')+' data-skopen="'+escAttr(rk)+'">'
+      +'<summary class="sksum"><span class="sklab">'+escHTML(resLabel(r))+'</span>'
+      +'<span class="skct">'+(rs?rs+' of '+list.length+' left out':list.length+' videos')+'</span></summary>';
+    const bySys={};const sysOrder=[];
+    list.forEach(v=>{const sn=v.sys||"—";if(!bySys[sn]){bySys[sn]=[];sysOrder.push(sn);}bySys[sn].push(v);});
+    if(SKOPEN[rk])sysOrder.forEach(sn=>{
+      const svs=bySys[sn];const gk=skGroupKey(r,sn);
+      const gs=svs.filter(v=>isSkippedIn(c,itemId(v))).length;
+      const allOut=gs===svs.length;
+      h+='<details class="skgrp sub"'+(SKOPEN[gk]?' open':'')+' data-skopen="'+escAttr(gk)+'">'
+        +'<summary class="sksum"><span class="sklab">'+escHTML(sn)+'</span>'
+        +'<span class="skct">'+(gs?gs+' of '+svs.length+' left out':svs.length)+'</span></summary>'
+        +'<div class="skbulk"><button type="button" class="btn ghost sm" data-skall="'
+        +escAttr(JSON.stringify([r,sn,!allOut]))+'">'+(allOut?"Include all":"Leave all out")+'</button></div>';
+      let lastCat=null;
+      if(SKOPEN[gk])svs.forEach(v=>{
+        const cat=v.cat||"";
+        if(cat!==lastCat){lastCat=cat;if(cat)h+='<div class="skcat">'+escHTML(cat)+'</div>';}
+        const id=itemId(v),off=isSkippedIn(c,id);
+        h+='<label class="skrow'+(off?' out':'')+'">'
+          +'<input type="checkbox" data-skid="'+idsAttrOf([id])+'"'+(off?'':' checked')+'>'
+          +'<span class="skname">'+escHTML(vName(v))+'</span>'
+          +'<span class="skmin">'+v.min+'m</span></label>';
+      });
+      h+='</details>';
+    });
+    h+='</details>';
+  });
+  return h;
+}
+function skipCardHTML(c){
+  const st=skipStats(c);
+  const lab=st.skipped?(st.skipped+' of '+st.total+' videos left out'):('All '+st.total+' videos included');
+  return '<div class="card"><div class="cardhd">Videos in this plan</div>'
+    +fold("adj_skip",lab+' — edit',
+      '<p class="muted small" style="margin:6px 0 10px">Untick anything you don\u2019t want scheduled. Removing a video frees its time, so the plan re-flows straight away; ticking it back puts it in the queue again.</p>'
+      +skipPickerHTML(c,"adjsk"),false)
+    +'</div>';}
+function bindSkipPicker(c,apply){
+  // a group's contents are only rendered once it's open, so opening one has to
+  // repaint — otherwise the disclosure expands to reveal nothing
+  document.querySelectorAll("[data-skopen]").forEach(d=>{
+    d.ontoggle=()=>{const k=d.dataset.skopen;const was=!!SKOPEN[k];
+      if(d.open)SKOPEN[k]=true;else delete SKOPEN[k];
+      if(was!==!!SKOPEN[k])apply();};});
+  document.querySelectorAll("[data-skid]").forEach(b=>b.onchange=()=>{
+    const ids=idsFromAttr(b.dataset.skid);if(!ids.length)return;
+    setSkipId(c,ids[0],!b.checked);apply();});
+  document.querySelectorAll("[data-skall]").forEach(b=>b.onclick=()=>{
+    let a;try{a=JSON.parse(b.dataset.skall);}catch(e){return;}
+    const [r,sn,on]=a;
+    planVideosFor(c).forEach(v=>{if(v.res===r&&(v.sys||"—")===sn)setSkipId(c,itemId(v),on);});
+    apply();});
+}
 function threadVideos(c,sys){const en=resEnabledFor(c);return catVideos().filter(v=>v.sys===sys&&en[v.res]);}
 function ensureThreadArr(c){if(!Array.isArray(c.threadTopics)){const ids=[];THREAD_SYS.forEach(sys=>threadVideos(c,sys).forEach(v=>ids.push(itemId(v))));c.threadTopics=ids;}}
 function toggleThreadTopic(c,id){ensureThreadArr(c);const arr=c.threadTopics.slice();const i=arr.indexOf(id);if(i>=0)arr.splice(i,1);else arr.push(id);c.threadTopics=arr;}
@@ -1483,7 +1609,8 @@ function markUndone(id){S.vdone=S.vdone||{};S.vdoneDate=S.vdoneDate||{};
   S.vdoneAt=S.vdoneAt||{};S.vundone=S.vundone||{};
   delete S.vdone[id];delete S.vdoneDate[id];delete S.vdoneAt[id];
   S.vundone[id]=Date.now();}
-function isSkip(id){return !!S.vskip[id];}
+/* legacy global map, plus the plan's own opt-outs */
+function isSkip(id){return !!(S.vskip&&S.vskip[id])||!!(S.cfg&&S.cfg.skip&&S.cfg.skip[id]);}
 /* ============================================================
    BRODY-CALENDAR SCHEDULER (optional plan type). Videos are bucketed into
    the Brody week their topic is taught (each resource in its own order within
@@ -1670,8 +1797,12 @@ function reflowBrody(c,blk){
   // see — and go back and check off — what they missed.
   const EARLY=brodyEarlierIds(c,blk);const earlierSet=EARLY.ids;
   const vidsAll=vids;const earlierByDay={};const earlierItems=[];
-  vidsAll.forEach(v=>{if(earlierSet.has(v.id)){const iso=EARLY.dayOf[v.id];if(iso){(earlierByDay[iso]=earlierByDay[iso]||[]).push(v);earlierItems.push(v);}}});
-  const vids2=vidsAll.filter(v=>v.wk>=joinWk&&!earlierSet.has(v.id));vids.length=0;vids.push.apply(vids,vids2);
+  // Videos opted out of leave the plan outright — not just the packing queue. Doing
+  // it here keeps one list feeding the packer, the pins, the stats and the progress
+  // denominators, so a skipped video can't linger in the pre-arrival layer or keep
+  // inflating the total you're measured against.
+  vidsAll.forEach(v=>{if(earlierSet.has(v.id)&&!isSkip(v.id)){const iso=EARLY.dayOf[v.id];if(iso){(earlierByDay[iso]=earlierByDay[iso]||[]).push(v);earlierItems.push(v);}}});
+  const vids2=vidsAll.filter(v=>v.wk>=joinWk&&!earlierSet.has(v.id)&&!isSkip(v.id));vids.length=0;vids.push.apply(vids,vids2);
   // order: week asc → resource → native (catalog) order (stable sort keeps native)
   const ri=r=>{const i=RES_ORDER.indexOf(r);return i<0?99:i;};
   vids.sort((a,b)=>(a.wk-b.wk)||(ri(a.res)-ri(b.res)));
@@ -1768,7 +1899,7 @@ function reflow(){
   const c=S.cfg; if(!c){SCHED=null;return;}
   if(!catReady()){SCHED=null;return;}   // catalog still loading — render() shows a loading state
   const _blk=brodyBlock(c); if(_blk){reflowBrody(c,_blk);return;}
-  const backlog=buildBacklog();
+  const backlog=buildBacklog().filter(it=>!isSkip(it.id));   // opted-out videos are not part of the plan
   const byId={};const orderIndex={};backlog.forEach((it,i)=>{byId[it.id]=it;orderIndex[it.id]=i;});
   const remaining=backlog.filter(it=>!isDone(it.id)&&!isSkip(it.id));
   const cursorISO=(c.startISO>todayISO())?c.startISO:todayISO();
@@ -3360,12 +3491,14 @@ function renderAdjustBrody(c){
     +'</div><p class="muted small">Turn on the video resources you use — the plan re-flows live.</p>'
     +'<div class="flab mt">Anki</div><div class="togrow">'+resBtn("anking","Daily AnKing tags")+'</div>'
     +'<p class="muted small">Adds a copy-ready AnKing Browse search for each day’s videos to your Study page. Doesn’t change the schedule.</p></div>';
+  colB+=skipCardHTML(c);
   colB+=weeklyGoalSettingHTML(c);
   colB+='<div class="card soft"><div class="cardhd">Different plan?</div><p class="muted small">Switch to an exam countdown or start a fresh unit.</p><button class="btn" id="newUnit">Start a new plan…</button></div>';
   colB+=pastUnitsCard();
   colB+='<div class="card soft"><button class="btn" id="saveDone">Done — back to Study</button><p class="muted small center" style="margin-top:10px">Every change here saves and re-flows your plan instantly.</p></div>';
   app.innerHTML=chrome("adjust")+'<div class="wrap"><button class="link pmback" id="adjBack">‹ Plan</button><div class="cols"><div>'+body+'</div><div>'+colB+'</div></div></div>';
   const apply=()=>{save();reflow();renderKeepScroll(renderAdjust);};   // hold scroll so a toggle doesn't blink the page
+  bindSkipPicker(c,apply);
   bindWeeklyGoal(c,apply);
   document.querySelectorAll("[data-dow]").forEach(b=>b.onclick=()=>{const i=+b.dataset.dow;c.restDays=c.restDays||[];const k=c.restDays.indexOf(i);if(k>=0)c.restDays.splice(k,1);else c.restDays.push(i);apply();});
   document.querySelectorAll("[data-res]").forEach(b=>b.onclick=()=>{c.resources=c.resources||{};c.resources[b.dataset.res]=!hasRes(b.dataset.res);apply();});
@@ -3500,6 +3633,7 @@ function renderPlanEditor(){
   colB+=quizzesHTML(c,"adjqz");
   colB+=pathChaptersHTML(c,"adj_path");
   colB+=threadTopicsHTML(c,"adj");
+  colB+=skipCardHTML(c);
   if(S.active==="nbme"){
     colB+='<div class="card soft"><div class="cardhd">Finished this unit?</div><p class="muted small">Start a fresh plan for your next block or shelf — new exam, dates, and systems.</p><button class="btn" id="newUnit">Start a new unit…</button></div>';
     colB+=pastUnitsCard();
@@ -3524,6 +3658,7 @@ function renderPlanEditor(){
   bindThreadTopics(c,apply);
   document.querySelectorAll("[data-sup]").forEach(b=>b.onclick=()=>{const i=+b.dataset.sup;const a=c.sysOrder=(c.sysOrder||SYS_ORDER_DEFAULT).slice();if(i>0){const t=a[i-1];a[i-1]=a[i];a[i]=t;apply();}});
   document.querySelectorAll("[data-sdn]").forEach(b=>b.onclick=()=>{const i=+b.dataset.sdn;const a=c.sysOrder=(c.sysOrder||SYS_ORDER_DEFAULT).slice();if(i<a.length-1){const t=a[i+1];a[i+1]=a[i];a[i]=t;apply();}});
+  bindSkipPicker(c,apply);
   bindQuizzes(c,apply,"adjqz");
   bindCatOrder(c,apply);
   const sr=document.getElementById("sordReset");if(sr)sr.onclick=()=>{c.sysOrder=SYS_ORDER_DEFAULT.slice();apply();};
@@ -4093,9 +4228,9 @@ function enterHub(key){if(!S.cfgs[key]){startOnboard(key);return;}activate(key);
 let _ob=null;
 function defaultsForHub(key,fresh){const ex=fresh?null:S.cfgs[key];
   let o;
-  if(ex)o={hub:key,fresh:false,brody:ex.brody||null,brodyPace:ex.brodyPace||null,brodyJoinWk:(ex.brodyJoinWk!=null?ex.brodyJoinWk:undefined),brodyJoinDate:(ex.brodyJoinDate||undefined),brodyReviewDays:(ex.brodyReviewDays!=null?ex.brodyReviewDays:undefined),examLabel:ex.examLabel||"",examISO:ex.examISO||"",startISO:ex.startISO||todayISO(),wkdayHrs:ex.wkdayHrs,wkendHrs:ex.wkendHrs,restDays:(ex.restDays||[0]).slice(),reviewDays:ex.reviewDays,resources:Object.assign({bnb:true,pathoma:true,sketchy:true,fa:true,anking:true,uworld:true},ex.resources||{}),systems:(ex.systems||SYS).slice(),sysOrder:(ex.sysOrder&&ex.sysOrder.length===SYS.length?ex.sysOrder:SYS_ORDER_DEFAULT).slice(),pathChapters:(Array.isArray(ex.pathChapters)?ex.pathChapters.slice():undefined),threadTopics:(Array.isArray(ex.threadTopics)?ex.threadTopics.slice():undefined),weeklyQGoal:(ex.weeklyQGoal||0),qGoalPer:(ex.qGoalPer||"week"),catOrder:(ex.catOrder?JSON.parse(JSON.stringify(ex.catOrder)):undefined),quizzes:(Array.isArray(ex.quizzes)?JSON.parse(JSON.stringify(ex.quizzes)):[]),step:0};
+  if(ex)o={hub:key,fresh:false,brody:ex.brody||null,brodyPace:ex.brodyPace||null,brodyJoinWk:(ex.brodyJoinWk!=null?ex.brodyJoinWk:undefined),brodyJoinDate:(ex.brodyJoinDate||undefined),brodyReviewDays:(ex.brodyReviewDays!=null?ex.brodyReviewDays:undefined),examLabel:ex.examLabel||"",examISO:ex.examISO||"",startISO:ex.startISO||todayISO(),wkdayHrs:ex.wkdayHrs,wkendHrs:ex.wkendHrs,restDays:(ex.restDays||[0]).slice(),reviewDays:ex.reviewDays,resources:Object.assign({bnb:true,pathoma:true,sketchy:true,fa:true,anking:true,uworld:true},ex.resources||{}),systems:(ex.systems||SYS).slice(),sysOrder:(ex.sysOrder&&ex.sysOrder.length===SYS.length?ex.sysOrder:SYS_ORDER_DEFAULT).slice(),pathChapters:(Array.isArray(ex.pathChapters)?ex.pathChapters.slice():undefined),threadTopics:(Array.isArray(ex.threadTopics)?ex.threadTopics.slice():undefined),weeklyQGoal:(ex.weeklyQGoal||0),qGoalPer:(ex.qGoalPer||"week"),catOrder:(ex.catOrder?JSON.parse(JSON.stringify(ex.catOrder)):undefined),quizzes:(Array.isArray(ex.quizzes)?JSON.parse(JSON.stringify(ex.quizzes)):[]),skip:Object.assign({},ex.skip||{}),step:0};
   // a brand-new plan starts with every resource unchecked — the student picks
-  else o={hub:key,fresh:!!fresh,examLabel:key==="step1"?"Step 1":"",examISO:"",startISO:todayISO(),wkdayHrs:6,wkendHrs:4,restDays:[0],reviewDays:14,resources:{bnb:false,pathoma:false,sketchy:false,fa:false,anking:false,uworld:false},systems:(key==="nbme"?[]:SYS.slice()),sysOrder:SYS_ORDER_DEFAULT.slice(),threadTopics:[],weeklyQGoal:0,qGoalPer:"week",catOrder:undefined,quizzes:[],step:0};
+  else o={hub:key,fresh:!!fresh,examLabel:key==="step1"?"Step 1":"",examISO:"",startISO:todayISO(),wkdayHrs:6,wkendHrs:4,restDays:[0],reviewDays:14,resources:{bnb:false,pathoma:false,sketchy:false,fa:false,anking:false,uworld:false},systems:(key==="nbme"?[]:SYS.slice()),sysOrder:SYS_ORDER_DEFAULT.slice(),threadTopics:[],weeklyQGoal:0,qGoalPer:"week",catOrder:undefined,quizzes:[],skip:{},step:0};
   // NBME hub now selects individual systems (like Step 1); migrate any legacy block selection
   if(key==="nbme"&&ex&&(!ex.systems||!ex.systems.length)&&Array.isArray(ex.blocks)&&ex.blocks.length){
     const set=new Set(ex.blocks);o.systems=flatSys((ex.blockOrder||blockNames()).filter(b=>set.has(b)));
@@ -4260,9 +4395,9 @@ function obIsNbme(){return _ob&&_ob.hub==="nbme";}
 /* the ordered wizard steps for the current plan type — one thing per page */
 function obSteps(ob){
   const nbme=ob.hub==="nbme";
-  if(ob.brody)return (nbme?["plan"]:[]).concat(["block","resources","routine","practice","review"]);
+  if(ob.brody)return (nbme?["plan"]:[]).concat(["block","resources","skip","routine","practice","review"]);
   const s=[];if(nbme)s.push("plan","name");
-  s.push("dates","resources","systems","quizzes","routine","practice","review");
+  s.push("dates","resources","systems","skip","quizzes","routine","practice","review");
   return s;
 }
 const OB_STEP_META={
@@ -4273,6 +4408,7 @@ const OB_STEP_META={
   resources:["Pick your resources","Which video series do you actually use?"],
   systems:["Systems & study order","What does this shelf cover — and in what order?"],
   routine:["Your routine","How much can you study, and how fast?"],
+  skip:["Leave anything out","Opt out of individual videos. Optional — everything is included unless you say otherwise."],
   quizzes:["Quizzes","Any quizzes before the exam? Optional."],
   practice:["Practice questions","Optionally set a practice-question goal."],
   review:["Review & start","One last look before you build it."]
@@ -4375,6 +4511,10 @@ function renderOnboard(){
     }
     body+='<div class="card soft" id="o_reco"><div class="cardhd">The plan at a glance</div>'+obPreview()+'</div>';
   }
+  if(key==="skip"){ob.skip=ob.skip||{};
+    body+='<div class="card"><div class="cardhd">Videos in this plan</div>'
+      +'<p class="muted small" style="margin-top:0">Everything is in by default. Open a resource, then a system, and untick anything you don\u2019t want scheduled — a video you\u2019ve already seen, or a topic your course skips. You can change this any time from the Plan tab.</p>'
+      +skipPickerHTML(ob,"obsk")+'</div>';}
   if(key==="quizzes")body+=quizzesHTML(ob,"obqz");
   if(key==="practice")body+=weeklyGoalSettingHTML(ob);
   if(key==="review")body+=obReviewHTML(ob);
@@ -4406,6 +4546,7 @@ function renderOnboard(){
   document.querySelectorAll("[data-sup]").forEach(b=>b.onclick=()=>{const i=+b.dataset.sup;if(i>0){const a=ob.sysOrder;const t=a[i-1];a[i-1]=a[i];a[i]=t;renderOnboard();}});
   document.querySelectorAll("[data-sdn]").forEach(b=>b.onclick=()=>{const i=+b.dataset.sdn;const a=ob.sysOrder;if(i<a.length-1){const t=a[i+1];a[i+1]=a[i];a[i]=t;renderOnboard();}});
   const sr=document.getElementById("sordReset");if(sr)sr.onclick=()=>{ob.sysOrder=SYS_ORDER_DEFAULT.slice();renderOnboard();};
+  bindSkipPicker(ob,()=>renderOnboard());
   bindQuizzes(ob,()=>renderOnboard(),"obqz");
   bindWeeklyGoal(ob,()=>renderOnboard());
   const nx=document.getElementById("o_next");if(nx)nx.onclick=obNext;
@@ -4497,7 +4638,7 @@ function commitOnboard(){const ob=_ob;
     // brodyPace is locked to the plan at creation (reflowBrody stamps it if the catalog wasn't ready yet)
     brody:(brody?brody.id:undefined),brodyPace:(brody?(ob.brodyPace||(catReady()?brodyPace(ob):undefined)):undefined),brodyJoinWk:(brody?(ob.brodyJoinWk!=null?ob.brodyJoinWk:undefined):undefined),brodyJoinDate:(brody?(ob.brodyJoinDate||todayISO()):undefined),brodyReviewDays:(brody?brodyReviewBuf(ob):undefined),
     examISO:(brody?brody.shelf:ob.examISO),startISO:(brody?brody.weeks[0].start:ob.startISO),wkdayHrs:ob.wkdayHrs,wkendHrs:ob.wkendHrs,restDays:ob.restDays.slice(),
-    reviewDays:(brody?0:ob.reviewDays),resources:Object.assign({},ob.resources),systems:(brody?brody.systems.slice():ob.systems.slice()),sysOrder:(ob.sysOrder||SYS_ORDER_DEFAULT).slice(),pathChapters:(Array.isArray(ob.pathChapters)?ob.pathChapters.slice():undefined),threadTopics:(brody?undefined:(Array.isArray(ob.threadTopics)?ob.threadTopics.slice():undefined)),weeklyQGoal:(ob.weeklyQGoal>0?ob.weeklyQGoal:0),qGoalPer:qGoalPer(ob),catOrder:(ob.catOrder?JSON.parse(JSON.stringify(ob.catOrder)):undefined),quizzes:(Array.isArray(ob.quizzes)?ob.quizzes.filter(q=>q&&q.iso):[])});
+    reviewDays:(brody?0:ob.reviewDays),resources:Object.assign({},ob.resources),systems:(brody?brody.systems.slice():ob.systems.slice()),sysOrder:(ob.sysOrder||SYS_ORDER_DEFAULT).slice(),pathChapters:(Array.isArray(ob.pathChapters)?ob.pathChapters.slice():undefined),threadTopics:(brody?undefined:(Array.isArray(ob.threadTopics)?ob.threadTopics.slice():undefined)),weeklyQGoal:(ob.weeklyQGoal>0?ob.weeklyQGoal:0),qGoalPer:qGoalPer(ob),catOrder:(ob.catOrder?JSON.parse(JSON.stringify(ob.catOrder)):undefined),quizzes:(Array.isArray(ob.quizzes)?ob.quizzes.filter(q=>q&&q.iso):[]),skip:Object.assign({},ob.skip||{})});
   c.off=c.off||{};
   if(ob.fresh&&prev&&key==="nbme")archiveUnit(prev);   // keep the old unit reachable under Plan → Past units
   S.cfgs[key]=c;activate(key);S.active=key;_ob=null;
@@ -4539,11 +4680,16 @@ function doResetAll(){
     S.cfgs=snap.cfgs;S.active=snap.active;S.cfg=S.active?S.cfgs[S.active]:null;_prevSig=progressSig();save();
     if(S.cfg){reflow();render();}else renderWelcome();toast("Restored ✓");});
 }
-const BUILD="2026-07-22d";
+const BUILD="2026-07-22e";
 /* ---------- What's new (changelog) ----------
    Newest entry first. Bump the top entry's id whenever you add one and the
    pop-up shows once per person (tracked in synced settings.seenUpdate). */
 const CHANGELOG=[
+  {id:"2026-08-13", date:"August 2026", title:"Leave individual videos out of your plan", items:[
+    "Setting up a plan now has a step where you can open each resource, then each system, and untick anything you don\u2019t want scheduled \u2014 a video you\u2019ve already watched, or a topic your course skips. Optional: everything is in unless you say otherwise.",
+    "The same control lives in the Plan tab under \u201cVideos in this plan\u201d, so you can change your mind at any point. Removing a video frees its time and the plan re-flows immediately; ticking it back queues it again.",
+    "There\u2019s a one-tap \u201cleave all out\u201d per system for when a whole block doesn\u2019t apply to you.",
+  ]},
   {id:"2026-08-12", date:"August 2026", title:"Five more Heme/Onc algorithms", items:[
     "Internal Medicine \u2192 Hematology/Oncology now holds eight: transfusion reactions, plasma cell dyscrasias, acute DVT, hypercoagulability and platelet disorders join the anemia, lymphoma and leukemia trees.",
     "Where a diagram leans on detail it can\u2019t hold \u2014 the Wells criteria components, the multiple myeloma diagnostic thresholds \u2014 there\u2019s now a collapsible Reference notes panel under it.",
