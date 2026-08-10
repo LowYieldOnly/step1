@@ -840,6 +840,14 @@ ul.rritems li::before{content:"";position:absolute;left:0;top:10px;width:5px;hei
 .exkey.d{background:var(--gold-soft);border-color:var(--gold)}
 .exkey.x{background:var(--info-bg);border-color:var(--info)}
 .exfoot{font-size:11.5px;color:var(--faint);line-height:2;padding:2px 0 10px}
+.exnotes{border:1px solid var(--line);border-radius:var(--r);padding:0 14px;margin:0 0 26px;background:var(--panel)}
+.exnotes>summary{cursor:pointer;list-style:none;padding:12px 0;font-size:13px;font-weight:700;color:var(--text-2);user-select:none}
+.exnotes>summary::-webkit-details-marker{display:none}
+.exnotes>summary::before{content:"▸";color:var(--faint);font-size:10px;margin-right:8px;display:inline-block;transition:transform .12s}
+.exnotes[open]>summary::before{transform:rotate(90deg)}
+.exnotes>summary:hover{color:var(--ink)}
+.exnotes ul{margin:0;padding:0 0 14px 18px}
+.exnotes li{font-size:13px;line-height:1.6;color:var(--text-2);margin-bottom:9px}
 /* Phones keep the branching tree — flattening it to an outline loses exactly the
    thing these diagrams are for. Instead it opens at a scale where the shape and
    the connectors read, and tapping a box zooms in and centres it. */
@@ -4531,11 +4539,15 @@ function doResetAll(){
     S.cfgs=snap.cfgs;S.active=snap.active;S.cfg=S.active?S.cfgs[S.active]:null;_prevSig=progressSig();save();
     if(S.cfg){reflow();render();}else renderWelcome();toast("Restored ✓");});
 }
-const BUILD="2026-07-22c";
+const BUILD="2026-07-22d";
 /* ---------- What's new (changelog) ----------
    Newest entry first. Bump the top entry's id whenever you add one and the
    pop-up shows once per person (tracked in synced settings.seenUpdate). */
 const CHANGELOG=[
+  {id:"2026-08-12", date:"August 2026", title:"Five more Heme/Onc algorithms", items:[
+    "Internal Medicine \u2192 Hematology/Oncology now holds eight: transfusion reactions, plasma cell dyscrasias, acute DVT, hypercoagulability and platelet disorders join the anemia, lymphoma and leukemia trees.",
+    "Where a diagram leans on detail it can\u2019t hold \u2014 the Wells criteria components, the multiple myeloma diagnostic thresholds \u2014 there\u2019s now a collapsible Reference notes panel under it.",
+  ]},
   {id:"2026-08-11", date:"August 2026", title:"New: the M3 Resource Hub", items:[
     "A new hub on the home screen for clerkship resources, filed by shelf and then by unit. First up: Internal Medicine \u2192 Hematology/Oncology, with diagnostic algorithms for normocytic non-hemolytic anemia, lymphoma and leukemia.",
     "Every box starts blank with a prompt describing what belongs there \u2014 \u201cmarrow is not responding to the anemia\u201d rather than \u201cretic index?\u201d \u2014 so you can reason your way down the tree instead of needing it memorised first. Tap a box to check yourself, or reveal the whole tree at once. Nothing here is graded or tracked.",
@@ -4945,6 +4957,12 @@ function exNodeHTML(n){
   return '<li>'+box+(n.c&&n.c.length?'<ul>'+n.c.map(exNodeHTML).join('')+'</ul>':'')+'</li>';
 }
 function exTreeHTML(a){return '<div class="extree"><ul>'+exNodeHTML(a.root)+'</ul></div>';}
+/* Some algorithms lean on detail the diagram can't hold — the Wells components,
+   the myeloma criteria. Collapsed by default so it never competes with the tree. */
+function exNotesHTML(a){
+  const n=(a&&a.notes)||[];if(!n.length)return '';
+  return '<details class="exnotes"><summary>Reference notes ('+n.length+')</summary>'
+    +'<ul>'+n.map(x=>'<li>'+escHTML(x)+'</li>').join('')+'</ul></details>';}
 function exCountHTML(a){const set=exAskable(a),n=set.filter(exShown).length;return n+' / '+set.length+' revealed';}
 function exAllShown(a){const set=exAskable(a);return set.length>0&&set.every(exShown);}
 /* A full algorithm is far wider than any screen, so the canvas pans and the
@@ -5137,7 +5155,7 @@ function renderM3Unit(sh,u){
   if(!a){m3Shell(body+'<div class="rrempty">No resources here yet.</div>');
     const bk0=document.getElementById("m3_back");if(bk0)bk0.onclick=()=>{M3UNIT=null;render();window.scrollTo(0,0);};return;}
   const algos=exAlgos(u);
-  body+='<p class="exhint">Every box starts blank with a short question — tap it to check your answer. Pinch, or use −/+, to zoom the diagram. Nothing here is graded or tracked.</p>'
+  body+='<p class="exhint">Every box starts blank with a prompt for what belongs there — reason it out, then tap to check yourself. Pinch, or use −/+, to zoom. Nothing here is graded or tracked.</p>'
     +'<div class="expick">'+algos.map(x=>'<button type="button" class="tog '+(x.id===a.id?"on":"")+'" data-exalgo="'+escAttr(x.id)+'">'+escHTML(x.name)+'</button>').join('')+'</div>'
     +'<div class="exbar"><button class="btn ghost sm" id="ex_all">'+(exAllShown(a)?"Cover all":"Reveal all")+'</button>'
     +'<span class="exzoom"><button class="btn ghost sm" id="ex_zout" aria-label="zoom out">\u2212</button>'
@@ -5147,7 +5165,8 @@ function renderM3Unit(sh,u){
     +'<span class="extick" id="ex_tick">'+exCountHTML(a)+'</span></div>'
     +'<div class="excanvas" id="ex_canvas"><div class="exsizer" id="ex_sizer"><div class="exstage" id="ex_stage">'+exTreeHTML(a)+'</div></div></div>'
     +'<div class="exfoot"><span class="exkey f"></span>finding <span class="exkey t"></span>next step '
-    +'<span class="exkey d"></span>diagnosis <span class="exkey x"></span>management</div>';
+    +'<span class="exkey d"></span>diagnosis <span class="exkey x"></span>management</div>'
+    +exNotesHTML(a);
   m3Shell(body);
   const bk=document.getElementById("m3_back");if(bk)bk.onclick=()=>{M3UNIT=null;render();window.scrollTo(0,0);};
   document.querySelectorAll("[data-exalgo]").forEach(b=>b.onclick=()=>{EX_CUR=b.dataset.exalgo;renderKeepScroll(render);});
