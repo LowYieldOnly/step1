@@ -752,6 +752,8 @@ details.ca-resgrp[open]>.ca-reslab::before{transform:rotate(90deg)}
 .rrclear{position:absolute;right:5px;top:50%;transform:translateY(-50%);background:none;border:0;color:var(--faint);cursor:pointer;font-size:17px;line-height:1;padding:6px 8px;border-radius:4px}
 .rrclear:hover{color:var(--ink)}
 .rrhits{font-size:12px;color:var(--faint);margin:0 0 14px;min-height:16px}
+.rrpick{display:flex;flex-wrap:wrap;gap:7px;margin:0 0 12px}
+.rrpickn{font-size:11px;font-weight:600;opacity:.6;margin-left:3px}
 .rrsec{margin:0 0 26px}
 .rrsechd{display:flex;align-items:baseline;gap:11px;padding:0 0 8px;border-bottom:2px solid var(--phos);margin-bottom:2px}
 .rrsechd h3{margin:0;font-size:17px;font-weight:800;letter-spacing:-.01em;color:var(--phos)}
@@ -2170,6 +2172,7 @@ let EX_CUR=null,EX_SHOWN={};                      // which algorithm is open, an
 let M3SHELF=null,M3UNIT=null;                     // M3 drill-down: shelf → unit → resource
 let EX_ZOOM=1;                                    // wide trees are scaled to fit; phones use the outline instead
 let RR_Q="",RR_OPEN={},RR_TOPEN={};               // search text + which video / topic nodes are expanded
+let RR_CUR=null;                                  // which system's reference is open
 let QZOPEN={};   // which quiz rows have their topic picker open
 let CATOPEN={};   // which systems have their topic-order list expanded
 let ADJ_VIEW=null;   // Plan tab landing: null = 3-button menu, "edit" = editor, "old" = past plans
@@ -4680,11 +4683,15 @@ function doResetAll(){
     S.cfgs=snap.cfgs;S.active=snap.active;S.cfg=S.active?S.cfgs[S.active]:null;_prevSig=progressSig();save();
     if(S.cfg){reflow();render();}else renderWelcome();toast("Restored ✓");});
 }
-const BUILD="2026-07-22e";
+const BUILD="2026-07-22f";
 /* ---------- What's new (changelog) ----------
    Newest entry first. Bump the top entry's id whenever you add one and the
    pop-up shows once per person (tracked in synced settings.seenUpdate). */
 const CHANGELOG=[
+  {id:"2026-08-14", date:"August 2026", title:"Renal joins Rapid Reference", items:[
+    "Rapid Reference now covers Renal as well as Hematology \u2014 31 more videos, 295 topics, 1,382 points. Tap the chip at the top to switch systems.",
+    "Search stays inside whichever system you\u2019re in, so a renal term doesn\u2019t drag up heme results and vice versa.",
+  ]},
   {id:"2026-08-13", date:"August 2026", title:"Leave individual videos out of your plan", items:[
     "Setting up a plan now has a step where you can open each resource, then each system, and untick anything you don\u2019t want scheduled \u2014 a video you\u2019ve already watched, or a topic your course skips. Optional: everything is in unless you say otherwise.",
     "The same control lives in the Plan tab under \u201cVideos in this plan\u201d, so you can change your mind at any point. Removing a video frees its time and the plan re-flows immediately; ticking it back queues it again.",
@@ -5020,7 +5027,9 @@ function bindRapidRefNodes(){
   document.querySelectorAll("[data-rrt]").forEach(b=>b.onclick=()=>{
     const k=b.dataset.rrt;if(RR_TOPEN[k])delete RR_TOPEN[k];else RR_TOPEN[k]=true;rrRefresh();});
 }
-function rrCurrent(){const m=(RR_DATA&&RR_DATA.refs)||[];return m[0]||null;}
+function rrRefs(){return (RR_DATA&&RR_DATA.refs)||[];}
+function rrCurrent(){const m=rrRefs();return m.find(r=>r.id===RR_CUR)||m[0]||null;}
+function rrVideoCount(r){let n=0;(r.sections||[]).forEach(s=>{n+=(s.videos||[]).length;});return n;}
 function renderRapidRef(){
   if(!RR_DATA){
     loadRapidRef();
@@ -5035,8 +5044,9 @@ function renderRapidRef(){
   if(!ref){app.innerHTML=chrome("ref")+'<div class="wrap"><div class="rrempty">Nothing here yet.</div></div>';wireChrome();return;}
   const f=rrFilter(ref,RR_Q);
   app.innerHTML=chrome("ref")+'<div class="wrap">'
-    +'<h1 class="pmhd">'+escHTML(ref.title)+' rapid reference</h1>'
-    +'<p class="muted small" style="margin:-6px 0 16px;max-width:62ch">An outline of each '+escHTML(ref.source||"video")+' video — open one to see its topics, open a topic to see the points. A companion to the videos, not a replacement, and separate from your schedule: nothing here gets checked off.</p>'
+    +'<h1 class="pmhd">Rapid reference</h1>'
+    +'<p class="muted small" style="margin:-6px 0 14px;max-width:62ch">An outline of each '+escHTML(ref.source||"video")+' video — open one to see its topics, open a topic to see the points. A companion to the videos, not a replacement, and separate from your schedule: nothing here gets checked off.</p>'
+    +(rrRefs().length>1?('<div class="rrpick">'+rrRefs().map(r=>'<button type="button" class="tog '+(r.id===ref.id?"on":"")+'" data-rrref="'+escAttr(r.id)+'">'+escHTML(r.title)+' <span class="rrpickn">'+rrVideoCount(r)+'</span></button>').join('')+'</div>'):'')
     +'<div class="rrbar"><div class="rrsearch">'
     // type=text, not type=search: the field carries its own × and the native
     // search decoration would put a second one right beside it. inputmode +
@@ -5057,6 +5067,11 @@ function renderRapidRef(){
       rrRefresh();};}
   const cl=document.getElementById("rr_clear");
   if(cl)cl.onclick=()=>{RR_Q="";renderRapidRef();const q2=document.getElementById("rr_q");if(q2)q2.focus();};
+  // the open-node keys and the search belong to the tree you were in, so switching
+  // systems starts clean rather than carrying a stale half-expanded state
+  document.querySelectorAll("[data-rrref]").forEach(b=>b.onclick=()=>{
+    if(RR_CUR===b.dataset.rrref)return;
+    RR_CUR=b.dataset.rrref;RR_Q="";RR_OPEN={};RR_TOPEN={};renderRapidRef();window.scrollTo(0,0);});
   bindRapidRefNodes();
 }
 
