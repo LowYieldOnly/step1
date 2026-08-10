@@ -4531,14 +4531,14 @@ function doResetAll(){
     S.cfgs=snap.cfgs;S.active=snap.active;S.cfg=S.active?S.cfgs[S.active]:null;_prevSig=progressSig();save();
     if(S.cfg){reflow();render();}else renderWelcome();toast("Restored ✓");});
 }
-const BUILD="2026-07-22b";
+const BUILD="2026-07-22c";
 /* ---------- What's new (changelog) ----------
    Newest entry first. Bump the top entry's id whenever you add one and the
    pop-up shows once per person (tracked in synced settings.seenUpdate). */
 const CHANGELOG=[
   {id:"2026-08-11", date:"August 2026", title:"New: the M3 Resource Hub", items:[
     "A new hub on the home screen for clerkship resources, filed by shelf and then by unit. First up: Internal Medicine \u2192 Hematology/Oncology, with diagnostic algorithms for normocytic non-hemolytic anemia, lymphoma and leukemia.",
-    "Every box in an algorithm starts blank with a short question. Tap it to check your answer, or reveal the whole tree at once. It\u2019s a self-quiz, not a checklist: nothing here is graded or tracked.",
+    "Every box starts blank with a prompt describing what belongs there \u2014 \u201cmarrow is not responding to the anemia\u201d rather than \u201cretic index?\u201d \u2014 so you can reason your way down the tree instead of needing it memorised first. Tap a box to check yourself, or reveal the whole tree at once. Nothing here is graded or tracked.",
     "On a phone the full branching diagram is there too, not a flattened list. Pinch to zoom in and out smoothly, drag to pan, and hit Fit for the whole shape at once. Tapping a box only ever reveals it \u2014 the diagram stays where you put it.",
     "The other shelves are listed and waiting \u2014 adding a unit or a resource is a content update, not an app update.",
   ]},
