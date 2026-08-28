@@ -1220,7 +1220,7 @@ function normalizeCfg(c,key){
   if(!c.examLabel||c.examLabel==="My exam")c.examLabel=(key==="step1"?"Step 1":"Shelf exam");
   c.resources=c.resources||{bnb:true,pathoma:true,sketchy:true,fa:true,anking:true,uworld:true};
   if(c.resources.bnb==null)c.resources.bnb=true; // old plans always included B&B
-  c.restDays=c.restDays||[0];c.off=c.off||{};
+  c.restDays=c.restDays||[0];c.off=c.off||{};c.on=c.on||{};
   if(c.reviewDays==null)c.reviewDays=14;
   if(c.wkdayHrs==null)c.wkdayHrs=6; if(c.wkendHrs==null)c.wkendHrs=4;
   if(c.ankiMinPerDay==null)c.ankiMinPerDay=0; if(c.uworldMinPerDay==null)c.uworldMinPerDay=0;
@@ -1231,6 +1231,17 @@ function normalizeCfg(c,key){
   if(Array.isArray(c.systems))c.systems=c.systems.filter(s=>SYS.indexOf(s)>=0);
 }
 function activate(key){S.active=key;S.cfg=S.cfgs[key]||null;}
+/* Rest days are a weekly pattern (c.restDays), and single dates override it in both
+   directions: c.off[iso] takes one date out of the plan, c.on[iso] puts one rest day
+   back in. The setters keep the two maps disjoint, so a date is never both; the
+   predicates still let off win, in case an imported profile carries both.
+   Every place that decides "can I study this day?" goes through dayIsOpen. */
+function dayIsRest(c,iso,wd){return (c.restDays||[0]).includes(wd!=null?wd:isoToDate(iso).getDay())&&!(c.on||{})[iso];}
+function dayIsOff(c,iso){return !!(c.off||{})[iso];}
+function dayIsOpen(c,iso,wd){return !dayIsRest(c,iso,wd)&&!dayIsOff(c,iso);}
+/* True only for a rest weekday the student has explicitly opted to study — the state
+   that needs its own "back to rest day" way out. */
+function dayIsStudyingRest(c,iso){return (c.restDays||[0]).includes(isoToDate(iso).getDay())&&!!(c.on||{})[iso];}
 function hubName(key){return key==="step1"?"STEP 1 Command Center":(key==="m3"?"M3 Resource Hub":"M2 Scheduler");}
 let _prevSig=null;
 
@@ -1648,8 +1659,8 @@ function brodyInBlock(blk,v){return (blk.systems.indexOf(v.sys)>=0||brodyInclude
 const BRODY_REVIEW_DEFAULT=3;
 const BRODY_QUIZ_MAX=6;   // h/day above which "be ready for this week's quiz" is unrealistic → flag the week
 function brodyReviewBuf(c){return Math.max(0,(c&&c.brodyReviewDays!=null)?c.brodyReviewDays:BRODY_REVIEW_DEFAULT);}
-function brodyStudyDays(c,blk,cursorISO){const rest=c.restDays||[0],off=c.off||{};const seq=[];let dd=isoToDate(cursorISO),g=0;
-  while(isoFromDate(dd)<blk.shelf&&g++<400){const iso=isoFromDate(dd);if(!rest.includes(dd.getDay())&&!off[iso])seq.push(iso);dd=addDays(dd,1);}return seq;}
+function brodyStudyDays(c,blk,cursorISO){const seq=[];let dd=isoToDate(cursorISO),g=0;
+  while(isoFromDate(dd)<blk.shelf&&g++<400){const iso=isoFromDate(dd);if(dayIsOpen(c,iso,dd.getDay()))seq.push(iso);dd=addDays(dd,1);}return seq;}
 /* The buffer is anchored to the BLOCK, not to today: the last N study days before
    the shelf are review days no matter when you look. (Computing it from today made
    the cutoff collapse to the shelf once you stood inside the buffer — the review
@@ -1682,11 +1693,11 @@ function brodyEarlierIds(c,blk){
   if(jd<=blk.weeks[0].start)return {ids:new Set(),dayOf:{}};
   const R=c.resources||{};const en={bnb:R.bnb,pathoma:R.pathoma,skmicro:R.sketchy,skpharm:R.sketchy,bootcamp:R.bootcamp};
   const pathSel=en.pathoma?effectivePathChapters(c):new Set();
-  const rest=c.restDays||[0];const off=c.off||{};const cutoff=brodyReviewCutoff(c,blk);
+  const cutoff=brodyReviewCutoff(c,blk);
   const wkStart=blk.weeks.map(w=>w.start);const weekOf=iso=>{let n=0;for(let i=0;i<blk.weeks.length;i++){if(iso>=wkStart[i])n=blk.weeks[i].n;}return n;};
   const wkDays={};blk.weeks.forEach(w=>wkDays[w.n]={all:[],before:[]});
   {let dd=isoToDate(wkStart[0]),g=0;while(isoFromDate(dd)<blk.shelf&&g++<400){const iso=isoFromDate(dd),wd=dd.getDay(),wn=weekOf(iso);
-    if(wn&&!rest.includes(wd)&&!off[iso]&&iso<cutoff){wkDays[wn].all.push(iso);if(iso<jd)wkDays[wn].before.push(iso);}dd=addDays(dd,1);}}
+    if(wn&&dayIsOpen(c,iso,wd)&&iso<cutoff){wkDays[wn].all.push(iso);if(iso<jd)wkDays[wn].before.push(iso);}dd=addDays(dd,1);}}
   const byWk={};blk.weeks.forEach(w=>byWk[w.n]=[]);
   catVideos().forEach(v=>{if(!brodyInBlock(blk,v))return;if(!en[v.res])return;if(v.res==="pathoma"&&!pathSel.has(pathChapterOf(v)))return;
     const w=brodyVideoWeek(blk,v);if(byWk[w])byWk[w].push(v);});
@@ -1728,19 +1739,18 @@ function brodyWeekLoads(c,blk){
     if(earlier.has(itemId(v)))return;
     if(!brodyRemains(itemId(v)))return;
     const w=brodyVideoWeek(blk,v);load[w]+=v.min;cnt[w]++;});
-  const rest=c.restDays||[0];const off=c.off||{};
   const cursor=(todayISO()>blk.weeks[0].start)?todayISO():blk.weeks[0].start;
   const cutoff=brodyReviewCutoff(c,blk);
   const wkStart=blk.weeks.map(w=>w.start);
   const joinWk=brodyJoinWk(c,blk);   // the plan starts here — weeks before it aren't part of it
   // open study days from the cursor with iso strictly before `date` (and before the buffer)
-  const openBefore=date=>{let n=0,dd=isoToDate(cursor),g=0;while(g++<400){const iso=isoFromDate(dd);if(iso>=date||iso>=cutoff)break;if(iso>=cursor&&!rest.includes(dd.getDay())&&!off[iso])n++;dd=addDays(dd,1);}return n;};
+  const openBefore=date=>{let n=0,dd=isoToDate(cursor),g=0;while(g++<400){const iso=isoFromDate(dd);if(iso>=date||iso>=cutoff)break;if(iso>=cursor&&dayIsOpen(c,iso,dd.getDay()))n++;dd=addDays(dd,1);}return n;};
   return blk.weeks.map((w,i)=>{const end=(i+1<blk.weeks.length)?wkStart[i+1]:blk.shelf;
     const pre=w.n<joinWk;
     const dl=brodyWeekDeadline(blk,w.start);
     const effDl=(dl>=blk.shelf)?cutoff:dl;              // the final deadline is capped by the review buffer
     const odbd=openBefore(effDl);
-    let days=0,dd=isoToDate(w.start);for(let k=0;k<10;k++){const iso=isoFromDate(dd);if(iso>=end)break;if(iso>=cursor&&iso<cutoff&&!rest.includes(dd.getDay())&&!off[iso])days++;dd=addDays(dd,1);}
+    let days=0,dd=isoToDate(w.start);for(let k=0;k<10;k++){const iso=isoFromDate(dd);if(iso>=end)break;if(iso>=cursor&&iso<cutoff&&dayIsOpen(c,iso,dd.getDay()))days++;dd=addDays(dd,1);}
     return {n:w.n,label:w.label,loadMin:pre?0:load[w.n],count:pre?0:cnt[w.n],days:days,odbd:odbd,deadline:dl,past:days===0,pre:pre};});
 }
 /* Recommended h/day = the higher of the two real guarantees, nothing stricter:
@@ -1787,7 +1797,6 @@ function reflowBrody(c,blk){
   });
   const wkStart=blk.weeks.map(w=>w.start);const shelf=blk.shelf;
   const cursorISO=(todayISO()>wkStart[0])?todayISO():wkStart[0];
-  const rest=c.restDays||[0];const off=c.off||{};
   const reviewCutoff=brodyReviewCutoff(c,blk);   // last N study days before shelf stay video-free
   const weekOf=iso=>{let n=0;for(let i=0;i<blk.weeks.length;i++){if(iso>=wkStart[i])n=blk.weeks[i].n;}return n;};
   const currentWk=weekOf(cursorISO);
@@ -1815,7 +1824,7 @@ function reflowBrody(c,blk){
   const weekDays={};blk.weeks.forEach(w=>weekDays[w.n]=[]);
   const openDays=[];
   {let dd=isoToDate(cursorISO),g=0;while(isoFromDate(dd)<shelf&&g++<400){const iso=isoFromDate(dd),wd=dd.getDay(),wn=weekOf(iso);
-    if(wn&&!rest.includes(wd)&&!off[iso]&&iso<reviewCutoff){weekDays[wn].push(iso);openDays.push(iso);}dd=addDays(dd,1);}}
+    if(wn&&dayIsOpen(c,iso,wd)&&iso<reviewCutoff){weekDays[wn].push(iso);openDays.push(iso);}dd=addDays(dd,1);}}
   const doneOrSkip=id=>isDone(id)||isSkip(id);
   const todayISO_=todayISO();
   // minutes already completed on each day — they consume that day's budget, so
@@ -1864,7 +1873,7 @@ function reflowBrody(c,blk){
   const days=[];const dayMap={};const todayI=todayISO_;
   {let dd=isoToDate(wkStart[0]),g=0;while(isoFromDate(dd)<shelf&&g++<400){const iso=isoFromDate(dd),wd=dd.getDay();
     const past=iso<todayI;
-    const isRest=rest.includes(wd),isOff=!!off[iso];
+    const isRest=dayIsRest(c,iso,wd),isOff=dayIsOff(c,iso);
     const isReview=!past&&((iso>=reviewCutoff)||(lastContentISO&&iso>lastContentISO))&&!isRest&&!isOff;   // buffer, or finished-ahead tail
     const packed=dayItems[iso]||[];const pinned=donePins[iso]||[];const early=earlierByDay[iso]||[];
     const items=packed.concat(pinned).concat(early).sort((a,b)=>((orderIndex[a.id]!=null?orderIndex[a.id]:1e9)-(orderIndex[b.id]!=null?orderIndex[b.id]:1e9)));
@@ -1908,10 +1917,9 @@ function reflow(){
   const cursorISO=(c.startISO>todayISO())?c.startISO:todayISO();
   const examISO=c.examISO||isoFromDate(addDays(new Date(),120));
   // build candidate study dates [cursor, exam)
-  const rest=c.restDays||[0]; const off=c.off||{};
   const studyDates=[]; let d=isoToDate(cursorISO); let guard=0;
   while(isoFromDate(d)<examISO && guard++<800){const iso=isoFromDate(d);const wd=d.getDay();
-    if(!rest.includes(wd)&&!off[iso])studyDates.push(iso);
+    if(dayIsOpen(c,iso,wd))studyDates.push(iso);
     d=addDays(d,1);
   }
   const review=Math.max(0,Math.min(c.reviewDays||0,studyDates.length));
@@ -1965,7 +1973,7 @@ function reflow(){
   let dd=isoToDate(histStart); let g2=0;
   while(isoFromDate(dd)<examISO && g2++<900){const iso=isoFromDate(dd);const wd=dd.getDay();
     const past=iso<cursorISO;
-    const isRest=rest.includes(wd), isOff=!!off[iso], isReview=reviewDates.includes(iso);
+    const isRest=dayIsRest(c,iso,wd), isOff=dayIsOff(c,iso), isReview=reviewDates.includes(iso);
     const packed=dayItems[iso]||[]; const pinned=donePins[iso]||[];   // past days carry pins only
     const items=packed.concat(pinned).sort((a,b)=>(orderIndex[a.id]!=null?orderIndex[a.id]:1e9)-(orderIndex[b.id]!=null?orderIndex[b.id]:1e9));
     const row={iso,past,off:isOff&&!past,rest:isRest&&!isOff&&!past,review:isReview&&!isOff&&!isRest&&!past,items,
@@ -3200,7 +3208,8 @@ function renderToday(){
     colB+=dayDetail(focusISO);
   } else {
     if(isOffToday){
-      colB+='<div class="card"><div class="cardhd">'+(todayRow.off?'Day off':'Rest day')+' · '+fmtLong(todayISO())+'</div><p class="muted">No videos scheduled today.'+(todayRow.off?' <button class="link" id="unoff">Cancel day off</button>':'')+'</p></div>';
+      colB+='<div class="card"><div class="cardhd">'+(todayRow.off?'Day off':'Rest day')+' · '+fmtLong(todayISO())+'</div><p class="muted">No videos scheduled today.'
+        +(todayRow.off?' <button class="link" id="unoff">Cancel day off</button>':' <button class="link" id="studyToday">Study today anyway</button>')+'</p></div>';
     } else if(todayRow&&todayRow.review&&!(row&&row.items.length)){
       colB+='<div class="card"><div class="cardhd">Review day · '+fmtLong(todayISO())+'</div><p class="muted">Video-free by design — this day is reserved for practice questions, Anki, and your weak spots before the exam.</p></div>';
     }
@@ -3222,6 +3231,9 @@ function renderToday(){
   const bt=document.getElementById("backToday");if(bt)bt.onclick=()=>{CAL_SEL=todayISO();render();};
   const df=document.getElementById("d_off");if(df)df.onclick=()=>dayOffToggle(focusISO,true);
   const du=document.getElementById("d_unoff");if(du)du.onclick=()=>dayOffToggle(focusISO,false);
+  const sd=document.getElementById("d_studyday");if(sd)sd.onclick=()=>dayStudyToggle(focusISO,true);
+  const sn=document.getElementById("d_unstudy");if(sn)sn.onclick=()=>dayStudyToggle(focusISO,false);
+  const s1=document.getElementById("studyToday");if(s1)s1.onclick=()=>dayStudyToggle(todayISO(),true);
   const pv=document.getElementById("calPrev");if(pv)pv.onclick=()=>{CAL_YM=ymShift(CAL_YM,-1);render();};
   const nx=document.getElementById("calNext");if(nx)nx.onclick=()=>{CAL_YM=ymShift(CAL_YM,1);render();};
   const ct=document.getElementById("calToday");if(ct)ct.onclick=()=>{CAL_YM=todayISO().slice(0,7);CAL_SEL=todayISO();render();};
@@ -3233,8 +3245,17 @@ function bindVlist(){document.querySelectorAll(".chk[data-ids]").forEach(b=>b.on
   document.querySelectorAll(".flagb[data-flag]").forEach(b=>b.onclick=()=>{const ids=idsFromAttr(b.dataset.flag);if(!ids.length)return;toggleShakyItems(ids);render();});
   document.querySelectorAll("[data-dayreset]").forEach(b=>b.onclick=()=>uncheckDay(b.dataset.dayreset));}
 
-function setDayOff(iso,on){S.cfg.off=S.cfg.off||{};if(on)S.cfg.off[iso]=true;else delete S.cfg.off[iso];save();reflow();render();}
-function dayOffToggle(iso,on){setDayOff(iso,on);toastUndo(on?(fmtShort(iso)+" off — work re-flowed."):(fmtShort(iso)+" back on."),()=>{setDayOff(iso,!on);});}
+/* off and on are kept mutually exclusive: taking a day off clears any decision to
+   study it, and choosing to study a rest day clears any day-off on that date. So a
+   date is only ever in one map, and each button has exactly one way back. */
+function setDayOff(iso,off){S.cfg.off=S.cfg.off||{};S.cfg.on=S.cfg.on||{};
+  if(off){S.cfg.off[iso]=true;delete S.cfg.on[iso];}else delete S.cfg.off[iso];save();reflow();render();}
+function setDayOn(iso,on){S.cfg.on=S.cfg.on||{};S.cfg.off=S.cfg.off||{};
+  if(on){S.cfg.on[iso]=true;delete S.cfg.off[iso];}else delete S.cfg.on[iso];save();reflow();render();}
+function dayOffToggle(iso,off){setDayOff(iso,off);toastUndo(off?(fmtShort(iso)+" off — work re-flowed."):(fmtShort(iso)+" back on."),()=>{setDayOff(iso,!off);});}
+/* Study a single rest day (or hand it back). The rest-day pattern itself is untouched
+   — this is one date, so next week's rest day is still a rest day. */
+function dayStudyToggle(iso,on){setDayOn(iso,on);toastUndo(on?(fmtShort(iso)+" added — work re-flowed onto it."):(fmtShort(iso)+" back to a rest day."),()=>{setDayOn(iso,!on);});}
 
 /* ---------- PLAN (month calendar) ---------- */
 let CAL_YM=null, CAL_SEL=null;
@@ -3294,13 +3315,21 @@ function dayDetail(iso){
   h+='</div>';
   if(!row)h+='<p class="muted small">Outside your current plan window'+(iso<todayISO()?" (past)":"")+'.</p>';
   else if(row.off)h+='<p class="muted">Day off — no videos scheduled. <button class="link" id="d_unoff">Cancel day off</button></p>';
-  else if(row.rest)h+='<p class="muted small">Weekly rest day. Enjoy the breather.</p>';
+  else if(row.rest)h+='<p class="muted small">Weekly rest day. Enjoy the breather.</p>'
+    +(past?'':'<div class="rowtools"><button class="btn ghost" id="d_studyday">Study this day</button></div>');
   else if(row.review)h+='<p class="muted small">Review window — timed UWorld blocks + Anki. No new videos.</p>';
   else if(row.earlier)h+='<p class="muted small">From <b>before you joined</b> — not part of your plan and not counted against your pace. Optional, but if you want to go back for any of it, check it off here.</p>'+dayVlist(row);
   else if(past&&row.items.length)h+='<p class="muted small">What you checked off this day. Anything left unfinished re-flowed forward.</p>'+dayVlist(row);
   else if(past)h+='<p class="muted small">Nothing was checked off this day — that work re-flowed forward.</p>';
-  else if(row.items.length)h+=dayVlist(row)+'<div class="rowtools"><button class="btn ghost" id="d_off">Take this day off</button></div>';
-  else h+='<p class="muted small">Nothing scheduled this day.</p>';
+  else {
+    // On a rest day you've opted to study, "back to rest day" IS the way out — offering
+    // "take this day off" as well would be two buttons with the same effect.
+    const studyingRest=dayIsStudyingRest(S.cfg,iso);
+    const tools='<div class="rowtools"><button class="btn ghost" id="'+(studyingRest?'d_unstudy':'d_off')+'">'
+      +(studyingRest?'Back to rest day':'Take this day off')+'</button></div>';
+    if(row.items.length)h+=dayVlist(row)+tools;
+    else h+='<p class="muted small">Nothing scheduled this day'+(studyingRest?' — your work already fits before it.':'.')+'</p>'+(studyingRest?tools:'');
+  }
   return h+'</div>';
 }
 function renderPlan(){
@@ -3323,6 +3352,8 @@ function renderPlan(){
   document.querySelectorAll("[data-cal]").forEach(b=>b.onclick=()=>{CAL_SEL=b.dataset.cal;renderPlan();});
   const dof=document.getElementById("d_off");if(dof)dof.onclick=()=>dayOffToggle(CAL_SEL,true);
   const dun=document.getElementById("d_unoff");if(dun)dun.onclick=()=>dayOffToggle(CAL_SEL,false);
+  const dsd=document.getElementById("d_studyday");if(dsd)dsd.onclick=()=>dayStudyToggle(CAL_SEL,true);
+  const dus=document.getElementById("d_unstudy");if(dus)dus.onclick=()=>dayStudyToggle(CAL_SEL,false);
 }
 
 /* ---------- PROGRESS ---------- */
@@ -3333,9 +3364,8 @@ function pacingChart(){
   const items=buildBacklog(); const minById={}; let totalMin=0;
   items.forEach(it=>{minById[it.id]=it.min;totalMin+=it.min;});
   if(!totalMin||exam<=start)return "";
-  const rest=c.restDays||[0], off=c.off||{};
   const studyDates=[]; let d=isoToDate(start),g=0;
-  while(isoFromDate(d)<exam&&g++<3000){const iso=isoFromDate(d);const wd=d.getDay();if(!rest.includes(wd)&&!off[iso])studyDates.push(iso);d=addDays(d,1);}
+  while(isoFromDate(d)<exam&&g++<3000){const iso=isoFromDate(d);const wd=d.getDay();if(dayIsOpen(c,iso,wd))studyDates.push(iso);d=addDays(d,1);}
   const review=Math.max(0,Math.min(c.reviewDays||0,studyDates.length));
   const contentDates=studyDates.slice(0,studyDates.length-review);
   const totalStudyDays=contentDates.length||1; const contentSet={}; contentDates.forEach(iso=>contentSet[iso]=1);
@@ -4643,7 +4673,7 @@ function commitOnboard(){const ob=_ob;
     brody:(brody?brody.id:undefined),brodyPace:(brody?(ob.brodyPace||(catReady()?brodyPace(ob):undefined)):undefined),brodyJoinWk:(brody?(ob.brodyJoinWk!=null?ob.brodyJoinWk:undefined):undefined),brodyJoinDate:(brody?(ob.brodyJoinDate||todayISO()):undefined),brodyReviewDays:(brody?brodyReviewBuf(ob):undefined),
     examISO:(brody?brody.shelf:ob.examISO),startISO:(brody?brody.weeks[0].start:ob.startISO),wkdayHrs:ob.wkdayHrs,wkendHrs:ob.wkendHrs,restDays:ob.restDays.slice(),
     reviewDays:(brody?0:ob.reviewDays),resources:Object.assign({},ob.resources),systems:(brody?brody.systems.slice():ob.systems.slice()),sysOrder:(ob.sysOrder||SYS_ORDER_DEFAULT).slice(),pathChapters:(Array.isArray(ob.pathChapters)?ob.pathChapters.slice():undefined),threadTopics:(brody?undefined:(Array.isArray(ob.threadTopics)?ob.threadTopics.slice():undefined)),weeklyQGoal:(ob.weeklyQGoal>0?ob.weeklyQGoal:0),qGoalPer:qGoalPer(ob),catOrder:(ob.catOrder?JSON.parse(JSON.stringify(ob.catOrder)):undefined),quizzes:(Array.isArray(ob.quizzes)?ob.quizzes.filter(q=>q&&q.iso):[]),skip:Object.assign({},ob.skip||{})});
-  c.off=c.off||{};
+  c.off=c.off||{};c.on=c.on||{};
   if(ob.fresh&&prev&&key==="nbme")archiveUnit(prev);   // keep the old unit reachable under Plan → Past units
   S.cfgs[key]=c;activate(key);S.active=key;_ob=null;
   save();reflow();VIEW="today";render();
@@ -4684,7 +4714,7 @@ function doResetAll(){
     S.cfgs=snap.cfgs;S.active=snap.active;S.cfg=S.active?S.cfgs[S.active]:null;_prevSig=progressSig();save();
     if(S.cfg){reflow();render();}else renderWelcome();toast("Restored ✓");});
 }
-const BUILD="2026-08-22b";
+const BUILD="2026-08-22c";
 /* ---------- What's new (changelog) ----------
    Newest entry first. Bump the top entry's id whenever you add one and the
    pop-up shows once per person (tracked in synced settings.seenUpdate). */
