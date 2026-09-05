@@ -1847,6 +1847,8 @@ function reflowBrody(c,blk){
   const todayISO_=todayISO();
   // minutes already completed on each day — they consume that day's budget, so
   // checking a video off never frees a slot that pulls a future video forward.
+  // Nothing here reshuffles on its own: compacting the plan around work you've done
+  // ahead is what "Re-fit your schedule" is for, and it happens only when you ask.
   const doneMinByDay={};const vdd=S.vdoneDate||{};
   for(const id in vdd){if(earlierSet.has(id))continue;const it=byId[id];if(it)doneMinByDay[vdd[id]]=(doneMinByDay[vdd[id]]||0)+it.min;}
   const dayItems={};
@@ -1944,11 +1946,13 @@ function reflow(){
   const contentDates=studyDates.slice(0,Math.max(0,studyDates.length-review));
   const reviewDates=studyDates.slice(Math.max(0,studyDates.length-review));
   // Pack the backlog onto contentDates IN CATALOG SEQUENCE, with a forward-only day
-  // cursor. Completed videos are pinned to the day they were finished (donePins, below)
-  // and consume that day's budget (doneMinByDay) so a finished day never refills; a
-  // done video studied ahead also pushes the cursor forward, so nothing later in the
-  // sequence is ever packed onto a date before it. The calendar always reads in order,
-  // whatever you've checked off (past-dated completions aside — those are history).
+  // cursor. Completed videos are pinned to the day they were finished (donePins, below).
+  // A day that has already happened has its budget spent (doneMinByDay) so a finished
+  // day never refills and nothing later in the sequence is packed before it — the
+  // calendar always reads in order, whatever you've checked off.
+  // A done video studied ahead also pushes the cursor forward, so nothing later in the
+  // sequence is ever packed onto a date before it. Nothing reshuffles on its own —
+  // compacting around work done ahead is what "Re-fit your schedule" is for.
   const doneMinByDay={};const vddPack=S.vdoneDate||{};
   for(const id in vddPack){const it=byId[id];if(it)doneMinByDay[vddPack[id]]=(doneMinByDay[vddPack[id]]||0)+it.min;}
   const dateIndex={}; contentDates.forEach((iso,i)=>dateIndex[iso]=i);
@@ -2451,15 +2455,53 @@ function brodyBehindPace(c){const d=brodyRefitDelta(c);return (d&&!d.easier)?d.r
 /* Adopt it. The pace is normally locked to the plan (re-deriving it on every check-off
    made finishing a video shrink the day and push work later), so this is the one
    deliberate way to move it \u2014 and it's undoable. */
+/* Where the plan currently lands: the last day carrying video, and how many
+   video-free days that leaves before the exam. What a re-fit is judged by. */
+function schedShape(){
+  if(!SCHED||!SCHED.days)return {tail:null,review:0};
+  return {tail:SCHED.days.filter(d=>d.todo>0).map(d=>d.iso).pop()||null,
+          review:SCHED.days.filter(d=>d.review).length};
+}
+/* Ticking a video on a day that hasn't arrived records it as "watched then", which
+   reserves that day's capacity and pins the pour \u2014 so the plan can never compact and
+   the finish date never moves, however far ahead you get. Re-fitting says what
+   actually happened: you watched it today. The frozen rules then do the rest on their
+   own, pulling later work forward into the days you freed.
+   This is the whole reason it's a button. Doing it automatically means the calendar
+   rearranges itself while you're reading it; doing it on demand means it only ever
+   moves when you asked it to. Returns what it changed, so undo can put it back. */
+function refitPullForward(){
+  const t=todayISO();const vdd=S.vdoneDate||{};const moved={};
+  for(const id in vdd){if(vdd[id]>t){moved[id]=vdd[id];vdd[id]=t;}}
+  return moved;
+}
+function refitPutBack(moved){const vdd=S.vdoneDate||{};for(const id in moved)vdd[id]=moved[id];}
+/* What a re-fit achieved, in the terms that matter: an earlier finish and the
+   review days it bought. Falls back to naming the pace when the shape didn't move. */
+function refitToast(before,after,paceTxt,nMoved){
+  const gained=after.review-before.review;
+  if(gained>0)return 'Re-fit \u2014 videos finish '+gained+' day'+(gained===1?'':'s')+' earlier, '
+    +after.review+' video-free day'+(after.review===1?'':'s')+' before the exam.';
+  // Work did move up, just not enough to free a whole day yet \u2014 say that rather than
+  // "nothing happened", which would read as the button being broken.
+  if(nMoved)return 'Re-fit \u2014 '+nMoved+' video'+(nMoved===1?'':'s')+' you watched ahead moved onto today, and the rest moved up.';
+  if(paceTxt)return paceTxt;
+  return 'Re-fit \u2014 nothing to pull forward; your plan is already tight.';
+}
 function brodyRefit(){
   const c=S.cfg;if(!c||!c.brody)return;
-  const d=brodyRefitDelta(c);if(!d)return;
-  const prev=c.brodyPace;
-  c.brodyPace=d.rec;save();reflow();render();
-  toastUndo(d.over ? ('Re-fit to '+d.rec+' h/day \u2014 more than fits in a day, so trim a resource too.')
+  const before=schedShape();
+  const d=brodyRefitDelta(c);
+  const prevPace=c.brodyPace;
+  const moved=refitPullForward();
+  if(!d&&!Object.keys(moved).length){toast('Nothing to re-fit \u2014 your plan is already tight.');return;}
+  if(d)c.brodyPace=d.rec;
+  save();reflow();render();
+  const paceTxt=d?(d.over ? ('Re-fit to '+d.rec+' h/day \u2014 more than fits in a day, so trim a resource too.')
     : d.easier ? ('Re-fit to '+d.rec+' h/day \u2014 lighter days, still ahead of every quiz.')
-    : ('Re-fit to '+d.rec+' h/day \u2014 back ahead of every quiz.'),
-    ()=>{c.brodyPace=prev;save();reflow();render();});
+    : ('Re-fit to '+d.rec+' h/day \u2014 back ahead of every quiz.')):'';
+  toastUndo(refitToast(before,schedShape(),paceTxt,Object.keys(moved).length),
+    ()=>{c.brodyPace=prevPace;refitPutBack(moved);save();reflow();render();});
 }
 /* The custom planner's twin of brodyRefit. Brody derives a pace, so re-fitting there
    moves one number; here the hours are what the student SAID they can do, and the
@@ -2491,13 +2533,18 @@ function customFitHrs(c){
 }
 function customRefit(){
   const c=S.cfg;if(!c||c.brody)return;
-  const f=customFitHrs(c);if(!f)return;
+  const before=schedShape();
+  const f=customFitHrs(c);
   const prev={wkdayHrs:c.wkdayHrs,wkendHrs:c.wkendHrs};
-  c.wkdayHrs=f.wkdayHrs;c.wkendHrs=f.wkendHrs;save();reflow();render();
-  const set=f.wkdayHrs+' h weekdays / '+f.wkendHrs+' h weekends';
-  toastUndo(f.over ? ('Re-fit to '+set+' — more video than fits in a day, so trim a resource too.')
-    : ('Re-fit to '+set+' — everything fits before your review window again.'),
-    ()=>{Object.assign(c,prev);save();reflow();render();});
+  const moved=refitPullForward();
+  if(!f&&!Object.keys(moved).length){toast('Nothing to re-fit — your plan is already tight.');return;}
+  if(f){c.wkdayHrs=f.wkdayHrs;c.wkendHrs=f.wkendHrs;}
+  save();reflow();render();
+  const set=f?(f.wkdayHrs+' h weekdays / '+f.wkendHrs+' h weekends'):'';
+  const hrsTxt=f?(f.over ? ('Re-fit to '+set+' — more video than fits in a day, so trim a resource too.')
+    : ('Re-fit to '+set+' — everything fits before your review window again.')):'';
+  toastUndo(refitToast(before,schedShape(),hrsTxt,Object.keys(moved).length),
+    ()=>{Object.assign(c,prev);refitPutBack(moved);save();reflow();render();});
 }
 function paceHero(){const st=SCHED.stats;
   if(SCHED.brody){const tight=(SCHED.weekLoad||[]).filter(w=>w.heavy);
@@ -2505,7 +2552,10 @@ function paceHero(){const st=SCHED.stats;
     const skTxt=sk?(" \u00b7 starting at week "+(sk+1)):"";
     if(st.remItems===0)return '<div class="herostat ok"><span class="hsdot"></span><span>All videos done \u2014 you\u2019re in sync with Brody.</span></div>';
     const d=brodyRefitDelta();
-    const btn=d?'<button type="button" class="btn ghost hsbtn" id="heroRefit">Re-fit your schedule</button>':'';
+    // Always offered while there's work left. It isn't only for a plan in trouble —
+    // its main job is compacting the calendar around videos you've watched ahead, and
+    // that's a thing you decide to do, not a state the app can detect and nag about.
+    const btn='<button type="button" class="btn ghost hsbtn" id="heroRefit">Re-fit your schedule</button>';
     // Behind leads. A week only became "more than fits" BECAUSE you fell behind, and
     // telling someone to trim content when the real answer is "re-fit your days" sent
     // them to cut material they still need.
@@ -2531,7 +2581,7 @@ function paceHero(){const st=SCHED.stats;
   // derived pace: up when the work no longer fits, down once they've worked ahead.
   const f=customFitHrs();
   const fset=f?(f.wkdayHrs+' h weekdays / '+f.wkendHrs+' h weekends'):'';
-  const cbtn=f?'<button type="button" class="btn ghost hsbtn" id="heroRefit">Re-fit your schedule</button>':'';
+  const cbtn='<button type="button" class="btn ghost hsbtn" id="heroRefit">Re-fit your schedule</button>';
   if(st.remItems===0){cls="ok";txt="All videos done \u2014 UWorld & review from here.";}
   else if(st.feasible){cls="ok";txt="On pace at ~"+hpd+" h/day of video"+(st.reviewDaysLeft>0?(" \u00b7 "+st.reviewDaysLeft+" review day"+(st.reviewDaysLeft===1?"":"s")+" to spare"):" \u00b7 right to the wire");}
   else{cls="warn";txt="Behind \u2014 ~"+hpd+" h/day of video needed \u00b7 "+SCHED.atRisk.length+" video"+(SCHED.atRisk.length===1?"":"s")+" don\u2019t fit yet"
@@ -4824,7 +4874,7 @@ function doResetAll(){
     S.cfgs=snap.cfgs;S.active=snap.active;S.cfg=S.active?S.cfgs[S.active]:null;_prevSig=progressSig();save();
     if(S.cfg){reflow();render();}else renderWelcome();toast("Restored ✓");});
 }
-const BUILD="2026-09-05b";
+const BUILD="2026-09-05c";
 /* ---------- What's new (changelog) ----------
    Newest entry first. Bump the top entry's id whenever you add one and the
    pop-up shows once per person (tracked in synced settings.seenUpdate). */
