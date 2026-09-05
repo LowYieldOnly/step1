@@ -1608,7 +1608,16 @@ function checklistVideos(){
    today to the exam, reserving a review/UWorld buffer at the end.
    ============================================================ */
 let SCHED=null;   // {days:[{iso,off,rest,review,items,min}], atRisk:[items], stats:{...}, byId:{}}
-function dayBudgetMin(d){const we=(d.getDay()===0||d.getDay()===6);const total=Math.max(15,Math.round((we?S.cfg.wkendHrs:S.cfg.wkdayHrs)*60));const reserved=(S.cfg.ankiMinPerDay||0)+(S.cfg.uworldMinPerDay||0);return Math.max(15,total-reserved);}
+/* A day's video budget at a GIVEN pair of hours — split out so the re-fit can ask
+   "what would a day hold at 5 h?" without writing the hours onto the plan first.
+   Capacity isn't linear in the hours: Anki/UWorld time comes off the top and a day
+   never drops below 15 min, so the re-fit has to measure rather than divide. */
+function dayBudgetMinFor(d,wkdayHrs,wkendHrs,c){c=c||S.cfg;
+  const we=(d.getDay()===0||d.getDay()===6);
+  const total=Math.max(15,Math.round((we?wkendHrs:wkdayHrs)*60));
+  const reserved=(c.ankiMinPerDay||0)+(c.uworldMinPerDay||0);
+  return Math.max(15,total-reserved);}
+function dayBudgetMin(d){return dayBudgetMinFor(d,S.cfg.wkdayHrs,S.cfg.wkendHrs,S.cfg);}
 function isDone(id){return !!S.vdone[id];}
 /* ---------- check-off as a per-item last-writer-wins register ----------
    vdone is UNION-merged across devices so two devices can each contribute
@@ -1730,18 +1739,23 @@ function brodyWeekDeadline(blk,wstart){
    days available before that deadline (odbd). The pace is derived so the running
    total of video minutes is cleared before each quiz — never behind the actual
    quiz you're about to take. */
-function brodyWeekLoads(c,blk){
+function brodyWeekLoads(c,blk,live){
   const R=c.resources||{};
   const en={bnb:R.bnb,pathoma:R.pathoma,skmicro:R.sketchy,skpharm:R.sketchy,bootcamp:R.bootcamp};
   const pathSel=en.pathoma?effectivePathChapters(c):new Set();
   // loads count only what's still OWED (undone/unskipped, plus today's check-offs
   // for intra-day stability) — a watched video is off the books, so the pace math
   // reflects the work ahead, not the whole unit over ever-fewer days.
+  // `live` drops the today grace and counts what's ACTUALLY left. The grace exists so
+  // the automatic recommendation can't slide under you mid-session; the re-fit is a
+  // deliberate, undoable tap, and it has to see the work you did an hour ago —
+  // otherwise studying ahead never registers until the next day.
+  const owed=live?(id=>!(isDone(id)||isSkip(id))):brodyRemains;
   const load={},cnt={};blk.weeks.forEach(w=>{load[w.n]=0;cnt[w.n]=0;});
   const earlier=brodyEarlierIds(c,blk).ids;   // pre-arrival videos are optional — never in the pace
   catVideos().forEach(v=>{if(!brodyInBlock(blk,v))return;if(!en[v.res])return;if(v.res==="pathoma"&&!pathSel.has(pathChapterOf(v)))return;
     if(earlier.has(itemId(v)))return;
-    if(!brodyRemains(itemId(v)))return;
+    if(!owed(itemId(v)))return;
     const w=brodyVideoWeek(blk,v);load[w]+=v.min;cnt[w]++;});
   const cursor=(todayISO()>blk.weeks[0].start)?todayISO():blk.weeks[0].start;
   const cutoff=brodyReviewCutoff(c,blk);
@@ -2420,52 +2434,110 @@ function render(){
    owed over the days that are actually left. Falling behind pushes it up; the pace
    stamped on the plan doesn't move on its own. */
 function brodyRefitPace(c){c=c||S.cfg;if(!c||!c.brody)return 0;
-  const blk=brodyBlock(c)||BRODY_BLOCKS[0];return brodyRecommendedPace(brodyWeekLoads(c,blk));}
-/* Behind = the plan no longer fits at the pace you set. Returns the pace it would
-   take, or 0 when you're fine. The pace snaps to half-hours, so anything under that
-   isn't a real difference worth prompting about. */
-function brodyBehindPace(c){const cur=(SCHED&&SCHED.brodyPace)||brodyPace(c||S.cfg);
-  const rec=brodyRefitPace(c);return (rec>cur+0.25)?rec:0;}
+  const blk=brodyBlock(c)||BRODY_BLOCKS[0];return brodyRecommendedPace(brodyWeekLoads(c,blk,true));}
+/* Whether re-fitting would actually move the pace, and which way. Behind, it goes up
+   to protect the quiz deadlines. Ahead \u2014 you've banked work by studying ahead \u2014 it
+   goes DOWN, spreading what's left over every remaining day for lighter days. Neither
+   happens on its own: leaving it alone is what banks the time into an earlier finish,
+   so the drop is offered, never applied. The pace snaps to half-hours, so anything
+   under that isn't a real difference worth putting a button on. */
+function brodyRefitDelta(c){
+  const cur=(SCHED&&SCHED.brodyPace)||brodyPace(c||S.cfg);
+  const rec=brodyRefitPace(c);
+  if(!(rec>0)||Math.abs(rec-cur)<0.25)return null;
+  return {rec,cur,easier:rec<cur,over:rec>BRODY_QUIZ_MAX};
+}
+function brodyBehindPace(c){const d=brodyRefitDelta(c);return (d&&!d.easier)?d.rec:0;}
 /* Adopt it. The pace is normally locked to the plan (re-deriving it on every check-off
    made finishing a video shrink the day and push work later), so this is the one
    deliberate way to move it \u2014 and it's undoable. */
 function brodyRefit(){
   const c=S.cfg;if(!c||!c.brody)return;
-  const rec=brodyRefitPace(c);if(!(rec>0))return;
+  const d=brodyRefitDelta(c);if(!d)return;
   const prev=c.brodyPace;
-  c.brodyPace=rec;save();reflow();render();
-  toastUndo(rec>BRODY_QUIZ_MAX
-    ? ('Re-fit to '+rec+' h/day \u2014 more than fits in a day, so trim a resource too.')
-    : ('Re-fit to '+rec+' h/day \u2014 back ahead of every quiz.'),
+  c.brodyPace=d.rec;save();reflow();render();
+  toastUndo(d.over ? ('Re-fit to '+d.rec+' h/day \u2014 more than fits in a day, so trim a resource too.')
+    : d.easier ? ('Re-fit to '+d.rec+' h/day \u2014 lighter days, still ahead of every quiz.')
+    : ('Re-fit to '+d.rec+' h/day \u2014 back ahead of every quiz.'),
     ()=>{c.brodyPace=prev;save();reflow();render();});
+}
+/* The custom planner's twin of brodyRefit. Brody derives a pace, so re-fitting there
+   moves one number; here the hours are what the student SAID they can do, and the
+   review window is theirs too. The window is left alone — the hours are raised until
+   everything fits in front of it, keeping the weekday:weekend ratio they chose.
+   Stepped rather than solved, because dayBudgetMin isn't linear in the hours. */
+const MAX_VIDEO_HRS=8;   // more video in one day than anyone actually sustains
+function customFitHrs(c){
+  c=c||S.cfg;
+  if(!c||c.brody||!SCHED||!SCHED.contentDates||!SCHED.contentDates.length)return null;
+  const rem=SCHED.stats.remMin;if(rem<=0)return null;
+  const days=SCHED.contentDates.map(isoToDate);
+  const cap=(a,b)=>days.reduce((t,d)=>t+dayBudgetMinFor(d,a,b,c),0);
+  const wk=c.wkdayHrs||0,we=c.wkendHrs||0;
+  if(cap(wk,we)>=rem)return null;                    // already fits — nothing to offer
+  const up=h=>Math.ceil(h*2)/2;
+  const bw=(wk||we)?wk:1, bn=(we||wk)?we:1;          // a plan with no hours at all grows both together
+  // Raise-only, unlike the Brody pace. There the number is DERIVED, so re-deriving it
+  // downward is fair game; here the hours are what the student said they can do, and
+  // the app has no business telling them to do less. Minimising them is also actively
+  // bad on a long runway — on a three-month plan the smallest hours that "fit" are
+  // half an hour a day, stretching the content to the wire with no slack left.
+  for(let k=1.05;k<=24;k+=.05){
+    const a=up(bw*k),b=up(bn*k);
+    if((a!==wk||b!==we)&&cap(a,b)>=rem)
+      return {wkdayHrs:a,wkendHrs:b,over:Math.max(a,b)>MAX_VIDEO_HRS};
+  }
+  return null;   // no hours in a day would do it — this isn't an hours problem
+}
+function customRefit(){
+  const c=S.cfg;if(!c||c.brody)return;
+  const f=customFitHrs(c);if(!f)return;
+  const prev={wkdayHrs:c.wkdayHrs,wkendHrs:c.wkendHrs};
+  c.wkdayHrs=f.wkdayHrs;c.wkendHrs=f.wkendHrs;save();reflow();render();
+  const set=f.wkdayHrs+' h weekdays / '+f.wkendHrs+' h weekends';
+  toastUndo(f.over ? ('Re-fit to '+set+' — more video than fits in a day, so trim a resource too.')
+    : ('Re-fit to '+set+' — everything fits before your review window again.'),
+    ()=>{Object.assign(c,prev);save();reflow();render();});
 }
 function paceHero(){const st=SCHED.stats;
   if(SCHED.brody){const tight=(SCHED.weekLoad||[]).filter(w=>w.heavy);
     const sk=SCHED.skippedWeeks||0;
     const skTxt=sk?(" \u00b7 starting at week "+(sk+1)):"";
     if(st.remItems===0)return '<div class="herostat ok"><span class="hsdot"></span><span>All videos done \u2014 you\u2019re in sync with Brody.</span></div>';
+    const d=brodyRefitDelta();
+    const btn=d?'<button type="button" class="btn ghost hsbtn" id="heroRefit">Re-fit your schedule</button>':'';
     // Behind leads. A week only became "more than fits" BECAUSE you fell behind, and
     // telling someone to trim content when the real answer is "re-fit your days" sent
     // them to cut material they still need.
-    const rec=brodyBehindPace();
-    if(rec)return '<div class="herostat warn"><span class="hsdot"></span><span>Behind at '+SCHED.brodyPace+' h/day \u2014 '
-      +(rec>BRODY_QUIZ_MAX
-        ? ('it would now take ~'+rec+' h/day to stay ahead of every quiz, which is more than fits in a day. Re-fit anyway, then trim a resource in Plan.')
-        : ('~'+rec+' h/day gets you back ahead of every quiz.'))
-      +'</span><button type="button" class="btn ghost hsbtn" id="heroRefit">Re-fit your schedule</button></div>';
+    if(d&&!d.easier)return '<div class="herostat warn"><span class="hsdot"></span><span>Behind at '+SCHED.brodyPace+' h/day \u2014 '
+      +(d.over
+        ? ('it would now take ~'+d.rec+' h/day to stay ahead of every quiz, which is more than fits in a day. Re-fit anyway, then trim a resource in Plan.')
+        : ('~'+d.rec+' h/day gets you back ahead of every quiz.'))
+      +'</span>'+btn+'</div>';
     // Ahead: the pace is held, so banked work shortens the content tail and the spare
     // days turn into review. It rides along with the firehose warning rather than
     // waiting behind it \u2014 a block with a structurally heavy week (Cardiopulm week 3)
     // is warned about all block long, and studying ahead would never get credited.
-    const spare=SCHED.days.filter(d=>d.review).length, banked=spare-(SCHED.reviewBuf||0);
+    const spare=SCHED.days.filter(d2=>d2.review).length, banked=spare-(SCHED.reviewBuf||0);
     const bank=(banked>0)?(' \u00b7 +'+banked+' day'+(banked===1?'':'s')+' banked ('+spare+' video-free before the exam)'):'';
-    if(tight.length)return '<div class="herostat warn"><span class="hsdot"></span><span>~'+SCHED.brodyPace+' h/day of video \u00b7 week '+tight.map(w=>w.n).join(", ")+' is more than fits before its quiz \u2014 trim a resource'+bank+'</span></div>';
-    return '<div class="herostat ok"><span class="hsdot"></span><span>On pace at ~'+SCHED.brodyPace+' h/day of video \u00b7 ahead of every quiz'+skTxt+bank+'</span></div>';}
+    // Working ahead is the moment the button matters most, so it's offered here too \u2014
+    // but the cost is named first. Re-fitting now spreads what's left over every
+    // remaining day, which is lighter days bought with the days you just banked.
+    const ease=d?(' \u00b7 re-fit to ~'+d.rec+' h/day for lighter days'+(banked>0?' (spends the banked days)':'')):'';
+    if(tight.length)return '<div class="herostat warn"><span class="hsdot"></span><span>~'+SCHED.brodyPace+' h/day of video \u00b7 week '+tight.map(w=>w.n).join(", ")+' is more than fits before its quiz \u2014 trim a resource'+bank+ease+'</span>'+btn+'</div>';
+    return '<div class="herostat ok"><span class="hsdot"></span><span>On pace at ~'+SCHED.brodyPace+' h/day of video \u00b7 ahead of every quiz'+skTxt+bank+ease+'</span>'+btn+'</div>';}
   const hpd=Math.round(st.reqPerDay/60*10)/10;let cls,txt;
+  // Same offer on the custom planner, moving the hours the student set instead of a
+  // derived pace: up when the work no longer fits, down once they've worked ahead.
+  const f=customFitHrs();
+  const fset=f?(f.wkdayHrs+' h weekdays / '+f.wkendHrs+' h weekends'):'';
+  const cbtn=f?'<button type="button" class="btn ghost hsbtn" id="heroRefit">Re-fit your schedule</button>':'';
   if(st.remItems===0){cls="ok";txt="All videos done \u2014 UWorld & review from here.";}
   else if(st.feasible){cls="ok";txt="On pace at ~"+hpd+" h/day of video"+(st.reviewDaysLeft>0?(" \u00b7 "+st.reviewDaysLeft+" review day"+(st.reviewDaysLeft===1?"":"s")+" to spare"):" \u00b7 right to the wire");}
-  else{cls="warn";txt="Behind \u2014 ~"+hpd+" h/day of video needed \u00b7 "+SCHED.atRisk.length+" video"+(SCHED.atRisk.length===1?"":"s")+" don\u2019t fit yet";}
-  return '<div class="herostat '+cls+'"><span class="hsdot"></span><span>'+txt+'</span></div>';
+  else{cls="warn";txt="Behind \u2014 ~"+hpd+" h/day of video needed \u00b7 "+SCHED.atRisk.length+" video"+(SCHED.atRisk.length===1?"":"s")+" don\u2019t fit yet"
+    +(f?(f.over?(". "+fset+" would clear it, which is more video than fits in a day \u2014 re-fit anyway, then trim a resource in Plan.")
+             :(" \u00b7 "+fset+" clears it")):"");}
+  return '<div class="herostat '+cls+'"><span class="hsdot"></span><span>'+txt+'</span>'+(st.remItems===0?'':cbtn)+'</div>';
 }
 function statusLine(){const st=SCHED.stats;
   if(st.remItems===0)return '<div class="status ok">You\'ve finished every scheduled video. Spend your remaining days on UWorld and review.</div>';
@@ -3271,7 +3343,7 @@ function renderToday(){
   const sd=document.getElementById("d_studyday");if(sd)sd.onclick=()=>dayStudyToggle(focusISO,true);
   const sn=document.getElementById("d_unstudy");if(sn)sn.onclick=()=>dayStudyToggle(focusISO,false);
   const s1=document.getElementById("studyToday");if(s1)s1.onclick=()=>dayStudyToggle(todayISO(),true);
-  const hrf=document.getElementById("heroRefit");if(hrf)hrf.onclick=brodyRefit;
+  const hrf=document.getElementById("heroRefit");if(hrf)hrf.onclick=()=>{(S.cfg&&S.cfg.brody)?brodyRefit():customRefit();};
   const pv=document.getElementById("calPrev");if(pv)pv.onclick=()=>{CAL_YM=ymShift(CAL_YM,-1);render();};
   const nx=document.getElementById("calNext");if(nx)nx.onclick=()=>{CAL_YM=ymShift(CAL_YM,1);render();};
   const ct=document.getElementById("calToday");if(ct)ct.onclick=()=>{CAL_YM=todayISO().slice(0,7);CAL_SEL=todayISO();render();};
@@ -4752,7 +4824,7 @@ function doResetAll(){
     S.cfgs=snap.cfgs;S.active=snap.active;S.cfg=S.active?S.cfgs[S.active]:null;_prevSig=progressSig();save();
     if(S.cfg){reflow();render();}else renderWelcome();toast("Restored ✓");});
 }
-const BUILD="2026-09-05a";
+const BUILD="2026-09-05b";
 /* ---------- What's new (changelog) ----------
    Newest entry first. Bump the top entry's id whenever you add one and the
    pop-up shows once per person (tracked in synced settings.seenUpdate). */
