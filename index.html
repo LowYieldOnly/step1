@@ -783,6 +783,78 @@ ul.rritems{list-style:none;margin:0;padding:1px 0 9px 14px}
 ul.rritems li{position:relative;padding:3.5px 0 3.5px 14px;color:var(--text-2);font-size:13px;line-height:1.5}
 ul.rritems li::before{content:"";position:absolute;left:0;top:10px;width:5px;height:1px;background:var(--line2)}
 .rrempty{color:var(--faint);font-size:13.5px;padding:18px 0}
+/* rapid reference — pharm compartments.
+   A drug set regrouped several ways. The five hazard colours are a legend, not
+   decoration: each one means a specific thing (QT risk / reflex tachycardia /
+   negative inotrope / dangerous combination / pregnancy-safe), so they get their
+   own tokens rather than borrowing UI accents, and are re-toned per theme below. */
+:root{--ph-qt:#7C5CFC;--ph-reflex:#B45309;--ph-inotrope:#992D30;--ph-combo:#D6336C;--ph-safe:#2C9A5A}
+:root[data-theme="dark"]{--ph-qt:#A99BFF;--ph-reflex:#E0A458;--ph-inotrope:#DE7A73;--ph-combo:#F07AA5;--ph-safe:#6FC08D}
+.rrgrp{display:flex;flex-wrap:wrap;align-items:center;gap:7px;margin:0 0 9px}
+.rrgrpl{font-family:var(--mono);font-size:10px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:var(--faint);margin-right:2px}
+.phlegend{display:flex;flex-wrap:wrap;gap:5px 15px;align-items:center;margin:0 0 14px;font-size:12px;color:var(--text-2)}
+.phlegend span.it{display:inline-flex;align-items:center;gap:6px}
+.phdot{width:7px;height:7px;border-radius:50%;display:inline-block;flex:none}
+.phdot.qt{background:var(--ph-qt)}.phdot.reflex{background:var(--ph-reflex)}
+.phdot.inotrope{background:var(--ph-inotrope)}.phdot.combo{background:var(--ph-combo)}
+.phdot.safe{background:var(--ph-safe)}
+.phdots{display:inline-flex;gap:3px;margin-left:1px}
+.phmodes{display:flex;flex-wrap:wrap;gap:7px;margin:0 0 14px}
+.phgrid{display:grid;gap:14px;min-width:0}
+/* Grid items default to min-width:auto, i.e. they refuse to shrink below their
+   content's min-content width — so the wide class table dragged the whole column
+   past the phone viewport and the page scrolled sideways. The scrollers keep the
+   tables readable; these let the column actually be as narrow as the screen. */
+.phgrid>*{min-width:0}
+.phscroll{overflow-x:auto;min-width:0;max-width:100%}
+@media(min-width:820px){.phgrid.two{grid-template-columns:1fr 1fr}}
+.phbox{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius-lg);padding:14px 15px 16px}
+.phbox h3{margin:0 0 3px;font-size:15px;font-weight:800;letter-spacing:-.01em}
+.phbox .phsub{margin:0 0 12px;font-size:12.5px;color:var(--text-2);line-height:1.45;max-width:62ch}
+.phbucket{margin-top:13px}.phbucket:first-of-type{margin-top:0}
+.phbucket h4{margin:0 0 6px;font-size:13px;font-weight:700;display:flex;flex-wrap:wrap;align-items:baseline;gap:7px}
+.phbucket h4 .n{font-weight:400;font-size:12px;color:var(--faint)}
+.phchips{display:flex;flex-wrap:wrap;gap:5px}
+button.phchip{font-family:var(--sans);font-size:13px;font-weight:600;background:var(--bg2);color:var(--ink);
+  border:1px solid var(--line2);border-radius:8px;padding:4px 9px 5px;cursor:pointer;
+  display:inline-flex;align-items:center;gap:5px;line-height:1.3}
+button.phchip:hover{border-color:var(--phos);color:var(--phos)}
+button.phchip:focus-visible{outline:2px solid var(--phos);outline-offset:1px}
+button.phchip.on{background:var(--phos);border-color:var(--phos);color:var(--accent-contrast)}
+button.phchip.on .phdot{box-shadow:0 0 0 1px var(--accent-contrast)}
+.phhaz{border-left:3px solid var(--line2);padding-left:13px;margin-bottom:17px}
+.phhaz.qt{border-color:var(--ph-qt)}.phhaz.reflex{border-color:var(--ph-reflex)}
+.phhaz.inotrope{border-color:var(--ph-inotrope)}.phhaz.combo{border-color:var(--ph-combo)}
+.phhaz.safe{border-color:var(--ph-safe)}
+.phhaz h4{margin:0 0 3px;font-size:14px;font-weight:700}
+.phhaz p{margin:0 0 9px;font-size:12.5px;color:var(--text-2);line-height:1.5;max-width:64ch}
+.phtable{width:100%;border-collapse:collapse;font-size:13px}
+.phtable th,.phtable td{text-align:left;padding:7px 10px 7px 0;vertical-align:top;border-bottom:1px solid var(--line)}
+.phtable th{font-size:11px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--faint)}
+.phtable td.k{font-weight:700;white-space:nowrap}
+.phtable tr.hl td{background:var(--gold-soft)}
+.phcards{display:grid;gap:10px}
+@media(min-width:760px){.phcards{grid-template-columns:1fr 1fr}}
+button.phcard{font-family:var(--sans);text-align:left;background:var(--panel);border:1px solid var(--line);
+  border-radius:var(--radius-lg);padding:13px 14px;cursor:pointer;display:block;width:100%;color:var(--ink)}
+button.phcard:hover{border-color:var(--phos)}
+button.phcard:focus-visible{outline:2px solid var(--phos);outline-offset:1px}
+.phstem{font-size:14px;font-weight:600;line-height:1.4}
+.phans{margin-top:9px;padding-top:9px;border-top:1px solid var(--line)}
+.phans .a{font-size:15px;font-weight:800;color:var(--phos)}
+.phans .w{font-size:12.5px;color:var(--text-2);margin-top:3px;line-height:1.5}
+.phtap{font-size:11.5px;color:var(--faint);margin-top:8px}
+.phdrillbar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:0 0 14px}
+.phdrillbar .ct{font-size:12.5px;color:var(--faint)}
+/* drug detail — a sheet, matching the app's other overlays */
+.phsheet{max-width:520px}
+.phsheet .nm{font-size:19px;font-weight:800;letter-spacing:-.015em;line-height:1.2;padding:2px 14px 0}
+.phsheet .cl{font-size:12.5px;color:var(--faint);padding:2px 14px 10px}
+.phsheet dl{margin:0;padding:0 14px 14px;display:grid;gap:11px}
+.phsheet dt{font-family:var(--mono);font-size:10px;font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:var(--faint);margin-bottom:2px}
+.phsheet dd{margin:0;font-size:13.5px;line-height:1.5;color:var(--ink)}
+.phsheet dd.flag{color:var(--ph-combo)}
+.phsheet .tagrow{display:flex;flex-wrap:wrap;gap:5px 13px;padding:0 14px 12px;font-size:12px;color:var(--text-2)}
 /* extra resources — tap-to-reveal diagnostic algorithms.
    The four box colours are a legend, not decoration, so they keep their meaning
    (finding / next step / diagnosis / management) while being re-toned to the
@@ -4874,7 +4946,7 @@ function doResetAll(){
     S.cfgs=snap.cfgs;S.active=snap.active;S.cfg=S.active?S.cfgs[S.active]:null;_prevSig=progressSig();save();
     if(S.cfg){reflow();render();}else renderWelcome();toast("Restored ✓");});
 }
-const BUILD="2026-09-05c";
+const BUILD="2026-09-06a";
 /* ---------- What's new (changelog) ----------
    Newest entry first. Bump the top entry's id whenever you add one and the
    pop-up shows once per person (tracked in synced settings.seenUpdate). */
@@ -5221,6 +5293,143 @@ function bindRapidRefNodes(){
 function rrRefs(){return (RR_DATA&&RR_DATA.refs)||[];}
 function rrCurrent(){const m=rrRefs();return m.find(r=>r.id===RR_CUR)||m[0]||null;}
 function rrVideoCount(r){let n=0;(r.sections||[]).forEach(s=>{n+=(s.videos||[]).length;});return n;}
+
+/* ============================================================
+   RAPID REFERENCE — PHARM
+   The video outlines above are one shape of reference: a tree keyed to catalog
+   videos. Drug references are a different shape — the same drug set regrouped
+   several ways, because the grouping IS the content (a drug you know by class
+   is a drug you can't retrieve from a stem that gives you an indication). So
+   they live in their own area of the tab rather than being forced into the tree.
+   ============================================================ */
+let PH_MODE="ind";        // ind | haz | cls | drill
+let PH_DRUG=null;         // which drug's sheet is open
+let PH_SHOWN={};          // which drill cards are revealed, keyed by reference id
+function rrPharm(){return (RR_DATA&&RR_DATA.pharm)||[];}
+function rrPharmById(id){return rrPharm().find(p=>p.id===id)||null;}
+/* One id space across both areas, so RR_CUR alone says what's open. */
+function rrCurPharm(){return RR_CUR?rrPharmById(RR_CUR):null;}
+function phDrug(p,k){return (p.drugs||{})[k]||null;}
+function phDrugCount(p){return Object.keys(p.drugs||{}).length;}
+function phTagLabel(p,k){const t=(p.tags||[]).find(x=>x.k===k);return t?t.label:k;}
+function phDots(p,k){const d=phDrug(p,k);if(!d||!(d.t||[]).length)return "";
+  return '<span class="phdots">'+d.t.map(t=>'<span class="phdot '+escAttr(t)+'"></span>').join('')+'</span>';}
+function phChip(p,k,label){const d=phDrug(p,k);if(!d)return "";
+  return '<button type="button" class="phchip'+(PH_DRUG===k?" on":"")+'" data-phd="'+escAttr(k)+'">'
+    +escHTML(label||d.n)+phDots(p,k)+'</button>';}
+function phChips(p,list){return '<div class="phchips">'+list.map(k=>phChip(p,k)).join('')+'</div>';}
+function phLegend(p){return '<div class="phlegend">'+(p.tags||[]).map(t=>
+  '<span class="it"><span class="phdot '+escAttr(t.k)+'"></span>'+escHTML(t.label)+'</span>').join('')+'</div>';}
+
+function phIndication(p){
+  const boxes=(p.indication||[]).map(sec=>'<section class="phbox"><h3>'+escHTML(sec.h)+'</h3>'
+    +'<p class="phsub">'+escHTML(sec.s||"")+'</p>'
+    +(sec.b||[]).map(b=>'<div class="phbucket"><h4>'+escHTML(b.t)
+        +(b.n?'<span class="n">'+escHTML(b.n)+'</span>':'')+'</h4>'+phChips(p,b.d)+'</div>').join('')
+    +'</section>').join('');
+  const notes=(p.notes||[]).map(nt=>'<section class="phbox"><h3>'+escHTML(nt.h)+'</h3>'
+    +'<p class="phsub">'+escHTML(nt.s||"")+'</p>'
+    +'<div class="phscroll"><table class="phtable"><tr>'+(nt.cols||[]).map(c=>'<th>'+escHTML(c)+'</th>').join('')+'</tr>'
+    +(nt.rows||[]).map(r=>'<tr>'+r.map((c,i)=>'<td'+(i===0?' class="k"':'')+'>'+escHTML(c)+'</td>').join('')+'</tr>').join('')
+    +'</table></div></section>').join('');
+  return '<div class="phgrid two">'+boxes+notes+'</div>';
+}
+function phHazard(p){
+  const haz=(p.hazard||[]).map(h=>'<div class="phhaz '+escAttr(h.k)+'"><h4>'+escHTML(h.h)+'</h4>'
+    +'<p>'+escHTML(h.p||"")+'</p>'+phChips(p,h.d)+'</div>').join('');
+  const find=(p.findings||[]).map(f=>'<tr><td>'+escHTML(f[0])+'</td><td class="k">'+phChip(p,f[2],f[1])+'</td></tr>').join('');
+  return '<div class="phgrid two">'
+    +'<section class="phbox"><h3>Hazards that cut across classes</h3>'
+    +'<p class="phsub">These are the groupings that break easiest, because each fact was learned attached to one drug — the pattern is what gets tested.</p>'+haz+'</section>'
+    +'<section class="phbox"><h3>One finding, one drug</h3>'
+    +'<p class="phsub">Pattern recognition for stems. Cover the right column first.</p>'
+    +'<div class="phscroll"><table class="phtable">'+find+'</table></div></section></div>';
+}
+function phClasses(p){
+  const rows=(p.classes||[]).map(c=>'<tr'+(c.hl?' class="hl"':'')+'><td class="k">'+escHTML(c.cl)+'</td>'
+    +'<td>'+(c.dr||[]).map(k=>phChip(p,k)).join(' ')+'</td>'
+    +'<td>'+escHTML(c.na)+'</td><td>'+escHTML(c.ap)+'</td><td>'+escHTML(c.use)+'</td></tr>').join('');
+  const paths=(p.pathways||[]).map(w=>'<div class="phbucket"><h4>'+escHTML(w.h)
+    +'<span class="n">'+escHTML(w.s||"")+'</span></h4>'+phChips(p,w.d)+'</div>').join('');
+  return '<div class="phgrid">'
+    +'<section class="phbox"><h3>Vaughan-Williams, with the part that actually blurs highlighted</h3>'
+    +'<p class="phsub">All three class I subtypes “block sodium channels” — the difference is binding strength and what it does downstream. IB versus IC is the single most testable split here: same starting point, opposite answer depending on whether there is structural or ischemic disease.</p>'
+    +'<div class="phscroll"><table class="phtable">'
+    +'<tr><th>Class</th><th>Drugs</th><th>Na blockade</th><th>AP duration</th><th>Best-fit use</th></tr>'+rows+'</table></div></section>'
+    +'<section class="phbox"><h3>Vasodilators by second messenger</h3>'
+    +'<p class="phsub">Everything that relaxes smooth muscle here runs through one of three routes. Keeping cGMP and cAMP apart stops “which one raises cGMP” questions from blending.</p>'
+    +paths+'</section></div>';
+}
+function phDrill(p){
+  const shown=PH_SHOWN[p.id]||{};
+  const cards=(p.drill||[]).map((d,i)=>{const on=!!shown[i];
+    return '<button type="button" class="phcard" data-phf="'+i+'">'
+      +'<div class="phstem">'+escHTML(d[0])+'</div>'
+      +(on?('<div class="phans"><div class="a">'+escHTML(d[1])+'</div><div class="w">'+escHTML(d[2])+'</div></div>')
+          :'<div class="phtap">Tap to reveal</div>')+'</button>';}).join('');
+  return '<div class="phdrillbar"><button type="button" class="btn ghost sm" id="ph_all">Reveal all</button>'
+    +'<button type="button" class="btn ghost sm" id="ph_none">Hide all</button>'
+    +'<span class="ct">'+(p.drill||[]).length+' scenarios — stem first, which is the direction exams run</span></div>'
+    +'<div class="phcards">'+cards+'</div>';
+}
+/* Search across a drug reference: name, class, mechanism, use and red flag.
+   The tree search returns points; this returns drugs, which is what you want
+   when the question is "what was ranolazine again". */
+function phSearch(p,q){
+  q=(q||"").trim().toLowerCase();if(!q)return null;
+  const hits=Object.keys(p.drugs||{}).filter(k=>{const d=p.drugs[k];
+    return [d.n,d.c,d.m,d.u,d.f].some(s=>String(s||"").toLowerCase().indexOf(q)>=0);});
+  return hits;
+}
+function phSearchView(p,hits){
+  if(!hits.length)return '<div class="rrempty">No drug here matches that.</div>';
+  return '<section class="phbox"><h3>'+hits.length+' drug'+(hits.length===1?"":"s")+' matching</h3>'
+    +'<p class="phsub">Searching a drug reference matches names, classes, mechanisms, uses and red flags.</p>'
+    +phChips(p,hits)+'</section>';
+}
+function phBody(p){
+  const hits=phSearch(p,RR_Q);
+  if(hits)PH_DRUG=null;   // the result set is a new context; nothing is "open" in it
+  if(hits)return phSearchView(p,hits);
+  if(PH_MODE==="haz")return phHazard(p);
+  if(PH_MODE==="cls")return phClasses(p);
+  if(PH_MODE==="drill")return phDrill(p);
+  return phIndication(p);
+}
+const PH_MODES=[["ind","By indication"],["haz","By hazard"],["cls","By class"],["drill","Drill"]];
+function phOpenDrug(p,k){
+  const d=phDrug(p,k);if(!d)return;
+  PH_DRUG=k;
+  const ov=document.createElement("div");ov.className="overlay";ov.id="modal";
+  ov.innerHTML='<div class="sheet phsheet">'
+    +'<div class="sheethd">Drug</div>'
+    +'<div class="nm">'+escHTML(d.n)+'</div><div class="cl">'+escHTML(d.c)+'</div>'
+    +((d.t||[]).length?('<div class="tagrow">'+d.t.map(t=>'<span><span class="phdot '+escAttr(t)+'"></span> '+escHTML(phTagLabel(p,t))+'</span>').join('')+'</div>'):'')
+    +'<dl><div><dt>Mechanism</dt><dd>'+escHTML(d.m)+'</dd></div>'
+    +'<div><dt>Reach for it when</dt><dd>'+escHTML(d.u)+'</dd></div>'
+    +'<div><dt>Red flag</dt><dd class="flag">'+escHTML(d.f)+'</dd></div></dl>'
+    +'<button class="mrow close ctr" data-c="close">Close</button></div>';
+  const shut=()=>{ov.remove();PH_DRUG=null;
+    document.querySelectorAll("button.phchip").forEach(c=>c.classList.remove("on"));};
+  ov.onclick=e=>{if(e.target===ov)shut();};
+  ov.querySelector('[data-c="close"]').onclick=shut;
+  document.body.appendChild(ov);
+  document.querySelectorAll("button.phchip").forEach(c=>c.classList.toggle("on",c.dataset.phd===k));
+}
+function bindPharm(p){
+  document.querySelectorAll("[data-phd]").forEach(b=>b.onclick=()=>phOpenDrug(p,b.dataset.phd));
+  document.querySelectorAll("[data-phmode]").forEach(b=>b.onclick=()=>{
+    // clear the highlighted drug too: it marks "this is the one whose sheet is open",
+    // and leaving it lit after the sheet has gone reads as a stuck selection
+    if(PH_MODE===b.dataset.phmode)return;PH_MODE=b.dataset.phmode;PH_DRUG=null;renderRapidRef();});
+  document.querySelectorAll("[data-phf]").forEach(b=>b.onclick=()=>{
+    const i=b.dataset.phf;PH_SHOWN[p.id]=PH_SHOWN[p.id]||{};
+    if(PH_SHOWN[p.id][i])delete PH_SHOWN[p.id][i];else PH_SHOWN[p.id][i]=true;renderRapidRef();});
+  const all=document.getElementById("ph_all");
+  if(all)all.onclick=()=>{const m={};(p.drill||[]).forEach((_,i)=>m[i]=true);PH_SHOWN[p.id]=m;renderRapidRef();};
+  const none=document.getElementById("ph_none");
+  if(none)none.onclick=()=>{PH_SHOWN[p.id]={};renderRapidRef();};
+}
 function renderRapidRef(){
   if(!RR_DATA){
     loadRapidRef();
@@ -5231,13 +5440,41 @@ function renderRapidRef(){
     const rt=document.getElementById("rrRetry");if(rt)rt.onclick=()=>{RR_ERR=false;loadRapidRef();render();};
     return;
   }
-  const ref=rrCurrent();
-  if(!ref){app.innerHTML=chrome("ref")+'<div class="wrap"><div class="rrempty">Nothing here yet.</div></div>';wireChrome();return;}
+  // Two areas share the tab and the id space: video outlines, and drug references.
+  // The picker names both so the second area is discoverable rather than hidden
+  // behind a mode nobody looks for.
+  const pharm=rrCurPharm();
+  const ref=pharm?null:rrCurrent();
+  if(!ref&&!pharm){app.innerHTML=chrome("ref")+'<div class="wrap"><div class="rrempty">Nothing here yet.</div></div>';wireChrome();return;}
+  const picker=(rrRefs().length+rrPharm().length>1)
+    ? ((rrRefs().length?('<div class="rrgrp"><span class="rrgrpl">Video outlines</span>'
+        +rrRefs().map(r=>'<button type="button" class="tog '+(!pharm&&ref&&r.id===ref.id?"on":"")+'" data-rrref="'+escAttr(r.id)+'">'+escHTML(r.title)+' <span class="rrpickn">'+rrVideoCount(r)+'</span></button>').join('')+'</div>'):'')
+      +(rrPharm().length?('<div class="rrgrp"><span class="rrgrpl">Pharm</span>'
+        +rrPharm().map(r=>'<button type="button" class="tog '+(pharm&&r.id===pharm.id?"on":"")+'" data-rrref="'+escAttr(r.id)+'">'+escHTML(r.title)+' <span class="rrpickn">'+phDrugCount(r)+'</span></button>').join('')+'</div>'):''))
+    : '';
+  if(pharm){
+    const hits=phSearch(pharm,RR_Q);
+    app.innerHTML=chrome("ref")+'<div class="wrap">'
+      +'<h1 class="pmhd">Rapid reference</h1>'
+      +'<p class="muted small" style="margin:-6px 0 14px;max-width:62ch">'+escHTML(pharm.blurb||"")+' A companion to the videos, not a replacement, and separate from your schedule: nothing here gets checked off.</p>'
+      +picker
+      +'<div class="rrbar"><div class="rrsearch">'
+      +'<input id="rr_q" type="text" inputmode="search" enterkeyhint="search" placeholder="Search drugs, mechanisms and red flags…" value="'+escAttr(RR_Q)+'" autocomplete="off">'
+      +(RR_Q?'<button class="rrclear" id="rr_clear" aria-label="clear search">×</button>':'')
+      +'</div></div>'
+      +'<div class="rrhits">'+(hits?escHTML(hits.length+(hits.length===1?" drug":" drugs")+" matching “"+RR_Q.trim()+"”"):"")+'</div>'
+      +(hits?'':'<div class="phmodes">'+PH_MODES.map(m=>'<button type="button" class="tog '+(PH_MODE===m[0]?"on":"")+'" data-phmode="'+m[0]+'">'+escHTML(m[1])+'</button>').join('')+'</div>')
+      +((hits||PH_MODE==="drill")?'':phLegend(pharm))
+      +'<div id="ph_body">'+phBody(pharm)+'</div>'
+      +'</div>';
+    wireChrome();wireRrSearch();wireRrPicker();bindPharm(pharm);
+    return;
+  }
   const f=rrFilter(ref,RR_Q);
   app.innerHTML=chrome("ref")+'<div class="wrap">'
     +'<h1 class="pmhd">Rapid reference</h1>'
     +'<p class="muted small" style="margin:-6px 0 14px;max-width:62ch">An outline of each '+escHTML(ref.source||"video")+' video — open one to see its topics, open a topic to see the points. A companion to the videos, not a replacement, and separate from your schedule: nothing here gets checked off.</p>'
-    +(rrRefs().length>1?('<div class="rrpick">'+rrRefs().map(r=>'<button type="button" class="tog '+(r.id===ref.id?"on":"")+'" data-rrref="'+escAttr(r.id)+'">'+escHTML(r.title)+' <span class="rrpickn">'+rrVideoCount(r)+'</span></button>').join('')+'</div>'):'')
+    +picker
     +'<div class="rrbar"><div class="rrsearch">'
     // type=text, not type=search: the field carries its own × and the native
     // search decoration would put a second one right beside it. inputmode +
@@ -5248,22 +5485,29 @@ function renderRapidRef(){
     +'<div class="rrhits" id="rr_hits">'+(f.hits==null?"":escHTML(f.hits+(f.hits===1?" point":" points")+" matching “"+RR_Q.trim()+"”"))+'</div>'
     +'<div id="rr_tree">'+rrTree(ref,f.sections,!!RR_Q.trim())+'</div>'
     +'</div>';
-  wireChrome();
+  wireChrome();wireRrSearch();wireRrPicker();
+  bindRapidRefNodes();
+}
+function wireRrSearch(){
   const q=document.getElementById("rr_q");
   if(q){q.oninput=()=>{const had=!!RR_Q;RR_Q=q.value;
       // the × only appears once there's text — adding/removing it is the one
-      // change that has to rebuild the bar, so restore the caret afterwards
-      if(had!==!!RR_Q){const pos=q.selectionStart;renderRapidRef();
+      // change that has to rebuild the bar, so restore the caret afterwards.
+      // A pharm reference swaps its whole body on any keystroke (the result is a
+      // drug list, not a filtered tree), so it always takes the full path.
+      if(had!==!!RR_Q||rrCurPharm()){const pos=q.selectionStart;renderRapidRef();
         const q2=document.getElementById("rr_q");if(q2){q2.focus();try{q2.setSelectionRange(pos,pos);}catch(e){}}return;}
       rrRefresh();};}
   const cl=document.getElementById("rr_clear");
   if(cl)cl.onclick=()=>{RR_Q="";renderRapidRef();const q2=document.getElementById("rr_q");if(q2)q2.focus();};
-  // the open-node keys and the search belong to the tree you were in, so switching
-  // systems starts clean rather than carrying a stale half-expanded state
+}
+/* The open-node keys, the search and the drug sheet all belong to the reference
+   you were in, so switching starts clean rather than carrying stale state. */
+function wireRrPicker(){
   document.querySelectorAll("[data-rrref]").forEach(b=>b.onclick=()=>{
     if(RR_CUR===b.dataset.rrref)return;
-    RR_CUR=b.dataset.rrref;RR_Q="";RR_OPEN={};RR_TOPEN={};renderRapidRef();window.scrollTo(0,0);});
-  bindRapidRefNodes();
+    RR_CUR=b.dataset.rrref;RR_Q="";RR_OPEN={};RR_TOPEN={};PH_DRUG=null;PH_MODE="ind";
+    renderRapidRef();window.scrollTo(0,0);});
 }
 
 /* ============================================================
