@@ -1,0 +1,12 @@
+{
+  "name": "brodymode-tools",
+  "private": true,
+  "type": "module",
+  "description": "Developer checks and content generators. Not part of the site.",
+  "scripts": {
+    "check": "node run-checks.mjs"
+  },
+  "dependencies": {
+    "playwright": "^1.63.0"
+  }
+}
