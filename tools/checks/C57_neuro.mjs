@@ -21,7 +21,7 @@ await p.evaluate(()=>{window.__mk=(res,today,join)=>{
   Object.assign(S,{vdone:{},vdoneDate:{},vdoneAt:{},vundone:{},vskip:{},vshaky:{},akdone:{},
     notes:{},streak:{days:{}},assessments:{},_resetAt:0});
   S.cfgs.nbme={examType:'nbme',brody:blk.id,examLabel:blk.name,examISO:blk.shelf,startISO:blk.weeks[0].start,
-    restDays:[0],resources:res||{bnb:true,pathoma:true,bootcamp:true},systems:blk.systems.slice(),
+    restDays:[0],resources:res||{bnb:true,pathoma:true,sketchy:true,bootcamp:true},systems:blk.systems.slice(),
     brodyReviewDays:3,brodyJoinWk:join||1,brodyJoinDate:blk.weeks[(join||1)-1].start};
   normalizeCfg(S.cfgs.nbme,'nbme');activate('nbme');S.active='nbme';VIEW='today';reflow();
 };
@@ -77,7 +77,7 @@ chk('C57-7 no video falls through to the last week ("defaulted")',
 chk('C57-8 no mapping points at a video that left the catalog',
     ns.orphans.length===0&&ns.bcOrphans.length===0, JSON.stringify([ns.orphans,ns.bcOrphans]).slice(0,300));
 chk('C57-9 every week has content ('+ns.perWeek.join(' / ')+' videos)',
-    ns.empty.length===0&&ns.total===525, JSON.stringify(ns.perWeek)+' total='+ns.total);
+    ns.empty.length===0&&ns.total===548, JSON.stringify(ns.perWeek)+' total='+ns.total);
 chk('C57-10 adding a third block left the first two audit-clean',
     audit.filter(a=>a.id!=='neuro-sensory').every(a=>!a.unmapped.length&&!a.orphans.length&&!a.bcOrphans.length),
     JSON.stringify(audit.filter(a=>a.id!=='neuro-sensory').map(a=>[a.id,a.unmapped.length,a.orphans.length])));
@@ -108,8 +108,8 @@ const plan=await p.evaluate(()=>{
     weekLoad:SCHED.weekLoad.map(w=>({n:w.n,needH:Math.round(w.needH*10)/10,heavy:w.heavy})),
     feasible:SCHED.stats.feasible,pace:SCHED.brodyPace,hero:__hero()};
 });
-chk('C57-12 all 525 videos ('+plan.h+' h) get a day',
-    plan.n===525&&plan.placed===525, JSON.stringify({n:plan.n,placed:plan.placed}));
+chk('C57-12 all 548 videos ('+plan.h+' h) get a day',
+    plan.n===548&&plan.placed===548, JSON.stringify({n:plan.n,placed:plan.placed}));
 chk('C57-13 nothing is scheduled on or after the Thursday exam',
     plan.onOrAfterShelf===0, 'late='+plan.onOrAfterShelf);
 chk('C57-14 the review buffer before the exam stays video-free, and Sundays stay empty',
@@ -117,6 +117,27 @@ chk('C57-14 the review buffer before the exam stays video-free, and Sundays stay
 chk('C57-15 each week is due at its own quiz, and the last week at the exam — the Thursday date survives the Friday-based deadline maths',
     JSON.stringify(plan.deadlines)===JSON.stringify(['2026-09-25','2026-10-02','2026-10-08']),
     JSON.stringify(plan.deadlines));
+
+// ---------- 5b. the hand-entered Sketchy sketches ----------
+const sk=await p.evaluate(()=>{
+  const b=brodyBlockById('neuro-sensory');
+  const v=catVideos().filter(x=>x.res==='skpharm'&&b.systems.indexOf(x.sys)>=0);
+  const secs={};v.forEach(x=>secs[x.sys+'|'+x.cat]=(secs[x.sys+'|'+x.cat]||0)+1);
+  const wk={};v.forEach(x=>wk[x.name]=b.videoWeek[brodyKey(x)]);
+  return {n:v.length,min:v.reduce((a,x)=>a+x.min,0),secs,wk,
+    mapped:v.every(x=>b.videoWeek[brodyKey(x)]!=null),
+    dupes:catVideos().length!==new Set(catVideos().map(brodyKey)).size,
+    otherSystems:catVideos().filter(x=>x.res==='skpharm'&&b.systems.indexOf(x.sys)<0).length};
+});
+chk('C57-15b all 23 Sketchy sketches for this unit are in the catalog, 310 min, none defaulted',
+    sk.n===23&&sk.min===310&&sk.mapped, JSON.stringify({n:sk.n,min:sk.min,mapped:sk.mapped}));
+chk('C57-15c each lands on the week its PHARM lecture falls in',
+    sk.wk['SSRIs, SNRIs, Cyproheptadine']===1&&sk.wk['Benzodiazepines & Flumazenil']===1
+    &&sk.wk['First-Generation Antipsychotics']===1&&sk.wk['Ethosuximide']===1
+    &&sk.wk['Opioids, Naloxone, Naltrexone']===2&&sk.wk['Narcolepsy Drugs']===2
+    &&sk.wk['IV Anesthetics']===3, JSON.stringify(sk.wk));
+chk('C57-15d adding them left the earlier Sketchy sections untouched and the catalog free of duplicate keys',
+    !sk.dupes&&sk.otherSystems===25, 'dupes='+sk.dupes+' other='+sk.otherSystems);
 
 // ---------- 6. the density is reported honestly, not hidden ----------
 chk('C57-16 with Bootcamp on, all three weeks are flagged as more than fits before their quiz',
@@ -126,13 +147,13 @@ chk('C57-16 with Bootcamp on, all three weeks are flagged as more than fits befo
 chk('C57-17 and the warning reads as English with more than one week flagged',
     /weeks 1, 2 and 3 are more than fits before their quiz/.test(plan.hero), plan.hero.slice(0,160));
 const light=await p.evaluate(()=>{
-  __mk({bnb:true,pathoma:true});
+  __mk({bnb:true,pathoma:true,sketchy:true});
   return {n:SCHED.stats.totalItems,h:Math.round(SCHED.stats.totalMin/6)/10,pace:SCHED.brodyPace,
     heavy:SCHED.weekLoad.filter(w=>w.heavy).length,feasible:SCHED.stats.feasible,
-    review:SCHED.days.filter(d=>d.review).length};
+    cap:BRODY_QUIZ_MAX,review:SCHED.days.filter(d=>d.review).length};
 });
-chk('C57-18 dropping Bootcamp makes it comfortable — 27 h, no week flagged — so the warning is about the resource load, not the block',
-    light.heavy===0&&light.feasible&&light.h<30&&light.pace<=5, JSON.stringify(light));
+chk('C57-18 dropping Bootcamp makes it comfortable — 32 h, no week flagged — so the warning is about the resource load, not the block',
+    light.heavy===0&&light.feasible&&light.h<35&&light.pace<light.cap, JSON.stringify(light));
 
 // ---------- 7. progress and systems ----------
 const done=await p.evaluate(()=>{
