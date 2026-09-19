@@ -120,6 +120,26 @@ const bnb = {
  "Opioids":2,"Stimulants":2,"Other Drugs":2,                 // PHARM 26, 28, 29
  "Child Abuse and Neglect":3,"Eating Disorders":3,           // Psych 27
 };
+// Sketchy Pharm, against the PHARM 20-30 sequence. The anaesthetics are the odd
+// ones out: this unit never lectures them, so they sit in the last week as review
+// rather than competing with the drugs that ARE being examined.
+const skpharm = {
+ "SSRIs, SNRIs, Cyproheptadine":1,"Tricyclic Antidepressants":1,"MAO Inhibitors":1,
+ "Bupropion, Mirtazapine, Trazodone":1,                       // PHARM 20 Anti-Depressants
+ "Benzodiazepines & Flumazenil":1,"Barbiturates":1,
+ "Nonbenzodiazepine Hypnotics, Melatonin, Ramelteon, Suvorexant":1,  // PHARM 21 Sedatives / Hypnotics
+ "First-Generation Antipsychotics":1,"Second-Generation Antipsychotics":1,
+ "Lithium":1,                                                 // PHARM 22 Anti-Psychotics / Bipolar
+ "Buspirone":1,"Broad-Spectrum Antiepileptics":1,"Ethosuximide":1,
+ "Carbamazepine, Oxcarbazepine, Phenytoin, Tiagabine, Vigabatrin":1,
+ "Gabapentin & Pregabalin":1,                                 // PHARM 23 Anxiolytics / Epilepsy
+ "Parkinsonism Drugs":1,                                      // PHARM 24, 25
+ "Narcolepsy Drugs":2,
+ "Amphetamine, Dexamphetamine, Lisdexamfetamine, Methylphenidate":2,  // PHARM 26 ADHD / Stimulants
+ "Opioids, Naloxone, Naltrexone":2,                           // PHARM 28, 29
+ "Varenicline":2,                                             // with the substance-use half
+ "IV Anesthetics":3,"Inhaled Anesthetics & Dantrolene":3,"Local Anesthetics":3,
+};
 // Bootcamp maps by section — it runs to hundreds of videos per unit.
 const bcWeek = {
  "Neurology|Embryology":1,"Neurology|Cellular Function":1,
@@ -174,11 +194,12 @@ const exclude = [];
 /* ---- resolve against the catalog, refusing to guess ---- */
 const inBlock = cat.videos.filter(v => SYS.indexOf(v.sys) >= 0);
 const videoWeek = {}, missed = [];
-const used = { pathoma:new Set(), bnb:new Set() };
+const used = { pathoma:new Set(), bnb:new Set(), skpharm:new Set() };
 inBlock.forEach(v => {
   let w = null;
   if (v.res === 'pathoma') { w = pathoma[v.name]; if (w) used.pathoma.add(v.name); }
   else if (v.res === 'bnb') { w = bnb[v.name]; if (w) used.bnb.add(v.name); }
+  else if (v.res === 'skpharm') { w = skpharm[v.name]; if (w) used.skpharm.add(v.name); }
   else if (v.res === 'bootcamp') {
     if (bcWeek[v.sys + '|' + (v.cat || '')] != null) return;   // covered by the section map
     missed.push(K(v)); return;
@@ -193,6 +214,7 @@ Object.keys(include).forEach(k => {
 
 const staleP = Object.keys(pathoma).filter(n => !used.pathoma.has(n));
 const staleB = Object.keys(bnb).filter(n => !used.bnb.has(n));
+const staleS = Object.keys(skpharm).filter(n => !used.skpharm.has(n));
 const bcCats = new Set(inBlock.filter(v => v.res === 'bootcamp').map(v => v.sys + '|' + (v.cat || '')));
 const staleC = Object.keys(bcWeek).filter(k => !bcCats.has(k));
 if (missed.length) {
@@ -200,8 +222,8 @@ if (missed.length) {
   missed.forEach(m => console.error('  ' + m));
   process.exit(1);
 }
-if (staleP.length || staleB.length || staleC.length) {
-  console.error('MAPPINGS THAT MATCH NOTHING:', [].concat(staleP, staleB, staleC));
+if (staleP.length || staleB.length || staleS.length || staleC.length) {
+  console.error('MAPPINGS THAT MATCH NOTHING:', [].concat(staleP, staleB, staleS, staleC));
   process.exit(1);
 }
 const weekNums = new Set(weeks.map(w => w.n));
