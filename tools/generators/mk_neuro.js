@@ -79,9 +79,10 @@ const pathoma = {
  "17.2 Spinal Cord Lesions":1,
  "17.3 Meningitis":2,                // PATH 59 CNS Infections
  "17.4 Cerebrovascular Disease":1,   // PATH 50 Vascular
- "17.5 Trauma":1,                    // PATH 49 Intro / Trauma
- "17.6 Demyelinating Disorders":1,   // PATH 51 Inflammatory
- "17.7 Dementia and Degenerative Disorders":1, // PATH 53 Degenerative
+ // Pathoma publishes trauma and demyelination as one video, so it serves both
+ // PATH 49 (Intro / Trauma) and PATH 51 (Inflammatory) — same week either way.
+ "17.5-17.6 Trauma & Demyel. Disorders":1,
+ "17.7 Dementia & Degenerative Disorders":1,   // PATH 53 Degenerative
  "17.8 CNS Tumors":1,                // PATH 52 Neoplastic
 };
 // Boards & Beyond, by video name within the block's systems.
