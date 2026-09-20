@@ -77,7 +77,7 @@ chk('C57-7 no video falls through to the last week ("defaulted")',
 chk('C57-8 no mapping points at a video that left the catalog',
     ns.orphans.length===0&&ns.bcOrphans.length===0, JSON.stringify([ns.orphans,ns.bcOrphans]).slice(0,300));
 chk('C57-9 every week has content ('+ns.perWeek.join(' / ')+' videos)',
-    ns.empty.length===0&&ns.total===548, JSON.stringify(ns.perWeek)+' total='+ns.total);
+    ns.empty.length===0&&ns.total===547, JSON.stringify(ns.perWeek)+' total='+ns.total);
 chk('C57-10 adding a third block left the first two audit-clean',
     audit.filter(a=>a.id!=='neuro-sensory').every(a=>!a.unmapped.length&&!a.orphans.length&&!a.bcOrphans.length),
     JSON.stringify(audit.filter(a=>a.id!=='neuro-sensory').map(a=>[a.id,a.unmapped.length,a.orphans.length])));
@@ -108,8 +108,8 @@ const plan=await p.evaluate(()=>{
     weekLoad:SCHED.weekLoad.map(w=>({n:w.n,needH:Math.round(w.needH*10)/10,heavy:w.heavy})),
     feasible:SCHED.stats.feasible,pace:SCHED.brodyPace,hero:__hero()};
 });
-chk('C57-12 all 548 videos ('+plan.h+' h) get a day',
-    plan.n===548&&plan.placed===548, JSON.stringify({n:plan.n,placed:plan.placed}));
+chk('C57-12 all 547 videos ('+plan.h+' h) get a day',
+    plan.n===547&&plan.placed===547, JSON.stringify({n:plan.n,placed:plan.placed}));
 chk('C57-13 nothing is scheduled on or after the Thursday exam',
     plan.onOrAfterShelf===0, 'late='+plan.onOrAfterShelf);
 chk('C57-14 the review buffer before the exam stays video-free, and Sundays stay empty',
@@ -117,6 +117,23 @@ chk('C57-14 the review buffer before the exam stays video-free, and Sundays stay
 chk('C57-15 each week is due at its own quiz, and the last week at the exam — the Thursday date survives the Friday-based deadline maths',
     JSON.stringify(plan.deadlines)===JSON.stringify(['2026-09-25','2026-10-02','2026-10-08']),
     JSON.stringify(plan.deadlines));
+
+// ---------- 5a. Pathoma chapter 17 matches the published listing ----------
+// The catalog had 17.5 and 17.6 as separate videos; Pathoma publishes them merged.
+// Pinned here so a future catalog edit that re-splits them fails rather than
+// quietly scheduling two videos that do not exist.
+const pa=await p.evaluate(()=>{
+  const v=catVideos().filter(x=>x.res==='pathoma'&&x.sys==='Neurology');
+  return {names:v.map(x=>x.name),mins:v.map(x=>x.min),total:v.reduce((a,x)=>a+x.min,0),
+    chapters:[...new Set(v.map(pathChapterOf))]};
+});
+chk('C57-15a Pathoma chapter 17 is the 7 published videos, 96 min, with trauma and demyelination merged',
+    pa.names.length===7&&pa.total===96
+    &&pa.names.indexOf('17.5-17.6 Trauma & Demyel. Disorders')>=0
+    &&pa.names.indexOf('17.7 Dementia & Degenerative Disorders')>=0
+    &&pa.names.indexOf('17.5 Trauma')<0, JSON.stringify(pa.names));
+chk('C57-15a2 the merged title still parses as chapter 17, so chapter selection keeps working',
+    JSON.stringify(pa.chapters)==='[17]', JSON.stringify(pa.chapters));
 
 // ---------- 5b. the hand-entered Sketchy sketches ----------
 const sk=await p.evaluate(()=>{
