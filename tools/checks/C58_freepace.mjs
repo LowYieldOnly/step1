@@ -398,7 +398,54 @@ chk('C58-48 free-paced, a late joiner still starts at their join week',
 chk('C58-49 …with the pre-arrival videos still shown as optional "earlier" work',
     late.earlier===true, 'no earlier-marked days were produced');
 
-chk('C58-50 no page errors anywhere in this run', errors.length===0, errors.join(' | '));
+/* ---------- 11. the on-open notice ----------
+   The mode is opt-in and lives two taps deep, so nobody finds it unless they are
+   told. The changelog pop-up already fires once per new entry, tracked in synced
+   settings — this pins that the entry exists, is the one that fires, and clears. */
+const news=await p.evaluate(()=>{
+  const top=CHANGELOG[0];
+  S.settings={};                                  // a student who has never seen it
+  const before=(S.settings.seenUpdate!==LATEST_UPDATE);
+  maybeShowUpdates();
+  const ov=document.getElementById('updates');
+  const txt=ov?ov.innerText.replace(/\s+/g,' '):'';
+  const shown=(ov?ov.querySelectorAll('.chgentry').length:0);
+  if(ov)ov.querySelector('[data-c="ok"]').click();
+  const after=S.settings.seenUpdate;
+  maybeShowUpdates();                             // second open — must stay quiet
+  const again=!!document.getElementById('updates');
+  const ids=CHANGELOG.map(e=>e.id);
+  return {topId:top.id,topTitle:top.title,latest:LATEST_UPDATE,before,txt,shown,after,again,
+          dupes:ids.length!==new Set(ids).size,
+          sorted:ids.every((x,i)=>i===0||ids[i-1]>x)};
+});
+chk('C58-50 the new mode has a changelog entry, and it is the latest',
+    news.topId==='2026-09-21'&&news.latest===news.topId&&/quiz deadlines/i.test(news.topTitle),
+    news.topId+' / '+news.latest+' / '+news.topTitle);
+chk('C58-51 changelog ids are unique and newest-first',
+    !news.dupes&&news.sorted, 'dupes '+news.dupes+', sorted '+news.sorted);
+chk('C58-52 it pops on open for anyone who has not seen it',
+    news.before===true&&news.shown===2, 'pending '+news.before+', entries shown '+news.shown);
+chk('C58-53 …and actually names the feature and where to find it',
+    /Even pace to the exam/.test(news.txt)&&/Study days/.test(news.txt)
+      &&/Brody quiz weeks/.test(news.txt)&&/same Brody order/.test(news.txt),
+    news.txt.slice(0,260));
+chk('C58-54 …then marks itself seen and stays quiet on the next open',
+    news.after===news.latest&&news.again===false,
+    'seenUpdate '+news.after+', reopened '+news.again);
+/* seenUpdate rides in settings, which syncs — so the notice must not reappear on
+   every device, and must not break the merge invariant. */
+const newsSync=await p.evaluate(()=>{
+  window.__mk('heme-renal',true);
+  S.settings={seenUpdate:LATEST_UPDATE,seenBrodyHelp:true};
+  const a=JSON.stringify(persistObj());
+  const b=JSON.stringify(mergeState(JSON.parse(a),JSON.parse(a)));
+  return {same:a===b,kept:/"seenUpdate":"2026-09-21"/.test(a)};
+});
+chk('C58-55 the seen-flag persists and survives a self-merge',
+    newsSync.same&&newsSync.kept, JSON.stringify(newsSync));
+
+chk('C58-56 no page errors anywhere in this run', errors.length===0, errors.join(' | '));
 
 await close();
 process.exit(report());
