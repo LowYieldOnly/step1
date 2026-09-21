@@ -391,6 +391,8 @@ b{color:var(--ink)}
 .vrow.done .vq{opacity:.45;text-decoration:line-through}
 .badge{display:inline-block;font-size:9px;font-weight:800;padding:2px 5px;border-radius:5px;color:var(--on-accent)}
 .badge.bnb{background:var(--phos)}.badge.pa{background:var(--violet)}.badge.sk{background:var(--amber)}.badge.bc{background:var(--gold)}
+/* written resource — outlined rather than filled, so reading reads as a different kind of work */
+.badge.uw{background:transparent;color:var(--ink);box-shadow:inset 0 0 0 1.5px currentColor}
 .anki{display:flex;align-items:center;gap:12px;margin-top:14px;padding-top:14px;border-top:1px solid var(--line)}
 .ankicard .anki{margin-top:0;padding-top:0;border-top:0}
 .akmeta{display:flex;flex-direction:column;min-width:0;flex:1}
@@ -981,6 +983,8 @@ button.phcard:focus-visible{outline:2px solid var(--phos);outline-offset:1px}
 .bw-n{flex:0 0 auto;font-family:var(--mono);font-size:11px;font-weight:800;color:var(--phos)}
 .bw-l{flex:1;min-width:0;font-size:12.5px;color:var(--text-2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .bw-h{flex:0 0 auto;font-family:var(--mono);font-size:11.5px;font-weight:700;color:var(--ink)}
+/* a date shown for reference, not as a deadline (free-paced plans) */
+.bw-ref{opacity:.6;font-style:italic}
 .brodychip{display:flex;align-items:center;gap:10px;background:var(--accent-bg);border:1px solid var(--border);border-radius:12px;padding:10px 13px;font-size:13px;color:var(--text-2)}
 .brodychip b{color:var(--ink)}
 .brodychip .bc-wk{flex:0 0 auto;font-family:var(--mono);font-size:10px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--phos);background:var(--phos-soft);border:1px solid var(--phos-dim);border-radius:999px;padding:3px 9px}
@@ -1427,7 +1431,23 @@ function resEnabled(){return {bnb:hasRes("bnb"),pathoma:hasRes("pathoma"),skmicr
    carries over; the newer resources namespace by system to stay unique. Bootcamp
    also keys on category — its section-review videos repeat by name within a system. */
 function itemId(v){if(v.res==="bnb")return "b:"+v.name;if(v.res==="pathoma")return "p:"+v.name;if(v.res==="bootcamp")return "bc:"+v.sys+"|"+(v.cat||"")+"|"+v.name;return v.res+":"+v.sys+":"+v.name;}
-const RES_ORDER=["bnb","pathoma","skmicro","skpharm","bootcamp"];
+/* Written resources come last: a day reads as videos first, then reading. */
+const RES_ORDER=["bnb","pathoma","skmicro","skpharm","bootcamp","uwlib"];
+/* ---------- written resources ----------
+   The UWorld Medical Library is text, not video. It carries min:0 — deliberately,
+   not as a placeholder: an article contributes nothing to the video watch-time
+   budget, and inventing a reading time would have put fabricated minutes inside a
+   number the app promises is watch-time only. Articles are paced on their own
+   budget instead, by COUNT per day (brodyArtLoads / brodyArtPace).
+   They are plan items in every other respect — they live in the same catalog, get
+   ids from itemId, ride in a day's items list, and check off like anything else. */
+function isArticle(v){return v.res==="uwlib";}
+function artEnabled(c){const r=((c||S.cfg||{}).resources)||{};return !!r.uwlib;}
+/* A block only offers articles if someone has actually mapped them to its weeks.
+   Nervous & Sensory is the only one so far; the others say so rather than
+   silently scheduling nothing. */
+function brodyHasArts(blk){return !!(blk&&blk.artWeek&&Object.keys(blk.artWeek).length);}
+function brodyArtWeek(blk,v){const w=(blk.artWeek||{})[brodyKey(v)];return w!=null?w:blk.weeks.length;}
 /* Pathoma is chosen chapter-by-chapter rather than dumped into one system.
    Each chapter also carries the organ system it belongs under, which sets
    where its videos fall in the study order. */
@@ -1454,7 +1474,7 @@ const PATHOMA_CH=[
 ];
 const BRODY_HEME_RENAL={"id":"heme-renal","name":"Hematology & Renal","systems":["Hematology","Renal"],"weeks":[{"n":1,"start":"2026-07-27","label":"RBC & WBC","lectures":[{"disc":"Path · Heme","title":"RBC: Hematopoiesis, Hemoglobin, Tools for evaluation"},{"disc":"Path · Heme","title":"RBC: Anemia – Destruction 1"},{"disc":"Path · Heme","title":"RBC: Anemia – Destruction 2"},{"disc":"Path · Heme","title":"RBC: Anemia – Production deficits"},{"disc":"Path · Heme","title":"WBC: Overview, Tools for diagnosis, Reactive WBC proliferation"},{"disc":"Path · Heme","title":"WBC: Neoplasms overview, Leukemia"},{"disc":"Path · Heme","title":"WBC: Lymphomas"},{"disc":"Path · Heme","title":"WBC: Myeloproliferative and Myelodysplastic disease, Plasma cell disease"},{"disc":"Psych","title":"Overview"},{"disc":"Psych","title":"Psychodynamic model (flipped)"},{"disc":"Ethics","title":"Ethics in health systems"}]},{"n":2,"start":"2026-08-03","label":"Hemostasis, Transfusion & Anticoagulants","lectures":[{"disc":"Path · Heme","title":"Hemostasis/Thrombosis"},{"disc":"Path · Heme","title":"Hemostasis/Thrombosis: Bleeding"},{"disc":"Path · Heme","title":"Hemostasis/Thrombosis: Thrombosing"},{"disc":"Path · Heme","title":"Thymus, Histiocytosis, Cases"},{"disc":"Path · Heme","title":"RBC/WBC/Hemostasis & Thrombosis laboratory"},{"disc":"Path · Heme","title":"Transfusion medicine 1"},{"disc":"Path · Heme","title":"Transfusion medicine 2"},{"disc":"Pharm","title":"Anti-coagulants 1"},{"disc":"Pharm","title":"Anti-coagulants 2"},{"disc":"Pharm","title":"Anti-coagulants – Reversal agents"},{"disc":"Psych","title":"Cognitive & behavioral model 2 (flipped)"},{"disc":"Psych","title":"Definitions/Classifications"},{"disc":"Psych","title":"The psychiatric interview"},{"disc":"Ethics","title":"Health systems I: Historical foundations"}]},{"n":3,"start":"2026-08-10","label":"Renal — Physiology, Glomerular & Tubular","lectures":[{"disc":"Path · Renal","title":"Evaluation of renal disease"},{"disc":"Path · Renal","title":"Histology and mechanisms of renal disease"},{"disc":"Path · Renal","title":"Glomerular disease – Nephritic disease"},{"disc":"Path · Renal","title":"RPGN & systemic disease affecting kidneys"},{"disc":"Path · Renal","title":"Glomerular disease – Nephrotic disease"},{"disc":"Path · Renal","title":"Tubulointerstitial disease"},{"disc":"Path · Renal","title":"Autopsy 2 (Group D)"},{"disc":"Pharm","title":"Diuretics 1"},{"disc":"Pharm","title":"Diuretics 2"},{"disc":"Psych","title":"Mental status exam (flipped)"},{"disc":"Psych","title":"Testing and rating scales"},{"disc":"Psych","title":"Neurocognitive disorders"},{"disc":"Ethics","title":"Health systems II: Contemporary organizations"}]},{"n":4,"start":"2026-08-17","label":"Renal — GU, Stones & Neoplasia","lectures":[{"disc":"Path · Renal","title":"Cysts & neoplasms"},{"disc":"Path · Renal","title":"Urinary tract: Ureter, bladder, urethra"},{"disc":"Path · Renal","title":"Hypertension, Renal vascular disease"},{"disc":"Path · Renal","title":"Urolithiasis, Hydronephrosis, Transplant disease"},{"disc":"Path · Renal","title":"Renal laboratory"},{"disc":"Path · Renal","title":"Autopsy 3 (Group E)"},{"disc":"Pharm","title":"Clin/Pharm Sim Lab 1A"},{"disc":"Pharm","title":"Clin/Pharm Sim Lab 1B"},{"disc":"Psych","title":"Schizophrenia spectrum & other psychotic disorders"},{"disc":"Ethics","title":"Health systems III: Finance & insurance"}]}],"shelf":"2026-08-21","checkpoints":["2026-08-07","2026-08-14"],"videoWeek":{"pathoma|Hematology|Hemostasis and Related Disorders|4.1 Primary Hemostasis and Related Bleeding Disorders":2,"pathoma|Hematology|Hemostasis and Related Disorders|4.2 Secondary Hemostasis and Related Disorders":2,"pathoma|Hematology|Hemostasis and Related Disorders|4.3 Other Disorders of Hemostasis":2,"pathoma|Hematology|Hemostasis and Related Disorders|4.4 Thrombosis":2,"pathoma|Hematology|Hemostasis and Related Disorders|4.5 Embolism":2,"pathoma|Hematology|Red Blood Cell Disorders|5.1 Anemia":1,"pathoma|Hematology|Red Blood Cell Disorders|5.2 Microcytic Anemia (Parts 1, 2, & 3)":1,"pathoma|Hematology|Red Blood Cell Disorders|5.3 Macrocytic Anemia":1,"pathoma|Hematology|Red Blood Cell Disorders|5.4 Normocytic Anemia":1,"pathoma|Hematology|Red Blood Cell Disorders|5.5 Normocytic Anemias w/ Extravascular Hemolysis":1,"pathoma|Hematology|Red Blood Cell Disorders|5.6 Normocytic Anemias w/ Intravascular Hemolysis":1,"pathoma|Hematology|Red Blood Cell Disorders|5.7 Anemia Due to Underproduction":1,"pathoma|Hematology|White Blood Cell Disorders|6.1 Leukopenia and Leukocytosis":1,"pathoma|Hematology|White Blood Cell Disorders|6.2 Acute Leukemia":1,"pathoma|Hematology|White Blood Cell Disorders|6.3 Chronic Leukemia":1,"pathoma|Hematology|White Blood Cell Disorders|6.4 Myeloproliferative Disorders":1,"pathoma|Hematology|White Blood Cell Disorders|6.5 Lymphadenopathy":1,"pathoma|Hematology|White Blood Cell Disorders|6.6 Lymphoma":1,"pathoma|Hematology|White Blood Cell Disorders|6.7 Hodgkin's Lymphoma":1,"pathoma|Hematology|White Blood Cell Disorders|6.8 Plasma Cell Disorders (Dyscrasias)":1,"pathoma|Hematology|White Blood Cell Disorders|6.9 Langerhans Cell Histiocytosis":2,"pathoma|Renal|Kidney and Urinary Tract Pathology|12.1 Congenital":4,"pathoma|Renal|Kidney and Urinary Tract Pathology|12.2 Acute Renal Failure":3,"pathoma|Renal|Kidney and Urinary Tract Pathology|12.3 Nephrotic Syndrome":3,"pathoma|Renal|Kidney and Urinary Tract Pathology|12.4 Nephritic Syndrome":3,"pathoma|Renal|Kidney and Urinary Tract Pathology|12.5 Urinary Tract Infection":3,"pathoma|Renal|Kidney and Urinary Tract Pathology|12.6 Nephrolithiasis":4,"pathoma|Renal|Kidney and Urinary Tract Pathology|12.7 Chronic Renal Failure":3,"pathoma|Renal|Kidney and Urinary Tract Pathology|12.8 Renal Neoplasia":4,"pathoma|Renal|Kidney and Urinary Tract Pathology|12.9 Lower Urinary Tract Carcinoma":4,"bnb|Hematology|Hemostasis|Coagulation I":2,"bnb|Hematology|Hemostasis|Coagulation II":2,"bnb|Hematology|Hemostasis|Platelets":2,"bnb|Hematology|Hemostasis|Hypercoagulable States":2,"bnb|Hematology|Hemostasis|Coagulopathies":2,"bnb|Hematology|Hemostasis|Platelet Disorders":2,"bnb|Hematology|Hemostasis|Thrombotic Microangiopathy":2,"bnb|Hematology|Hemostasis|Antiplatelets":2,"bnb|Hematology|Hemostasis|Anticoagulants":2,"bnb|Hematology|Red Blood Cells|Hemolysis Basics":1,"bnb|Hematology|Red Blood Cells|Extrinsic Hemolysis":1,"bnb|Hematology|Red Blood Cells|Intrinsic Hemolysis":1,"bnb|Hematology|Red Blood Cells|Microcytic Anemias I":1,"bnb|Hematology|Red Blood Cells|Microcytic Anemias II":1,"bnb|Hematology|Red Blood Cells|Alpha Thalassemias":1,"bnb|Hematology|Red Blood Cells|Beta Thalassemias":1,"bnb|Hematology|Red Blood Cells|Sickle Cell Disease":1,"bnb|Hematology|Red Blood Cells|Other Anemias":1,"bnb|Hematology|Red Blood Cells|Blood Groups":1,"bnb|Hematology|Red Blood Cells|Porphyrias":1,"bnb|Hematology|White Blood Cells|Acute Leukemias":1,"bnb|Hematology|White Blood Cells|Chronic Leukemias":1,"bnb|Hematology|White Blood Cells|Hodgkin Lymphoma":1,"bnb|Hematology|White Blood Cells|Non-Hodgkin Lymphoma":1,"bnb|Hematology|White Blood Cells|Plasma Cell Disorders":1,"bnb|Hematology|White Blood Cells|Amyloidosis":1,"bnb|Hematology|White Blood Cells|Myeloproliferative Disorders":1,"bnb|Renal|Embryology, Anatomy and Physiology|Renal Anatomy":3,"bnb|Renal|Embryology, Anatomy and Physiology|Renal Embryology":3,"bnb|Renal|Embryology, Anatomy and Physiology|Fluid Compartments":3,"bnb|Renal|Embryology, Anatomy and Physiology|Glomerular Filtration":3,"bnb|Renal|Embryology, Anatomy and Physiology|Clearance":3,"bnb|Renal|Embryology, Anatomy and Physiology|Secretion and Absorption":3,"bnb|Renal|Embryology, Anatomy and Physiology|Proximal Tubule":3,"bnb|Renal|Embryology, Anatomy and Physiology|Loop of Henle and Distal Tubule":3,"bnb|Renal|Embryology, Anatomy and Physiology|Collecting Duct":3,"bnb|Renal|Embryology, Anatomy and Physiology|Renin-Angiotensin-Aldosterone System":3,"bnb|Renal|Acid-Base|Acid Excretion":3,"bnb|Renal|Acid-Base|Acid-Base Principles":3,"bnb|Renal|Acid-Base|Metabolic Acidosis I":3,"bnb|Renal|Acid-Base|Metabolic Acidosis II":3,"bnb|Renal|Acid-Base|Metabolic Alkalosis":3,"bnb|Renal|Acid-Base|Respiratory Acid Base Disorders":3,"bnb|Renal|Acid-Base|Renal Tubular Acidosis":3,"bnb|Renal|Electrolytes|Hyponatremia":3,"bnb|Renal|Electrolytes|Diabetes Insipidus":3,"bnb|Renal|Electrolytes|Potassium Disorders":3,"bnb|Renal|Electrolytes|Calcium, Phosphate and Magnesium":3,"bnb|Renal|Diseases of the Nephron|Glomerular Disease Principles":3,"bnb|Renal|Diseases of the Nephron|Nephritic Syndrome":3,"bnb|Renal|Diseases of the Nephron|Nephrotic Syndrome":3,"bnb|Renal|Diseases of the Nephron|MPGN":3,"bnb|Renal|Diseases of the Nephron|Tubulointerstitial Disease":3,"bnb|Renal|Diseases of the Nephron|Renal Failure":3,"bnb|Renal|Other Renal Topics|Cystic Kidney Disease":4,"bnb|Renal|Other Renal Topics|Diuretics":3,"bnb|Renal|Other Renal Topics|Kidney Stones":4,"bnb|Renal|Other Renal Topics|Renal and Bladder Tumors":4,"skpharm|Renal|Diuretics|Acetazolamide & Mannitol":3,"skpharm|Renal|Diuretics|Loop Diuretics":3,"skpharm|Renal|Diuretics|Thiazides":3,"skpharm|Renal|Diuretics|Potassium-Sparing Diuretics":3,"skpharm|Hematology|Anticoagulants & Thrombolytics|Heparin, LMWH, Fondaparinux, Direct Thrombin Inhibitors, Xa Inhibitors":2,"skpharm|Hematology|Anticoagulants & Thrombolytics|Warfarin":2,"skpharm|Hematology|Anticoagulants & Thrombolytics|Antiplatelet Agents":2,"skpharm|Hematology|Anticoagulants & Thrombolytics|Thrombolytics":2,"skpharm|Hematology|Anti-Inflammatory|NSAIDs":2,"skpharm|Hematology|Anti-Inflammatory|Gout Drugs":2,"skpharm|Hematology|Anti-Inflammatory|Immunosuppressants":2,"bnb|Psychiatry|Psychology|Ego Defenses":1,"bnb|Psychiatry|Psychology|Conditioning and Transference":1,"bnb|Behavioral Science|General Topics|Ethics Principles":1,"bnb|Behavioral Science|General Topics|Informed Consent":2,"bnb|Behavioral Science|General Topics|Confidentiality":2,"bnb|Behavioral Science|General Topics|Decision-Making Capacity":2,"bnb|Psychiatry|Pathology|Cognitive Disorders":3,"bnb|Behavioral Science|General Topics|Public Health":3,"bnb|Psychiatry|Pathology|Psychosis":4,"bnb|Psychiatry|Pathology|Psychotic Disorders":4,"bnb|Behavioral Science|General Topics|Quality and Safety":4},"exclude":["bnb|Hematology|Cancer Drugs|Antimetabolites","bnb|Hematology|Cancer Drugs|Alkylating and Platinum Agents","bnb|Hematology|Cancer Drugs|Antitumor Antibiotics and Topoisomerase Drugs","bnb|Hematology|Cancer Drugs|Microtubule Inhibitors","bnb|Hematology|Cancer Drugs|Other Cancer Drugs"],"include":["bnb|Psychiatry|Psychology|Ego Defenses","bnb|Psychiatry|Psychology|Conditioning and Transference","bnb|Behavioral Science|General Topics|Ethics Principles","bnb|Behavioral Science|General Topics|Informed Consent","bnb|Behavioral Science|General Topics|Confidentiality","bnb|Behavioral Science|General Topics|Decision-Making Capacity","bnb|Psychiatry|Pathology|Cognitive Disorders","bnb|Behavioral Science|General Topics|Public Health","bnb|Psychiatry|Pathology|Psychosis","bnb|Psychiatry|Pathology|Psychotic Disorders","bnb|Behavioral Science|General Topics|Quality and Safety"],"bcWeek":{"Hematology|Embryology": 1, "Hematology|Blood Cells": 1, "Hematology|Microcytic Anemia": 1, "Hematology|Normocytic Anemia": 1, "Hematology|Macrocytic Anemia": 1, "Hematology|Leukemias and Lymphomas": 1, "Hematology|Plasma Cell Dyscrasias & Myeloproliferative Disease": 1, "Hematology|Principles of Oncology and Therapeutics": 1, "Hematology|Histology — Blood & Blood Formation": 1, "Hematology|Platelets": 2, "Hematology|Coagulation and Fibrinolysis": 2, "Renal|Anatomy & Embryology": 3, "Renal|Fluid & Filtration Physiology": 3, "Renal|Nephron Transporters": 3, "Renal|Renin-Angiotensin-Aldosterone System": 3, "Renal|Electrolytes": 3, "Renal|Acid-Base Physiology": 3, "Renal|Pathology Diagnostics": 3, "Renal|Nephrotic Syndromes": 3, "Renal|Nephritic Syndromes": 3, "Renal|Kidney Injury": 3, "Renal|Renal Pharmacology": 3, "Renal|Histology — Urinary System": 3, "Renal|Inflammatory Conditions & Malignancy": 4, "Renal|Nephrolithiasis": 4, "Renal|Cystic Kidney Disease": 4, "Renal|Urinary Incontinence": 4}};
 const BRODY_CARDIOPULM={"id":"cardiopulm","name":"Cardiopulmonary","systems":["Cardiology","Pulmonary"],"weeks":[{"n":1,"start":"2026-08-24","label":"Cardiac Pathology & Hypertension","lectures":[{"disc":"Path · Cardio","title":"VD: Arterio- and Arteriolosclerosis, Dissection, Connective Tissue Disease, Aneurysm; Hypertension"},{"disc":"Path · Cardio","title":"BVD: Vasculitis"},{"disc":"Path · Cardio","title":"Atherosclerosis and Lipids"},{"disc":"Path · Cardio","title":"Coronary Artery Disease & Myocardial Infarct"},{"disc":"Path · Cardio","title":"Myocarditis; Cardiomyopathies"},{"disc":"Path · Cardio","title":"Valvular Heart Disease"},{"disc":"Path · Cardio","title":"Laboratory 1"},{"disc":"Path · Cardio","title":"Heart Failure, Cardiac Neoplasms, Pericardial Disease"},{"disc":"Pharm","title":"Hypertension (1 of 3)"},{"disc":"Pharm","title":"Hypertension (2 of 3)"},{"disc":"Pharm","title":"Hypertension (3 of 3)"},{"disc":"Pharm","title":"Hypertension — Cardiopulmonary"},{"disc":"Clin App","title":"Hypertension"},{"disc":"Clin App","title":"Coronary Artery Heart Disease"},{"disc":"Clin App","title":"Cardiomyopathies"},{"disc":"Clin App","title":"Valve"},{"disc":"Psych","title":"Bipolar and Related Disorders"},{"disc":"Psych","title":"Depressive Disorders (flipped)"},{"disc":"Psych","title":"Obsessive Compulsive & Related Disorders"},{"disc":"Ethics","title":"Health systems IV: Comparative health systems"}]},{"n":2,"start":"2026-08-31","label":"Arrhythmias, Ischemia & Congenital Heart Disease","lectures":[{"disc":"Pharm","title":"Anti-Arrhythmics (1 of 2)"},{"disc":"Pharm","title":"Anti-Arrhythmics (2 of 2)"},{"disc":"Pharm","title":"Anti-Hyperlipidemic Agents"},{"disc":"Pharm","title":"Cardiac Ischemia — Angina"},{"disc":"Pharm","title":"Cardiac Ischemia — Infarct"},{"disc":"Pharm","title":"Congestive Heart Failure (1 of 2)"},{"disc":"Pharm","title":"Congestive Heart Failure (2 of 2)"},{"disc":"Path · Cardio","title":"CHD; Heart Sounds (A)"},{"disc":"Path · Cardio","title":"CHD; Heart Sounds (B)"},{"disc":"Path · Cardio","title":"Laboratory 2A"},{"disc":"Path · Cardio","title":"Laboratory 2B"},{"disc":"Clin App","title":"EKG/Arrhythmias 1"},{"disc":"Clin App","title":"Rhythm Generator Workshop"},{"disc":"Clin App","title":"CBL Cases 3"},{"disc":"Psych","title":"Standardized patient (A)"},{"disc":"Psych","title":"Standardized patient (B)"},{"disc":"Psych","title":"Anxiety Disorders (flipped)"},{"disc":"Psych","title":"Dissociative Disorders; Trauma- and Stressor-Related Disorders"},{"disc":"Ethics","title":"Health systems V: Rural health framework"}]},{"n":3,"start":"2026-09-07","label":"Pulmonary — Physiology, Obstructive & Restrictive","lectures":[{"disc":"Pharm · Clin App","title":"CBL Cases 4"},{"disc":"Path · Cardio","title":"Blood Vessel Disease: Congenital & Tumors"},{"disc":"Path · Pulm","title":"Overview / Congenital Diseases / ARDS"},{"disc":"Path · Pulm","title":"Obstructive Disease"},{"disc":"Path · Pulm","title":"Restrictive Disease"},{"disc":"Path · Pulm","title":"Pneumoconiosis / Environmental"},{"disc":"Path · Pulm","title":"Vascular, Upper Respiratory, Pleural"},{"disc":"Path · Pulm","title":"Neoplasia: Non-Small Cell Carcinomas"},{"disc":"Pharm","title":"Asthma (1 of 2)"},{"disc":"Pharm","title":"Asthma (2 of 2)"},{"disc":"Clin App","title":"Airway Physiology Review / Imaging"},{"disc":"Clin App","title":"Obstructive Lung Disease"},{"disc":"Clin App","title":"Restrictive Lung Disease"},{"disc":"Psych","title":"Interpersonal Dysfunction"},{"disc":"Ethics","title":"NC county health systems"}]},{"n":4,"start":"2026-09-14","label":"Pulmonary — Infection, Neoplasia & Respiratory Failure","lectures":[{"disc":"Path · Pulm","title":"Neoplasia: Neuroendocrine Neoplasms; Laryngeal Neoplasms"},{"disc":"Path · Pulm","title":"Infectious: Upper Respiratory Tract"},{"disc":"Path · Pulm","title":"Laboratory 1A"},{"disc":"Path · Pulm","title":"Laboratory 1B"},{"disc":"Path · Pulm","title":"Infectious: Lower Respiratory Tract"},{"disc":"Path · Pulm","title":"Laboratory 2"},{"disc":"Clin App","title":"Vascular"},{"disc":"Clin App","title":"Respiratory Failure"},{"disc":"Clin App","title":"CBL Cases 5"},{"disc":"Psych","title":"Standardized patient (A)"},{"disc":"Psych","title":"Standardized patient (B)"},{"disc":"Ethics","title":"Structural competency & SDOH foundations; SDOH I (geography / rural health)"}]}],"shelf":"2026-09-18","checkpoints":["2026-08-28","2026-09-11"],"videoWeek":{"pathoma|Cardiology|Vascular Pathology|7.1 Vasculitis":1,"pathoma|Cardiology|Vascular Pathology|7.2 Hypertension":1,"pathoma|Cardiology|Vascular Pathology|7.3 Arteriosclerosis":1,"pathoma|Cardiology|Vascular Pathology|7.4 Aortic Dissection and Aneurysm":1,"pathoma|Cardiology|Vascular Pathology|7.5 Vascular Tumors":3,"pathoma|Cardiology|Cardiac Pathology|8.1 Ischemic Heart Disease":1,"pathoma|Cardiology|Cardiac Pathology|8.2 Congestive Heart Failure":1,"pathoma|Cardiology|Cardiac Pathology|8.3 Congenital Defects":2,"pathoma|Cardiology|Cardiac Pathology|8.4 Valvular Disorders":1,"pathoma|Cardiology|Cardiac Pathology|8.5 Endocarditis":1,"pathoma|Cardiology|Cardiac Pathology|8.6 Cardiomyopathy":1,"pathoma|Cardiology|Cardiac Pathology|8.7 Cardiac Tumors":1,"pathoma|Pulmonary|Respiratory Tract Pathology|9.1 Nasopharynx":4,"pathoma|Pulmonary|Respiratory Tract Pathology|9.2 Larynx":4,"pathoma|Pulmonary|Respiratory Tract Pathology|9.3 Pulmonary Infections":4,"pathoma|Pulmonary|Respiratory Tract Pathology|9.4 Chronic Obstructive Pulmonary Disease":3,"pathoma|Pulmonary|Respiratory Tract Pathology|9.5 Restrictive Diseases":3,"pathoma|Pulmonary|Respiratory Tract Pathology|9.6 Pulmonary Hypertension":3,"pathoma|Pulmonary|Respiratory Tract Pathology|9.7 Respiratory Distress Syndromes":3,"pathoma|Pulmonary|Respiratory Tract Pathology|9.8 Lung Cancer":3,"pathoma|Pulmonary|Respiratory Tract Pathology|9.9 Pleura":3,"bnb|Cardiology|Anatomy and Physiology|Cardiac Anatomy":1,"bnb|Cardiology|Anatomy and Physiology|Cardiac Physiology":1,"bnb|Cardiology|Anatomy and Physiology|CV Response to Exercise":1,"bnb|Cardiology|Anatomy and Physiology|Blood Flow Mechanics":1,"bnb|Cardiology|Anatomy and Physiology|Regulation of Blood Pressure":1,"bnb|Cardiology|Anatomy and Physiology|PV Loops":1,"bnb|Cardiology|Anatomy and Physiology|Wiggers' Diagram":1,"bnb|Cardiology|Anatomy and Physiology|Venous Pressure Tracings":1,"bnb|Cardiology|Anatomy and Physiology|Starling Curve":1,"bnb|Cardiology|Cardiac Ischemia|Cardiac Ischemia I":1,"bnb|Cardiology|Cardiac Ischemia|Cardiac Ischemia II":1,"bnb|Cardiology|Cardiac Ischemia|Atherosclerosis":1,"bnb|Cardiology|Cardiac Ischemia|STEMI":2,"bnb|Cardiology|Cardiac Ischemia|Unstable Angina/NSTEMI":2,"bnb|Cardiology|Cardiac Ischemia|Stable Angina":2,"bnb|Cardiology|EKGs|EKG Basics":2,"bnb|Cardiology|EKGs|High Yield EKGs":2,"bnb|Cardiology|Arrhythmias|Cardiac Action Potentials":2,"bnb|Cardiology|Arrhythmias|AV and Bundle Branch Blocks":2,"bnb|Cardiology|Arrhythmias|Atrial Fibrillation and Flutter":2,"bnb|Cardiology|Arrhythmias|Paroxysmal supraventricular tachycardia":2,"bnb|Cardiology|Arrhythmias|WPW":2,"bnb|Cardiology|Arrhythmias|Antiarrhythmic Drugs I":2,"bnb|Cardiology|Arrhythmias|Antiarrhythmic Drugs II":2,"bnb|Cardiology|Arrhythmias|Antiarrhythmic Drugs III":2,"bnb|Cardiology|Cardiac Auscultation|Heart Murmurs":1,"bnb|Cardiology|Cardiac Auscultation|Heart Sounds":2,"bnb|Cardiology|Heart Failure|Heart Failure Basics":1,"bnb|Cardiology|Heart Failure|Systolic and Diastolic Heart Failure":1,"bnb|Cardiology|Heart Failure|Restrictive Cardiomyopathy":1,"bnb|Cardiology|Heart Failure|Acute Heart Failure":2,"bnb|Cardiology|Heart Failure|Chronic Heart Failure":2,"bnb|Cardiology|The Developing Heart|Cardiac Embryology":2,"bnb|Cardiology|The Developing Heart|Shunts":2,"bnb|Cardiology|The Developing Heart|Cyanotic Congenital Heart Disease":2,"bnb|Cardiology|The Developing Heart|Coarctation of the Aorta":2,"bnb|Cardiology|Hypertension|Hypertension":1,"bnb|Cardiology|Hypertension|Secondary Hypertension":1,"bnb|Cardiology|Hypertension|Antihypertensives I":1,"bnb|Cardiology|Hypertension|Antihypertensives II":1,"bnb|Cardiology|Other Cardiovascular Topics|Valve Disease":1,"bnb|Cardiology|Other Cardiovascular Topics|Shock":2,"bnb|Cardiology|Other Cardiovascular Topics|Pericardial Disease":1,"bnb|Cardiology|Other Cardiovascular Topics|Aortic Disease":1,"bnb|Cardiology|Other Cardiovascular Topics|Cardiac Tumors":1,"bnb|Cardiology|Other Cardiovascular Topics|Hypertrophic Cardiomyopathy":1,"bnb|Cardiology|Other Cardiovascular Topics|Infective Endocarditis":1,"bnb|Pulmonary|Embryology, Anatomy and Physiology|Pulmonary Embryology":3,"bnb|Pulmonary|Embryology, Anatomy and Physiology|Pulmonary Anatomy I":3,"bnb|Pulmonary|Embryology, Anatomy and Physiology|Pulmonary Anatomy II":3,"bnb|Pulmonary|Embryology, Anatomy and Physiology|Pulmonary Physiology I":3,"bnb|Pulmonary|Embryology, Anatomy and Physiology|Pulmonary Physiology II":3,"bnb|Pulmonary|Embryology, Anatomy and Physiology|Hemoglobin":3,"bnb|Pulmonary|Embryology, Anatomy and Physiology|Pulmonary Circulation":3,"bnb|Pulmonary|Embryology, Anatomy and Physiology|Pulmonary Hypertension":3,"bnb|Pulmonary|Embryology, Anatomy and Physiology|Ventilation and Perfusion":3,"bnb|Pulmonary|Embryology, Anatomy and Physiology|Dead Space":3,"bnb|Pulmonary|Embryology, Anatomy and Physiology|Hypoxia":3,"bnb|Pulmonary|Embryology, Anatomy and Physiology|Hypoxemia":3,"bnb|Pulmonary|Embryology, Anatomy and Physiology|Carbon Dioxide":3,"bnb|Pulmonary|Embryology, Anatomy and Physiology|Lung Physical Exam":3,"bnb|Pulmonary|Obstructive and Restrictive Diseases|Pulmonary Function Tests":3,"bnb|Pulmonary|Obstructive and Restrictive Diseases|COPD":3,"bnb|Pulmonary|Obstructive and Restrictive Diseases|Asthma & Bronchiectasis":3,"bnb|Pulmonary|Obstructive and Restrictive Diseases|Restrictive Lung Disease":3,"bnb|Pulmonary|Obstructive and Restrictive Diseases|Treatment of COPD and Asthma":3,"bnb|Pulmonary|Other Pulmonary Topics|Pneumonia I":4,"bnb|Pulmonary|Other Pulmonary Topics|Pneumonia II":4,"bnb|Pulmonary|Other Pulmonary Topics|Pleural Disease":3,"bnb|Pulmonary|Other Pulmonary Topics|Lung Cancer":3,"bnb|Pulmonary|Other Pulmonary Topics|Sleep Apnea":4,"bnb|Pulmonary|Other Pulmonary Topics|Cystic Fibrosis":3,"bnb|Pulmonary|Other Pulmonary Topics|Tuberculosis":4,"bnb|Pulmonary|Other Pulmonary Topics|Sarcoidosis":3,"bnb|Pulmonary|Other Pulmonary Topics|Deep Vein Thrombosis & Pulmonary Embolism":4,"bnb|Pulmonary|Other Pulmonary Topics|Chest X-rays":3,"skpharm|Cardiology|Heart Failure Drugs|Digoxin":2,"skpharm|Cardiology|Heart Failure Drugs|ACE Inhibitors, ARBs, Aliskiren":1,"skpharm|Cardiology|Heart Failure Drugs|Sacubitril-Valsartan, Milrinone, Nesiritide, Ivabradine":2,"skpharm|Cardiology|Antihypertensives|Calcium Channel Blockers":1,"skpharm|Cardiology|Antihypertensives|Primary Hypertension & Hypertensive Emergency":1,"skpharm|Cardiology|Antiarrhythmics|Class I A-C Antiarrhythmics":2,"skpharm|Cardiology|Antiarrhythmics|Class II Antiarrhythmics":2,"skpharm|Cardiology|Antiarrhythmics|Class III Antiarrhythmics":2,"skpharm|Cardiology|Antiarrhythmics|Class IV Antiarrhythmics":2,"skpharm|Cardiology|Antiarrhythmics|Class V Antiarrhythmics":2,"skpharm|Cardiology|Vasoactive|Nitrates":2,"skpharm|Cardiology|Vasoactive|Prostaglandins, Prostacyclin, Bosentan, PDE5 Inhibitors":3,"skpharm|Pulmonary|Allergy & Pulmonary|Antihistamines":3,"skpharm|Pulmonary|Allergy & Pulmonary|Asthma Therapy":3,"bootcamp|Pulmonary|Lung Pathology Fundamentals|Introduction to Respiratory Infections":4,"bootcamp|Pulmonary|Lung Cancer|Small Cell Carcinoma":4,"bootcamp|Pulmonary|Lung Pathology Special Topics|DVT and Pulmonary Embolism":4,"bootcamp|Pulmonary|Lung Pathology Special Topics|Pneumothorax":4,"bootcamp|Pulmonary|Lung Pathology Special Topics|Pulmonary Edema":4,"bootcamp|Pulmonary|Lung Pathology Special Topics|Sleep Apnea":4,"bnb|Psychiatry|Pathology|Mood Disorders":1,"bnb|Psychiatry|Pharmacology|Antidepressants":1,"bnb|Psychiatry|Pharmacology|Lithium":1,"bnb|Biochemistry|Lipids|Hyperlipidemia":2,"bnb|Biochemistry|Lipids|Lipid Drugs":2,"bnb|Psychiatry|Pathology|Anxiety Disorders":2,"bnb|Psychiatry|Pathology|Dissociative Disorders":2,"bnb|Psychiatry|Pathology|Personality Disorders":3,"bnb|Behavioral Science|General Topics|Public Health":3,"bnb|Behavioral Science|General Topics|The Healthy Patient":4},"exclude":[],"include":["bnb|Psychiatry|Pathology|Mood Disorders","bnb|Psychiatry|Pharmacology|Antidepressants","bnb|Psychiatry|Pharmacology|Lithium","bnb|Biochemistry|Lipids|Hyperlipidemia","bnb|Biochemistry|Lipids|Lipid Drugs","bnb|Psychiatry|Pathology|Anxiety Disorders","bnb|Psychiatry|Pathology|Dissociative Disorders","bnb|Psychiatry|Pathology|Personality Disorders","bnb|Behavioral Science|General Topics|Public Health","bnb|Behavioral Science|General Topics|The Healthy Patient"],"bcWeek":{"Cardiology|Anatomy":1,"Cardiology|Anatomy — Heart":1,"Cardiology|Anatomy — Mediastinum":1,"Cardiology|Histology — Cardiovascular System":1,"Cardiology|Vascular System":1,"Cardiology|Cardiac Parameters of Physiologic Function":1,"Cardiology|Cardiac Function & Venous Return Curves":1,"Cardiology|Pressure-Volume Loops":1,"Cardiology|Vasodilation and Vasoconstriction":1,"Cardiology|Pressure and Flow Physiology":1,"Cardiology|Renin-Angiotensin-Aldosterone System":1,"Cardiology|Exercise Physiology":1,"Cardiology|Hypertension":1,"Cardiology|Aortic Diseases":1,"Cardiology|Valvular Disease":1,"Cardiology|Cardiomyopathy":1,"Cardiology|Heart Failure":1,"Cardiology|Pericardial Disease":1,"Cardiology|Stable Angina and Atherosclerosis":1,"Cardiology|Myocardial Infarction":1,"Cardiology|Peripheral Venous and Arterial Disease":1,"Cardiology|Embryology":2,"Cardiology|Cardiac Cycle":2,"Cardiology|Cardiac Conductive Physiology":2,"Cardiology|Antiarrhythmics":2,"Cardiology|Atrial Arrhythmias":2,"Cardiology|Ventricular Arrhythmias":2,"Cardiology|Conduction Blocks":2,"Cardiology|Acyanotic Congenital Heart Defects":2,"Cardiology|Cyanotic Congenital Heart Defects":2,"Cardiology|Shock":2,"Pulmonary|Introduction to the Respiratory System":3,"Pulmonary|Air Physiology":3,"Pulmonary|Blood Physiology":3,"Pulmonary|Lung Pathology Fundamentals":3,"Pulmonary|Obstructive Lung Disease":3,"Pulmonary|Restrictive Lung Disease":3,"Pulmonary|Lung Cancer":3,"Pulmonary|Lung Pathology Special Topics":3,"Pulmonary|Anatomy — Lungs":3,"Pulmonary|Histology — Respiratory System":3,"Pulmonary|Anatomy — Nose & Nasal Cavity":4,"Pulmonary|Anatomy — Larynx":4}};
-const BRODY_NEURO={"id":"neuro-sensory","name":"Nervous & Sensory","systems":["Neurology","Psychiatry","Ophthalmology"],"weeks":[{"n":1,"start":"2026-09-21","label":"Neuro Pathology & Psychiatric Pharmacology","lectures":[{"disc":"Path · N/S","title":"Intro / Trauma"},{"disc":"Path · N/S","title":"Vascular"},{"disc":"Path · N/S","title":"Inflammatory"},{"disc":"Path · N/S","title":"Neoplastic"},{"disc":"Path · N/S","title":"Degenerative"},{"disc":"Path · N/S","title":"Nerve, Neuromuscular Junction"},{"disc":"Path · N/S","title":"Seizure Etiology; Edema & Herniation"},{"disc":"Pharm","title":"Anti-Depressants"},{"disc":"Pharm","title":"Sedatives / Hypnotics"},{"disc":"Pharm","title":"Anti-Psychotics / Bipolar Drugs"},{"disc":"Pharm","title":"Anxiolytics / Epilepsy Drugs"},{"disc":"Pharm","title":"Pharmacology of Movement Disorders"},{"disc":"Pharm","title":"Neurodegenerative Drugs"},{"disc":"Clin App","title":"Mental Status Changes"},{"disc":"Clin App","title":"Seizures"},{"disc":"Clin App","title":"Movement Disorders"},{"disc":"Psych","title":"Somatic Symptom and Related Disorders and Malingering"},{"disc":"Psych","title":"Child & Adolescent Psychiatry: Evaluation & Assessment"},{"disc":"Psych","title":"Child & Adolescent Psychiatry: ADHD, ODD, CD"},{"disc":"Ethics","title":"SDOH II (Socioeconomic status)"},{"disc":"FOD","title":"Grief and Depression — lecture and patient interview"}]},{"n":2,"start":"2026-09-28","label":"Cerebrovascular Disease, Pain & Substance Use","lectures":[{"disc":"Path · N/S","title":"Muscle"},{"disc":"Path · N/S","title":"Toxic-Metabolic-Nutritional"},{"disc":"Path · N/S","title":"Developmental Disease"},{"disc":"Path · N/S","title":"Central Nervous System Infections"},{"disc":"Pharm","title":"ADHD Drugs / Stimulants"},{"disc":"Pharm","title":"Anti-migraine Drugs"},{"disc":"Pharm","title":"Opioids (1 of 2)"},{"disc":"Pharm","title":"Opioids (2 of 2)"},{"disc":"Clin App","title":"Cerebrovascular Disease 1"},{"disc":"Clin App","title":"Cerebrovascular Disease 2"},{"disc":"Clin App","title":"Peripheral & Cranial Nerve Disorders"},{"disc":"Clin App","title":"Headache"},{"disc":"Psych","title":"Chronic Pain"},{"disc":"Psych","title":"Sleep-Wake Disorders"},{"disc":"Psych","title":"Child & Adolescent Psychiatry: Mood & Anxiety Disorders"},{"disc":"Ethics","title":"SDOH III (Work & occupation)"},{"disc":"Exam","title":"NBME Comprehensive Basic Science Exam (CBSE) — Fri 10-02"}]},{"n":3,"start":"2026-10-05","label":"The Eye, Neurodevelopment & Review","lectures":[{"disc":"Path · N/S","title":"Eye (1 of 2)"},{"disc":"Path · N/S","title":"Eye (2 of 2)"},{"disc":"Path · N/S","title":"Laboratory"},{"disc":"Pharm","title":"Ophthalmic Drugs"},{"disc":"Psych","title":"Child & Adolescent Psychiatry: Neurodevelopmental Disorders"},{"disc":"Psych","title":"Child & Adolescent Psychiatry: Trauma- and Stressor-Related Disorders; Feeding & Eating Disorders"},{"disc":"Ethics","title":"SDOH IV (Environment)"},{"disc":"FOD","title":"Biostats Review"}]}],"shelf":"2026-10-08","checkpoints":["2026-09-25","2026-10-02"],"videoWeek":{"pathoma|Neurology|Central Nervous System Pathology|17.1 Developmental Anomalies":2,"pathoma|Neurology|Central Nervous System Pathology|17.2 Spinal Cord Lesions":1,"pathoma|Neurology|Central Nervous System Pathology|17.3 Meningitis":2,"pathoma|Neurology|Central Nervous System Pathology|17.4 Cerebrovascular Disease":1,"pathoma|Neurology|Central Nervous System Pathology|17.5-17.6 Trauma & Demyel. Disorders":1,"pathoma|Neurology|Central Nervous System Pathology|17.7 Dementia & Degenerative Disorders":1,"pathoma|Neurology|Central Nervous System Pathology|17.8 CNS Tumors":1,"bnb|Neurology|Introduction to Neurology|Cells of the Nervous System":1,"bnb|Neurology|Introduction to Neurology|Nerve Damage":1,"bnb|Neurology|Introduction to Neurology|Blood Brain Barrier":1,"bnb|Neurology|Introduction to Neurology|Neurotransmitters":1,"bnb|Neurology|Introduction to Neurology|Dermatomes and Reflexes":1,"bnb|Neurology|Introduction to Neurology|Brain Injury":1,"bnb|Neurology|Nervous System Structures|Cerebral Cortex":1,"bnb|Neurology|Nervous System Structures|Spinal Cord":1,"bnb|Neurology|Nervous System Structures|Spinal Cord Syndromes":1,"bnb|Neurology|Nervous System Structures|Brainstem":1,"bnb|Neurology|Nervous System Structures|Rules of 4s":1,"bnb|Neurology|Nervous System Structures|Cranial Nerves I":2,"bnb|Neurology|Nervous System Structures|Cranial Nerves II":2,"bnb|Neurology|Nervous System Structures|Auditory System":2,"bnb|Neurology|Nervous System Structures|Vestibular System":2,"bnb|Neurology|Nervous System Structures|Thalamus, Hypothalamus, Limbic System":1,"bnb|Neurology|Nervous System Structures|Cerebellum":1,"bnb|Neurology|Nervous System Structures|Basal Ganglia":1,"bnb|Neurology|Nervous System Structures|Ventricles and Sinuses":1,"bnb|Neurology|Neurovascular Disorders|Cerebral Strokes":2,"bnb|Neurology|Neurovascular Disorders|Vertebral Basilar Stroke Syndromes":2,"bnb|Neurology|Neurovascular Disorders|Intracranial Aneurysms":2,"bnb|Neurology|Neurovascular Disorders|Intracranial Bleeding":2,"bnb|Neurology|Neurovascular Disorders|Herniation Syndromes":1,"bnb|Neurology|Neurovascular Disorders|Treatment of TIA/Stroke":2,"bnb|Neurology|Autonomic Nervous System|Autonomic Nervous System I":1,"bnb|Neurology|Autonomic Nervous System|Autonomic Nervous System II":1,"bnb|Neurology|Autonomic Nervous System|Autonomic Receptors":1,"bnb|Neurology|Autonomic Nervous System|Adrenergic Drugs I":1,"bnb|Neurology|Autonomic Nervous System|Adrenergic Drugs II":1,"bnb|Neurology|Autonomic Nervous System|Cholinergic Drugs":1,"bnb|Neurology|Autonomic Nervous System|Cholinergic Toxidromes":1,"bnb|Neurology|Other Neurology Topics|Meningitis I":2,"bnb|Neurology|Other Neurology Topics|Meningitis II":2,"bnb|Neurology|Other Neurology Topics|Seizures":1,"bnb|Neurology|Other Neurology Topics|Anticonvulsants I":1,"bnb|Neurology|Other Neurology Topics|Anticonvulsants II":1,"bnb|Neurology|Other Neurology Topics|Neuroembryology":1,"bnb|Neurology|Other Neurology Topics|Delirium":1,"bnb|Neurology|Other Neurology Topics|Dementia":1,"bnb|Neurology|Other Neurology Topics|Demyelinating Disease":1,"bnb|Neurology|Other Neurology Topics|Multiple Sclerosis":1,"bnb|Neurology|Other Neurology Topics|Headaches":2,"bnb|Neurology|Other Neurology Topics|Adult Brain Tumors":1,"bnb|Neurology|Other Neurology Topics|Childhood Brain Tumors":1,"bnb|Neurology|Other Neurology Topics|Parkinson Disease":1,"bnb|Neurology|Other Neurology Topics|Movement Disorders":1,"bnb|Neurology|Other Neurology Topics|Sleep Physiology":2,"bnb|Neurology|Other Neurology Topics|Sleep Disorders":2,"bnb|Neurology|Other Neurology Topics|Neuromuscular Junction Disorders":1,"bnb|Ophthalmology|General Topics|Eye Anatomy":3,"bnb|Ophthalmology|General Topics|Eye Disorders":3,"bnb|Ophthalmology|General Topics|Lens":3,"bnb|Ophthalmology|General Topics|Glaucoma":3,"bnb|Ophthalmology|General Topics|The Retina":3,"bnb|Ophthalmology|General Topics|Retinal Disorders I":3,"bnb|Ophthalmology|General Topics|Retinal Disorders II":3,"bnb|Ophthalmology|General Topics|Optic Nerve":3,"bnb|Ophthalmology|General Topics|Gaze Disorders":3,"bnb|Ophthalmology|General Topics|Visual Field Defects":3,"bnb|Psychiatry|Psychology|Conditioning and Transference":1,"bnb|Psychiatry|Psychology|Ego Defenses":1,"bnb|Psychiatry|Pathology|Child Abuse and Neglect":3,"bnb|Psychiatry|Pathology|Childhood Disorders":1,"bnb|Psychiatry|Pathology|ADHD and Autism":1,"bnb|Psychiatry|Pathology|Cognitive Disorders":1,"bnb|Psychiatry|Pathology|Psychosis":1,"bnb|Psychiatry|Pathology|Psychotic Disorders":1,"bnb|Psychiatry|Pathology|Dissociative Disorders":1,"bnb|Psychiatry|Pathology|Somatic and Factitious Disorders":1,"bnb|Psychiatry|Pathology|Personality Disorders":1,"bnb|Psychiatry|Pathology|Mood Disorders":1,"bnb|Psychiatry|Pathology|Anxiety Disorders":1,"bnb|Psychiatry|Pathology|Eating Disorders":3,"bnb|Psychiatry|Substance Use Disorders|Alcohol and CNS Depressants":1,"bnb|Psychiatry|Substance Use Disorders|Opioids":2,"bnb|Psychiatry|Substance Use Disorders|Stimulants":2,"bnb|Psychiatry|Substance Use Disorders|Other Drugs":2,"bnb|Psychiatry|Pharmacology|Antidepressants":1,"bnb|Psychiatry|Pharmacology|Lithium":1,"bnb|Psychiatry|Pharmacology|Antipsychotics":1,"skpharm|Neurology|Anesthetics & Analgesics|IV Anesthetics":3,"skpharm|Neurology|Anesthetics & Analgesics|Inhaled Anesthetics & Dantrolene":3,"skpharm|Neurology|Anesthetics & Analgesics|Local Anesthetics":3,"skpharm|Psychiatry|Anesthetics & Analgesics|Opioids, Naloxone, Naltrexone":2,"skpharm|Psychiatry|Antidepressants & Anxiolytics|SSRIs, SNRIs, Cyproheptadine":1,"skpharm|Psychiatry|Antidepressants & Anxiolytics|Tricyclic Antidepressants":1,"skpharm|Psychiatry|Antidepressants & Anxiolytics|MAO Inhibitors":1,"skpharm|Psychiatry|Antidepressants & Anxiolytics|Bupropion, Mirtazapine, Trazodone":1,"skpharm|Psychiatry|Antidepressants & Anxiolytics|Buspirone":1,"skpharm|Psychiatry|Mood Stabilizers & Antiepileptic Drugs|Lithium":1,"skpharm|Neurology|Mood Stabilizers & Antiepileptic Drugs|Broad-Spectrum Antiepileptics":1,"skpharm|Neurology|Mood Stabilizers & Antiepileptic Drugs|Ethosuximide":1,"skpharm|Neurology|Mood Stabilizers & Antiepileptic Drugs|Carbamazepine, Oxcarbazepine, Phenytoin, Tiagabine, Vigabatrin":1,"skpharm|Neurology|Mood Stabilizers & Antiepileptic Drugs|Gabapentin & Pregabalin":1,"skpharm|Psychiatry|Antipsychotics & Parkinson's|First-Generation Antipsychotics":1,"skpharm|Psychiatry|Antipsychotics & Parkinson's|Second-Generation Antipsychotics":1,"skpharm|Neurology|Antipsychotics & Parkinson's|Parkinsonism Drugs":1,"skpharm|Psychiatry|Psychostimulants: Narcolepsy & ADHD|Narcolepsy Drugs":2,"skpharm|Psychiatry|Psychostimulants: Narcolepsy & ADHD|Amphetamine, Dexamphetamine, Lisdexamfetamine, Methylphenidate":2,"skpharm|Psychiatry|Sedative-Hypnotics|Benzodiazepines & Flumazenil":1,"skpharm|Psychiatry|Sedative-Hypnotics|Nonbenzodiazepine Hypnotics, Melatonin, Ramelteon, Suvorexant":1,"skpharm|Psychiatry|Sedative-Hypnotics|Barbiturates":1,"skpharm|Psychiatry|Smoking Cessation Aids|Varenicline":2,"bnb|Behavioral Science|General Topics|Pediatrics":1},"exclude":[],"include":["bnb|Behavioral Science|General Topics|Pediatrics"],"bcWeek":{"Neurology|Embryology":1,"Neurology|Cellular Function":1,"Neurology|Ascending Spinal Cord Tracts":1,"Neurology|Descending Spinal Cord Tracts":1,"Neurology|Brainstem Anatomy":1,"Neurology|Cerebral Cortex":1,"Neurology|Spinal Cord Syndromes":1,"Neurology|Invasive Spinal Cord Disease":1,"Neurology|Demyelinating Disease":1,"Neurology|Conduction Physiology":1,"Neurology|Neuromuscular Junction":1,"Neurology|Pediatric Brain Tumors":1,"Neurology|Adult Primary Brain Tumors":1,"Neurology|Cerebellum and Ventricles":1,"Neurology|Diencephalon":1,"Neurology|Basal Ganglia":1,"Neurology|Neurotransmitter Activity in Psychiatric Disease":1,"Neurology|Dementia":1,"Neurology|Seizures":1,"Neurology|Traumatic Brain Injuries":1,"Neurology|Autonomic System":1,"Neurology|Anatomy — Spinal Cord":1,"Neurology|Neuroanatomy — Cerebral Cortex":1,"Neurology|Neuroanatomy — Diencephalon":1,"Neurology|Neuroanatomy — Basal Ganglia":1,"Neurology|Neuroanatomy — Subcortical White Matter":1,"Neurology|Neuroanatomy — Superficial Brainstem":1,"Neurology|Neuroanatomy — Cerebellum":1,"Neurology|Neuroanatomy — Spinal Cord Tracts":1,"Neurology|Neuroanatomy — Brain Ventricles":1,"Neurology|Neuroanatomy — Meninges, Dural Folds, & Venous Sinuses":1,"Neurology|Histology — Nervous System":1,"Neurology|Radiculopathy":2,"Neurology|Cranial Nerves 1-6":2,"Neurology|Cranial Nerves 7-12":2,"Neurology|Auditory Sensation":2,"Neurology|Vertigo":2,"Neurology|Ischemic Cerebrovascular Accidents":2,"Neurology|Aneurysms and Intracranial Hemorrhage":2,"Neurology|Headache":2,"Neurology|Side Effects and Toxins":2,"Neurology|Anatomy — Ear":2,"Neurology|Neuroanatomy — Cranial Nerves":2,"Neurology|Neuroanatomy — Cerebral Vasculature":2,"Neurology|Neuroanatomy — Radiology - Neuroradiology & Angiography":2,"Neurology|Histology — Ears":2,"Neurology|Vision":3,"Neurology|Inflammatory Response":3,"Neurology|Cellular Injury & Neoplasia":3,"Neurology|Pharmacodynamics":3,"Neurology|Pharmacokinetics":3,"Psychiatry|Psychology":1,"Psychiatry|Developmental Disorders":1,"Psychiatry|Memory, Dissociation, and Orientation":1,"Psychiatry|Anxiety, Trauma, and Stress Disorders":1,"Psychiatry|Personality Disorders":1,"Psychiatry|Psychotic and Mood Disorders":1,"Psychiatry|Pharmacology":1,"Psychiatry|Sleep and Psychosomatic Conditions":2,"Psychiatry|Substance Misuse":2,"Ophthalmology|Anatomy — Orbit":3,"Ophthalmology|Histology — Eyes":3}};
+const BRODY_NEURO={"id":"neuro-sensory","name":"Nervous & Sensory","systems":["Neurology","Psychiatry","Ophthalmology"],"weeks":[{"n":1,"start":"2026-09-21","label":"Neuro Pathology & Psychiatric Pharmacology","lectures":[{"disc":"Path · N/S","title":"Intro / Trauma"},{"disc":"Path · N/S","title":"Vascular"},{"disc":"Path · N/S","title":"Inflammatory"},{"disc":"Path · N/S","title":"Neoplastic"},{"disc":"Path · N/S","title":"Degenerative"},{"disc":"Path · N/S","title":"Nerve, Neuromuscular Junction"},{"disc":"Path · N/S","title":"Seizure Etiology; Edema & Herniation"},{"disc":"Pharm","title":"Anti-Depressants"},{"disc":"Pharm","title":"Sedatives / Hypnotics"},{"disc":"Pharm","title":"Anti-Psychotics / Bipolar Drugs"},{"disc":"Pharm","title":"Anxiolytics / Epilepsy Drugs"},{"disc":"Pharm","title":"Pharmacology of Movement Disorders"},{"disc":"Pharm","title":"Neurodegenerative Drugs"},{"disc":"Clin App","title":"Mental Status Changes"},{"disc":"Clin App","title":"Seizures"},{"disc":"Clin App","title":"Movement Disorders"},{"disc":"Psych","title":"Somatic Symptom and Related Disorders and Malingering"},{"disc":"Psych","title":"Child & Adolescent Psychiatry: Evaluation & Assessment"},{"disc":"Psych","title":"Child & Adolescent Psychiatry: ADHD, ODD, CD"},{"disc":"Ethics","title":"SDOH II (Socioeconomic status)"},{"disc":"FOD","title":"Grief and Depression — lecture and patient interview"}]},{"n":2,"start":"2026-09-28","label":"Cerebrovascular Disease, Pain & Substance Use","lectures":[{"disc":"Path · N/S","title":"Muscle"},{"disc":"Path · N/S","title":"Toxic-Metabolic-Nutritional"},{"disc":"Path · N/S","title":"Developmental Disease"},{"disc":"Path · N/S","title":"Central Nervous System Infections"},{"disc":"Pharm","title":"ADHD Drugs / Stimulants"},{"disc":"Pharm","title":"Anti-migraine Drugs"},{"disc":"Pharm","title":"Opioids (1 of 2)"},{"disc":"Pharm","title":"Opioids (2 of 2)"},{"disc":"Clin App","title":"Cerebrovascular Disease 1"},{"disc":"Clin App","title":"Cerebrovascular Disease 2"},{"disc":"Clin App","title":"Peripheral & Cranial Nerve Disorders"},{"disc":"Clin App","title":"Headache"},{"disc":"Psych","title":"Chronic Pain"},{"disc":"Psych","title":"Sleep-Wake Disorders"},{"disc":"Psych","title":"Child & Adolescent Psychiatry: Mood & Anxiety Disorders"},{"disc":"Ethics","title":"SDOH III (Work & occupation)"},{"disc":"Exam","title":"NBME Comprehensive Basic Science Exam (CBSE) — Fri 10-02"}]},{"n":3,"start":"2026-10-05","label":"The Eye, Neurodevelopment & Review","lectures":[{"disc":"Path · N/S","title":"Eye (1 of 2)"},{"disc":"Path · N/S","title":"Eye (2 of 2)"},{"disc":"Path · N/S","title":"Laboratory"},{"disc":"Pharm","title":"Ophthalmic Drugs"},{"disc":"Psych","title":"Child & Adolescent Psychiatry: Neurodevelopmental Disorders"},{"disc":"Psych","title":"Child & Adolescent Psychiatry: Trauma- and Stressor-Related Disorders; Feeding & Eating Disorders"},{"disc":"Ethics","title":"SDOH IV (Environment)"},{"disc":"FOD","title":"Biostats Review"}]}],"shelf":"2026-10-08","checkpoints":["2026-09-25","2026-10-02"],"videoWeek":{"pathoma|Neurology|Central Nervous System Pathology|17.1 Developmental Anomalies":2,"pathoma|Neurology|Central Nervous System Pathology|17.2 Spinal Cord Lesions":1,"pathoma|Neurology|Central Nervous System Pathology|17.3 Meningitis":2,"pathoma|Neurology|Central Nervous System Pathology|17.4 Cerebrovascular Disease":1,"pathoma|Neurology|Central Nervous System Pathology|17.5-17.6 Trauma & Demyel. Disorders":1,"pathoma|Neurology|Central Nervous System Pathology|17.7 Dementia & Degenerative Disorders":1,"pathoma|Neurology|Central Nervous System Pathology|17.8 CNS Tumors":1,"bnb|Neurology|Introduction to Neurology|Cells of the Nervous System":1,"bnb|Neurology|Introduction to Neurology|Nerve Damage":1,"bnb|Neurology|Introduction to Neurology|Blood Brain Barrier":1,"bnb|Neurology|Introduction to Neurology|Neurotransmitters":1,"bnb|Neurology|Introduction to Neurology|Dermatomes and Reflexes":1,"bnb|Neurology|Introduction to Neurology|Brain Injury":1,"bnb|Neurology|Nervous System Structures|Cerebral Cortex":1,"bnb|Neurology|Nervous System Structures|Spinal Cord":1,"bnb|Neurology|Nervous System Structures|Spinal Cord Syndromes":1,"bnb|Neurology|Nervous System Structures|Brainstem":1,"bnb|Neurology|Nervous System Structures|Rules of 4s":1,"bnb|Neurology|Nervous System Structures|Cranial Nerves I":2,"bnb|Neurology|Nervous System Structures|Cranial Nerves II":2,"bnb|Neurology|Nervous System Structures|Auditory System":2,"bnb|Neurology|Nervous System Structures|Vestibular System":2,"bnb|Neurology|Nervous System Structures|Thalamus, Hypothalamus, Limbic System":1,"bnb|Neurology|Nervous System Structures|Cerebellum":1,"bnb|Neurology|Nervous System Structures|Basal Ganglia":1,"bnb|Neurology|Nervous System Structures|Ventricles and Sinuses":1,"bnb|Neurology|Neurovascular Disorders|Cerebral Strokes":2,"bnb|Neurology|Neurovascular Disorders|Vertebral Basilar Stroke Syndromes":2,"bnb|Neurology|Neurovascular Disorders|Intracranial Aneurysms":2,"bnb|Neurology|Neurovascular Disorders|Intracranial Bleeding":2,"bnb|Neurology|Neurovascular Disorders|Herniation Syndromes":1,"bnb|Neurology|Neurovascular Disorders|Treatment of TIA/Stroke":2,"bnb|Neurology|Autonomic Nervous System|Autonomic Nervous System I":1,"bnb|Neurology|Autonomic Nervous System|Autonomic Nervous System II":1,"bnb|Neurology|Autonomic Nervous System|Autonomic Receptors":1,"bnb|Neurology|Autonomic Nervous System|Adrenergic Drugs I":1,"bnb|Neurology|Autonomic Nervous System|Adrenergic Drugs II":1,"bnb|Neurology|Autonomic Nervous System|Cholinergic Drugs":1,"bnb|Neurology|Autonomic Nervous System|Cholinergic Toxidromes":1,"bnb|Neurology|Other Neurology Topics|Meningitis I":2,"bnb|Neurology|Other Neurology Topics|Meningitis II":2,"bnb|Neurology|Other Neurology Topics|Seizures":1,"bnb|Neurology|Other Neurology Topics|Anticonvulsants I":1,"bnb|Neurology|Other Neurology Topics|Anticonvulsants II":1,"bnb|Neurology|Other Neurology Topics|Neuroembryology":1,"bnb|Neurology|Other Neurology Topics|Delirium":1,"bnb|Neurology|Other Neurology Topics|Dementia":1,"bnb|Neurology|Other Neurology Topics|Demyelinating Disease":1,"bnb|Neurology|Other Neurology Topics|Multiple Sclerosis":1,"bnb|Neurology|Other Neurology Topics|Headaches":2,"bnb|Neurology|Other Neurology Topics|Adult Brain Tumors":1,"bnb|Neurology|Other Neurology Topics|Childhood Brain Tumors":1,"bnb|Neurology|Other Neurology Topics|Parkinson Disease":1,"bnb|Neurology|Other Neurology Topics|Movement Disorders":1,"bnb|Neurology|Other Neurology Topics|Sleep Physiology":2,"bnb|Neurology|Other Neurology Topics|Sleep Disorders":2,"bnb|Neurology|Other Neurology Topics|Neuromuscular Junction Disorders":1,"bnb|Ophthalmology|General Topics|Eye Anatomy":3,"bnb|Ophthalmology|General Topics|Eye Disorders":3,"bnb|Ophthalmology|General Topics|Lens":3,"bnb|Ophthalmology|General Topics|Glaucoma":3,"bnb|Ophthalmology|General Topics|The Retina":3,"bnb|Ophthalmology|General Topics|Retinal Disorders I":3,"bnb|Ophthalmology|General Topics|Retinal Disorders II":3,"bnb|Ophthalmology|General Topics|Optic Nerve":3,"bnb|Ophthalmology|General Topics|Gaze Disorders":3,"bnb|Ophthalmology|General Topics|Visual Field Defects":3,"bnb|Psychiatry|Psychology|Conditioning and Transference":1,"bnb|Psychiatry|Psychology|Ego Defenses":1,"bnb|Psychiatry|Pathology|Child Abuse and Neglect":3,"bnb|Psychiatry|Pathology|Childhood Disorders":1,"bnb|Psychiatry|Pathology|ADHD and Autism":1,"bnb|Psychiatry|Pathology|Cognitive Disorders":1,"bnb|Psychiatry|Pathology|Psychosis":1,"bnb|Psychiatry|Pathology|Psychotic Disorders":1,"bnb|Psychiatry|Pathology|Dissociative Disorders":1,"bnb|Psychiatry|Pathology|Somatic and Factitious Disorders":1,"bnb|Psychiatry|Pathology|Personality Disorders":1,"bnb|Psychiatry|Pathology|Mood Disorders":1,"bnb|Psychiatry|Pathology|Anxiety Disorders":1,"bnb|Psychiatry|Pathology|Eating Disorders":3,"bnb|Psychiatry|Substance Use Disorders|Alcohol and CNS Depressants":1,"bnb|Psychiatry|Substance Use Disorders|Opioids":2,"bnb|Psychiatry|Substance Use Disorders|Stimulants":2,"bnb|Psychiatry|Substance Use Disorders|Other Drugs":2,"bnb|Psychiatry|Pharmacology|Antidepressants":1,"bnb|Psychiatry|Pharmacology|Lithium":1,"bnb|Psychiatry|Pharmacology|Antipsychotics":1,"skpharm|Neurology|Anesthetics & Analgesics|IV Anesthetics":3,"skpharm|Neurology|Anesthetics & Analgesics|Inhaled Anesthetics & Dantrolene":3,"skpharm|Neurology|Anesthetics & Analgesics|Local Anesthetics":3,"skpharm|Psychiatry|Anesthetics & Analgesics|Opioids, Naloxone, Naltrexone":2,"skpharm|Psychiatry|Antidepressants & Anxiolytics|SSRIs, SNRIs, Cyproheptadine":1,"skpharm|Psychiatry|Antidepressants & Anxiolytics|Tricyclic Antidepressants":1,"skpharm|Psychiatry|Antidepressants & Anxiolytics|MAO Inhibitors":1,"skpharm|Psychiatry|Antidepressants & Anxiolytics|Bupropion, Mirtazapine, Trazodone":1,"skpharm|Psychiatry|Antidepressants & Anxiolytics|Buspirone":1,"skpharm|Psychiatry|Mood Stabilizers & Antiepileptic Drugs|Lithium":1,"skpharm|Neurology|Mood Stabilizers & Antiepileptic Drugs|Broad-Spectrum Antiepileptics":1,"skpharm|Neurology|Mood Stabilizers & Antiepileptic Drugs|Ethosuximide":1,"skpharm|Neurology|Mood Stabilizers & Antiepileptic Drugs|Carbamazepine, Oxcarbazepine, Phenytoin, Tiagabine, Vigabatrin":1,"skpharm|Neurology|Mood Stabilizers & Antiepileptic Drugs|Gabapentin & Pregabalin":1,"skpharm|Psychiatry|Antipsychotics & Parkinson's|First-Generation Antipsychotics":1,"skpharm|Psychiatry|Antipsychotics & Parkinson's|Second-Generation Antipsychotics":1,"skpharm|Neurology|Antipsychotics & Parkinson's|Parkinsonism Drugs":1,"skpharm|Psychiatry|Psychostimulants: Narcolepsy & ADHD|Narcolepsy Drugs":2,"skpharm|Psychiatry|Psychostimulants: Narcolepsy & ADHD|Amphetamine, Dexamphetamine, Lisdexamfetamine, Methylphenidate":2,"skpharm|Psychiatry|Sedative-Hypnotics|Benzodiazepines & Flumazenil":1,"skpharm|Psychiatry|Sedative-Hypnotics|Nonbenzodiazepine Hypnotics, Melatonin, Ramelteon, Suvorexant":1,"skpharm|Psychiatry|Sedative-Hypnotics|Barbiturates":1,"skpharm|Psychiatry|Smoking Cessation Aids|Varenicline":2,"bnb|Behavioral Science|General Topics|Pediatrics":1},"exclude":[],"include":["bnb|Behavioral Science|General Topics|Pediatrics"],"bcWeek":{"Neurology|Embryology":1,"Neurology|Cellular Function":1,"Neurology|Ascending Spinal Cord Tracts":1,"Neurology|Descending Spinal Cord Tracts":1,"Neurology|Brainstem Anatomy":1,"Neurology|Cerebral Cortex":1,"Neurology|Spinal Cord Syndromes":1,"Neurology|Invasive Spinal Cord Disease":1,"Neurology|Demyelinating Disease":1,"Neurology|Conduction Physiology":1,"Neurology|Neuromuscular Junction":1,"Neurology|Pediatric Brain Tumors":1,"Neurology|Adult Primary Brain Tumors":1,"Neurology|Cerebellum and Ventricles":1,"Neurology|Diencephalon":1,"Neurology|Basal Ganglia":1,"Neurology|Neurotransmitter Activity in Psychiatric Disease":1,"Neurology|Dementia":1,"Neurology|Seizures":1,"Neurology|Traumatic Brain Injuries":1,"Neurology|Autonomic System":1,"Neurology|Anatomy — Spinal Cord":1,"Neurology|Neuroanatomy — Cerebral Cortex":1,"Neurology|Neuroanatomy — Diencephalon":1,"Neurology|Neuroanatomy — Basal Ganglia":1,"Neurology|Neuroanatomy — Subcortical White Matter":1,"Neurology|Neuroanatomy — Superficial Brainstem":1,"Neurology|Neuroanatomy — Cerebellum":1,"Neurology|Neuroanatomy — Spinal Cord Tracts":1,"Neurology|Neuroanatomy — Brain Ventricles":1,"Neurology|Neuroanatomy — Meninges, Dural Folds, & Venous Sinuses":1,"Neurology|Histology — Nervous System":1,"Neurology|Radiculopathy":2,"Neurology|Cranial Nerves 1-6":2,"Neurology|Cranial Nerves 7-12":2,"Neurology|Auditory Sensation":2,"Neurology|Vertigo":2,"Neurology|Ischemic Cerebrovascular Accidents":2,"Neurology|Aneurysms and Intracranial Hemorrhage":2,"Neurology|Headache":2,"Neurology|Side Effects and Toxins":2,"Neurology|Anatomy — Ear":2,"Neurology|Neuroanatomy — Cranial Nerves":2,"Neurology|Neuroanatomy — Cerebral Vasculature":2,"Neurology|Neuroanatomy — Radiology - Neuroradiology & Angiography":2,"Neurology|Histology — Ears":2,"Neurology|Vision":3,"Neurology|Inflammatory Response":3,"Neurology|Cellular Injury & Neoplasia":3,"Neurology|Pharmacodynamics":3,"Neurology|Pharmacokinetics":3,"Psychiatry|Psychology":1,"Psychiatry|Developmental Disorders":1,"Psychiatry|Memory, Dissociation, and Orientation":1,"Psychiatry|Anxiety, Trauma, and Stress Disorders":1,"Psychiatry|Personality Disorders":1,"Psychiatry|Psychotic and Mood Disorders":1,"Psychiatry|Pharmacology":1,"Psychiatry|Sleep and Psychosomatic Conditions":2,"Psychiatry|Substance Misuse":2,"Ophthalmology|Anatomy — Orbit":3,"Ophthalmology|Histology — Eyes":3},"artWeek":{"uwlib|Neurology||Histology: Nerve tissue":1,"uwlib|Neurology||Nerve physiology":1,"uwlib|Neurology||Physiology: Membrane potential":1,"uwlib|Neurology||Neuroanatomy: Cortical lobe function, basic tracts, arterial anatomy, and neurolocalization":1,"uwlib|Neurology||Neuroanatomy: Spinal cord":1,"uwlib|Neurology||Embryology of the nervous system (neuroembryology)":1,"uwlib|Neurology||Neurotransmitters and related medications":1,"uwlib|Neurology||Autonomic nervous system":1,"uwlib|Neurology||Horner syndrome":1,"uwlib|Neurology||Concussion and traumatic brain injury":1,"uwlib|Neurology||Subdural and epidural hematomas":1,"uwlib|Neurology||Caput succedaneum, cephalohematoma, and subgaleal hemorrhage":1,"uwlib|Neurology||Intraventricular hemorrhage":1,"uwlib|Neurology||Brain herniation syndromes":1,"uwlib|Neurology||Idiopathic intracranial hypertension (pseudotumor cerebri)":1,"uwlib|Neurology||Brain death":1,"uwlib|Neurology||Deceased organ donation: Evaluation and management of donors":1,"uwlib|Neurology||Evaluation of patient falls":1,"uwlib|Neurology||Brain tumor overview":1,"uwlib|Neurology||Brain tumors in adults":1,"uwlib|Neurology||Pediatric brain tumors":1,"uwlib|Neurology||Neuroblastoma":1,"uwlib|Neurology||Multiple sclerosis":1,"uwlib|Neurology||Transverse myelitis":1,"uwlib|Neurology||Autoimmune encephalitis":1,"uwlib|Neurology||Alzheimer disease":1,"uwlib|Neurology||Vascular dementia":1,"uwlib|Neurology||Frontotemporal dementia":1,"uwlib|Neurology||Dementia with Lewy bodies":1,"uwlib|Neurology||Creutzfeldt-Jakob disease (CJD)":1,"uwlib|Neurology||Normal pressure hydrocephalus (NPH)":1,"uwlib|Neurology||Mild cognitive impairment":1,"uwlib|Neurology||Memory function and disorders":1,"uwlib|Neurology||Huntington disease":1,"uwlib|Neurology||Parkinson disease and parkinsonism":1,"uwlib|Neurology||Friedreich ataxia":1,"uwlib|Neurology||Amyotrophic lateral sclerosis (ALS) (Lou Gehrig disease)":1,"uwlib|Neurology||Spinal muscle atrophy (SMA)":1,"uwlib|Neurology||Charcot-Marie-Tooth disease":1,"uwlib|Neurology||Wilson disease":2,"uwlib|Neurology||Essential tremor (and other types of tremor)":1,"uwlib|Neurology||Dystonia":1,"uwlib|Neurology||Myasthenia gravis":1,"uwlib|Neurology||Guillain-Barré syndrome":1,"uwlib|Neurology||Botulism":1,"uwlib|Neurology||Tetanus":1,"uwlib|Neurology||Epilepsy/seizures":1,"uwlib|Neurology||Febrile seizure":1,"uwlib|Neurology||Syncope":1,"uwlib|Neurology||Neuroleptic malignant syndrome":1,"uwlib|Neurology||Delirium":1,"uwlib|Neurology||Functional neurologic symptom disorder":1,"uwlib|Neurology||Duchenne and Becker muscular dystrophy":2,"uwlib|Neurology||Myotonic dystrophy":2,"uwlib|Neurology||Malignant hyperthermia":2,"uwlib|Neurology||Phenylketonuria":2,"uwlib|Neurology||Perinatal asphyxia and hypoxic ischemic encephalopathy":2,"uwlib|Neurology||Fetal alcohol syndrome":2,"uwlib|Neurology||Neural tube defects":2,"uwlib|Neurology||Chiari malformations":2,"uwlib|Neurology||Syringomyelia":2,"uwlib|Neurology||Hydrocephalus in children":2,"uwlib|Neurology||Craniosynostosis":2,"uwlib|Neurology||Cerebral palsy":2,"uwlib|Neurology||Neurofibromatosis type 1":2,"uwlib|Neurology||NF2-related schwannomatosis (formerly neurofibromatosis type 2)":2,"uwlib|Neurology||Tuberous sclerosis complex":2,"uwlib|Neurology||Sturge-Weber syndrome":2,"uwlib|Neurology||Ataxia-telangiectasia":2,"uwlib|Neurology||Bacterial meningitis (age >1 month)":2,"uwlib|Neurology||Neisseria meningitidis (meningococcal meningitis)":2,"uwlib|Neurology||Viral meningitis":2,"uwlib|Neurology||Encephalitis":2,"uwlib|Neurology||Japanese encephalitis":2,"uwlib|Neurology||West Nile virus":2,"uwlib|Neurology||Brain abscess":2,"uwlib|Neurology||HIV-associated neurocognitive disorders":2,"uwlib|Neurology||Stroke":2,"uwlib|Neurology||Subarachnoid hemorrhage":2,"uwlib|Neurology||Carotid artery stenosis":2,"uwlib|Neurology||Cervical artery dissection: Carotid and vertebral artery dissection":2,"uwlib|Neurology||Fibrinolytic therapy":2,"uwlib|Neurology||Cranial nerves: Anatomy and palsies":2,"uwlib|Neurology||Facial palsy":2,"uwlib|Neurology||Trigeminal neuralgia":2,"uwlib|Neurology||Brachial plexus injuries":2,"uwlib|Neurology||Meralgia paresthetica":2,"uwlib|Neurology||Diabetic neuropathy":2,"uwlib|Neurology||Cauda equina syndrome":2,"uwlib|Neurology||Spinal cord compression":2,"uwlib|Neurology||Vertigo":2,"uwlib|Neurology||Ménière disease":2,"uwlib|Neurology||Migraine headache":2,"uwlib|Neurology||Tension headache":2,"uwlib|Neurology||Cluster headache":2,"uwlib|Neurology||Cyclic vomiting syndrome":2,"uwlib|Neurology||Pain signaling and neuroanatomy: Nociceptive pain":2,"uwlib|Neurology||Pain signaling and neuroanatomy: Neuropathic, nociplastic, and chronic pain":2,"uwlib|Neurology||Opioids":2,"uwlib|Neurology||Opioid overdose/intoxication":2,"uwlib|Neurology||Low back pain":2,"uwlib|Neurology||Restless leg syndrome (RLS)":2,"uwlib|Neurology||Visual pathway":3,"uwlib|Neurology||Autism spectrum disorder":3,"uwlib|Neurology||Pediatric developmental milestones":3,"uwlib|Neurology||Rett syndrome":3,"uwlib|Neurology||Fragile X syndrome":3,"uwlib|Neurology||Prader-Willi syndrome and Angelman syndrome":3}};
 const BRODY_BLOCKS=[BRODY_HEME_RENAL,BRODY_CARDIOPULM,BRODY_NEURO];   // chronological — more Brody blocks are added one at a time as each is verified
 const BRODY_TRIAL=BRODY_HEME_RENAL;   // back-compat alias
 function pathChapterOf(v){const m=/^(\d+)\./.exec(v.name||"");return m?+m[1]:0;}
@@ -1473,7 +1493,11 @@ function togglePathCh(c,n){const sel=effectivePathChapters(c);if(sel.has(n))sel.
    chosen itemIds: an explicit [] means "prompt me, nothing yet"; undefined means
    a legacy/pre-feature plan (everything included, back-compat) until first edited. */
 const THREAD_SYS=new Set(["Psychiatry","Behavioral Science"]);
-function resEnabledFor(c){const R=(c&&c.resources)||{};return {bnb:!!R.bnb,pathoma:!!R.pathoma,skmicro:!!R.sketchy,skpharm:!!R.sketchy,bootcamp:!!R.bootcamp};}
+/* Includes written resources: this feeds the "videos in this plan" opt-out picker,
+   and an article you don't want scheduled has to be droppable like any other item.
+   Kept separate from resEnabled(), which drives the minute-based video pour and must
+   never see an article. */
+function resEnabledFor(c){const R=(c&&c.resources)||{};return {bnb:!!R.bnb,pathoma:!!R.pathoma,skmicro:!!R.sketchy,skpharm:!!R.sketchy,bootcamp:!!R.bootcamp,uwlib:!!R.uwlib};}
 /* ============================================================
    OPT OUT OF SPECIFIC VIDEOS
    The skip set lives on the CONFIG, not in global state. It's part of
@@ -1745,6 +1769,41 @@ function brodyInBlock(blk,v){return (blk.systems.indexOf(v.sys)>=0||brodyInclude
 const BRODY_REVIEW_DEFAULT=3;
 const BRODY_QUIZ_MAX=6;   // h/day above which "be ready for this week's quiz" is unrealistic → flag the week
 function brodyReviewBuf(c){return Math.max(0,(c&&c.brodyReviewDays!=null)?c.brodyReviewDays:BRODY_REVIEW_DEFAULT);}
+/* ---------- quiz-paced (default) vs free-paced ----------
+   Free pace keeps the whole Brody CONTENT MAP — the same videos, in the same
+   week-by-week order — and drops only the weekly quizzes as deadlines. That is the
+   entire difference, and it is expressed in one place: brodyWeekLoads hands every
+   week the block exam as its due date instead of its own quiz. Everything
+   downstream then falls out correctly with no second code path —
+
+     · the pace becomes the even spread of what's left over the days that are left
+       (the quiz term and the even term collapse onto the same number);
+     · a week can no longer be "more than fits before its quiz", so the only thing
+       left to flag is the honest one: the whole unit not fitting before the exam;
+     · the pour, the ordering, the review buffer, the join week, the never-delete
+       rules and the re-fit button are all shared, untouched.
+
+   The quiz dates stay VISIBLE (brodyWeekLoads still reports each week's real quiz
+   in `quiz`) — they just stop setting the pace. Off by default; a plan opts in from
+   Plan → Study days & pace. */
+function brodyFree(c){return !!((c||S.cfg||{}).brodyFree);}
+/* Switching modes has to re-derive the pace. The pace is deliberately STAMPED on the
+   plan (see reflowBrody) so that checking a video off can't move it — which means a
+   stamp made under quiz deadlines would survive the switch, and flipping the toggle
+   would appear to do nothing at all. Undoable, because it overwrites a number the
+   student may have hand-nudged. */
+function setBrodyFree(c,free){
+  c=c||S.cfg;if(!c||!c.brody)return;
+  const wasFree=brodyFree(c);if(wasFree===!!free)return;
+  const prevPace=c.brodyPace;
+  if(free)c.brodyFree=true;else delete c.brodyFree;
+  c.brodyPace=brodyRecPace(c,brodyBlock(c)||BRODY_BLOCKS[0]);
+  save();reflow();
+  toastUndo(free
+    ? ('Even pace — '+c.brodyPace+' h/day across every open day; quizzes no longer set deadlines.')
+    : ('Brody quiz weeks — '+c.brodyPace+' h/day to stay ahead of every quiz.'),
+    ()=>{if(wasFree)c.brodyFree=true;else delete c.brodyFree;c.brodyPace=prevPace;save();reflow();render();});
+}
 function brodyStudyDays(c,blk,cursorISO){const seq=[];let dd=isoToDate(cursorISO),g=0;
   while(isoFromDate(dd)<blk.shelf&&g++<400){const iso=isoFromDate(dd);if(dayIsOpen(c,iso,dd.getDay()))seq.push(iso);dd=addDays(dd,1);}return seq;}
 /* The buffer is anchored to the BLOCK, not to today: the last N study days before
@@ -1808,10 +1867,35 @@ function brodyWeekDeadline(blk,wstart){
   for(let i=0;i<cps.length;i++){if(cps[i]>=fri)return cps[i];}
   return blk.shelf;                                       // last week → the block exam
 }
-/* Per-week loads plus each week's deadline and the cumulative count of open study
-   days available before that deadline (odbd). The pace is derived so the running
-   total of video minutes is cleared before each quiz — never behind the actual
-   quiz you're about to take. */
+/* The day arithmetic every per-week load needs, and nothing else: for each week,
+   how many of its own open study days are left, and how many open days remain
+   before its deadline (odbd). Shared, so the video budget (minutes) and the
+   article budget (counts) can never disagree about the calendar — they are two
+   quantities poured over one set of days, and a second copy of this arithmetic
+   would be a second chance to drift. */
+function brodyWeekFrame(c,blk){
+  const cursor=(todayISO()>blk.weeks[0].start)?todayISO():blk.weeks[0].start;
+  const cutoff=brodyReviewCutoff(c,blk);
+  const wkStart=blk.weeks.map(w=>w.start);
+  const joinWk=brodyJoinWk(c,blk);   // the plan starts here — weeks before it aren't part of it
+  const free=brodyFree(c);
+  // open study days from the cursor with iso strictly before `date` (and before the buffer)
+  const openBefore=date=>{let n=0,dd=isoToDate(cursor),g=0;while(g++<400){const iso=isoFromDate(dd);if(iso>=date||iso>=cutoff)break;if(iso>=cursor&&dayIsOpen(c,iso,dd.getDay()))n++;dd=addDays(dd,1);}return n;};
+  return blk.weeks.map((w,i)=>{const end=(i+1<blk.weeks.length)?wkStart[i+1]:blk.shelf;
+    const pre=w.n<joinWk;
+    const quiz=brodyWeekDeadline(blk,w.start);           // the real quiz, reported either way
+    // THE one switch between quiz-paced and free-paced. Quiz-paced: this week is
+    // owed by its own quiz. Free-paced: every week is owed by the block exam, which
+    // is what turns a pace into a flat spread instead of a per-quiz staircase.
+    const dl=free?blk.shelf:quiz;
+    const effDl=(dl>=blk.shelf)?cutoff:dl;              // the final deadline is capped by the review buffer
+    const odbd=openBefore(effDl);
+    let days=0,dd=isoToDate(w.start);for(let k=0;k<10;k++){const iso=isoFromDate(dd);if(iso>=end)break;if(iso>=cursor&&iso<cutoff&&dayIsOpen(c,iso,dd.getDay()))days++;dd=addDays(dd,1);}
+    return {n:w.n,label:w.label,days:days,odbd:odbd,deadline:dl,quiz:quiz,past:days===0,pre:pre};});
+}
+/* Per-week VIDEO loads (minutes) on top of that frame. The pace is derived so the
+   running total of video minutes is cleared before each quiz — never behind the
+   actual quiz you're about to take. */
 function brodyWeekLoads(c,blk,live){
   const R=c.resources||{};
   const en={bnb:R.bnb,pathoma:R.pathoma,skmicro:R.sketchy,skpharm:R.sketchy,bootcamp:R.bootcamp};
@@ -1830,20 +1914,43 @@ function brodyWeekLoads(c,blk,live){
     if(earlier.has(itemId(v)))return;
     if(!owed(itemId(v)))return;
     const w=brodyVideoWeek(blk,v);load[w]+=v.min;cnt[w]++;});
-  const cursor=(todayISO()>blk.weeks[0].start)?todayISO():blk.weeks[0].start;
-  const cutoff=brodyReviewCutoff(c,blk);
-  const wkStart=blk.weeks.map(w=>w.start);
-  const joinWk=brodyJoinWk(c,blk);   // the plan starts here — weeks before it aren't part of it
-  // open study days from the cursor with iso strictly before `date` (and before the buffer)
-  const openBefore=date=>{let n=0,dd=isoToDate(cursor),g=0;while(g++<400){const iso=isoFromDate(dd);if(iso>=date||iso>=cutoff)break;if(iso>=cursor&&dayIsOpen(c,iso,dd.getDay()))n++;dd=addDays(dd,1);}return n;};
-  return blk.weeks.map((w,i)=>{const end=(i+1<blk.weeks.length)?wkStart[i+1]:blk.shelf;
-    const pre=w.n<joinWk;
-    const dl=brodyWeekDeadline(blk,w.start);
-    const effDl=(dl>=blk.shelf)?cutoff:dl;              // the final deadline is capped by the review buffer
-    const odbd=openBefore(effDl);
-    let days=0,dd=isoToDate(w.start);for(let k=0;k<10;k++){const iso=isoFromDate(dd);if(iso>=end)break;if(iso>=cursor&&iso<cutoff&&dayIsOpen(c,iso,dd.getDay()))days++;dd=addDays(dd,1);}
-    return {n:w.n,label:w.label,loadMin:pre?0:load[w.n],count:pre?0:cnt[w.n],days:days,odbd:odbd,deadline:dl,past:days===0,pre:pre};});
+  return brodyWeekFrame(c,blk).map(f=>Object.assign({},f,
+    {loadMin:f.pre?0:load[f.n],count:f.pre?0:cnt[f.n]}));
 }
+/* Per-week ARTICLE loads (counts) on the same frame. Articles have no runtime, so
+   there is nothing to sum in minutes — the quantity being poured is how many of
+   them there are. Everything else is identical: only what's still owed counts, the
+   same today-grace applies, and pre-arrival weeks owe nothing. */
+function brodyArtLoads(c,blk,live){
+  const frame=brodyWeekFrame(c,blk);
+  if(!artEnabled(c)||!brodyHasArts(blk))
+    return frame.map(f=>Object.assign({},f,{count:0}));
+  const owed=live?(id=>!(isDone(id)||isSkip(id))):brodyRemains;
+  const cnt={};blk.weeks.forEach(w=>{cnt[w.n]=0;});
+  const earlier=brodyEarlierIds(c,blk).ids;
+  catVideos().forEach(v=>{if(!isArticle(v))return;if(!brodyInBlock(blk,v))return;
+    const id=itemId(v);
+    if(earlier.has(id))return;
+    if(!owed(id))return;
+    const w=brodyArtWeek(blk,v);if(cnt[w]!=null)cnt[w]++;});
+  return frame.map(f=>Object.assign({},f,{count:f.pre?0:cnt[f.n]}));
+}
+/* Recommended articles/day, by exactly the rule that sets the video pace: the
+   higher of quiz-ready (clear the running total before each week's quiz, for every
+   week that can be met at a realistic count) and exam-ready (everything left spread
+   over every open day). Whole articles — half a reading isn't a plate. */
+const BRODY_ART_MAX=12;   // articles/day above which "ready for this week's quiz" isn't real
+function brodyRecommendedArts(loads){
+  let cum=0,cumDays=0,quizN=0;
+  loads.forEach(w=>{cum+=w.count;cumDays+=w.days;
+    if(w.odbd>0){const need=cum/w.odbd;if(need<=BRODY_ART_MAX)quizN=Math.max(quizN,need);}});
+  const even=cumDays>0?cum/cumDays:0;
+  return Math.max(1,Math.ceil(Math.max(even,quizN)));
+}
+function brodyRecArts(c,blk,live){return brodyRecommendedArts(brodyArtLoads(c,blk||brodyBlock(c)||BRODY_BLOCKS[0],live));}
+/* Like the video pace, stamped on the plan rather than re-derived on every
+   check-off, so finishing an article never shrinks the day it was on. */
+function brodyArtPace(c){if(c&&c.artPerDay)return c.artPerDay;return brodyRecArts(c,brodyBlock(c)||BRODY_BLOCKS[0]);}
 /* Recommended h/day = the higher of the two real guarantees, nothing stricter:
    (1) quiz-ready — clear the running total of remaining minutes before each week's
        quiz (odbd = open days before that quiz), for every week that CAN be met at a
@@ -1851,6 +1958,8 @@ function brodyWeekLoads(c,blk,live){
        flagged instead of dragging the whole block to an 8 h/day plan;
    (2) exam-ready — everything remaining spread over every open day before the
        review buffer.
+   On a FREE-PACED plan every week's deadline is already the exam, so (1) collapses
+   onto (2) and the answer is just the even spread — no branch needed here.
    There is deliberately NO "finish each week by its Sunday" floor: a week's true
    deadline is its quiz, and holding pace to the calendar week made the number
    balloon late in the week (10 h of week-one video over its one remaining day)
@@ -1866,7 +1975,12 @@ function brodyRecommendedPace(loads){
   const evenPace=cumDays>0?cumMin/cumDays:0;
   return Math.max(0.5,Math.ceil(Math.max(evenPace,quizPace)/60/0.5)*0.5);
 }
-function brodyPace(c){if(c&&c.brodyPace)return c.brodyPace;const blk=brodyBlock(c)||BRODY_BLOCKS[0];return brodyRecommendedPace(brodyWeekLoads(c,blk));}
+/* The recommendation for a plan, computed in that plan's own mode. Every caller
+   goes through here rather than pairing brodyWeekLoads with brodyRecommendedPace by
+   hand, so a new call site cannot silently read a quiz-paced number off a
+   free-paced plan (or the reverse). */
+function brodyRecPace(c,blk,live){return brodyRecommendedPace(brodyWeekLoads(c,blk||brodyBlock(c)||BRODY_BLOCKS[0],live));}
+function brodyPace(c){if(c&&c.brodyPace)return c.brodyPace;return brodyRecPace(c,brodyBlock(c)||BRODY_BLOCKS[0]);}
 function reflowBrody(c,blk){
   // The pace belongs to the PLAN, not to your progress. Stamp it once so it stops
   // being re-derived from remaining work on every check-off: that made completing a
@@ -1875,12 +1989,21 @@ function reflowBrody(c,blk){
   // next day and cascaded — you did extra work and the calendar moved work later.
   // Locked, a check-off only ever empties a slot. The Plan banner still shows the
   // live recommendation and offers one tap to adopt it, so adapting stays your call.
-  if(c.brody&&!c.brodyPace&&catReady())c.brodyPace=brodyRecommendedPace(brodyWeekLoads(c,blk));
+  if(c.brody&&!c.brodyPace&&catReady())c.brodyPace=brodyRecPace(c,blk);
+  // The article count is stamped for the same reason, on its own key.
+  const artsOn=artEnabled(c)&&brodyHasArts(blk);
+  if(artsOn&&!c.artPerDay&&catReady())c.artPerDay=brodyRecArts(c,blk);
   const en=resEnabled();const pathSel=en.pathoma?effectivePathChapters(c):new Set();
   const lastWk=blk.weeks.length;
-  const vids=[];
+  const vids=[],arts=[];
   catVideos().forEach(v=>{
     if(!brodyInBlock(blk,v))return;   // system in block (or explicitly included), and not excluded
+    // Written resources are poured on their own count budget further down, so they
+    // are collected here but kept out of the minute-based video queue.
+    if(isArticle(v)){
+      if(artsOn)arts.push({sys:v.sys,name:v.name,min:0,fa:v.cat||"",tag:"",res:v.res,label:v.name,id:itemId(v),wk:brodyArtWeek(blk,v),art:true});
+      return;
+    }
     if(!en[v.res])return;
     if(v.res==="pathoma"&&!pathSel.has(pathChapterOf(v)))return;
     const wk=brodyVideoWeek(blk,v);
@@ -1909,7 +2032,15 @@ function reflowBrody(c,blk){
   // order: week asc → resource → native (catalog) order (stable sort keeps native)
   const ri=r=>{const i=RES_ORDER.indexOf(r);return i<0?99:i;};
   vids.sort((a,b)=>(a.wk-b.wk)||(ri(a.res)-ri(b.res)));
+  // Articles get the same treatment on their own queue: opted-out and pre-arrival
+  // ones leave the plan, the rest sort by week then catalog order.
+  const arts2=arts.filter(v=>v.wk>=joinWk&&!earlierSet.has(v.id)&&!isSkip(v.id));
+  arts.length=0;arts.push.apply(arts,arts2);
+  arts.sort((a,b)=>a.wk-b.wk);
   const byId={};const orderIndex={};vids.forEach((v,i)=>{byId[v.id]=v;orderIndex[v.id]=i;});
+  // Articles index AFTER every video, so a day reads videos first and then reading
+  // rather than interleaving two kinds of work.
+  arts.forEach((v,i)=>{byId[v.id]=v;orderIndex[v.id]=5e5+i;});
   earlierItems.forEach((v,i)=>{if(byId[v.id]==null)byId[v.id]=v;if(orderIndex[v.id]==null)orderIndex[v.id]=1e6+i;});
   // Open study days, in order (respects rest days, off days, and the review buffer).
   const weekDays={};blk.weeks.forEach(w=>weekDays[w.n]=[]);
@@ -1954,7 +2085,32 @@ function reflowBrody(c,blk){
      const iso=openDays[di];
      (dayItems[iso]=dayItems[iso]||[]).push(it);lastFillIdx=Math.max(lastFillIdx,di);
    });}
-  // Finishing the videos ahead of the buffer? The open days between the last video
+  /* Then pour the ARTICLES over the same days on their own budget — a count, not a
+     clock. Deliberately a second pass rather than one merged queue: articles and
+     videos are different currencies, so a day holds up to N minutes of video AND up
+     to M articles, and neither can crowd the other out. Every rule from the video
+     pour is mirrored, including the one that matters most — a finished article keeps
+     its place so the cursor never falls behind work you've already done, and
+     articles read on a day consume that day's allowance. */
+  const artItems={};const doneArtsByDay={};
+  if(artsOn){
+    for(const id in vdd){const it=byId[id];if(it&&it.art&&!earlierSet.has(id))doneArtsByDay[vdd[id]]=(doneArtsByDay[vdd[id]]||0)+1;}
+    const artPerDay=Math.max(1,Math.round(brodyArtPace(c)));
+    const artUsed=iso=>((artItems[iso]||[]).length)+(doneArtsByDay[iso]||0);
+    let di=0;
+    arts.forEach(it=>{
+      if(!openDays.length)return;
+      if(doneOrSkip(it.id)){
+        const dd=vdd[it.id];
+        if(dd!=null&&dayIndex[dd]!=null)di=Math.max(di,dayIndex[dd]);
+        return;
+      }
+      while(di<openDays.length-1&&artUsed(openDays[di])>=artPerDay)di++;
+      const iso=openDays[di];
+      (artItems[iso]=artItems[iso]||[]).push(it);lastFillIdx=Math.max(lastFillIdx,di);
+    });
+  }
+  // Finishing the content ahead of the buffer? The open days between the last item
   // and the shelf become review too, so the tail reads as one continuous review
   // window instead of blank days.
   const lastContentISO=lastFillIdx>=0?openDays[lastFillIdx]:null;
@@ -1968,10 +2124,17 @@ function reflowBrody(c,blk){
     const past=iso<todayI;
     const isRest=dayIsRest(c,iso,wd),isOff=dayIsOff(c,iso);
     const isReview=!past&&((iso>=reviewCutoff)||(lastContentISO&&iso>lastContentISO))&&!isRest&&!isOff;   // buffer, or finished-ahead tail
-    const packed=dayItems[iso]||[];const pinned=donePins[iso]||[];const early=earlierByDay[iso]||[];
+    // Articles join `items` rather than living in a parallel list: they ARE scheduled
+    // plan items, and one list is what lets the calendar, the day detail, uncheck-all,
+    // the Anki tags and every done-check work on them without a second code path.
+    // Their min:0 keeps them out of every minutes figure on its own.
+    const packed=(dayItems[iso]||[]).concat(artItems[iso]||[]);
+    const pinned=donePins[iso]||[];const early=earlierByDay[iso]||[];
     const items=packed.concat(pinned).concat(early).sort((a,b)=>((orderIndex[a.id]!=null?orderIndex[a.id]:1e9)-(orderIndex[b.id]!=null?orderIndex[b.id]:1e9)));
     const row={iso,past,earlier:early.length>0,off:isOff&&!past,rest:isRest&&!isOff&&!past,review:isReview,items,brodyWeek:weekOf(iso),
-      min:items.reduce((a,b)=>a+b.min,0),todo:packed.reduce((a,b)=>a+b.min,0)};
+      min:items.reduce((a,b)=>a+b.min,0),todo:packed.reduce((a,b)=>a+b.min,0),
+      // article counts are tracked beside the minutes so a day can say "3h · 4 to read"
+      arts:items.filter(x=>x.art).length,artsTodo:(artItems[iso]||[]).filter(x=>!doneOrSkip(x.id)).length};
     days.push(row);dayMap[iso]=row;dd=addDays(dd,1);}}
   // A week is "quiz-tight" if being fully ready for its Friday quiz would take more
   // than a realistic amount of video/day — the running total of minutes divided by
@@ -1987,17 +2150,25 @@ function reflowBrody(c,blk){
     cumLoad+=load;const odbd=wlLoads[i].odbd;const dl=wlLoads[i].deadline;
     const dead=dl<=todayISO();   // this quiz already happened — leftovers roll into the next deadline via cumLoad
     const needH=dead?0:((odbd>0)?(cumLoad/odbd/60):(cumLoad>0?Infinity:0));   // no open days left before a live quiz → can't be quiz-ready
-
-    return {n:w.n,label:w.label,start:w.start,load,deadline:dl,needH:needH,cap:odbd*paceMin,heavy:(!dead&&needH>BRODY_QUIZ_MAX),past,days:weekDays[w.n].length};});
+    // Free-paced, dl is the exam for every week, so needH climbs to the even spread
+    // on the last row and `heavy` means the one thing it can still mean: the unit as
+    // a whole doesn't fit before the exam at a realistic pace.
+    return {n:w.n,label:w.label,start:w.start,load,deadline:dl,quiz:wlLoads[i].quiz,needH:needH,cap:odbd*paceMin,heavy:(!dead&&needH>BRODY_QUIZ_MAX),past,days:weekDays[w.n].length};});
   const remaining=vids.filter(v=>!doneOrSkip(v.id));const remMin=remaining.reduce((a,b)=>a+b.min,0);
+  const artsRem=arts.filter(v=>!doneOrSkip(v.id));
   // planItems is the authoritative "what's in this plan" list every progress figure
   // reads from — the curated Brody set here, the backlog on the custom path. Before
   // this, the hero counted these while the per-subject bars counted buildBacklog(),
   // so one card could show two different totals for the same plan.
-  SCHED={days,dayMap,atRisk:[],byId,planItems:vids,reviewDates:days.filter(d=>d.review).map(d=>d.iso),contentDates:days.filter(d=>!d.rest&&!d.off&&!d.review).map(d=>d.iso),brody:blk,weekLoad,brodyPace:brodyPace(c),currentWeek:currentWk,skippedWeeks:skippedWeeks,reviewBuf:brodyReviewBuf(c),reviewCutoff:reviewCutoff,
+  // Articles are part of the plan, so they are in planItems and in the item counts.
+  // They are NOT in the minute figures — there are no minutes to add — which is why
+  // progress-by-time falls back to counting when a plan is reading-only (see overall()).
+  const planAll=vids.concat(arts);
+  SCHED={days,dayMap,atRisk:[],byId,planItems:planAll,planVideos:vids,planArts:arts,reviewDates:days.filter(d=>d.review).map(d=>d.iso),contentDates:days.filter(d=>!d.rest&&!d.off&&!d.review).map(d=>d.iso),brody:blk,weekLoad,brodyPace:brodyPace(c),brodyFree:brodyFree(c),artsOn:artsOn,artPace:artsOn?Math.max(1,Math.round(brodyArtPace(c))):0,currentWeek:currentWk,skippedWeeks:skippedWeeks,reviewBuf:brodyReviewBuf(c),reviewCutoff:reviewCutoff,
     stats:{remMin,availMin:0,examDaysLeft:Math.max(0,daysBetween(todayISO(),shelf)),reqPerDay:0,feasible:!weekLoad.some(w=>w.heavy),
       contentDaysLeft:days.filter(d=>!d.rest&&!d.off&&!d.review).length,reviewDaysLeft:days.filter(d=>d.review).length,
-      totalItems:vids.length,doneItems:vids.filter(v=>isDone(v.id)).length,remItems:remaining.length,
+      totalItems:planAll.length,doneItems:planAll.filter(v=>isDone(v.id)).length,remItems:remaining.length+artsRem.length,
+      remVideos:remaining.length,totalArts:arts.length,doneArts:arts.filter(v=>isDone(v.id)).length,remArts:artsRem.length,
       totalMin:vids.reduce((a,v)=>a+v.min,0),doneMin:vids.reduce((a,v)=>a+(isDone(v.id)?v.min:0),0)}};
 }
 function reflow(){
@@ -2099,15 +2270,20 @@ function setProgBy(k){S.settings=S.settings||{};S.settings.progBy=(k==="time")?"
 function overall(){
   if(!SCHED)return {pct:0,done:0,total:0,doneMin:0,totalMin:0,byTime:false};
   const st=SCHED.stats,t=st.totalItems,dn=st.doneItems,tm=st.totalMin||0,dm=st.doneMin||0;
-  const byTime=progBy()==="time";
-  return {pct:byTime?(tm?Math.round(dm/tm*100):0):(t?Math.round(dn/t*100):0),
-          done:dn,total:t,doneMin:dm,totalMin:tm,byTime};
+  // A reading-only plan has no minutes at all, so "by time" would sit at 0% forever.
+  // Fall back to counting there — the reader asked for a progress figure, not for a
+  // unit, and the unit they picked doesn't exist for this plan.
+  const byTime=progBy()==="time"&&tm>0;
+  return {pct:byTime?Math.round(dm/tm*100):(t?Math.round(dn/t*100):0),
+          done:dn,total:t,doneMin:dm,totalMin:tm,byTime,
+          arts:(st.totalArts||0)};
 }
 /* Both halves of a fraction take the unit the TOTAL is in, so a barely-started
    subject reads "0h/12.2h" rather than the jarring "0m/12.2h". */
 function fmtHlike(min,ref){return (ref<60)?(min+"m"):((Math.round(min/60*10)/10)+"h");}
 /* "3 / 12 videos" or "1.4h / 6h" — whichever the reader chose */
-function progLabel(o){return o.byTime?(fmtHlike(o.doneMin,o.totalMin)+' / '+fmtH(o.totalMin)):(o.done+' / '+o.total+' videos');}
+function progLabel(o){return o.byTime?(fmtHlike(o.doneMin,o.totalMin)+' / '+fmtH(o.totalMin))
+  :(o.done+' / '+o.total+(o.arts?' items':' videos'));}   // "items" once reading is in the plan
 function planItems(){return (SCHED&&SCHED.planItems)||[];}
 function sysProgress(){const by={};planItems().forEach(it=>{const k=it.sys;(by[k]=by[k]||{d:0,t:0,dm:0,tm:0});by[k].t++;by[k].tm+=it.min;if(isDone(it.id)){by[k].d++;by[k].dm+=it.min;}});return by;}
 function sysPct(x){return progBy()==="time"?(x.tm?Math.round(x.dm/x.tm*100):0):(x.t?Math.round(x.d/x.t*100):0);}
@@ -2289,8 +2465,8 @@ function toastUndo(m,fn){toEl.innerHTML=escHTML(m)+' <button id="tu">Undo</butto
 function ring(pct,size){size=size||64;const fs=Math.round(size*0.62);
   return '<div class="statpct"><div class="statpct-n" style="font-size:'+fs+'px">'+pct+'<span>%</span></div><div class="statpct-l">complete</div></div>';}
 
-function resBadge(res){const m={bnb:["B&B","bnb"],pathoma:["Pa","pa"],skmicro:["SkM","sk"],skpharm:["SkP","sk"],bootcamp:["BC","bc"]};const x=m[res]||["·","bnb"];return '<span class="badge '+x[1]+'">'+x[0]+'</span>';}
-function resLabel(res){return {bnb:"Boards & Beyond",pathoma:"Pathoma",skmicro:"Sketchy Micro",skpharm:"Sketchy Pharm",bootcamp:"Bootcamp"}[res]||"Videos";}
+function resBadge(res){const m={bnb:["B&B","bnb"],pathoma:["Pa","pa"],skmicro:["SkM","sk"],skpharm:["SkP","sk"],bootcamp:["BC","bc"],uwlib:["UW","uw"]};const x=m[res]||["·","bnb"];return '<span class="badge '+x[1]+'">'+x[0]+'</span>';}
+function resLabel(res){return {bnb:"Boards & Beyond",pathoma:"Pathoma",skmicro:"Sketchy Micro",skpharm:"Sketchy Pharm",bootcamp:"Bootcamp",uwlib:"UWorld Library (reading)"}[res]||"Videos";}
 function vName(it){let n=it.name;if(it.res==="pathoma")n=n.replace(/^\d+\.\d+(-\d+\.\d+)?\s*/,"");return n;}
 
 /* One rendered row = exactly one video. Rows are keyed on the item's own id
@@ -2336,7 +2512,9 @@ function itemRows(items,opts){opts=opts||{};if(!items.length)return '<div class=
       +'<div class="vmeta">'+(qual.get(it)
         ? '<span class="vnq"><span class="vn">'+escHTML(vName(it))+'</span><span class="vq" title="'+escAttr(qual.get(it))+'">'+escHTML(qual.get(it))+'</span></span>'
         : '<span class="vn">'+escHTML(vName(it))+'</span>')
-      +'<span class="vmin">'+it.min+'m</span></div>'
+      // written resources have no runtime, so the slot carries the kind of work
+      // instead of a meaningless "0m"
+      +'<span class="vmin">'+(it.min>0?(it.min+'m'):'read')+'</span></div>'
       +'<button class="flagb '+(shaky?"on":"")+'" data-flag="'+idsAttr+'" aria-label="flag for review" title="Flag as shaky — collects in your review queue">⚑</button>'
       +'</div>';}).join('')+'</div>';}).join('');}
 
@@ -2511,7 +2689,7 @@ function render(){
    owed over the days that are actually left. Falling behind pushes it up; the pace
    stamped on the plan doesn't move on its own. */
 function brodyRefitPace(c){c=c||S.cfg;if(!c||!c.brody)return 0;
-  const blk=brodyBlock(c)||BRODY_BLOCKS[0];return brodyRecommendedPace(brodyWeekLoads(c,blk,true));}
+  return brodyRecPace(c,brodyBlock(c)||BRODY_BLOCKS[0],true);}
 /* Whether re-fitting would actually move the pace, and which way. Behind, it goes up
    to protect the quiz deadlines. Ahead \u2014 you've banked work by studying ahead \u2014 it
    goes DOWN, spreading what's left over every remaining day for lighter days. Neither
@@ -2532,7 +2710,8 @@ function brodyBehindPace(c){const d=brodyRefitDelta(c);return (d&&!d.easier)?d.r
    video-free days that leaves before the exam. What a re-fit is judged by. */
 function schedShape(){
   if(!SCHED||!SCHED.days)return {tail:null,review:0};
-  return {tail:SCHED.days.filter(d=>d.todo>0).map(d=>d.iso).pop()||null,
+  // reading counts as content, or a reading-only plan would have no tail at all
+  return {tail:SCHED.days.filter(d=>d.todo>0||(d.artsTodo||0)>0).map(d=>d.iso).pop()||null,
           review:SCHED.days.filter(d=>d.review).length};
 }
 /* Ticking a video on a day that hasn't arrived records it as "watched then", which
@@ -2566,15 +2745,26 @@ function brodyRefit(){
   const before=schedShape();
   const d=brodyRefitDelta(c);
   const prevPace=c.brodyPace;
+  // Reading re-fits on the same tap, in its own currency. Without this, a
+  // reading-only plan had a button that could never do anything.
+  const artsOn=!!(SCHED&&SCHED.artsOn);
+  const prevArts=c.artPerDay;
+  const recA=artsOn?brodyRecArts(c,brodyBlock(c)||BRODY_BLOCKS[0],true):0;
+  const dA=(artsOn&&recA>0&&recA!==Math.max(1,Math.round(brodyArtPace(c))))?recA:0;
   const moved=refitPullForward();
-  if(!d&&!Object.keys(moved).length){toast('Nothing to re-fit \u2014 your plan is already tight.');return;}
+  if(!d&&!dA&&!Object.keys(moved).length){toast('Nothing to re-fit \u2014 your plan is already tight.');return;}
   if(d)c.brodyPace=d.rec;
+  if(dA)c.artPerDay=dA;
   save();reflow();render();
-  const paceTxt=d?(d.over ? ('Re-fit to '+d.rec+' h/day \u2014 more than fits in a day, so trim a resource too.')
-    : d.easier ? ('Re-fit to '+d.rec+' h/day \u2014 lighter days, still ahead of every quiz.')
-    : ('Re-fit to '+d.rec+' h/day \u2014 back ahead of every quiz.')):'';
+  const fr=brodyFree(c);
+  let paceTxt=d?(d.over ? ('Re-fit to '+d.rec+' h/day \u2014 more than fits in a day, so trim a resource too.')
+    : d.easier ? ('Re-fit to '+d.rec+' h/day \u2014 lighter days, still '+(fr?'finishing before the exam.':'ahead of every quiz.'))
+    : ('Re-fit to '+d.rec+' h/day \u2014 '+(fr?'back on track to finish.':'back ahead of every quiz.'))):'';
+  if(dA)paceTxt=(paceTxt?paceTxt.replace(/\.$/,'')+' \u00b7 reading now '+dA+'/day.'
+                        :('Re-fit to '+dA+' article'+(dA===1?'':'s')+'/day.'));
   toastUndo(refitToast(before,schedShape(),paceTxt,Object.keys(moved).length),
-    ()=>{c.brodyPace=prevPace;refitPutBack(moved);save();reflow();render();});
+    ()=>{c.brodyPace=prevPace;if(prevArts==null)delete c.artPerDay;else c.artPerDay=prevArts;
+         refitPutBack(moved);save();reflow();render();});
 }
 /* The custom planner's twin of brodyRefit. Brody derives a pace, so re-fitting there
    moves one number; here the hours are what the student SAID they can do, and the
@@ -2623,19 +2813,34 @@ function paceHero(){const st=SCHED.stats;
   if(SCHED.brody){const tight=(SCHED.weekLoad||[]).filter(w=>w.heavy);
     const sk=SCHED.skippedWeeks||0;
     const skTxt=sk?(" \u00b7 starting at week "+(sk+1)):"";
-    if(st.remItems===0)return '<div class="herostat ok"><span class="hsdot"></span><span>All videos done \u2014 you\u2019re in sync with Brody.</span></div>';
+    const artsOn=!!SCHED.artsOn,vidHrs=(st.totalMin||0)>0;
+    if(st.remItems===0)return '<div class="herostat ok"><span class="hsdot"></span><span>'
+      +(artsOn?(vidHrs?'All videos and reading done':'All reading done'):'All videos done')
+      +' \u2014 you\u2019re in sync with Brody.</span></div>';
+    // Reading-only plans have no hours to quote, so the hero speaks in articles. The
+    // re-fit button is still offered: the article count is stamped like the pace and
+    // the same "pull work forward" logic applies to it.
+    if(artsOn&&!vidHrs){
+      const spare0=SCHED.days.filter(d2=>d2.review).length,bank0=spare0-(SCHED.reviewBuf||0);
+      const recA=brodyRecArts(S.cfg,SCHED.brody,true),curA=SCHED.artPace||recA;
+      const btn0='<button type="button" class="btn ghost hsbtn" id="heroRefit">Re-fit your schedule</button>';
+      const b0=(bank0>0)?(' \u00b7 +'+bank0+' day'+(bank0===1?'':'s')+' banked'):'';
+      if(recA>curA)return '<div class="herostat warn"><span class="hsdot"></span><span>Behind at '+curA+' article'+(curA===1?'':'s')+'/day \u2014 ~'+recA+'/day clears the '+st.remArts+' left.</span>'+btn0+'</div>';
+      return '<div class="herostat ok"><span class="hsdot"></span><span>On pace at '+curA+' article'+(curA===1?'':'s')+'/day \u00b7 '+st.remArts+' of '+st.totalArts+' left'+skTxt+b0+'</span>'+btn0+'</div>';
+    }
     const d=brodyRefitDelta();
     // Always offered while there's work left. It isn't only for a plan in trouble —
     // its main job is compacting the calendar around videos you've watched ahead, and
     // that's a thing you decide to do, not a state the app can detect and nag about.
     const btn='<button type="button" class="btn ghost hsbtn" id="heroRefit">Re-fit your schedule</button>';
+    const free=SCHED.brodyFree;
     // Behind leads. A week only became "more than fits" BECAUSE you fell behind, and
     // telling someone to trim content when the real answer is "re-fit your days" sent
     // them to cut material they still need.
     if(d&&!d.easier)return '<div class="herostat warn"><span class="hsdot"></span><span>Behind at '+SCHED.brodyPace+' h/day \u2014 '
       +(d.over
-        ? ('it would now take ~'+d.rec+' h/day to stay ahead of every quiz, which is more than fits in a day. Re-fit anyway, then trim a resource in Plan.')
-        : ('~'+d.rec+' h/day gets you back ahead of every quiz.'))
+        ? ('it would now take ~'+d.rec+' h/day to '+(free?'finish this unit':'stay ahead of every quiz')+', which is more than fits in a day. Re-fit anyway, then trim a resource in Plan.')
+        : ('~'+d.rec+' h/day '+(free?'still clears everything before the exam.':'gets you back ahead of every quiz.')))
       +'</span>'+btn+'</div>';
     // Ahead: the pace is held, so banked work shortens the content tail and the spare
     // days turn into review. It rides along with the firehose warning rather than
@@ -2648,13 +2853,16 @@ function paceHero(){const st=SCHED.stats;
     // remaining day, which is lighter days bought with the days you just banked.
     const ease=d?(' \u00b7 re-fit to ~'+d.rec+' h/day for lighter days'+(banked>0?' (spends the banked days)':'')):'';
     if(tight.length){
+      // Free-paced there are no per-week deadlines, so a flagged week can only mean
+      // the unit as a whole overflows the exam — one message, not a list of weeks.
+      if(free)return '<div class="herostat warn"><span class="hsdot"></span><span>~'+SCHED.brodyPace+' h/day of video · more than fits before the exam — trim a resource'+bank+ease+'</span>'+btn+'</div>';
       // Reads naturally whether one week is heavy or all of them are — Nervous &
       // Sensory is the first block dense enough to flag every week at once.
       const ns=tight.map(w=>w.n);
       const wks=(ns.length===1)?('week '+ns[0]+' is')
         :('weeks '+ns.slice(0,-1).join(', ')+' and '+ns[ns.length-1]+' are');
       return '<div class="herostat warn"><span class="hsdot"></span><span>~'+SCHED.brodyPace+' h/day of video \u00b7 '+wks+' more than fits before '+(ns.length===1?'its':'their')+' quiz \u2014 trim a resource'+bank+ease+'</span>'+btn+'</div>';}
-    return '<div class="herostat ok"><span class="hsdot"></span><span>On pace at ~'+SCHED.brodyPace+' h/day of video \u00b7 ahead of every quiz'+skTxt+bank+ease+'</span>'+btn+'</div>';}
+    return '<div class="herostat ok"><span class="hsdot"></span><span>On pace at ~'+SCHED.brodyPace+' h/day of video \u00b7 '+(free?'even pace to the exam':'ahead of every quiz')+skTxt+bank+ease+'</span>'+btn+'</div>';}
   const hpd=Math.round(st.reqPerDay/60*10)/10;let cls,txt;
   // Same offer on the custom planner, moving the hours the student set instead of a
   // derived pace: up when the work no longer fits, down once they've worked ahead.
@@ -3504,12 +3712,16 @@ function fmtH(min){if(min<60)return min+"m";return (Math.round(min/60*10)/10)+"h
 /* A day's time badge. Once videos are checked off — especially when studying ahead
    — the number that matters is what's LEFT on that day, not what it originally
    held. row.todo is the unwatched minutes; row.min is the day's full load. */
+/* A day can hold two currencies: video minutes and a number of articles. The label
+   names whichever the day actually has, so a reading-only day reads "4 to read"
+   rather than the empty string a minutes-only label returned for it. */
 function dayTimeLabel(row){
   const total=row.min||0,left=(row.todo!=null?row.todo:total);
-  if(total<=0)return "";
-  if(left<=0)return "✓ "+fmtH(total);
-  if(left<total)return fmtH(left)+" left";
-  return fmtH(total);
+  const nA=row.arts||0,aLeft=(row.artsTodo!=null?row.artsTodo:nA);
+  const art=nA>0?(aLeft>0?(aLeft+" to read"):("✓ "+nA+" read")):"";
+  if(total<=0)return art;
+  const vid=(left<=0)?("✓ "+fmtH(total)):(left<total?(fmtH(left)+" left"):fmtH(total));
+  return art?(vid+" · "+art):vid;
 }
 function ymShift(ym,delta){let p=ym.split("-").map(Number),y=p[0],m=p[1];m+=delta;while(m<1){m+=12;y--;}while(m>12){m-=12;y++;}return y+"-"+pad2(m);}
 function monthMatrix(ym){const p=ym.split("-").map(Number),y=p[0],m=p[1];
@@ -3736,32 +3948,60 @@ function renderAdjustBrody(c){
   const dows=DOW.map((d,i)=>'<button type="button" class="tog '+((c.restDays||[]).includes(i)?"on":"")+'" data-dow="'+i+'">'+d+'</button>').join('');
   const resBtn=(k,lab)=>'<button type="button" class="tog '+(hasRes(k)?"on":"")+'" data-res="'+k+'">'+lab+'</button>';
   const pace=brodyPace(c);const heavy=(SCHED.weekLoad||[]).filter(w=>w.heavy);
+  const free=brodyFree(c);
+  const artsOn=!!SCHED.artsOn,artPace=SCHED.artPace||0;
+  const anyVid=(st.totalMin||0)>0;   // a reading-only plan has no hours to show
   let body='',colB='';
   body+='<div class="card"><div class="cardhd">This block</div>'
-    +'<p class="muted small" style="margin:0"><b>'+escHTML(blk.name)+'</b> <span class="pill">Brody calendar</span> — weeks of '+fmtShort(blk.weeks[0].start)+' → block exam '+fmtShort(blk.shelf)+'.</p>'
-    +'<div class="grid2" style="margin-top:12px"><div><div class="kv">'+st.remItems+'</div><div class="kvl">videos left</div></div>'
-    +'<div><div class="kv">'+Math.round(st.remMin/60)+'h</div><div class="kvl">video time left</div></div>'
-    +'<div><div class="kv">'+pace+'h</div><div class="kvl">video / day</div></div>'
-    +'<div><div class="kv">'+heavy.length+'</div><div class="kvl">firehose week'+(heavy.length===1?'':'s')+'</div></div></div></div>';
+    +'<p class="muted small" style="margin:0"><b>'+escHTML(blk.name)+'</b> <span class="pill">'+(free?'Brody content':'Brody calendar')+'</span> — weeks of '+fmtShort(blk.weeks[0].start)+' → block exam '+fmtShort(blk.shelf)+'.</p>'
+    +'<div class="grid2" style="margin-top:12px"><div><div class="kv">'+st.remItems+'</div><div class="kvl">'+(artsOn?'items left':'videos left')+'</div></div>'
+    +(artsOn&&!anyVid
+      ?'<div><div class="kv">'+st.remArts+'</div><div class="kvl">articles left</div></div>'
+       +'<div><div class="kv">'+artPace+'</div><div class="kvl">articles / day</div></div>'
+      :'<div><div class="kv">'+Math.round(st.remMin/60)+'h</div><div class="kvl">video time left</div></div>'
+       +'<div><div class="kv">'+pace+'h'+(artsOn?' + '+artPace:'')+'</div><div class="kvl">'+(artsOn?'video / day + reads':'video / day')+'</div></div>')
+    +(free
+      ?'<div><div class="kv">'+(heavy.length?'⚠':'✓')+'</div><div class="kvl">'+(heavy.length?'over the exam':'fits by exam')+'</div></div>'
+      :'<div><div class="kv">'+heavy.length+'</div><div class="kvl">firehose week'+(heavy.length===1?'':'s')+'</div></div>')
+    +'</div></div>';
   body+='<div class="card"><div class="cardhd">Study days &amp; pace</div>'
     +brodyPaceBanner(c)
     +'<div class="form">'
-    +'<div class="flab">No-video / rest days</div><div class="togrow">'+dows+'</div>'
-    +'<div class="flab mt">Daily pace</div>'
+    +'<div class="flab">What sets your deadlines</div>'
+    +'<div class="togrow"><button type="button" class="tog '+(free?'':'on')+'" data-bfree="0">Brody quiz weeks</button>'
+    +'<button type="button" class="tog '+(free?'on':'')+'" data-bfree="1">Even pace to the exam</button></div>'
+    +'<p class="muted small" style="margin:9px 0 0">'+(free
+      ?'<b>Even pace.</b> Same videos, same Brody order — but the weekly quizzes stop being deadlines. Everything left is spread evenly over your open days so no week is heavier than another, and it all finishes before the exam. Quiz dates still show, they just don’t drive your pace.'
+      :'<b>Quiz weeks.</b> Each Brody week’s videos are finished before that week’s quiz, so you’re never behind the material you’re about to be tested on. Heavy weeks stay heavy.')+'</p>'
+    +'<div class="flab mt">No-video / rest days</div><div class="togrow">'+dows+'</div>'
+    +(anyVid?'<div class="flab mt">Daily pace</div>'
     +'<div class="pacerow"><button type="button" class="pacebtn" data-fpace="dec" aria-label="less">−</button>'
     +'<div class="paceval"><b>'+pace+' h</b><span>of video · per day</span></div>'
     +'<button type="button" class="pacebtn" data-fpace="inc" aria-label="more">+</button></div>'
-    +'<p class="muted small" style="margin:9px 0 0">Hours of <b>video</b> per study day — not your total study time. Nudge to fine-tune; the banner above updates as you go.</p>'
+    +'<p class="muted small" style="margin:9px 0 0">Hours of <b>video</b> per study day — not your total study time. Nudge to fine-tune; the banner above updates as you go.</p>':'')
+    // Articles have no clock, so they get their own plate: a count, not a duration.
+    +(artsOn?'<div class="flab mt">Articles per day</div>'
+    +'<div class="pacerow"><button type="button" class="pacebtn" data-apace="dec" aria-label="fewer">−</button>'
+    +'<div class="paceval"><b>'+artPace+'</b><span>UWorld article'+(artPace===1?'':'s')+' · per day</span></div>'
+    +'<button type="button" class="pacebtn" data-apace="inc" aria-label="more">+</button></div>'
+    +'<p class="muted small" style="margin:9px 0 0">Articles don’t have a runtime, so reading is paced by count. '+st.remArts+' left of '+st.totalArts+' in this unit'+(anyVid?' — on top of your video hours.':'.')+'</p>':'')
     +'<div class="flab mt">Review buffer before the block exam</div>'
     +'<div class="pacerow"><button type="button" class="pacebtn" data-fbuf="dec" aria-label="fewer">−</button>'
     +'<div class="paceval"><b>'+brodyReviewBuf(c)+' day'+(brodyReviewBuf(c)===1?'':'s')+'</b><span>video-free for UWorld / review</span></div>'
     +'<button type="button" class="pacebtn" data-fbuf="inc" aria-label="more">+</button></div>'
-    +'<p class="muted small" style="margin:9px 0 0">'+(brodyReviewBuf(c)>0?('All videos finish by <b>'+fmtShort(SCHED.reviewCutoff)+'</b> — the last '+brodyReviewBuf(c)+' study day'+(brodyReviewBuf(c)===1?'':'s')+' before the block exam stay open for review. You still never fall behind Brody’s quizzes.'):'No buffer — content runs right up to the exam.')+'</p>'
+    +'<p class="muted small" style="margin:9px 0 0">'+(brodyReviewBuf(c)>0?('All videos finish by <b>'+fmtShort(SCHED.reviewCutoff)+'</b> — the last '+brodyReviewBuf(c)+' study day'+(brodyReviewBuf(c)===1?'':'s')+' before the block exam stay open for review.'+(free?'':' You still never fall behind Brody’s quizzes.')):'No buffer — content runs right up to the exam.')+'</p>'
     +'</div></div>';
   body+='<div class="card soft"><div class="cardhd">Weekly plan</div>'+brodyPreview(c)+'</div>';
   colB+='<div class="card"><div class="cardhd">Video resources</div><div class="togrow">'
     +resBtn("bnb","Boards &amp; Beyond")+resBtn("pathoma","Pathoma")+resBtn("sketchy","Sketchy")+resBtn("bootcamp","Bootcamp")
     +'</div><p class="muted small">Turn on the video resources you use — the plan re-flows live.</p>'
+    +'<div class="flab mt">Reading</div>'
+    +(brodyHasArts(blk)
+      ? '<div class="togrow">'+resBtn("uwlib","UWorld Library")+'</div>'
+        +'<p class="muted small">'+(artEnabled(c)
+          ? 'UWorld Library articles are mapped to this unit’s Brody weeks and scheduled alongside your videos. They have no runtime, so they’re paced by <b>how many per day</b> rather than by hours — set that below.'
+          : 'UWorld Library articles for this unit, mapped to the same Brody weeks as the videos. Use them instead of videos, or alongside them. They’re paced by articles per day, not hours.')+'</p>'
+      : '<p class="muted small">No UWorld Library articles are mapped to <b>'+escHTML(blk.name)+'</b> yet — only Nervous &amp; Sensory has them so far. Nothing to turn on here for this unit.</p>')
     +'<div class="flab mt">Anki</div><div class="togrow">'+resBtn("anking","Daily AnKing tags")+'</div>'
     +'<p class="muted small">Adds a copy-ready AnKing Browse search for each day’s videos to your Study page. Doesn’t change the schedule.</p></div>';
   colB+=skipCardHTML(c);
@@ -3776,7 +4016,10 @@ function renderAdjustBrody(c){
   document.querySelectorAll("[data-dow]").forEach(b=>b.onclick=()=>{const i=+b.dataset.dow;c.restDays=c.restDays||[];const k=c.restDays.indexOf(i);if(k>=0)c.restDays.splice(k,1);else c.restDays.push(i);apply();});
   document.querySelectorAll("[data-res]").forEach(b=>b.onclick=()=>{c.resources=c.resources||{};c.resources[b.dataset.res]=!hasRes(b.dataset.res);apply();});
   document.querySelectorAll("[data-fpace]").forEach(b=>b.onclick=()=>{const cur=brodyPace(c);c.brodyPace=Math.max(0.5,cur+(b.dataset.fpace==="inc"?0.5:-0.5));apply();});
-  const bup=document.getElementById("brodyUsePace");if(bup)bup.onclick=()=>{c.brodyPace=brodyRecommendedPace(brodyWeekLoads(c,brodyBlock(c)||BRODY_BLOCKS[0]));apply();};
+  document.querySelectorAll("[data-bfree]").forEach(b=>b.onclick=()=>{setBrodyFree(c,b.dataset.bfree==="1");apply();});
+  document.querySelectorAll("[data-apace]").forEach(b=>b.onclick=()=>{const cur=Math.max(1,Math.round(brodyArtPace(c)));c.artPerDay=Math.max(1,cur+(b.dataset.apace==="inc"?1:-1));apply();});
+  const bua=document.getElementById("brodyUseArts");if(bua)bua.onclick=()=>{c.artPerDay=brodyRecArts(c,brodyBlock(c)||BRODY_BLOCKS[0]);apply();};
+  const bup=document.getElementById("brodyUsePace");if(bup)bup.onclick=()=>{c.brodyPace=brodyRecPace(c,brodyBlock(c)||BRODY_BLOCKS[0]);apply();};
   document.querySelectorAll("[data-fbuf]").forEach(b=>b.onclick=()=>{const cur=brodyReviewBuf(c);c.brodyReviewDays=Math.max(0,Math.min(14,cur+(b.dataset.fbuf==="inc"?1:-1)));apply();});
   const nu=document.getElementById("newUnit");if(nu)nu.onclick=()=>{startOnboard("nbme",true);};
   const ab=document.getElementById("adjBack");if(ab)ab.onclick=()=>{ADJ_VIEW=null;render();};
@@ -3808,7 +4051,30 @@ function customPaceBanner(c,st){
    apply, an on-track/behind/firehose status, and the resulting buffer spelled out. */
 function brodyPaceBanner(c){
   const blk=brodyBlock(c)||BRODY_BLOCKS[0];
-  const rec=brodyRecommendedPace(brodyWeekLoads(c,blk));
+  const free=brodyFree(c);
+  const st=SCHED.stats;
+  const artsOn=!!SCHED.artsOn;
+  /* A reading-only plan has no hours, so the whole hours banner would be a lie
+     told in a large font. It gets its own, in the currency it actually uses. */
+  if(artsOn&&!((st.totalMin||0)>0)){
+    const recA=brodyRecArts(c,blk),curA=SCHED.artPace||recA;
+    const diffA=recA!==curA;
+    return '<div class="pacebanner '+(curA>=recA?'ok':'warn')+'">'
+      +'<div class="pbtop"><div class="pbnum">'+recA+'<i>/day</i></div>'
+      +'<div class="pblab"><b>Recommended reading</b><span>UWorld Library <b>articles per day</b> to '
+      +(free?'clear this unit at an even pace, finishing before your buffer'
+            :'stay ahead of every quiz and finish before your buffer')+'</span></div></div>'
+      +'<div class="pbstat">'+(curA>=recA
+        ?('<span class="pbok">On track</span> you’re set to '+curA+' article'+(curA===1?'':'s')+' a day — '+st.remArts+' left of '+st.totalArts+'.')
+        :('<span class="pbwarn">Behind</span> you’re set to '+curA+' a day; about <b>'+recA+' a day</b> clears the '+st.remArts+' left in time.'))+'</div>'
+      +'<div class="pbbuf">📅 '+(brodyReviewBuf(c)>0
+        ?('All reading finishes by <b>'+fmtShort(SCHED.reviewCutoff)+'</b>, leaving <b>'+brodyReviewBuf(c)+' free day'+(brodyReviewBuf(c)===1?'':'s')+'</b> before the '+fmtShort(blk.shelf)+' exam for UWorld &amp; review.')
+        :('Reading runs right up to the '+fmtShort(blk.shelf)+' exam — no review buffer reserved.'))+'</div>'
+      +'<div class="pbnote">📖 Articles have <b>no runtime</b>, so this plan is paced by count rather than hours. Your Brody lectures, Anki, UWorld and review are <b>on top of this</b>.</div>'
+      +(diffA?'<button type="button" class="btn ghost pbbtn" id="brodyUseArts">Set my reading to '+recA+'/day</button>':'')
+      +'</div>';
+  }
+  const rec=brodyRecPace(c,blk);
   const cur=brodyPace(c);
   const heavy=(SCHED.weekLoad||[]).filter(w=>w.heavy);
   const nh=Math.max(0,...(SCHED.weekLoad||[]).filter(w=>isFinite(w.needH)).map(w=>w.needH||0));
@@ -3817,7 +4083,15 @@ function brodyPaceBanner(c){
   const buf=brodyReviewBuf(c);
   const diff=Math.abs(cur-rec)>=0.25;   // only offer the button when it would actually change your pace
   let stat;
-  if(heavy.length)stat='<span class="pbwarn">Firehose</span> Week '+heavy.map(w=>w.n).join(', ')+' packs more third-party than fits before its quiz, even at a high pace — trim a resource there. Everything else still finishes by the exam.';
+  // Free-paced, there is no weekly deadline to be behind and no single week that can
+  // be "more than fits" — both states still exist, they're just measured against the
+  // exam, so they get their own words rather than quiz words.
+  if(free){
+    if(heavy.length)stat='<span class="pbwarn">Doesn’t fit</span> this unit packs more third-party video than fits before the exam, even at a high pace — trim a resource.';
+    else if(behind)stat='<span class="pbwarn">Won’t finish</span> you’re set to '+cur+' h/day — about <b>'+rec+' h/day</b> clears every video before your buffer.';
+    else stat='<span class="pbok">On track</span> you’re set to '+cur+' h/day, evenly — every video is done before your buffer. Change anything below and this updates instantly.';
+  }
+  else if(heavy.length)stat='<span class="pbwarn">Firehose</span> Week '+heavy.map(w=>w.n).join(', ')+' packs more third-party than fits before its quiz, even at a high pace — trim a resource there. Everything else still finishes by the exam.';
   else if(behind)stat='<span class="pbwarn">Behind a quiz</span> you’re set to '+cur+' h/day — about <b>'+rec+' h/day</b> keeps you ahead of every weekly quiz.';
   else stat='<span class="pbok">On track</span> you’re set to '+cur+' h/day — every week finishes before its quiz. Change anything below and this updates instantly.';
   const bufTxt=buf>0
@@ -3825,7 +4099,9 @@ function brodyPaceBanner(c){
     : 'Videos run right up to the '+fmtShort(blk.shelf)+' exam — no review buffer reserved.';
   return '<div class="pacebanner '+(ok?'ok':'warn')+'">'
     +'<div class="pbtop"><div class="pbnum">'+rec+'<i>h/day</i></div>'
-    +'<div class="pblab"><b>Recommended pace</b><span>hours of <b>video to watch</b> per day to stay ahead of every quiz and finish before your buffer</span></div></div>'
+    +'<div class="pblab"><b>Recommended pace</b><span>hours of <b>video to watch</b> per day to '
+    +(free?'clear every video in this unit at an even pace, finishing before your buffer'
+          :'stay ahead of every quiz and finish before your buffer')+'</span></div></div>'
     +'<div class="pbstat">'+stat+'</div>'
     +'<div class="pbbuf">📅 '+bufTxt+'</div>'
     +'<div class="pbnote">⏱ This is <b>video watch-time only</b> — the hours of third-party video scheduled that day. Your Brody lectures, Anki, UWorld, and review are <b>on top of this</b>, not included in it.</div>'
@@ -4501,7 +4777,7 @@ function enterHub(key){if(!S.cfgs[key]){startOnboard(key);return;}activate(key);
 let _ob=null;
 function defaultsForHub(key,fresh){const ex=fresh?null:S.cfgs[key];
   let o;
-  if(ex)o={hub:key,fresh:false,brody:ex.brody||null,brodyPace:ex.brodyPace||null,brodyJoinWk:(ex.brodyJoinWk!=null?ex.brodyJoinWk:undefined),brodyJoinDate:(ex.brodyJoinDate||undefined),brodyReviewDays:(ex.brodyReviewDays!=null?ex.brodyReviewDays:undefined),examLabel:ex.examLabel||"",examISO:ex.examISO||"",startISO:ex.startISO||todayISO(),wkdayHrs:ex.wkdayHrs,wkendHrs:ex.wkendHrs,restDays:(ex.restDays||[0]).slice(),reviewDays:ex.reviewDays,resources:Object.assign({bnb:true,pathoma:true,sketchy:true,fa:true,anking:true,uworld:true},ex.resources||{}),systems:(ex.systems||SYS).slice(),sysOrder:(ex.sysOrder&&ex.sysOrder.length===SYS.length?ex.sysOrder:SYS_ORDER_DEFAULT).slice(),pathChapters:(Array.isArray(ex.pathChapters)?ex.pathChapters.slice():undefined),threadTopics:(Array.isArray(ex.threadTopics)?ex.threadTopics.slice():undefined),weeklyQGoal:(ex.weeklyQGoal||0),qGoalPer:(ex.qGoalPer||"week"),catOrder:(ex.catOrder?JSON.parse(JSON.stringify(ex.catOrder)):undefined),quizzes:(Array.isArray(ex.quizzes)?JSON.parse(JSON.stringify(ex.quizzes)):[]),skip:Object.assign({},ex.skip||{}),step:0};
+  if(ex)o={hub:key,fresh:false,brody:ex.brody||null,brodyPace:ex.brodyPace||null,brodyFree:(ex.brodyFree?true:undefined),artPerDay:(ex.artPerDay||undefined),brodyJoinWk:(ex.brodyJoinWk!=null?ex.brodyJoinWk:undefined),brodyJoinDate:(ex.brodyJoinDate||undefined),brodyReviewDays:(ex.brodyReviewDays!=null?ex.brodyReviewDays:undefined),examLabel:ex.examLabel||"",examISO:ex.examISO||"",startISO:ex.startISO||todayISO(),wkdayHrs:ex.wkdayHrs,wkendHrs:ex.wkendHrs,restDays:(ex.restDays||[0]).slice(),reviewDays:ex.reviewDays,resources:Object.assign({bnb:true,pathoma:true,sketchy:true,fa:true,anking:true,uworld:true},ex.resources||{}),systems:(ex.systems||SYS).slice(),sysOrder:(ex.sysOrder&&ex.sysOrder.length===SYS.length?ex.sysOrder:SYS_ORDER_DEFAULT).slice(),pathChapters:(Array.isArray(ex.pathChapters)?ex.pathChapters.slice():undefined),threadTopics:(Array.isArray(ex.threadTopics)?ex.threadTopics.slice():undefined),weeklyQGoal:(ex.weeklyQGoal||0),qGoalPer:(ex.qGoalPer||"week"),catOrder:(ex.catOrder?JSON.parse(JSON.stringify(ex.catOrder)):undefined),quizzes:(Array.isArray(ex.quizzes)?JSON.parse(JSON.stringify(ex.quizzes)):[]),skip:Object.assign({},ex.skip||{}),step:0};
   // a brand-new plan starts with every resource unchecked — the student picks
   else o={hub:key,fresh:!!fresh,examLabel:key==="step1"?"Step 1":"",examISO:"",startISO:todayISO(),wkdayHrs:6,wkendHrs:4,restDays:[0],reviewDays:14,resources:{bnb:false,pathoma:false,sketchy:false,fa:false,anking:false,uworld:false},systems:(key==="nbme"?[]:SYS.slice()),sysOrder:SYS_ORDER_DEFAULT.slice(),threadTopics:[],weeklyQGoal:0,qGoalPer:"week",catOrder:undefined,quizzes:[],skip:{},step:0};
   // NBME hub now selects individual systems (like Step 1); migrate any legacy block selection
@@ -4831,8 +5107,9 @@ function renderObTogs(){
   document.querySelectorAll("[data-odow]").forEach(b=>b.classList.toggle("on",_ob.restDays.includes(+b.dataset.odow)));
   document.querySelectorAll("[data-ores]").forEach(b=>b.classList.toggle("on",!!_ob.resources[b.dataset.ores]));
 }
-function obPaceHelp(ob){const pace=brodyPace(ob),rec=brodyRecommendedPace(brodyWeekLoads(ob,brodyBlockById(ob.brody)||BRODY_BLOCKS[0]));
-  return ob.brodyPace?('Set to '+pace+' h/day.'+(pace<rec?' Below the ~'+rec+' h/day this block needs — you may fall behind a quiz.':' You’ll finish with room to spare.')):('Recommended ~'+rec+' h/day, spread evenly across your open days — nudge it to fit your schedule.');}
+function obPaceHelp(ob){const pace=brodyPace(ob),rec=brodyRecPace(ob,brodyBlockById(ob.brody)||BRODY_BLOCKS[0]);
+  const short=brodyFree(ob)?' Below the ~'+rec+' h/day this block needs — you may not finish before the exam.':' Below the ~'+rec+' h/day this block needs — you may fall behind a quiz.';
+  return ob.brodyPace?('Set to '+pace+' h/day.'+(pace<rec?short:' You’ll finish with room to spare.')):('Recommended ~'+rec+' h/day, spread evenly across your open days — nudge it to fit your schedule.');}
 function obLive(){const c=document.getElementById("o_reco");if(c){c.innerHTML='<div class="cardhd">Recommended pace</div>'+obPreview();bindUsePace();}
   // keep the Daily-pace control in sync as resources / rest days change (Brody plans)
   if(_ob&&_ob.brody){const pv=document.getElementById("ob_paceval");if(pv)pv.textContent=brodyPace(_ob)+' h';const ph=document.getElementById("ob_pacehelp");if(ph)ph.innerHTML=obPaceHelp(_ob);}}
@@ -4867,22 +5144,38 @@ function brodyPreview(ob){
   if(!catReady())return '<p class="muted small" style="margin:0">Loading the video catalog…</p>';
   const blk=brodyBlock(ob)||BRODY_BLOCKS[0];const loads=brodyWeekLoads(ob,blk);
   const total=loads.reduce((a,w)=>a+w.loadMin,0);
-  if(!obHasVideoRes(ob))return '<p class="muted small" style="margin:0">Turn on at least one video resource to see the weekly plan.</p>';
-  if(!total)return '<p class="muted small" style="margin:0">Every video in this block is checked off — the days ahead are yours for questions and review.</p>';
-  const pace=brodyPace(ob);
+  // Reading counts as content, so a plan with articles on is a real plan even with
+  // every video resource off — the old guard would have called it empty.
+  const aLoads=brodyArtLoads(ob,blk);const artsOn=artEnabled(ob)&&brodyHasArts(blk);
+  const artTotal=aLoads.reduce((a,w)=>a+w.count,0);
+  const artBy={};aLoads.forEach(w=>{artBy[w.n]=w.count;});
+  if(!obHasVideoRes(ob)&&!artsOn)return '<p class="muted small" style="margin:0">Turn on at least one video resource to see the weekly plan.</p>';
+  if(!total&&!artTotal)return '<p class="muted small" style="margin:0">Everything in this block is checked off — the days ahead are yours for questions and review.</p>';
+  const pace=brodyPace(ob);const free=brodyFree(ob);const artPace=artsOn?brodyRecArts(ob,blk):0;
   // a late joiner's plan starts at their join week; joined weeks that passed only
   // show if they still carry unwatched videos (the rolled-forward backlog)
-  const shown=loads.filter(w=>!w.pre&&!(w.past&&!w.loadMin));
+  const shown=loads.filter(w=>!w.pre&&!(w.past&&!(w.loadMin||artBy[w.n])));
   let cum=0;const tightWks=[];
   const rows=shown.map(w=>{cum+=w.loadMin;const h=w.loadMin/60;
     const dead=w.deadline<=todayISO();   // that quiz already happened — leftovers just need to beat the exam
     const needH=dead?0:(w.odbd>0?cum/w.odbd/60:(cum>0?Infinity:0));const heavy=needH>BRODY_QUIZ_MAX;if(heavy)tightWks.push(w.n);
-    const dueTxt=dead?'catch-up':((w.deadline>=blk.shelf?'exam ':'quiz ')+fmtShort(w.deadline));
-    const tag='<span class="bw-h">'+(Math.round(h*10)/10)+' h'+(heavy?' ⚠':'')+'</span>';
+    // Free-paced, the week's quiz is still SHOWN — it's the real date of a real quiz,
+    // and hiding it would be worse than useless. It just isn't a deadline any more, so
+    // it reads as a reference marker instead of a due date.
+    const dueTxt=free?('<span class="bw-ref">quiz '+fmtShort(w.quiz)+'</span>')
+      :(dead?'catch-up':((w.deadline>=blk.shelf?'exam ':'quiz ')+fmtShort(w.deadline)));
+    const nA=artBy[w.n]||0;
+    const tag='<span class="bw-h">'+(total?((Math.round(h*10)/10)+' h'):'')+(heavy?' ⚠':'')
+      +(nA?((total?' · ':'')+nA+'&nbsp;read'):'')+'</span>';
     return '<div class="brodywk'+(heavy?' heavy':'')+'"><span class="bw-n">Wk '+w.n+'</span><span class="bw-l">'+escHTML(w.label)+' · '+dueTxt+'</span>'+tag+'</div>';}).join('');
   const skipped=loads.filter(w=>w.pre).length;
-  const tightMsg=tightWks.length?(' <b>⚠ Week '+tightWks.join(', ')+'</b> is a firehose — more third-party than fits before its quiz. Trim a resource or prioritize the high-yield ones there.'):' Comfortably ahead of every quiz.';
-  let h='<p class="muted small" style="margin:0 0 10px">'+Math.round(total/60)+' h of video across '+shown.length+' Brody week'+(shown.length===1?'':'s')+' → block exam '+fmtShort(blk.shelf)+'. At <b>'+pace+' h/day</b>, spread evenly across your open days.'+tightMsg+(skipped>0?(' You’re starting at week '+(skipped+1)+' — earlier weeks aren’t included, so there’s no backlog to clear.'):'')+'</p>';
+  const tightMsg=free
+    ? (tightWks.length?' <b>⚠ More third-party than fits before the exam</b>, even at a high pace — trim a resource or prioritize the high-yield ones.':' Everything clears before the exam.')
+    : (tightWks.length?(' <b>⚠ Week '+tightWks.join(', ')+'</b> is a firehose — more third-party than fits before its quiz. Trim a resource or prioritize the high-yield ones there.'):' Comfortably ahead of every quiz.');
+  const what=[total?(Math.round(total/60)+' h of video'):'',artTotal?(artTotal+' article'+(artTotal===1?'':'s')):''].filter(Boolean).join(' + ');
+  const at=[total?('<b>'+pace+' h/day</b>'):'',artTotal?('<b>'+artPace+' article'+(artPace===1?'':'s')+'/day</b>'):''].filter(Boolean).join(' + ');
+  let h='<p class="muted small" style="margin:0 0 10px">'+what+' across '+shown.length+' Brody week'+(shown.length===1?'':'s')+' → block exam '+fmtShort(blk.shelf)+'. At '+at+', spread evenly across your open days.'+(total?tightMsg:'')
+    +(free?' Quiz dates are shown for reference — they don’t set your pace in this mode.':'')+(skipped>0?(' You’re starting at week '+(skipped+1)+' — earlier weeks aren’t included, so there’s no backlog to clear.'):'')+'</p>';
   h+='<div class="brodywks">'+rows+'</div>';
   return h;
 }
@@ -4909,7 +5202,9 @@ function commitOnboard(){const ob=_ob;
   const c=S.cfgs[key]||{};
   Object.assign(c,{examType:key,examLabel:key==="step1"?"Step 1":(brody?brody.name:(ob.examLabel||"Shelf exam")),
     // brodyPace is locked to the plan at creation (reflowBrody stamps it if the catalog wasn't ready yet)
-    brody:(brody?brody.id:undefined),brodyPace:(brody?(ob.brodyPace||(catReady()?brodyPace(ob):undefined)):undefined),brodyJoinWk:(brody?(ob.brodyJoinWk!=null?ob.brodyJoinWk:undefined):undefined),brodyJoinDate:(brody?(ob.brodyJoinDate||todayISO()):undefined),brodyReviewDays:(brody?brodyReviewBuf(ob):undefined),
+    // carried on an edit, cleared by a brand-new plan — a fresh plan starts on Brody's
+    // own quiz weeks, which is the mode the calendar is named after
+    brody:(brody?brody.id:undefined),brodyFree:((brody&&ob.brodyFree)?true:undefined),artPerDay:((brody&&ob.artPerDay)?ob.artPerDay:undefined),brodyPace:(brody?(ob.brodyPace||(catReady()?brodyPace(ob):undefined)):undefined),brodyJoinWk:(brody?(ob.brodyJoinWk!=null?ob.brodyJoinWk:undefined):undefined),brodyJoinDate:(brody?(ob.brodyJoinDate||todayISO()):undefined),brodyReviewDays:(brody?brodyReviewBuf(ob):undefined),
     examISO:(brody?brody.shelf:ob.examISO),startISO:(brody?brody.weeks[0].start:ob.startISO),wkdayHrs:ob.wkdayHrs,wkendHrs:ob.wkendHrs,restDays:ob.restDays.slice(),
     reviewDays:(brody?0:ob.reviewDays),resources:Object.assign({},ob.resources),systems:(brody?brody.systems.slice():ob.systems.slice()),sysOrder:(ob.sysOrder||SYS_ORDER_DEFAULT).slice(),pathChapters:(Array.isArray(ob.pathChapters)?ob.pathChapters.slice():undefined),threadTopics:(brody?undefined:(Array.isArray(ob.threadTopics)?ob.threadTopics.slice():undefined)),weeklyQGoal:(ob.weeklyQGoal>0?ob.weeklyQGoal:0),qGoalPer:qGoalPer(ob),catOrder:(ob.catOrder?JSON.parse(JSON.stringify(ob.catOrder)):undefined),quizzes:(Array.isArray(ob.quizzes)?ob.quizzes.filter(q=>q&&q.iso):[]),skip:Object.assign({},ob.skip||{})});
   c.off=c.off||{};c.on=c.on||{};
@@ -4953,11 +5248,27 @@ function doResetAll(){
     S.cfgs=snap.cfgs;S.active=snap.active;S.cfg=S.active?S.cfgs[S.active]:null;_prevSig=progressSig();save();
     if(S.cfg){reflow();render();}else renderWelcome();toast("Restored ✓");});
 }
-const BUILD="2026-09-20a";
+const BUILD="2026-09-22a";
 /* ---------- What's new (changelog) ----------
    Newest entry first. Bump the top entry's id whenever you add one and the
    pop-up shows once per person (tracked in synced settings.seenUpdate). */
 const CHANGELOG=[
+  {id:"2026-09-22", date:"September 2026", title:"New: read instead of watch — UWorld Library on the Brody calendar", items:[
+    "If you’d rather read than watch, the UWorld Medical Library is now a schedulable resource. Turn it on under Plan → Video resources → Reading.",
+    "All 108 UWorld Neurology articles are mapped to the Nervous & Sensory unit’s Brody weeks, the same way the videos are — so the reading follows your course week by week, finishes each week before that week’s quiz, and rolls forward instead of vanishing if you fall behind.",
+    "Articles have no runtime, so they aren’t paced in hours. They get their own plate: <b>articles per day</b>, recommended the same way your video pace is, and nudgeable in Plan. A day can hold both — “4h 20m · 11 to read” — and neither budget crowds out the other.",
+    "Use it instead of videos or alongside them. Turn every video resource off and you get a reading-only plan: no hours anywhere, just a daily article count, and the pace banner speaks in articles.",
+    "Everything else works on reading exactly as it does on videos — check-offs, progress, the calendar, re-fit, rest days, days off, the review buffer, leaving individual items out, and the even-pace mode.",
+    "So far only Nervous & Sensory has articles mapped. On Heme/Renal and Cardiopulmonary the Plan tab says so rather than quietly scheduling nothing.",
+  ]},
+  {id:"2026-09-21", date:"September 2026", title:"Use the Brody calendar without the quiz deadlines", items:[
+    "Your Brody plan can now choose what sets its deadlines. Open Plan → Study days & pace and you’ll see two options under “What sets your deadlines”.",
+    "“Brody quiz weeks” is what you have today and stays the default: each week’s videos are finished before that week’s quiz, so you’re never behind the material you’re about to be tested on. Heavy weeks stay heavy.",
+    "“Even pace to the exam” keeps the exact same videos in the exact same Brody order — nothing is added, dropped or reshuffled — but the weekly quizzes stop being deadlines. Everything left is spread evenly over your open days, so no week is heavier than another, and it all still finishes before your review buffer.",
+    "Worth it if Brody front-loads a unit, if you’ve fallen behind and the quiz-ready number has gone unrealistic, or if you’re working through a unit’s content outside its real quiz calendar. On Heme/Renal, for instance, it drops the pace from 4.5 to 4 h/day.",
+    "The trade: you can be mid-week on material a quiz has already covered. Quiz dates still show on your weekly plan so you can see that coming — they just don’t drive your pace.",
+    "Everything else works exactly as before either way: nudge your own h/day, re-fit as you study ahead, set your review buffer, rest days, days off, “study this day”, leaving videos out. Switching re-derives your recommended pace, and it’s undoable — flip between the two whenever you like, nothing you’ve checked off is affected.",
+  ]},
   {id:"2026-08-14", date:"August 2026", title:"Renal joins Rapid Reference", items:[
     "Rapid Reference now covers Renal as well as Hematology \u2014 31 more videos, 295 topics, 1,382 points. Tap the chip at the top to switch systems.",
     "Search stays inside whichever system you\u2019re in, so a renal term doesn\u2019t drag up heme results and vice versa.",
@@ -5142,6 +5453,12 @@ function brodyHelpHTML(){
       +'<li>The videos from before you joined don’t vanish either: they show on their real past dates marked <i>earlier</i> — optional and checkable. Go back for any you want; they’re not counted against your pace.</li>'
       +'<li>Everything from your join week onward is your actual plan, paced to stay ahead of each remaining quiz and finish before the shelf.</li>'
     +'</ul></div>'
+    +'<div class="chgentry"><div class="chgtitle">Don’t want the quiz deadlines? Switch to an even pace</div><ul class="chglist">'
+      +'<li>Under <b>Plan → Study days &amp; pace</b> you can set what drives your deadlines. <b>Brody quiz weeks</b> (the default) finishes each week’s videos before that week’s quiz. <b>Even pace to the exam</b> keeps the exact same videos in the exact same Brody order, but spreads everything left evenly over your open days instead.</li>'
+      +'<li>Even pace means <b>no week is heavier than another</b> — useful if Brody front-loads a unit, if you’re behind and the quiz-ready number has gone silly, or if you’re working through a unit’s content outside its real quiz calendar.</li>'
+      +'<li>The trade: you can be mid-week on material a quiz already covered. Quiz dates still show on your weekly plan so you can see that coming — they just don’t set your pace.</li>'
+      +'<li>Flip it either way whenever you like. Nothing you’ve checked off is affected; only the h/day changes.</li>'
+    +'</ul></div>'
   +'</div>';
 }
 function showBrodyHelp(markSeen){
@@ -5187,19 +5504,26 @@ function menuAct(m){
    mapped to a week, and mappings whose video no longer exists). Read-only —
    leads review and report; the map is edited in code. */
 function auditBlock(blk){
+  // Articles are audited too — they are mapped by hand exactly like the videos, so
+  // they carry exactly the same risk of an unmapped item or a stale key. They read
+  // their week from artWeek rather than videoWeek, so the source of the mapping is
+  // chosen per item rather than assumed.
   const vids=catVideos().filter(v=>brodyInBlock(blk,v));
-  const explicitOf=v=>(blk.videoWeek[brodyKey(v)]!=null)||(v.res==="bootcamp"&&blk.bcWeek&&blk.bcWeek[v.sys+"|"+(v.cat||"")]!=null);
+  const explicitOf=v=>isArticle(v)
+    ? ((blk.artWeek||{})[brodyKey(v)]!=null)
+    : ((blk.videoWeek[brodyKey(v)]!=null)||(v.res==="bootcamp"&&blk.bcWeek&&blk.bcWeek[v.sys+"|"+(v.cat||"")]!=null));
+  const weekOfItem=v=>isArticle(v)?brodyArtWeek(blk,v):brodyVideoWeek(blk,v);
   const weeks=blk.weeks.map(w=>({n:w.n,label:w.label,start:w.start,lectures:(w.lectures||[]).slice(),vids:[]}));
   const wkIdx={};blk.weeks.forEach((w,i)=>wkIdx[w.n]=i);
   const unmapped=[];
-  vids.forEach(v=>{const wk=brodyVideoWeek(blk,v);const exp=explicitOf(v);
+  vids.forEach(v=>{const wk=weekOfItem(v);const exp=explicitOf(v);
     const bucket=weeks[wkIdx[wk]!=null?wkIdx[wk]:weeks.length-1];
     bucket.vids.push({res:v.res,sys:v.sys,cat:v.cat||"",name:v.name,exp});
     if(!exp)unmapped.push({res:v.res,sys:v.sys,cat:v.cat||"",name:v.name,wk});});
   const ri=r=>RES_ORDER.indexOf(r);
   weeks.forEach(w=>w.vids.sort((a,b)=>(ri(a.res)-ri(b.res))||a.name.localeCompare(b.name)));
   const catKeys=new Set(catVideos().map(brodyKey));
-  const orphans=Object.keys(blk.videoWeek||{}).filter(k=>!catKeys.has(k));
+  const orphans=Object.keys(blk.videoWeek||{}).concat(Object.keys(blk.artWeek||{})).filter(k=>!catKeys.has(k));
   const bcKeys=new Set(catVideos().filter(v=>v.res==="bootcamp").map(v=>v.sys+"|"+(v.cat||"")));
   const bcOrphans=Object.keys(blk.bcWeek||{}).filter(k=>!bcKeys.has(k));
   return {blk,weeks,unmapped,orphans,bcOrphans,total:vids.length};

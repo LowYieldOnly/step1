@@ -69,6 +69,12 @@ const audit=await p.evaluate(()=>BRODY_BLOCKS.map(b=>{
   return {id:b.id,total:a.total,
     unmapped:a.unmapped.map(v=>v.res+'|'+v.sys+'|'+v.cat+'|'+v.name),
     orphans:a.orphans,bcOrphans:a.bcOrphans,
+    // the audit covers the whole mapping regardless of which resources are enabled,
+    // so videos and articles are counted apart rather than as one opaque total
+    vidTotal:a.weeks.reduce((n,w)=>n+w.vids.filter(v=>v.res!=='uwlib').length,0),
+    artTotal:a.weeks.reduce((n,w)=>n+w.vids.filter(v=>v.res==='uwlib').length,0),
+    perWeekVid:a.weeks.map(w=>w.vids.filter(v=>v.res!=='uwlib').length),
+    perWeekArt:a.weeks.map(w=>w.vids.filter(v=>v.res==='uwlib').length),
     perWeek:a.weeks.map(w=>w.vids.length),empty:a.weeks.filter(w=>!w.vids.length).map(w=>w.n)};
 }));
 const ns=audit.find(a=>a.id==='neuro-sensory');
@@ -76,8 +82,11 @@ chk('C57-7 no video falls through to the last week ("defaulted")',
     ns.unmapped.length===0, ns.unmapped.slice(0,4).join(' ; '));
 chk('C57-8 no mapping points at a video that left the catalog',
     ns.orphans.length===0&&ns.bcOrphans.length===0, JSON.stringify([ns.orphans,ns.bcOrphans]).slice(0,300));
-chk('C57-9 every week has content ('+ns.perWeek.join(' / ')+' videos)',
-    ns.empty.length===0&&ns.total===547, JSON.stringify(ns.perWeek)+' total='+ns.total);
+chk('C57-9 every week has content ('+ns.perWeekVid.join(' / ')+' videos)',
+    ns.empty.length===0&&ns.vidTotal===547, JSON.stringify(ns.perWeekVid)+' total='+ns.vidTotal);
+chk('C57-9b …and the UWorld articles are mapped across the weeks too ('+ns.perWeekArt.join(' / ')+')',
+    ns.artTotal===108&&ns.perWeekArt.every(n=>n>0),
+    JSON.stringify(ns.perWeekArt)+' total='+ns.artTotal);
 chk('C57-10 adding a third block left the first two audit-clean',
     audit.filter(a=>a.id!=='neuro-sensory').every(a=>!a.unmapped.length&&!a.orphans.length&&!a.bcOrphans.length),
     JSON.stringify(audit.filter(a=>a.id!=='neuro-sensory').map(a=>[a.id,a.unmapped.length,a.orphans.length])));
