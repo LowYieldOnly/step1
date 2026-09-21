@@ -403,7 +403,8 @@ chk('C58-49 …with the pre-arrival videos still shown as optional "earlier" wor
    told. The changelog pop-up already fires once per new entry, tracked in synced
    settings — this pins that the entry exists, is the one that fires, and clears. */
 const news=await p.evaluate(()=>{
-  const top=CHANGELOG[0];
+  const ENTRY='2026-09-21';                       // the free-pace announcement
+  const mine=CHANGELOG.find(e=>e.id===ENTRY);
   S.settings={};                                  // a student who has never seen it
   const before=(S.settings.seenUpdate!==LATEST_UPDATE);
   maybeShowUpdates();
@@ -415,21 +416,28 @@ const news=await p.evaluate(()=>{
   maybeShowUpdates();                             // second open — must stay quiet
   const again=!!document.getElementById('updates');
   const ids=CHANGELOG.map(e=>e.id);
-  return {topId:top.id,topTitle:top.title,latest:LATEST_UPDATE,before,txt,shown,after,again,
+  return {found:!!mine,title:mine&&mine.title,rank:CHANGELOG.indexOf(mine),
+          body:mine?mine.items.join(' '):'',
+          latest:LATEST_UPDATE,before,txt,shown,after,again,
           dupes:ids.length!==new Set(ids).size,
           sorted:ids.every((x,i)=>i===0||ids[i-1]>x)};
 });
-chk('C58-50 the new mode has a changelog entry, and it is the latest',
-    news.topId==='2026-09-21'&&news.latest===news.topId&&/quiz deadlines/i.test(news.topTitle),
-    news.topId+' / '+news.latest+' / '+news.topTitle);
+/* Deliberately NOT pinned as "the newest entry" — new releases get added above it,
+   and an assertion that breaks on every future changelog entry is noise, not a test.
+   What matters is that the entry exists, says what the feature is, and is near enough
+   the top to still be in the two the pop-up shows when it first ships. */
+chk('C58-50 the free-pace mode has its own changelog entry',
+    news.found&&/quiz deadlines/i.test(news.title||''), news.title||'entry 2026-09-21 is gone');
+chk('C58-50b …naming the setting and both options',
+    /Even pace to the exam/.test(news.body)&&/Brody quiz weeks/.test(news.body)&&/Study days/.test(news.body),
+    news.body.slice(0,200));
 chk('C58-51 changelog ids are unique and newest-first',
     !news.dupes&&news.sorted, 'dupes '+news.dupes+', sorted '+news.sorted);
 chk('C58-52 it pops on open for anyone who has not seen it',
     news.before===true&&news.shown===2, 'pending '+news.before+', entries shown '+news.shown);
-chk('C58-53 …and actually names the feature and where to find it',
-    /Even pace to the exam/.test(news.txt)&&/Study days/.test(news.txt)
-      &&/Brody quiz weeks/.test(news.txt)&&/same Brody order/.test(news.txt),
-    news.txt.slice(0,260));
+chk('C58-53 …showing the newest entries, this one among them while it is recent',
+    news.rank>=0&&news.rank<2&&news.txt.indexOf(news.title)>=0,
+    'entry sits at position '+news.rank+' of the changelog');
 chk('C58-54 …then marks itself seen and stays quiet on the next open',
     news.after===news.latest&&news.again===false,
     'seenUpdate '+news.after+', reopened '+news.again);
@@ -440,7 +448,7 @@ const newsSync=await p.evaluate(()=>{
   S.settings={seenUpdate:LATEST_UPDATE,seenBrodyHelp:true};
   const a=JSON.stringify(persistObj());
   const b=JSON.stringify(mergeState(JSON.parse(a),JSON.parse(a)));
-  return {same:a===b,kept:/"seenUpdate":"2026-09-21"/.test(a)};
+  return {same:a===b,kept:a.indexOf('"seenUpdate":"'+LATEST_UPDATE+'"')>=0};
 });
 chk('C58-55 the seen-flag persists and survives a self-merge',
     newsSync.same&&newsSync.kept, JSON.stringify(newsSync));

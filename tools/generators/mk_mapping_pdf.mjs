@@ -68,6 +68,8 @@ async function extract(page, id) {
       build: (typeof BUILD !== 'undefined' ? BUILD : ''),
       catalogCount: catVideos().length,
       total: a.total, totalMin: weeks.reduce((s, w) => s + w.min, 0),
+      // written resources have no runtime, so they are counted apart from the video total
+      nArts: weeks.reduce((s, w) => s + w.groups.filter(g => g.res === 'uwlib').reduce((t, g) => t + g.n, 0), 0),
       resTotals: RES_ORDER.filter(r => resTot[r]).map(r => ({ res:r, label:resLabel(r), n:resTot[r].n, min:resTot[r].min })),
       unmapped: a.unmapped, orphans: a.orphans, bcOrphans: a.bcOrphans,
       weeks,
@@ -140,35 +142,35 @@ function render(d) {
 
   P.push(`<p class="eyebrow">BRODY MODE · Third-party resource mapping</p>`);
   P.push(`<h1>${esc(d.name)}</h1>`);
-  P.push(`<p class="sub">Every third-party video the schedule assigns in this unit, and the Brody week it is assigned to.</p>`);
+  P.push(`<p class="sub">Every third-party ${d.nArts ? 'video and article' : 'video'} the schedule assigns in this unit, and the Brody week it is assigned to.</p>`);
   P.push(`<hr class="rule">`);
 
   P.push(`<div class="meta">
     <div><b>Course systems</b>${esc(sysList)}</div>
     <div><b>Unit runs</b>${esc(longDate(d.weeks[0].start))} → ${esc(longDate(d.shelf))}</div>
-    <div><b>Total assigned</b>${d.total} videos · ${hrs(d.totalMin)} h</div>
+    <div><b>Total assigned</b>${d.nArts ? `${d.total - d.nArts} videos (${hrs(d.totalMin)} h) + ${d.nArts} articles` : `${d.total} videos · ${hrs(d.totalMin)} h`}</div>
     <div><b>Quizzes / checkpoints</b>${d.checkpoints.length ? d.checkpoints.map(longDate).map(esc).join(' · ') : '—'}</div>
   </div>`);
 
   P.push(`<div class="note">
     <p><b>How to read this.</b> The unit is divided into Brody content weeks. Each week lists the course's own lecture topics for that week, then every third-party video mapped to it, grouped by resource. The scheduler's rule is that a week's videos are finished within that week, before that week's quiz — so this table is also the deadline structure.</p>
-    <p>Runtimes are the publishers' own. Hours are video time only: they exclude question banks, Anki and review.</p>
+    <p>Runtimes are the publishers' own. Hours are video time only: they exclude question banks, Anki and review.${d.nArts ? ` The ${d.nArts} UWorld Library articles are written material with no runtime, so they carry no hours and are scheduled by a separate count per day rather than by time.` : ''}</p>
     ${issues ? `<p><b>${issues}</b> item${issues === 1 ? '' : 's'} need attention — flagged at the end of this document.</p>`
              : `<p>Every video in this unit is explicitly mapped to a week, and every mapping points at a video that exists in the catalog. Nothing fell through to a default.</p>`}
   </div>`);
 
   /* summary tables */
-  P.push(`<h2>By week</h2><table><thead><tr><th>Week</th><th>Content</th><th>Starts</th><th class="num">Videos</th><th class="num">Hours</th></tr></thead><tbody>`);
+  P.push(`<h2>By week</h2><table><thead><tr><th>Week</th><th>Content</th><th>Starts</th><th class="num">${d.nArts ? 'Items' : 'Videos'}</th><th class="num">Hours</th></tr></thead><tbody>`);
   d.weeks.forEach(w => P.push(`<tr><td>${w.n}</td><td>${esc(w.label)}</td><td>${esc(longDate(w.start))}</td><td class="num">${w.n_vids}</td><td class="num">${hrs(w.min)}</td></tr>`));
   P.push(`<tr class="tot"><td colspan="3">Total</td><td class="num">${d.total}</td><td class="num">${hrs(d.totalMin)}</td></tr></tbody></table>`);
 
-  P.push(`<h2>By resource</h2><table><thead><tr><th>Resource</th><th class="num">Videos</th><th class="num">Hours</th><th class="num">Share of hours</th></tr></thead><tbody>`);
-  d.resTotals.forEach(r => P.push(`<tr><td>${esc(r.label)}</td><td class="num">${r.n}</td><td class="num">${hrs(r.min)}</td><td class="num">${Math.round(r.min / d.totalMin * 100)}%</td></tr>`));
+  P.push(`<h2>By resource</h2><table><thead><tr><th>Resource</th><th class="num">Items</th><th class="num">Hours</th><th class="num">Share of hours</th></tr></thead><tbody>`);
+  d.resTotals.forEach(r => P.push(`<tr><td>${esc(r.label)}</td><td class="num">${r.n}</td><td class="num">${r.min > 0 ? hrs(r.min) : 'no runtime'}</td><td class="num">${r.min > 0 && d.totalMin ? Math.round(r.min / d.totalMin * 100) + '%' : '—'}</td></tr>`));
   P.push(`<tr class="tot"><td>Total</td><td class="num">${d.total}</td><td class="num">${hrs(d.totalMin)}</td><td class="num">100%</td></tr></tbody></table>`);
 
   /* week by week */
   d.weeks.forEach(w => {
-    P.push(`<div class="wk"><div class="wkhd"><span class="wkn">Week ${w.n}</span><span class="wklab">${esc(w.label)}</span><span class="wkct">${w.n_vids} videos · ${hrs(w.min)} h</span></div>`);
+    P.push(`<div class="wk"><div class="wkhd"><span class="wkn">Week ${w.n}</span><span class="wklab">${esc(w.label)}</span><span class="wkct">${w.n_vids} ${d.nArts ? 'items' : 'videos'} · ${hrs(w.min)} h</span></div>`);
     P.push(`<div class="lects"><div class="lecthd">Brody lecture topics · week of ${esc(longDate(w.start))}</div>`);
     if (w.discs.length) w.discs.forEach(g => P.push(
       `<div class="lgrp"><div class="ldisc">${esc(g.disc)}</div><div>${g.titles.map(t => `<div class="ltitle">${esc(t)}</div>`).join('')}</div></div>`));
@@ -181,7 +183,8 @@ function render(d) {
       g.cats.forEach(c => {
         P.push(`<div class="cat">`);
         if (c.cat) P.push(`<div class="catnm">${esc(c.cat)}</div>`);
-        c.vids.forEach(v => P.push(`<div class="v"><span class="t${v.exp ? '' : ' def'}">${esc(v.name)}${v.exp ? '' : ' <span class="deftag">defaulted</span>'}</span><span class="m">${v.min}m</span></div>`));
+        // written resources have no runtime — show nothing rather than "0m"
+        c.vids.forEach(v => P.push(`<div class="v"><span class="t${v.exp ? '' : ' def'}">${esc(v.name)}${v.exp ? '' : ' <span class="deftag">defaulted</span>'}</span><span class="m">${v.min > 0 ? v.min + 'm' : '—'}</span></div>`));
         P.push(`</div>`);
       });
       P.push(`</div></div>`);
@@ -234,8 +237,8 @@ try {
   fs.unlinkSync(tmp);
   const kb = Math.round(fs.statSync(OUT).size / 1024);
   console.log('wrote ' + OUT + '  (' + kb + ' KB)');
-  console.log('  ' + data.name + ': ' + data.total + ' videos, ' + hrs(data.totalMin) + ' h across ' + data.weeks.length + ' weeks');
-  data.resTotals.forEach(r => console.log('    ' + String(r.n).padStart(4) + '  ' + hrs(r.min).padStart(5) + ' h  ' + r.label));
+  console.log('  ' + data.name + ': ' + (data.total - data.nArts) + ' videos (' + hrs(data.totalMin) + ' h)' + (data.nArts ? ' + ' + data.nArts + ' articles' : '') + ' across ' + data.weeks.length + ' weeks');
+  data.resTotals.forEach(r => console.log('    ' + String(r.n).padStart(4) + '  ' + (r.min > 0 ? hrs(r.min).padStart(5) + ' h' : '     —') + '  ' + r.label));
   const issues = data.unmapped.length + data.orphans.length + data.bcOrphans.length;
   console.log('  ' + (issues ? '⚠ ' + issues + ' flagged item(s)' : 'mapping clean — nothing defaulted, nothing orphaned'));
 } finally {
