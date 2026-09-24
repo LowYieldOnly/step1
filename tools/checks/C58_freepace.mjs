@@ -418,6 +418,8 @@ const news=await p.evaluate(()=>{
   const ids=CHANGELOG.map(e=>e.id);
   return {found:!!mine,title:mine&&mine.title,rank:CHANGELOG.indexOf(mine),
           body:mine?mine.items.join(' '):'',
+          top:CHANGELOG.slice(0,2).map(e=>e.title),
+          third:CHANGELOG[2]?CHANGELOG[2].title:null,
           latest:LATEST_UPDATE,before,txt,shown,after,again,
           dupes:ids.length!==new Set(ids).size,
           sorted:ids.every((x,i)=>i===0||ids[i-1]>x)};
@@ -435,9 +437,16 @@ chk('C58-51 changelog ids are unique and newest-first',
     !news.dupes&&news.sorted, 'dupes '+news.dupes+', sorted '+news.sorted);
 chk('C58-52 it pops on open for anyone who has not seen it',
     news.before===true&&news.shown===2, 'pending '+news.before+', entries shown '+news.shown);
-chk('C58-53 …showing the newest entries, this one among them while it is recent',
-    news.rank>=0&&news.rank<2&&news.txt.indexOf(news.title)>=0,
-    'entry sits at position '+news.rank+' of the changelog');
+/* Deliberately NOT "this entry is one of the two shown" — it was, when it shipped,
+   and two releases later it is not. An assertion written to hold only while a
+   feature is recent is a time bomb with a test's name on it. What is durable is the
+   rule the pop-up actually follows: it shows the NEWEST entries, in order, and
+   nothing older. */
+chk('C58-53 …and they are the newest entries, in order, with nothing older',
+    news.txt.indexOf(news.top[0])>=0&&news.txt.indexOf(news.top[1])>=0
+      &&news.txt.indexOf(news.top[0])<news.txt.indexOf(news.top[1])
+      &&(news.third===null||news.txt.indexOf(news.third)<0),
+    'shown: '+JSON.stringify(news.top)+' — third entry "'+news.third+'" should be absent');
 chk('C58-54 …then marks itself seen and stays quiet on the next open',
     news.after===news.latest&&news.again===false,
     'seenUpdate '+news.after+', reopened '+news.again);
