@@ -4858,7 +4858,7 @@ function enterHub(key){if(!S.cfgs[key]){startOnboard(key);return;}activate(key);
 let _ob=null;
 function defaultsForHub(key,fresh){const ex=fresh?null:S.cfgs[key];
   let o;
-  if(ex)o={hub:key,fresh:false,brody:ex.brody||null,brodyPace:ex.brodyPace||null,brodyFree:(ex.brodyFree?true:undefined),artPerDay:(ex.artPerDay||undefined),brodyJoinWk:(ex.brodyJoinWk!=null?ex.brodyJoinWk:undefined),brodyJoinDate:(ex.brodyJoinDate||undefined),brodyReviewDays:(ex.brodyReviewDays!=null?ex.brodyReviewDays:undefined),examLabel:ex.examLabel||"",examISO:ex.examISO||"",startISO:ex.startISO||todayISO(),wkdayHrs:ex.wkdayHrs,wkendHrs:ex.wkendHrs,restDays:(ex.restDays||[0]).slice(),reviewDays:ex.reviewDays,resources:Object.assign({bnb:true,pathoma:true,sketchy:true,fa:true,anking:true,uworld:true},ex.resources||{}),systems:(ex.systems||SYS).slice(),sysOrder:(ex.sysOrder&&ex.sysOrder.length===SYS.length?ex.sysOrder:SYS_ORDER_DEFAULT).slice(),pathChapters:(Array.isArray(ex.pathChapters)?ex.pathChapters.slice():undefined),threadTopics:(Array.isArray(ex.threadTopics)?ex.threadTopics.slice():undefined),weeklyQGoal:(ex.weeklyQGoal||0),qGoalPer:(ex.qGoalPer||"week"),catOrder:(ex.catOrder?JSON.parse(JSON.stringify(ex.catOrder)):undefined),quizzes:(Array.isArray(ex.quizzes)?JSON.parse(JSON.stringify(ex.quizzes)):[]),skip:Object.assign({},ex.skip||{}),step:0};
+  if(ex)o={hub:key,fresh:false,brody:ex.brody||null,brodyPace:ex.brodyPace||null,brodyFree:(ex.brodyFree?true:undefined),artPerDay:(ex.artPerDay||undefined),contentOff:(ex.contentOff?JSON.parse(JSON.stringify(ex.contentOff)):undefined),brodyJoinWk:(ex.brodyJoinWk!=null?ex.brodyJoinWk:undefined),brodyJoinDate:(ex.brodyJoinDate||undefined),brodyReviewDays:(ex.brodyReviewDays!=null?ex.brodyReviewDays:undefined),examLabel:ex.examLabel||"",examISO:ex.examISO||"",startISO:ex.startISO||todayISO(),wkdayHrs:ex.wkdayHrs,wkendHrs:ex.wkendHrs,restDays:(ex.restDays||[0]).slice(),reviewDays:ex.reviewDays,resources:Object.assign({bnb:true,pathoma:true,sketchy:true,fa:true,anking:true,uworld:true},ex.resources||{}),systems:(ex.systems||SYS).slice(),sysOrder:(ex.sysOrder&&ex.sysOrder.length===SYS.length?ex.sysOrder:SYS_ORDER_DEFAULT).slice(),pathChapters:(Array.isArray(ex.pathChapters)?ex.pathChapters.slice():undefined),threadTopics:(Array.isArray(ex.threadTopics)?ex.threadTopics.slice():undefined),weeklyQGoal:(ex.weeklyQGoal||0),qGoalPer:(ex.qGoalPer||"week"),catOrder:(ex.catOrder?JSON.parse(JSON.stringify(ex.catOrder)):undefined),quizzes:(Array.isArray(ex.quizzes)?JSON.parse(JSON.stringify(ex.quizzes)):[]),skip:Object.assign({},ex.skip||{}),step:0};
   // a brand-new plan starts with every resource unchecked — the student picks
   else o={hub:key,fresh:!!fresh,examLabel:key==="step1"?"Step 1":"",examISO:"",startISO:todayISO(),wkdayHrs:6,wkendHrs:4,restDays:[0],reviewDays:14,resources:{bnb:false,pathoma:false,sketchy:false,fa:false,anking:false,uworld:false},systems:(key==="nbme"?[]:SYS.slice()),sysOrder:SYS_ORDER_DEFAULT.slice(),threadTopics:[],weeklyQGoal:0,qGoalPer:"week",catOrder:undefined,quizzes:[],skip:{},step:0};
   // NBME hub now selects individual systems (like Step 1); migrate any legacy block selection
@@ -5035,7 +5035,7 @@ const OB_STEP_META={
   block:["Pick your block","Which Brody unit are you on?"],
   name:["Name your exam","What are you studying for?"],
   dates:["Set your dates","When is your exam, and when do you start?"],
-  resources:["Pick your resources","Which video series do you actually use?"],
+  resources:["Pick your resources","Which ones do you actually use, and how deep should the plan go?"],
   systems:["Systems & study order","What does this shelf cover — and in what order?"],
   routine:["Your routine","How much can you study, and how fast?"],
   skip:["Leave anything out","Opt out of individual videos. Optional — everything is included unless you say otherwise."],
@@ -5044,10 +5044,18 @@ const OB_STEP_META={
   review:["Review & start","One last look before you build it."]
 };
 function obHasVideoRes(ob){return !!(ob.resources&&["bnb","pathoma","sketchy","bootcamp"].some(k=>ob.resources[k]));}
+/* Reading counts as content, so a plan with UWorld Library on and every video
+   resource off is a real plan. The old gate only knew about video and would have
+   blocked setup on the step where you'd just chosen to read instead. */
+function obHasAnyRes(ob){
+  if(obHasVideoRes(ob))return true;
+  const blk=ob.brody?brodyBlockById(ob.brody):null;
+  return !!(blk&&brodyHasArts(blk)&&ob.resources&&ob.resources.uwlib);
+}
 /* per-step gate for Next — true to allow, or a string to show why it's blocked */
 function obStepValid(ob,key){
   if(key==="dates")return ob.examISO?true:"Pick your exam date to continue.";
-  if(key==="resources")return obHasVideoRes(ob)?true:"Turn on at least one video resource (B&B, Pathoma, Sketchy, or Bootcamp).";
+  if(key==="resources")return obHasAnyRes(ob)?true:"Turn on at least one resource to continue.";
   if(key==="systems"){if(!ob.systems.length)return "Pick at least one system this exam covers.";const un=threadUnconfigured(ob);if(un)return "Choose which "+un+" sections to include — or drop it from your systems.";}
   return true;
 }
@@ -5101,11 +5109,32 @@ function renderOnboard(){
   if(key==="dates")body+='<div class="card"><div class="cardhd">Dates</div><div class="form">'
     +'<label>Exam date'+dateTriggerHTML("o_exam",ob.examISO,"Pick your exam date")+'</label>'
     +'<label>Start date'+dateTriggerHTML("o_start",ob.startISO,"Pick a start date")+'</label></div></div>';
-  if(key==="resources")body+='<div class="card"><div class="cardhd">Video resources</div><div class="togrow">'
+  if(key==="resources"){
+    const oblk=ob.brody?brodyBlockById(ob.brody):null;
+    body+='<div class="card"><div class="cardhd">Video resources</div><div class="togrow">'
     +resBtn("bnb","Boards &amp; Beyond")+resBtn("pathoma","Pathoma")+resBtn("sketchy","Sketchy")+resBtn("bootcamp","Bootcamp")
     +'</div><p class="muted small">Turn on the video resources you use — they interleave into '+(ob.brody?'each Brody week':'the plan')+'.</p>'
+    // Reading and content depth are Brody-only: both are driven by per-unit maps that
+    // only exist for a Brody block.
+    +(oblk&&brodyHasArts(oblk)
+      ?('<div class="flab mt">Reading</div><div class="togrow">'+resBtn("uwlib","UWorld Library")+'</div>'
+        +'<p class="muted small">UWorld Library articles mapped to this unit’s Brody weeks. Use them instead of videos or alongside them — they have no runtime, so they’re paced by how many per day.</p>')
+      :'')
+    +(oblk
+      ?('<div class="flab mt">Content depth</div>'
+        +'<div class="togrow">'
+        +'<button type="button" class="tog '+(contentIsComprehensive(ob)?'on':'')+'" data-ocpreset="full">Comprehensive</button>'
+        +'<button type="button" class="tog '+(contentIsMinimal(ob)?'on':'')+'" data-ocpreset="min">Minimal</button>'
+        +'</div>'
+        +'<div class="togrow" style="margin-top:8px">'
+        +CONTENT_TYPES.map(t=>'<button type="button" class="tog '+(contentOff(ob)[t.k]?'':'on')+'" data-octype="'+escAttr(t.k)+'">'+escHTML(t.label)+'</button>').join('')
+        +'</div>'
+        +'<p class="muted small">'+(contentIsComprehensive(ob)
+          ?'Everything this unit maps gets scheduled. <b>Minimal</b> drops anatomy, histology, embryology and physiology, and keeps pathology, pharmacology and the clinical material.'
+          :'Dimmed types are left out. Pathology, pharmacology and clinical material are never dropped, and you can change this any time in Plan.')+'</p>')
+      :'')
     +'<div class="flab mt">Anki</div><div class="togrow">'+resBtn("anking","Daily AnKing tags")+'</div>'
-    +'<p class="muted small">Optional — adds a copy-ready AnKing Browse search for each day’s videos to your Study page. Doesn’t change the schedule.</p></div>';
+    +'<p class="muted small">Optional — adds a copy-ready AnKing Browse search for each day’s videos to your Study page. Doesn’t change the schedule.</p></div>';}
   if(key==="systems"){const obSysInner='<p class="muted small" style="margin-top:6px">'+(obIsNbme()
       ?'Tap the systems this shelf covers. Reorder with ▲▼ to set what you study first.'
       :'The recommended Boards &amp; Beyond sequence. Reorder with ▲▼, and tap a system to include or drop it.')+'</p>'
@@ -5117,8 +5146,15 @@ function renderOnboard(){
     body+=threadTopicsHTML(ob,"ob");}
   if(key==="routine"){
     if(ob.brody){
+      const oFree=brodyFree(ob);
       body+='<div class="card"><div class="cardhd">Study days &amp; pace</div><div class="form">'
-        +'<div class="flab">No-video / rest days</div><div class="togrow">'+dows+'</div>'
+        +'<div class="flab">What sets your deadlines</div>'
+        +'<div class="togrow"><button type="button" class="tog '+(oFree?'':'on')+'" data-obfree="0">Brody quiz weeks</button>'
+        +'<button type="button" class="tog '+(oFree?'on':'')+'" data-obfree="1">Even pace to the exam</button></div>'
+        +'<p class="muted small" style="margin:9px 0 0">'+(oFree
+          ?'<b>Even pace.</b> Same videos, same Brody order, but the weekly quizzes stop being deadlines — everything spreads evenly over your open days instead.'
+          :'<b>Quiz weeks.</b> Each Brody week’s videos finish before that week’s quiz, so you’re never behind the material you’re about to be tested on.')+'</p>'
+        +'<div class="flab mt">No-video / rest days</div><div class="togrow">'+dows+'</div>'
         +'<div class="flab mt">Daily pace</div>'
         +'<div class="pacerow"><button type="button" class="pacebtn" data-opace="dec" aria-label="less">−</button>'
         +'<div class="paceval"><b id="ob_paceval">'+brodyPace(ob)+' h</b><span>of video · per day</span></div>'
@@ -5169,6 +5205,18 @@ function renderOnboard(){
   document.querySelectorAll("[data-oblk]").forEach(b=>b.onclick=()=>{const bl=brodyBlockById(b.dataset.oblk);if(bl){if(ob.brody!==bl.id)ob.brodyJoinWk=null;ob.brody=bl.id;ob.systems=bl.systems.slice();ob.examLabel=bl.name;}renderOnboard();});
   document.querySelectorAll("[data-opace]").forEach(b=>b.onclick=()=>{const cur=brodyPace(ob);ob.brodyPace=Math.max(0.5,cur+(b.dataset.opace==="inc"?0.5:-0.5));renderOnboard();});
   document.querySelectorAll("[data-obuf]").forEach(b=>b.onclick=()=>{const cur=brodyReviewBuf(ob);ob.brodyReviewDays=Math.max(0,Math.min(14,cur+(b.dataset.obuf==="inc"?1:-1)));renderOnboard();});
+  /* Changing the pace mode or what's in the plan drops the stamped pace so the next
+     render re-derives it — the same reason the Plan editor does. Otherwise the
+     recommendation shown on this very screen would be the one from before the change. */
+  document.querySelectorAll("[data-obfree]").forEach(b=>b.onclick=()=>{
+    if(b.dataset.obfree==="1")ob.brodyFree=true;else delete ob.brodyFree;
+    delete ob.brodyPace;renderOnboard();});
+  document.querySelectorAll("[data-octype]").forEach(b=>b.onclick=()=>{
+    const k=b.dataset.octype;setContentOff(ob,k,!contentOff(ob)[k]);
+    delete ob.brodyPace;delete ob.artPerDay;renderOnboard();});
+  document.querySelectorAll("[data-ocpreset]").forEach(b=>b.onclick=()=>{
+    setContentPreset(ob,b.dataset.ocpreset==="min");
+    delete ob.brodyPace;delete ob.artPerDay;renderOnboard();});
   document.querySelectorAll("[data-sinc]").forEach(b=>b.onclick=()=>{const s=b.dataset.sinc;const k=ob.systems.indexOf(s);if(k>=0){if(ob.systems.length>1)ob.systems.splice(k,1);}else ob.systems.push(s);renderOnboard();});
   document.querySelectorAll("[data-pathch]").forEach(b=>b.onclick=()=>{togglePathCh(ob,+b.dataset.pathch);renderOnboard();});
   bindThreadTopics(ob,()=>renderOnboard());
@@ -5276,7 +5324,7 @@ function commitOnboard(){const ob=_ob;
   const brody=ob.brody?brodyBlockById(ob.brody):null;
   if(!brody&&!ob.examISO){toast("Pick an exam date first");return;}
   if(!brody&&!ob.systems.length){toast("Pick at least one system");return;}
-  if(!obHasVideoRes(ob)){toast("Pick at least one video resource");return;}
+  if(!obHasAnyRes(ob)){toast("Pick at least one resource");return;}
   if(!brody){const un=threadUnconfigured(ob);if(un){toast("Choose which "+un+" sections to include — or remove "+un+" from your systems.");renderOnboard();const el=document.querySelector(".threadwarn");if(el)el.scrollIntoView({behavior:"smooth",block:"center"});return;}}
   const key=ob.hub;
   const prev=S.cfgs[key]?JSON.parse(JSON.stringify(S.cfgs[key])):null;
@@ -5285,7 +5333,7 @@ function commitOnboard(){const ob=_ob;
     // brodyPace is locked to the plan at creation (reflowBrody stamps it if the catalog wasn't ready yet)
     // carried on an edit, cleared by a brand-new plan — a fresh plan starts on Brody's
     // own quiz weeks, which is the mode the calendar is named after
-    brody:(brody?brody.id:undefined),brodyFree:((brody&&ob.brodyFree)?true:undefined),artPerDay:((brody&&ob.artPerDay)?ob.artPerDay:undefined),brodyPace:(brody?(ob.brodyPace||(catReady()?brodyPace(ob):undefined)):undefined),brodyJoinWk:(brody?(ob.brodyJoinWk!=null?ob.brodyJoinWk:undefined):undefined),brodyJoinDate:(brody?(ob.brodyJoinDate||todayISO()):undefined),brodyReviewDays:(brody?brodyReviewBuf(ob):undefined),
+    brody:(brody?brody.id:undefined),brodyFree:((brody&&ob.brodyFree)?true:undefined),artPerDay:((brody&&ob.artPerDay)?ob.artPerDay:undefined),contentOff:((brody&&ob.contentOff&&Object.keys(ob.contentOff).length)?JSON.parse(JSON.stringify(ob.contentOff)):undefined),brodyPace:(brody?(ob.brodyPace||(catReady()?brodyPace(ob):undefined)):undefined),brodyJoinWk:(brody?(ob.brodyJoinWk!=null?ob.brodyJoinWk:undefined):undefined),brodyJoinDate:(brody?(ob.brodyJoinDate||todayISO()):undefined),brodyReviewDays:(brody?brodyReviewBuf(ob):undefined),
     examISO:(brody?brody.shelf:ob.examISO),startISO:(brody?brody.weeks[0].start:ob.startISO),wkdayHrs:ob.wkdayHrs,wkendHrs:ob.wkendHrs,restDays:ob.restDays.slice(),
     reviewDays:(brody?0:ob.reviewDays),resources:Object.assign({},ob.resources),systems:(brody?brody.systems.slice():ob.systems.slice()),sysOrder:(ob.sysOrder||SYS_ORDER_DEFAULT).slice(),pathChapters:(Array.isArray(ob.pathChapters)?ob.pathChapters.slice():undefined),threadTopics:(brody?undefined:(Array.isArray(ob.threadTopics)?ob.threadTopics.slice():undefined)),weeklyQGoal:(ob.weeklyQGoal>0?ob.weeklyQGoal:0),qGoalPer:qGoalPer(ob),catOrder:(ob.catOrder?JSON.parse(JSON.stringify(ob.catOrder)):undefined),quizzes:(Array.isArray(ob.quizzes)?ob.quizzes.filter(q=>q&&q.iso):[]),skip:Object.assign({},ob.skip||{})});
   c.off=c.off||{};c.on=c.on||{};
@@ -5329,7 +5377,7 @@ function doResetAll(){
     S.cfgs=snap.cfgs;S.active=snap.active;S.cfg=S.active?S.cfgs[S.active]:null;_prevSig=progressSig();save();
     if(S.cfg){reflow();render();}else renderWelcome();toast("Restored ✓");});
 }
-const BUILD="2026-09-24a";
+const BUILD="2026-09-24b";
 /* ---------- What's new (changelog) ----------
    Newest entry first. Bump the top entry's id whenever you add one and the
    pop-up shows once per person (tracked in synced settings.seenUpdate). */
