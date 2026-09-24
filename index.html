@@ -539,6 +539,8 @@ b{color:var(--ink)}
 .flab{font-size:12.5px;color:var(--muted);font-weight:600;margin-top:2px}
 .togrow{display:flex;flex-wrap:wrap;gap:7px}
 .tog{background:var(--bg2);border:1px solid var(--line2);color:var(--muted);border-radius:11px;padding:9px 13px;font-size:13px;font-weight:600;cursor:pointer;transition:all .14s}
+/* how many items a content-type switch is worth, shown on the switch itself */
+.tognum{font-family:var(--mono);font-size:11px;font-weight:700;opacity:.65;margin-left:2px}
 .tog:hover{color:var(--ink)}
 .tog:active{transform:scale(.97)}
 .tog.on{background:var(--phos-soft);border-color:var(--phos-dim);color:var(--phos)}
@@ -1441,6 +1443,43 @@ const RES_ORDER=["bnb","pathoma","skmicro","skpharm","bootcamp","uwlib"];
    budget instead, by COUNT per day (brodyArtLoads / brodyArtPace).
    They are plan items in every other respect — they live in the same catalog, get
    ids from itemId, ride in a day's items list, and check off like anything else. */
+/* ---------- content types: what "Minimal" drops ----------
+   Minimal keeps pathology, pharmacology and clinical material and drops the
+   foundational-science layer. Which video is which is classified in
+   tools/generators/mk_content_tags.js and spliced in below — section rules where a
+   publisher's whole section is one kind of thing, per-item tags where it is mixed
+   (Bootcamp files five autonomic PHYSIOLOGY videos and fifteen autonomic DRUG videos
+   under one heading, so a rule there would delete what Minimal exists to keep).
+
+   INCLUSIVE BY DEFAULT: only what Minimal drops is tagged, so anything unclassified
+   stays in the plan. The mistake this design can make is showing a Minimal user too
+   much, never silently losing material they needed. */
+const CONTENT_TYPES=[{k:"anat",label:"Anatomy"},{k:"hist",label:"Histology"},{k:"embryo",label:"Embryology"},{k:"physio",label:"Physiology"}];
+/* @content-tags:start */
+const CONTENT_RULES=[{"res":"bootcamp","cat":"Histology — ","tag":"hist"},{"res":"bootcamp","cat":"Anatomy — ","tag":"anat"},{"res":"bootcamp","cat":"Neuroanatomy — ","tag":"anat"},{"res":"bootcamp","cat":"Embryology","exact":true,"tag":"embryo"},{"res":"bootcamp","cat":"Brainstem Anatomy","exact":true,"tag":"anat"},{"res":"bootcamp","cat":"Ascending Spinal Cord Tracts","exact":true,"tag":"anat"},{"res":"bootcamp","cat":"Descending Spinal Cord Tracts","exact":true,"tag":"anat"},{"res":"bootcamp","cat":"Conduction Physiology","exact":true,"tag":"physio"},{"res":"bootcamp","cat":"Cellular Function","exact":true,"tag":"physio"}];
+const CONTENT_TAGS={"bnb|Neurology|Introduction to Neurology|Cells of the Nervous System":"hist","bnb|Neurology|Introduction to Neurology|Blood Brain Barrier":"physio","bnb|Neurology|Introduction to Neurology|Neurotransmitters":"physio","bnb|Neurology|Introduction to Neurology|Dermatomes and Reflexes":"anat","bnb|Neurology|Nervous System Structures|Cerebral Cortex":"anat","bnb|Neurology|Nervous System Structures|Spinal Cord":"anat","bnb|Neurology|Nervous System Structures|Brainstem":"anat","bnb|Neurology|Nervous System Structures|Rules of 4s":"anat","bnb|Neurology|Nervous System Structures|Cranial Nerves I":"anat","bnb|Neurology|Nervous System Structures|Cranial Nerves II":"anat","bnb|Neurology|Nervous System Structures|Auditory System":"anat","bnb|Neurology|Nervous System Structures|Vestibular System":"anat","bnb|Neurology|Nervous System Structures|Thalamus, Hypothalamus, Limbic System":"anat","bnb|Neurology|Nervous System Structures|Cerebellum":"anat","bnb|Neurology|Nervous System Structures|Basal Ganglia":"anat","bnb|Neurology|Nervous System Structures|Ventricles and Sinuses":"anat","bnb|Neurology|Autonomic Nervous System|Autonomic Nervous System I":"physio","bnb|Neurology|Autonomic Nervous System|Autonomic Nervous System II":"physio","bnb|Neurology|Autonomic Nervous System|Autonomic Receptors":"physio","bnb|Neurology|Other Neurology Topics|Neuroembryology":"embryo","bnb|Neurology|Other Neurology Topics|Sleep Physiology":"physio","bnb|Ophthalmology|General Topics|Eye Anatomy":"anat","bnb|Ophthalmology|General Topics|The Retina":"anat","bnb|Ophthalmology|General Topics|Optic Nerve":"anat","bootcamp|Neurology|Autonomic System|Autonomic System Overview":"physio","bootcamp|Neurology|Autonomic System|Autonomic System Signaling":"physio","bootcamp|Neurology|Autonomic System|Autonomic Secondary Messengers":"physio","bootcamp|Neurology|Autonomic System|Autonomic System Summary":"physio","bootcamp|Neurology|Autonomic System|Other Involuntary Signaling Systems":"physio","bootcamp|Neurology|Basal Ganglia|Anatomical Considerations":"anat","bootcamp|Neurology|Basal Ganglia|Basal Ganglia Circuits":"physio","bootcamp|Neurology|Cerebellum and Ventricles|Anatomical Considerations":"anat","bootcamp|Neurology|Cerebral Cortex|Frontal Lobe":"anat","bootcamp|Neurology|Cerebral Cortex|Temporal Lobe":"anat","bootcamp|Neurology|Cerebral Cortex|Parietal Lobe":"anat","bootcamp|Neurology|Cerebral Cortex|Occipital Lobe":"anat","bootcamp|Neurology|Cerebral Cortex|Internal Capsule":"anat","bootcamp|Neurology|Cranial Nerves 1-6|Cranial Nerve I":"anat","bootcamp|Neurology|Cranial Nerves 1-6|Cranial Nerve II":"anat","bootcamp|Neurology|Cranial Nerves 1-6|Cranial Nerve III":"anat","bootcamp|Neurology|Cranial Nerves 1-6|Cranial Nerve IV":"anat","bootcamp|Neurology|Cranial Nerves 1-6|Cranial Nerve V":"anat","bootcamp|Neurology|Cranial Nerves 1-6|Cranial Nerve VI":"anat","bootcamp|Neurology|Cranial Nerves 7-12|Cranial Nerve VII":"anat","bootcamp|Neurology|Cranial Nerves 7-12|Cranial Nerve VIII":"anat","bootcamp|Neurology|Cranial Nerves 7-12|Cranial Nerve IX":"anat","bootcamp|Neurology|Cranial Nerves 7-12|Cranial Nerve X":"anat","bootcamp|Neurology|Cranial Nerves 7-12|Cranial Nerve XI":"anat","bootcamp|Neurology|Cranial Nerves 7-12|Cranial Nerve XII":"anat","bootcamp|Neurology|Diencephalon|Overview (Hypothalamus, Thalamus, Pineal Gland, Limbic System)":"anat","bootcamp|Neurology|Diencephalon|Hypothalamic Nuclei":"anat","bootcamp|Neurology|Neuromuscular Junction|Physiology of NMJ":"physio","bootcamp|Neurology|Radiculopathy|Spinal Cord Anatomical Considerations":"anat","bootcamp|Neurology|Radiculopathy|Reflex and Spinal Level":"anat","bootcamp|Neurology|Spinal Cord Syndromes|Review of Sensory and Motor Tracts":"anat","bootcamp|Neurology|Vertigo|Vestibular System Anatomy":"anat","bootcamp|Neurology|Vision|Visual Pathway Overview":"anat","bootcamp|Neurology|Auditory Sensation|Fundamental Concepts":"physio","uwlib|Neurology||Histology: Nerve tissue":"hist","uwlib|Neurology||Nerve physiology":"physio","uwlib|Neurology||Physiology: Membrane potential":"physio","uwlib|Neurology||Neuroanatomy: Cortical lobe function, basic tracts, arterial anatomy, and neurolocalization":"anat","uwlib|Neurology||Neuroanatomy: Spinal cord":"anat","uwlib|Neurology||Embryology of the nervous system (neuroembryology)":"embryo","uwlib|Neurology||Autonomic nervous system":"physio","uwlib|Neurology||Visual pathway":"anat","uwlib|Neurology||Pain signaling and neuroanatomy: Nociceptive pain":"physio"};
+/* @content-tags:end */
+function contentTag(v){
+  const t=CONTENT_TAGS[brodyKey(v)];if(t)return t;
+  for(let i=0;i<CONTENT_RULES.length;i++){const r=CONTENT_RULES[i];
+    if(v.res!==r.res)continue;
+    const c=v.cat||"";
+    if(r.exact?(c===r.cat):(c.indexOf(r.cat)===0))return r.tag;}
+  return null;   // untagged = core, always kept
+}
+/* Which types this plan has switched off. Absent = Comprehensive, which is the
+   default and what every plan made before this existed keeps. */
+function contentOff(c){return ((c||S.cfg||{}).contentOff)||{};}
+function contentIncluded(c,v){const t=contentTag(v);return !t||!contentOff(c)[t];}
+function contentIsMinimal(c){const o=contentOff(c);return CONTENT_TYPES.every(t=>!!o[t.k]);}
+function contentIsComprehensive(c){const o=contentOff(c);return CONTENT_TYPES.every(t=>!o[t.k]);}
+function setContentOff(c,k,off){c=c||S.cfg;if(!c)return;
+  const o=Object.assign({},contentOff(c));
+  if(off)o[k]=true;else delete o[k];
+  if(Object.keys(o).length)c.contentOff=o;else delete c.contentOff;}
+function setContentPreset(c,minimal){c=c||S.cfg;if(!c)return;
+  if(minimal){const o={};CONTENT_TYPES.forEach(t=>o[t.k]=true);c.contentOff=o;}
+  else delete c.contentOff;}
 function isArticle(v){return v.res==="uwlib";}
 function artEnabled(c){const r=((c||S.cfg||{}).resources)||{};return !!r.uwlib;}
 /* A block only offers articles if someone has actually mapped them to its weeks.
@@ -1519,7 +1558,7 @@ function planVideosFor(c){
   const pathSel=en.pathoma?effectivePathChapters(c):new Set();
   if(c.brody){
     const blk=brodyBlockById(c.brody);if(!blk)return [];
-    return catVideos().filter(v=>brodyInBlock(blk,v)&&en[v.res]
+    return catVideos().filter(v=>brodyInBlock(blk,v)&&en[v.res]&&contentIncluded(c,v)
       &&(v.res!=="pathoma"||pathSel.has(pathChapterOf(v))));
   }
   const sel=new Set((c.systems&&c.systems.length)?c.systems:SYS);
@@ -1844,7 +1883,7 @@ function brodyEarlierIds(c,blk){
   {let dd=isoToDate(wkStart[0]),g=0;while(isoFromDate(dd)<blk.shelf&&g++<400){const iso=isoFromDate(dd),wd=dd.getDay(),wn=weekOf(iso);
     if(wn&&dayIsOpen(c,iso,wd)&&iso<cutoff){wkDays[wn].all.push(iso);if(iso<jd)wkDays[wn].before.push(iso);}dd=addDays(dd,1);}}
   const byWk={};blk.weeks.forEach(w=>byWk[w.n]=[]);
-  catVideos().forEach(v=>{if(!brodyInBlock(blk,v))return;if(!en[v.res])return;if(v.res==="pathoma"&&!pathSel.has(pathChapterOf(v)))return;
+  catVideos().forEach(v=>{if(!brodyInBlock(blk,v))return;if(!en[v.res])return;if(!contentIncluded(c,v))return;if(v.res==="pathoma"&&!pathSel.has(pathChapterOf(v)))return;
     const w=brodyVideoWeek(blk,v);if(byWk[w])byWk[w].push(v);});
   const ids=new Set(),dayOf={};
   blk.weeks.forEach(w=>{const D=wkDays[w.n];const wv=byWk[w.n]||[];if(!D.before.length||!wv.length)return;
@@ -1910,7 +1949,7 @@ function brodyWeekLoads(c,blk,live){
   const owed=live?(id=>!(isDone(id)||isSkip(id))):brodyRemains;
   const load={},cnt={};blk.weeks.forEach(w=>{load[w.n]=0;cnt[w.n]=0;});
   const earlier=brodyEarlierIds(c,blk).ids;   // pre-arrival videos are optional — never in the pace
-  catVideos().forEach(v=>{if(!brodyInBlock(blk,v))return;if(!en[v.res])return;if(v.res==="pathoma"&&!pathSel.has(pathChapterOf(v)))return;
+  catVideos().forEach(v=>{if(!brodyInBlock(blk,v))return;if(!en[v.res])return;if(!contentIncluded(c,v))return;if(v.res==="pathoma"&&!pathSel.has(pathChapterOf(v)))return;
     if(earlier.has(itemId(v)))return;
     if(!owed(itemId(v)))return;
     const w=brodyVideoWeek(blk,v);load[w]+=v.min;cnt[w]++;});
@@ -1928,7 +1967,7 @@ function brodyArtLoads(c,blk,live){
   const owed=live?(id=>!(isDone(id)||isSkip(id))):brodyRemains;
   const cnt={};blk.weeks.forEach(w=>{cnt[w.n]=0;});
   const earlier=brodyEarlierIds(c,blk).ids;
-  catVideos().forEach(v=>{if(!isArticle(v))return;if(!brodyInBlock(blk,v))return;
+  catVideos().forEach(v=>{if(!isArticle(v))return;if(!brodyInBlock(blk,v))return;if(!contentIncluded(c,v))return;
     const id=itemId(v);
     if(earlier.has(id))return;
     if(!owed(id))return;
@@ -1998,6 +2037,11 @@ function reflowBrody(c,blk){
   const vids=[],arts=[];
   catVideos().forEach(v=>{
     if(!brodyInBlock(blk,v))return;   // system in block (or explicitly included), and not excluded
+    // Minimal mode drops a whole layer of content (anatomy/histology/embryology/
+    // physiology). Filtering here keeps ONE list feeding the packer, the pins, the
+    // stats and the progress denominators — the same reason opted-out videos are
+    // removed here rather than just skipped by the packer.
+    if(!contentIncluded(c,v))return;
     // Written resources are poured on their own count budget further down, so they
     // are collected here but kept out of the minute-based video queue.
     if(isArticle(v)){
@@ -3951,6 +3995,22 @@ function renderAdjustBrody(c){
   const free=brodyFree(c);
   const artsOn=!!SCHED.artsOn,artPace=SCHED.artPace||0;
   const anyVid=(st.totalMin||0)>0;   // a reading-only plan has no hours to show
+  /* How much each content type is worth in THIS unit, so the switches carry real
+     numbers rather than abstract labels. Counted over what the plan's resources
+     would schedule, ignoring the current content switches — otherwise the count on a
+     switch you just turned off would drop to zero and you could not see what turning
+     it back on would cost. */
+  const cDrop={},cDropMin={};
+  {const en=resEnabled();const pathSel=en.pathoma?effectivePathChapters(c):new Set();
+   catVideos().forEach(v=>{
+     if(!brodyInBlock(blk,v))return;
+     if(isArticle(v)){if(!artEnabled(c)||!brodyHasArts(blk))return;}
+     else{if(!en[v.res])return;if(v.res==="pathoma"&&!pathSel.has(pathChapterOf(v)))return;}
+     const t=contentTag(v);if(!t)return;
+     cDrop[t]=(cDrop[t]||0)+1;cDropMin[t]=(cDropMin[t]||0)+v.min;});}
+  const cOff=contentOff(c);
+  const cDropTotal=CONTENT_TYPES.reduce((a,t)=>a+(cOff[t.k]?(cDrop[t.k]||0):0),0);
+  const cDropH=Math.round(CONTENT_TYPES.reduce((a,t)=>a+(cOff[t.k]?(cDropMin[t.k]||0):0),0)/60*10)/10;
   let body='',colB='';
   body+='<div class="card"><div class="cardhd">This block</div>'
     +'<p class="muted small" style="margin:0"><b>'+escHTML(blk.name)+'</b> <span class="pill">'+(free?'Brody content':'Brody calendar')+'</span> — weeks of '+fmtShort(blk.weeks[0].start)+' → block exam '+fmtShort(blk.shelf)+'.</p>'
@@ -3995,6 +4055,19 @@ function renderAdjustBrody(c){
   colB+='<div class="card"><div class="cardhd">Video resources</div><div class="togrow">'
     +resBtn("bnb","Boards &amp; Beyond")+resBtn("pathoma","Pathoma")+resBtn("sketchy","Sketchy")+resBtn("bootcamp","Bootcamp")
     +'</div><p class="muted small">Turn on the video resources you use — the plan re-flows live.</p>'
+    +'<div class="flab mt">Content depth</div>'
+    +'<div class="togrow">'
+    +'<button type="button" class="tog '+(contentIsComprehensive(c)?'on':'')+'" data-cpreset="full">Comprehensive</button>'
+    +'<button type="button" class="tog '+(contentIsMinimal(c)?'on':'')+'" data-cpreset="min">Minimal</button>'
+    +'</div>'
+    +'<div class="togrow" style="margin-top:8px">'
+    +CONTENT_TYPES.map(t=>{const n=cDrop[t.k]||0;
+      return '<button type="button" class="tog '+(contentOff(c)[t.k]?'':'on')+'" data-ctype="'+escAttr(t.k)+'">'
+        +escHTML(t.label)+(n?' <span class="tognum">'+n+'</span>':'')+'</button>';}).join('')
+    +'</div>'
+    +'<p class="muted small" style="margin:9px 0 0">'+(contentIsComprehensive(c)
+      ? 'Everything this unit maps is scheduled. <b>Minimal</b> drops the foundational-science layer — anatomy, histology, embryology and physiology — and keeps pathology, pharmacology and the clinical material.'
+      : ('Dropping <b>'+cDropTotal+' item'+(cDropTotal===1?'':'s')+'</b> ('+cDropH+' h) — '+(contentIsMinimal(c)?'the whole foundational-science layer':'the dimmed types above')+'. Pathology, pharmacology and clinical material are never dropped, and nothing you’ve checked off is lost: switch back and the plan returns exactly.'))+'</p>'
     +'<div class="flab mt">Reading</div>'
     +(brodyHasArts(blk)
       ? '<div class="togrow">'+resBtn("uwlib","UWorld Library")+'</div>'
@@ -4018,6 +4091,14 @@ function renderAdjustBrody(c){
   document.querySelectorAll("[data-fpace]").forEach(b=>b.onclick=()=>{const cur=brodyPace(c);c.brodyPace=Math.max(0.5,cur+(b.dataset.fpace==="inc"?0.5:-0.5));apply();});
   document.querySelectorAll("[data-bfree]").forEach(b=>b.onclick=()=>{setBrodyFree(c,b.dataset.bfree==="1");apply();});
   document.querySelectorAll("[data-apace]").forEach(b=>b.onclick=()=>{const cur=Math.max(1,Math.round(brodyArtPace(c)));c.artPerDay=Math.max(1,cur+(b.dataset.apace==="inc"?1:-1));apply();});
+  /* Changing what's in the plan changes how much work is left, so the stamped paces
+     are re-derived — exactly as switching quiz/even pace does. Leaving a pace set for
+     a plan 33 hours bigger would silently keep the days heavy. */
+  const reprice=()=>{delete c.brodyPace;delete c.artPerDay;apply();};
+  document.querySelectorAll("[data-ctype]").forEach(b=>b.onclick=()=>{
+    const k=b.dataset.ctype;setContentOff(c,k,!contentOff(c)[k]);reprice();});
+  document.querySelectorAll("[data-cpreset]").forEach(b=>b.onclick=()=>{
+    setContentPreset(c,b.dataset.cpreset==="min");reprice();});
   const bua=document.getElementById("brodyUseArts");if(bua)bua.onclick=()=>{c.artPerDay=brodyRecArts(c,brodyBlock(c)||BRODY_BLOCKS[0]);apply();};
   const bup=document.getElementById("brodyUsePace");if(bup)bup.onclick=()=>{c.brodyPace=brodyRecPace(c,brodyBlock(c)||BRODY_BLOCKS[0]);apply();};
   document.querySelectorAll("[data-fbuf]").forEach(b=>b.onclick=()=>{const cur=brodyReviewBuf(c);c.brodyReviewDays=Math.max(0,Math.min(14,cur+(b.dataset.fbuf==="inc"?1:-1)));apply();});
@@ -5248,15 +5329,23 @@ function doResetAll(){
     S.cfgs=snap.cfgs;S.active=snap.active;S.cfg=S.active?S.cfgs[S.active]:null;_prevSig=progressSig();save();
     if(S.cfg){reflow();render();}else renderWelcome();toast("Restored ✓");});
 }
-const BUILD="2026-09-22a";
+const BUILD="2026-09-24a";
 /* ---------- What's new (changelog) ----------
    Newest entry first. Bump the top entry's id whenever you add one and the
    pop-up shows once per person (tracked in synced settings.seenUpdate). */
 const CHANGELOG=[
+  {id:"2026-09-24", date:"September 2026", title:"New: Minimal and Comprehensive — choose how deep your plan goes", items:[
+    "Under Plan → Content depth you can now choose how much of a unit gets scheduled. Comprehensive is what you have today and stays the default. Minimal drops the foundational-science layer — anatomy, histology, embryology and physiology — and keeps pathology, pharmacology and the clinical material.",
+    "On Nervous & Sensory that is 228 fewer items and 33 fewer hours: 82 h becomes 49, and the recommended pace drops from 7 h/day to 4.5. Combined with even pace, it is the first setting that makes this unit actually fit before the exam.",
+    "The four types are separate switches too, so you don’t have to take the whole cut. Keep anatomy and drop histology, or the other way around — Minimal and Comprehensive are just one-tap presets for those switches. Each switch shows how many items it is worth in the unit you’re in.",
+    "Nothing is deleted and nothing is lost: switching back to Comprehensive restores the plan exactly, and anything you’d already checked off stays checked.",
+    "Pathology, pharmacology and clinical material are never dropped, whatever you switch off. Where a publisher files drugs under an anatomy or physiology heading — Bootcamp puts fifteen autonomic drug videos under “Autonomic System” — those are classified one by one so the drugs stay.",
+    "Content depth is tuned for Nervous & Sensory so far. On the other units the switches are there but the classification isn’t finished, so Minimal will drop less than it should.",
+  ]},
   {id:"2026-09-22", date:"September 2026", title:"New: read instead of watch — UWorld Library on the Brody calendar", items:[
     "If you’d rather read than watch, the UWorld Medical Library is now a schedulable resource. Turn it on under Plan → Video resources → Reading.",
     "All 108 UWorld Neurology articles are mapped to the Nervous & Sensory unit’s Brody weeks, the same way the videos are — so the reading follows your course week by week, finishes each week before that week’s quiz, and rolls forward instead of vanishing if you fall behind.",
-    "Articles have no runtime, so they aren’t paced in hours. They get their own plate: <b>articles per day</b>, recommended the same way your video pace is, and nudgeable in Plan. A day can hold both — “4h 20m · 11 to read” — and neither budget crowds out the other.",
+    "Articles have no runtime, so they aren’t paced in hours. They get their own plate: articles per day, recommended the same way your video pace is, and nudgeable in Plan. A day can hold both — “4h 20m · 11 to read” — and neither budget crowds out the other.",
     "Use it instead of videos or alongside them. Turn every video resource off and you get a reading-only plan: no hours anywhere, just a daily article count, and the pace banner speaks in articles.",
     "Everything else works on reading exactly as it does on videos — check-offs, progress, the calendar, re-fit, rest days, days off, the review buffer, leaving individual items out, and the even-pace mode.",
     "So far only Nervous & Sensory has articles mapped. On Heme/Renal and Cardiopulmonary the Plan tab says so rather than quietly scheduling nothing.",
