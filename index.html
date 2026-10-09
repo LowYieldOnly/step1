@@ -978,6 +978,35 @@ button.phcard:focus-visible{outline:2px solid var(--phos);outline-offset:1px}
 .wrv:last-child{border-bottom:0}
 .wrv-k{font-size:12.5px;font-weight:700;color:var(--faint);text-transform:uppercase;letter-spacing:.04em;font-family:var(--mono);flex:0 0 auto}
 .wrv-v{font-size:14px;color:var(--ink);text-align:right;line-height:1.4}
+/* ---- UWorld question map ---- */
+.uwsrc{background:var(--bg2);border:1px solid var(--line);border-radius:10px;padding:10px 12px;font-size:12px;color:var(--muted);line-height:1.5;margin:0 0 12px}
+.uwsrc b{color:var(--text-2)}
+.uwsearch{width:100%;box-sizing:border-box;background:var(--bg2);border:1px solid var(--line2);border-radius:11px;padding:11px 13px;font-size:14px;color:var(--ink);margin:0 0 14px}
+.uwsys{border:1px solid var(--line);border-radius:12px;margin:0 0 10px;background:var(--bg2);overflow:hidden}
+.uwsyshd{cursor:pointer;padding:12px 14px;font-weight:700;font-size:14px;color:var(--ink);list-style:none;display:flex;align-items:center;gap:8px}
+.uwsyshd::-webkit-details-marker{display:none}
+.uwsyshd::before{content:"›";display:inline-block;transition:transform .15s;color:var(--muted);font-weight:400}
+details.uwsys[open]>.uwsyshd::before{transform:rotate(90deg)}
+.uwct{margin-left:auto;font-family:var(--mono);font-size:11px;color:var(--faint)}
+.uwsec{padding:0 14px 10px}
+.uwsechd{font-size:11px;letter-spacing:.7px;text-transform:uppercase;color:var(--faint);font-weight:700;margin:10px 0 6px}
+.uwvid{padding:8px 0;border-top:1px solid var(--line)}
+.uwvtop{display:flex;align-items:center;gap:10px}
+.uwvn{flex:1;min-width:0;font-size:13.5px;color:var(--text-2)}
+.uwids{font-family:var(--mono);font-size:11px;color:var(--faint);margin-top:4px;word-break:break-word;line-height:1.6}
+.uwnone{font-size:11.5px;color:var(--faint);font-style:italic}
+.uwvid.unmapped .uwvn{opacity:.75}
+.uwflag{font-size:11px;color:var(--faint);margin-top:4px;font-style:italic}
+/* in-schedule: a per-video disclosure under a B&B row, and the day/week copy buttons */
+.uwrow{margin:2px 0 6px 34px}
+.uwrow summary{list-style:none;cursor:pointer;font-size:11.5px;color:var(--phos);font-weight:600;display:inline-flex;align-items:center;gap:5px}
+.uwrow summary::-webkit-details-marker{display:none}
+.uwrow summary::before{content:"›";display:inline-block;transition:transform .15s}
+details.uwrow[open]>summary::before{transform:rotate(90deg)}
+.uwrowbody{display:flex;align-items:flex-start;gap:8px;margin:5px 0 0}
+.uwrowbody .uwids{flex:1;margin:0}
+.uwbar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:10px 0 0}
+.uwbar .btn{flex:0 0 auto}
 /* Brody weekly plan preview + Study-view week chip */
 .brodywks{display:flex;flex-direction:column;gap:6px}
 .brodywk{display:flex;align-items:center;gap:10px;background:var(--bg2);border:1px solid var(--line);border-radius:10px;padding:8px 11px}
@@ -2561,7 +2590,39 @@ function itemRows(items,opts){opts=opts||{};if(!items.length)return '<div class=
       // instead of a meaningless "0m"
       +'<span class="vmin">'+(it.min>0?(it.min+'m'):'read')+'</span></div>'
       +'<button class="flagb '+(shaky?"on":"")+'" data-flag="'+idsAttr+'" aria-label="flag for review" title="Flag as shaky — collects in your review queue">⚑</button>'
-      +'</div>';}).join('')+'</div>';}).join('');}
+      +'</div>'
+      // B&B rows carry their UWorld question set, collapsed. Rendered only once the
+      // map has loaded, so a row never shows an empty disclosure while it fetches.
+      + uwRowHTML(it);}).join('')+'</div>';}).join('');}
+/* The per-video question set under a B&B row. `it` here is a merged row, so it has
+   res/name but not the catalog object. */
+function uwRowHTML(it){
+  if(!uwReady()||it.res!=="bnb")return '';
+  const ids=uwIdsFor(it.name);if(!ids||!ids.length)return '';
+  return '<details class="uwrow"><summary>'+ids.length+' UWorld question'+(ids.length===1?'':'s')+'</summary>'
+    +'<div class="uwrowbody"><div class="uwids">'+escHTML(ids.join(", "))+'</div>'
+    +'<button type="button" class="btn ghost sm" data-uwids="'+escAttr(ids.join(","))+'" data-uwlab="'+escAttr(it.name)+'">Copy</button></div></details>';
+}
+/* The copy bar for a whole day, and for the Brody week that day sits in. Only shown
+   when there is something to copy; the week button only on a Brody plan. */
+function uwDayBarHTML(iso){
+  if(!uwReady())return '';
+  const row=SCHED&&SCHED.dayMap&&SCHED.dayMap[iso];if(!row)return '';
+  const dayIds=uwIdsForItems(row.items);
+  if(!dayIds.length)return '';
+  let weekIds=[],wk=null;
+  if(SCHED.brody&&row.brodyWeek){
+    wk=row.brodyWeek;
+    const items=[];SCHED.days.forEach(d=>{if(d.brodyWeek===wk)items.push.apply(items,d.items);});
+    weekIds=uwIdsForItems(items);
+  }
+  return '<div class="uwbar">'
+    +'<button type="button" class="btn ghost sm" data-uwids="'+escAttr(dayIds.join(","))+'" data-uwlab="this day">Copy '+dayIds.length+' UWorld IDs for this day</button>'
+    +((weekIds.length>dayIds.length)
+      ? '<button type="button" class="btn ghost sm" data-uwids="'+escAttr(weekIds.join(","))+'" data-uwlab="Brody week '+wk+'">All '+weekIds.length+' for Brody week '+wk+'</button>'
+      : '')
+    +'</div>';
+}
 
 /* ---------- copy helpers + per-day Anki block ---------- */
 function fallbackCopy(t,msg){try{const ta=document.createElement("textarea");ta.value=t;ta.style.position="fixed";ta.style.opacity="0";document.body.appendChild(ta);ta.focus();ta.select();document.execCommand("copy");document.body.removeChild(ta);toast(msg||"Copied");}catch(e){toast("Copy failed — long-press to copy");}}
@@ -2663,8 +2724,8 @@ function chrome(active){
   let tabs;
   if(S.active==="m1"){tabs=[["browse","Browse"],["daily","Daily"],["grades","Grades"],["progress","Progress"]];}
   else if(S.active==="stepd"||S.active==="m3"){tabs=[];}
-  else if(S.active==="nbme"){tabs=[["today","Study"],["stats","Stats"],["grades","Grades"],["adjust","Plan"],["ref","Rapid Reference"],["checklist","Checklist"]];}
-  else{tabs=[["today","Study"],["stats","Stats"],["ref","Rapid Reference"],["adjust","Plan"]];}
+  else if(S.active==="nbme"){tabs=[["today","Study"],["stats","Stats"],["grades","Grades"],["adjust","Plan"],["uworld","Questions"],["ref","Rapid Reference"],["checklist","Checklist"]];}
+  else{tabs=[["today","Study"],["stats","Stats"],["uworld","Questions"],["ref","Rapid Reference"],["adjust","Plan"]];}
   const nm=(S.active==="nbme"||S.active==="m1"||S.active==="stepd"||S.active==="m3")?"Home":hubName(S.active||"step1");
   return '<div class="topbar'+(tabs.length?'':' solo')+'">'+'<button class="brandbtn" id="brandBtn" title="Switch hub">‹ <span class="brandnm">'+escHTML(nm)+'</span></button>'
    +(tabs.length?'<div class="nav">'+tabs.map(t=>'<button class="navb '+(active===t[0]?"on":"")+'" data-view="'+t[0]+'">'+t[1]+'</button>').join('')+'</div>':'')
@@ -2672,6 +2733,7 @@ function chrome(active){
    +'</div>';}
 
 function wireChrome(){
+  bindUwCopy();   // every view can carry copy buttons, so bind them once, here
   document.querySelectorAll(".navb").forEach(b=>b.onclick=()=>{if(S.active==="m1"){M1VIEW=b.dataset.view;}else{VIEW=b.dataset.view;if(b.dataset.view==="adjust")ADJ_VIEW=null;}render();});
   const mb=document.getElementById("menuBtn");if(mb)mb.onclick=openMenu;
   const sc=document.getElementById("syncChip");if(sc)sc.onclick=openBackups;
@@ -2719,12 +2781,16 @@ function render(){
   reflow();
   if(VIEW==="ready"||VIEW==="progress")VIEW="stats"; // legacy views merged into Stats
   if(VIEW==="step"||VIEW==="plan")VIEW="today"; // Step is its own hub; Planner folded into Study
+  // The question map is only useful to a plan that schedules B&B, so it is fetched
+  // lazily and only then. render() runs again when it lands.
+  if(!uwReady()&&!UW_ERR&&S.cfg&&hasRes("bnb"))loadUWorld();
   if(VIEW==="today")renderToday();
   else if(VIEW==="checklist")renderChecklist();
   else if(VIEW==="stats")renderStats();
   else if(VIEW==="grades")renderGrades();
   else if(VIEW==="adjust")renderAdjust();
   else if(VIEW==="ref")renderRapidRef();
+  else if(VIEW==="uworld")renderUWorld();
   else renderToday();
   wireChrome();
 }
@@ -3708,6 +3774,7 @@ function renderToday(){
       const anyDone=row.items.some(it=>isDone(it.id));
       colB+='<div class="card"><div class="cardhd">'+escHTML(heading)+' <span class="pill">'+dayTimeLabel(row)+'</span>'+(anyDone?'<button class="hdreset" data-dayreset="'+row.iso+'" title="Uncheck everything on this day">Uncheck all</button>':'')+'</div>'
         +dayVlist(row)
+        +uwDayBarHTML(row.iso)
         +'<div class="rowtools">'+(todayRow&&!isOffToday?'<button class="btn ghost" id="offToday">Take today off</button>':'')+'</div></div>';
     } else if(!isOffToday&&!(todayRow&&todayRow.review)){
       colB+='<div class="card"><div class="cardhd">Nothing scheduled today</div><p class="muted">Tap a day on the calendar to study ahead, or enjoy the breather.</p></div>';
@@ -3823,7 +3890,7 @@ function dayDetail(iso){
     const studyingRest=dayIsStudyingRest(S.cfg,iso);
     const tools='<div class="rowtools"><button class="btn ghost" id="'+(studyingRest?'d_unstudy':'d_off')+'">'
       +(studyingRest?'Back to rest day':'Take this day off')+'</button></div>';
-    if(row.items.length)h+=dayVlist(row)+tools;
+    if(row.items.length)h+=dayVlist(row)+uwDayBarHTML(row.iso)+tools;
     else h+='<p class="muted small">Nothing scheduled this day'+(studyingRest?' — your work already fits before it.':'.')+'</p>'+(studyingRest?tools:'');
   }
   return h+'</div>';
@@ -5378,11 +5445,18 @@ function doResetAll(){
     S.cfgs=snap.cfgs;S.active=snap.active;S.cfg=S.active?S.cfgs[S.active]:null;_prevSig=progressSig();save();
     if(S.cfg){reflow();render();}else renderWelcome();toast("Restored ✓");});
 }
-const BUILD="2026-10-09a";
+const BUILD="2026-10-10a";
 /* ---------- What's new (changelog) ----------
    Newest entry first. Bump the top entry's id whenever you add one and the
    pop-up shows once per person (tracked in synced settings.seenUpdate). */
 const CHANGELOG=[
+  {id:"2026-10-10", date:"October 2026", title:"New: UWorld question IDs for every Boards & Beyond video", items:[
+    "Watch a B&B video, then do the UWorld questions that test it. Each B&B video in your day now has its question IDs tucked under it \u2014 tap to open, tap to copy, then in UWorld go to Create Test \u2192 Custom and paste the numbers in. Paste the numbers only, not the video name.",
+    "There are copy buttons for a whole day and for a whole Brody week too, so you can build one test covering everything you watched. Duplicates are stripped automatically \u2014 UWorld rejects a list that repeats an ID.",
+    "A new Questions tab holds the whole map, searchable, system by system, for when you want a topic you aren\u2019t scheduled on.",
+    "This comes from the public \u201cBoards and Beyond Videos and UWorld Question IDs\u201d document maintained by Eli Tanenbaum and a group of contributors, who built and share it for exactly this. 3,105 question IDs across 464 of the 496 B&B videos. The question IDs point at UWorld\u2019s questions; the questions themselves are UWorld\u2019s and you need your own subscription.",
+    "Nothing is stored and nothing syncs \u2014 it is a lookup, so it adds nothing to your account.",
+  ]},
   {id:"2026-10-09", date:"October 2026", title:"New unit: Musculoskeletal & Skin", items:[
     "SYST 9400 is in. Three weeks \u2014 skin and dermatopathology (Oct 19), bone, joint and muscle pathology (Oct 26), then spine, limbs, environment and infection (Nov 2) \u2014 with Extended Quiz 7 and 8 as the weekly deadlines and the block exam on Monday Nov 9.",
     "All 47 lectures are mapped, and 488 videos / 82 h are scheduled against them with nothing defaulting to the last week. At the default pace it comes out around 6 h/day and every week fits before its quiz \u2014 the first unit since Heme/Renal that isn\u2019t a firehose.",
@@ -5681,6 +5755,117 @@ function auditBlock(blk){
    real catalog names, which is what lets a node show its runtime and a
    ✓ once you've watched it.
    ============================================================ */
+/* ---------- UWorld question IDs for Boards & Beyond videos ----------
+   Eli Tanenbaum's public "Boards and Beyond Videos and UWorld Question IDs"
+   document, reconciled against this catalog by tools/generators/mk_uworld.js and
+   served from uworld.json. Fetched the first time it is needed and never written
+   to: nothing here touches S or persistObj, so it adds no weight to the synced
+   profile and no state to merge.
+
+   Where B&B has split a video since the document named it, every part carries the
+   whole question set — so a copy can legitimately meet the same id twice. Every
+   copy path therefore goes through uwCopy, which de-duplicates and keeps the
+   document's order. */
+let UW_DATA=null,UW_LOADING=false,UW_ERR=false;
+function loadUWorld(cb){
+  if(UW_DATA){cb&&cb();return;}
+  if(UW_LOADING)return;
+  UW_LOADING=true;UW_ERR=false;
+  fetch("uworld.json").then(r=>{if(!r.ok)throw 0;return r.json();})
+    .then(d=>{UW_DATA=d;UW_LOADING=false;cb&&cb();render();})
+    .catch(()=>{UW_LOADING=false;UW_ERR=true;if(VIEW==="uworld")render();});
+}
+function uwReady(){return !!UW_DATA;}
+/* ids for one catalog B&B video, by name — B&B names are unique across the whole
+   catalog (itemId uses "b:"+name), so the name alone is a safe key. */
+function uwIdsFor(name){return (UW_DATA&&UW_DATA.byVideo&&UW_DATA.byVideo[name])||null;}
+function uwHas(it){return !!(it&&it.res==="bnb"&&uwIdsFor(it.name));}
+/* Every id a list of plan items is worth, de-duplicated, first-seen order kept. */
+function uwIdsForItems(items){
+  const out=[],seen=new Set();
+  (items||[]).forEach(it=>{const ids=uwHas(it)?uwIdsFor(it.name):null;
+    if(ids)ids.forEach(id=>{if(!seen.has(id)){seen.add(id);out.push(id);}});});
+  return out;
+}
+function uwCopy(ids,what){
+  if(!ids||!ids.length){toast("No question IDs for "+(what||"that"));return;}
+  copyText(ids.join(", "),ids.length+" question ID"+(ids.length===1?"":"s")+" copied — paste into UWorld → Create Test → Custom");
+}
+/* ---------- QUESTIONS TAB ----------
+   A browsable copy of the source document: system → section → video, each with its
+   UWorld question IDs and a copy button. Read-only and stateless — nothing here is
+   stored, so switching tabs forgets everything except the open search box.
+   Videos the document covers but this catalog has no entry for are still listed,
+   marked, because the questions are real even when the video is not one we schedule. */
+let UW_Q="",UW_OPEN={};
+function uwMatch(q,s){return String(s).toLowerCase().indexOf(q)>=0;}
+function renderUWorld(){
+  if(!uwReady()){
+    loadUWorld();
+    const body=UW_ERR
+      ? '<div class="m1soon"><span class="m1soon-tag">Offline</span><div class="cardhd">Couldn’t load the question map</div><p class="muted small">Check your connection and try again.</p><button class="btn ghost" id="uwRetry" style="margin-top:14px">Retry</button></div>'
+      : '<div class="m1soon"><span class="m1soon-tag">Loading</span><div class="cardhd">Fetching the question map…</div><div class="authspin"></div></div>';
+    app.innerHTML=chrome("uworld")+'<div class="wrap">'+body+'</div>';
+    const r=document.getElementById("uwRetry");if(r)r.onclick=()=>{UW_ERR=false;loadUWorld();render();};
+    wireChrome();return;
+  }
+  const q=UW_Q.trim().toLowerCase();
+  const src=UW_DATA.source||{};
+  let h='<div class="wrap"><h1 class="pmhd">UWorld questions by video</h1>'
+    +'<p class="muted small" style="margin:-6px 0 14px;max-width:64ch">Every Boards &amp; Beyond video with the UWorld question IDs that test its content. Copy a set, then in UWorld go to <b>Create Test → Custom</b> and paste the numbers in. Paste the numbers only — not the video name.</p>'
+    +'<div class="uwsrc">📄 From <b>'+escHTML(src.title||"the B&B → UWorld question document")+'</b>, by '+escHTML(src.author||"its maintainers")+'. '+escHTML(src.note||"")+'</div>'
+    +'<input class="uwsearch" id="uwq" type="search" placeholder="Search a video or system…" value="'+escAttr(UW_Q)+'">';
+  let shown=0,hits=0;
+  (UW_DATA.tree||[]).forEach(sysNode=>{
+    const secs=(sysNode.secs||[]).map(sec=>{
+      const vids=(sec.vids||[]).filter(v=>!q||uwMatch(q,v.n)||uwMatch(q,sysNode.sys)||uwMatch(q,sec.sec));
+      return vids.length?{sec:sec.sec,vids}:null;
+    }).filter(Boolean);
+    if(!secs.length)return;
+    shown++;
+    const n=secs.reduce((a,x)=>a+x.vids.length,0);hits+=n;
+    const open=q?true:(UW_OPEN[sysNode.sys]!==false&&!!UW_OPEN[sysNode.sys]);
+    h+='<details class="uwsys"'+(open?" open":"")+' data-uwsys="'+escAttr(sysNode.sys)+'">'
+      +'<summary class="uwsyshd">'+escHTML(sysNode.sys)+' <span class="uwct">'+n+'</span></summary>';
+    secs.forEach(sec=>{
+      h+='<div class="uwsec"><div class="uwsechd">'+escHTML(sec.sec)+'</div>';
+      sec.vids.forEach(v=>{
+        const ids=v.ids||[];
+        const mapped=!!(v.to&&v.to.length);
+        h+='<div class="uwvid'+(mapped?"":" unmapped")+'">'
+          +'<div class="uwvtop"><span class="uwvn">'+escHTML(v.n)+'</span>'
+          +(ids.length
+            ? '<button type="button" class="btn ghost sm uwcopy" data-uwids="'+escAttr(ids.join(","))+'" data-uwlab="'+escAttr(v.n)+'">Copy '+ids.length+'</button>'
+            : '<span class="uwnone">none</span>')
+          +'</div>'
+          +(ids.length?'<div class="uwids">'+escHTML(ids.join(", "))+'</div>':'')
+          +(mapped?'':'<div class="uwflag">Not a video in your catalog — the questions are here, but it won’t appear in your schedule.</div>')
+          +'</div>';
+      });
+      h+='</div>';
+    });
+    h+='</details>';
+  });
+  if(!shown)h+='<p class="cfmsg">Nothing matches “'+escHTML(UW_Q)+'”.</p>';
+  else if(q)h+='<p class="muted small" style="margin-top:12px">'+hits+' video'+(hits===1?'':'s')+' matching “'+escHTML(UW_Q)+'”.</p>';
+  app.innerHTML=chrome("uworld")+h+'</div>';
+  const box=document.getElementById("uwq");
+  if(box){box.oninput=()=>{UW_Q=box.value;const at=box.selectionStart;renderUWorld();
+    const b2=document.getElementById("uwq");if(b2){b2.focus();try{b2.setSelectionRange(at,at);}catch(e){}}};}
+  document.querySelectorAll("[data-uwsys]").forEach(d=>d.ontoggle=()=>{UW_OPEN[d.dataset.uwsys]=d.open;});
+  bindUwCopy();
+  wireChrome();
+}
+/* One binder for every copy button in the app, wherever it is rendered. ids ride in
+   a data attribute as a plain comma list — they are digits only, so there is no
+   delimiter to collide with. */
+function bindUwCopy(){
+  document.querySelectorAll("[data-uwids]").forEach(b=>b.onclick=(e)=>{
+    e.preventDefault();e.stopPropagation();
+    const ids=(b.dataset.uwids||"").split(",").map(x=>parseInt(x,10)).filter(x=>x>0);
+    uwCopy(ids,b.dataset.uwlab||"that");
+  });
+}
 function loadRapidRef(cb){
   if(RR_DATA){cb&&cb();return;}
   if(RR_LOADING)return;
