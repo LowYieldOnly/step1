@@ -289,10 +289,12 @@ const chlog=await p.evaluate(()=>{
 });
 chk('C60-35 no changelog entry contains markup, which would render as literal tags',
     chlog.bad.length===0, 'entries with markup: '+JSON.stringify(chlog.bad));
+/* Deliberately NOT "near the top of the changelog" — I wrote that in C58-53, it
+   expired two releases later, I fixed it there and then wrote the same thing here.
+   An entry's position moves every release; its existence and content do not. */
 chk('C60-36 content depth has a changelog entry naming both modes and where they live',
-    chlog.found&&chlog.rank>=0&&chlog.rank<2
-      &&/Minimal/.test(chlog.title)&&/Content depth/.test(chlog.body)
-      &&/Comprehensive/.test(chlog.body), (chlog.title||'missing')+' @'+chlog.rank);
+    chlog.found&&/Minimal/.test(chlog.title)&&/Content depth/.test(chlog.body)
+      &&/Comprehensive/.test(chlog.body), (chlog.title||'missing'));
 chk('C60-37 …and says what Minimal never drops',
     /[Pp]atholog/.test(chlog.body)&&/pharmacolog/.test(chlog.body), chlog.body.slice(0,180));
 
