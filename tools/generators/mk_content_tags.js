@@ -149,6 +149,55 @@ const ITEMS = [
   ['uwlib','Neurology','','Pain signaling and neuroanatomy: Nociceptive pain','physio'],
   // 'Neurotransmitters and related medications' stays — it is half pharmacology.
   // 'Cranial nerves: Anatomy and palsies' stays — the palsies are the examinable half.
+
+  // ---- Boards & Beyond · Musculoskeletal ----
+  // The whole "Anatomy and Orthopedics" section is regional anatomy, except the
+  // radiculopathy video, which is a clinical presentation.
+  ['bnb','Musculoskeletal','Anatomy and Orthopedics','Knee','anat'],
+  ['bnb','Musculoskeletal','Anatomy and Orthopedics','Shoulder and Elbow','anat'],
+  ['bnb','Musculoskeletal','Anatomy and Orthopedics','Brachial Plexus','anat'],
+  ['bnb','Musculoskeletal','Anatomy and Orthopedics','Wrist','anat'],
+  ['bnb','Musculoskeletal','Anatomy and Orthopedics','Hand','anat'],
+  ['bnb','Musculoskeletal','Anatomy and Orthopedics','Lumbosacral Plexus','anat'],
+  ['bnb','Musculoskeletal','Anatomy and Orthopedics','Hip','anat'],
+  // 'Lumbar Radiculopathy' deliberately kept.
+
+  // B&B files muscle and bone tissue biology under "Cell Biology" — physiology and
+  // histology of the tissue, not its diseases, which live in its Pathology section.
+  ['bnb','Musculoskeletal','Cell Biology','Skeletal Muscle','physio'],
+  ['bnb','Musculoskeletal','Cell Biology','Cardiac Muscle','physio'],
+  ['bnb','Musculoskeletal','Cell Biology','Smooth Muscle','physio'],
+  ['bnb','Musculoskeletal','Cell Biology','Bone','physio'],
+
+  // ---- Boards & Beyond · Dermatology ----
+  ['bnb','Dermatology','General Topics','Skin','hist'],
+  ['bnb','Dermatology','General Topics','Epithelial Cells','hist'],
+  // every other Dermatology video is a disorder — kept.
+
+  // ---- Bootcamp · Dermatology ----
+  ['bootcamp','Dermatology','General Principles','Skin Structure and Function','hist'],
+  ['bootcamp','Dermatology','General Principles','Histopathology','hist'],
+  // 'Skin Lesions' stays — it is the morphology vocabulary the clinical videos use.
+
+  // ---- Bootcamp · Musculoskeletal, the mixed sections ----
+  // Each regional section opens with one anatomy video and is otherwise clinical.
+  ['bootcamp','Musculoskeletal','Spine','Spine Anatomy','anat'],
+  ['bootcamp','Musculoskeletal','Shoulder & Elbow','Shoulder Anatomy','anat'],
+  ['bootcamp','Musculoskeletal','Wrist & Hand','Wrist & Hand Anatomy','anat'],
+  ['bootcamp','Musculoskeletal','Hip & Knee','Hip Anatomy','anat'],
+  ['bootcamp','Musculoskeletal','Foot & Ankle','Foot & Ankle Anatomy','anat'],
+  ['bootcamp','Musculoskeletal','Brachial Plexus Nerves & Lesions','Brachial Plexus Overview','anat'],
+  // The named peripheral nerves in those sections stay: the sections are "Nerves &
+  // Lesions", and the lesions are what gets examined.
+
+  // "Skeletal Muscle" is muscle physiology with two clinical videos in it.
+  ['bootcamp','Musculoskeletal','Skeletal Muscle','Skeletal Muscle - Overview','physio'],
+  ['bootcamp','Musculoskeletal','Skeletal Muscle','Skeletal Muscle Depolarization','physio'],
+  ['bootcamp','Musculoskeletal','Skeletal Muscle','Muscle Contraction and Relaxation','physio'],
+  ['bootcamp','Musculoskeletal','Skeletal Muscle','Metabolic Exercise Physiology','physio'],
+  ['bootcamp','Musculoskeletal','Skeletal Muscle','Sarcomere','physio'],
+  ['bootcamp','Musculoskeletal','Skeletal Muscle','Muscle Proprioception','physio'],
+  // 'Malignant Hyperthermia' and the question breakdown stay.
 ];
 
 /* ---------------- validate against the real catalog ---------------- */
@@ -192,9 +241,16 @@ app = app.slice(0, i + START.length) + '\n' + payload + '\n' + app.slice(j);
 fs.writeFileSync(APP, app);
 
 /* ---------------- report ---------------- */
-const SYS = ['Neurology', 'Psychiatry', 'Ophthalmology'];
+const UNITS = {
+  'Nervous & Sensory': ['Neurology', 'Psychiatry', 'Ophthalmology'],
+  'Musculoskeletal & Skin': ['Musculoskeletal', 'Dermatology'],
+};
 const tagFor = v => { const r = RULES.find(rr => ruleHit(v, rr)); return r ? r.tag : (tagOf[K(v)] || null); };
+console.log(RULES.length + ' section rules + ' + ITEMS.length + ' per-item tags spliced into index.html');
+
+Object.entries(UNITS).forEach(([unit, SYS]) => {
 const blockVids = cat.videos.filter(v => SYS.includes(v.sys));
+
 const byTag = {}, byRes = {};
 blockVids.forEach(v => {
   const t = tagFor(v);
@@ -207,8 +263,7 @@ const keep = Object.values(byRes).reduce((a, r) => a + r.keep, 0);
 const cutMin = Object.values(byRes).reduce((a, r) => a + r.cutMin, 0);
 const keepMin = Object.values(byRes).reduce((a, r) => a + r.keepMin, 0);
 
-console.log(RULES.length + ' section rules + ' + ITEMS.length + ' per-item tags spliced into index.html\n');
-console.log('Nervous & Sensory under Minimal (everything untagged is kept):');
+console.log('\n' + unit + ' under Minimal (everything untagged is kept):');
 console.log('  resource     drop    keep     drop h    keep h');
 Object.keys(byRes).sort().forEach(r => { const x = byRes[r];
   console.log('  ' + r.padEnd(11) + String(x.cut).padStart(5) + String(x.keep).padStart(8)
@@ -218,5 +273,7 @@ console.log('  ' + 'TOTAL'.padEnd(11) + String(cut).padStart(5) + String(keep).p
 console.log('\n  by type: ' + TAGS.map(t => t + ' ' + (byTag[t] || 0)).join(' · '));
 console.log('  Minimal drops ' + Math.round(cut / (cut + keep) * 100) + '% of items and '
   + Math.round(cutMin / (cutMin + keepMin) * 100) + '% of the video hours.');
+});
+
 console.log('\n  Unlisted = kept. A video nobody classified stays in a Minimal plan,');
 console.log('  so the mistake this can make is showing too much, never too little.');
