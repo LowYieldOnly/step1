@@ -35,8 +35,11 @@ const reg=await p.evaluate(()=>{
     found:!!brodyBlockById('neuro-sensory'),name:(brodyBlockById('neuro-sensory')||{}).name};
 });
 chk('C57-1 the block is registered and named', reg.found&&reg.name==='Nervous & Sensory', JSON.stringify(reg.ids));
-chk('C57-2 three blocks, unique ids, still in shelf order',
-    reg.ids.length===3&&!reg.dupes&&reg.sorted, JSON.stringify(reg.shelves));
+/* NOT pinned to a block count — a new unit every few weeks is the point of this
+   app, and an assertion that breaks each time one lands is noise. What must hold
+   however many there are: ids unique, shelves strictly ascending. */
+chk('C57-2 every block has a unique id, and they stay in shelf order',
+    reg.ids.length>=3&&!reg.dupes&&reg.sorted, JSON.stringify(reg.shelves));
 
 // ---------- 2. the calendar, including the two shape changes ----------
 const cal=await p.evaluate(()=>{
@@ -94,12 +97,15 @@ chk('C57-10 adding a third block left the first two audit-clean',
 // ---------- 4. block selection rolls over ----------
 const sel=await p.evaluate(()=>{
   const out={},real=todayISO;
-  [['2026-09-18','cardiopulm'],['2026-09-19','neuro-sensory'],['2026-10-05','neuro-sensory'],
-   ['2026-10-08','neuro-sensory'],['2026-12-01','neuro-sensory']].forEach(([d,exp])=>{
-    todayISO=()=>d;out[d]={got:brodyCurrentBlockId(),exp};});
+  // the expectation is DERIVED, not hardcoded: the current block is the first whose
+  // shelf hasn't passed, else the last. Hardcoding the answer meant every new unit
+  // broke this, which is exactly backwards for a check about blocks rolling over.
+  const expect=d=>(BRODY_BLOCKS.find(b=>d<=b.shelf)||BRODY_BLOCKS[BRODY_BLOCKS.length-1]).id;
+  ['2026-09-18','2026-09-19','2026-10-05','2026-10-08','2026-10-09','2026-12-01'].forEach(d=>{
+    todayISO=()=>d;out[d]={got:brodyCurrentBlockId(),exp:expect(d)};});
   todayISO=real;return out;
 });
-chk('C57-11 the day after the Cardiopulm exam, the current block becomes Nervous & Sensory',
+chk('C57-11 the current block rolls over the day after each block\u2019s exam',
     Object.values(sel).every(o=>o.got===o.exp), JSON.stringify(sel));
 
 // ---------- 5. scheduling ----------

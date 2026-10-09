@@ -83,8 +83,10 @@ for (const id of BLOCKS) M[id]={
 const every=(fn)=>BLOCKS.every(id=>fn(M[id].free,M[id].quiz,id));
 const why=(fn)=>BLOCKS.filter(id=>!fn(M[id].free,M[id].quiz,id)).join(', ')||'—';
 
-chk('C58-0 all three blocks were measured in both modes',
-    BLOCKS.length===3&&BLOCKS.every(id=>M[id].free.items>0), JSON.stringify(BLOCKS));
+/* Count-agnostic on purpose: every general theorem below runs over whatever blocks
+   exist, so a new unit widens the coverage instead of breaking the file. */
+chk('C58-0 every registered block was measured in both modes',
+    BLOCKS.length>=3&&BLOCKS.every(id=>M[id].free.items>0), JSON.stringify(BLOCKS));
 
 // ---------- 1. the content map is untouched, on every block ----------
 chk('C58-1 free pace schedules the same number of videos',
