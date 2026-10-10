@@ -1,3 +1,82 @@
+# BRODY MODE — Portable Blueprint
+
+**A self-contained package for building a curriculum-mapped study scheduler at your
+medical school.** Attach this single file to a Claude conversation and it carries
+everything needed to start: the method, the data shapes, a real worked example, and the
+measured costs.
+
+Source project: BRODY MODE, Brody School of Medicine at East Carolina University
+(`brodymode.com`, `github.com/LowYieldOnly/step1`). Packaged 2026-10-10 from commit
+`e9e72c9`, build `2026-10-10a`.
+
+---
+
+## For the person attaching this file
+
+Drop this file into a new Claude conversation and say what you want. Three starting
+points that work:
+
+> **Starting from scratch.** "I've attached a blueprint for a curriculum-mapped study
+> scheduler. I'm at [school], and I want to build this for [course/unit]. Walk me through
+> Phase 0 and help me decide whether this is worth doing. Ask me what you need to know."
+
+> **You have the course calendar.** "I've attached the blueprint, plus my school's course
+> calendar for [unit]. Do Steps 11–13: extract the week structure, quiz dates, exam date
+> and lecture list into the block skeleton the blueprint describes in §A.1."
+
+> **You have the calendar and a resource list.** "I've attached the blueprint, my course
+> calendar, and the list of videos in [resource] for [organ system]. Help me do Step 15 —
+> the mapping. Go week by week, propose which videos belong to each week, and mark the
+> calls you're unsure about so I can check them."
+
+A fourth, if you are writing this up rather than building it:
+
+> "I've attached a blueprint describing a curriculum-mapped scheduler built at one
+> medical school. Help me turn it into a methods paper. Start by telling me which claims
+> in it are supportable from the artefact alone and which need data that doesn't exist."
+
+**What this file does not contain:** the application's source code, the full 3,315-item
+resource catalog, or any third-party content. §A.1 and Appendix W give the data shapes
+and a real worked example, which is what a conversation needs to generate your
+equivalents. If you want the code itself, you need the repository — and see Step 3 and
+Step 33 about its licensing.
+
+---
+
+## For Claude, reading this file in a new conversation
+
+This document is a **method, not a specification of a product you are maintaining.** The
+person who attached it is trying to build their own version for their own school.
+
+What you have: the full method, every data shape, measured effort figures, and a real
+worked example of one encoded course unit (Appendix W).
+
+What you do not have: the application source, the full catalog, or this school's
+curriculum beyond the example. Do not pretend to. If a step needs the user's course
+calendar, their resource list, or a decision only they can make, ask for it.
+
+How to be useful here, in rough priority order:
+
+1. **The mapping is the work, and it is theirs.** Steps 15–18 are ~120 judgement calls
+   per unit that require someone who has taken the course and used the resources. You can
+   draft a mapping and you should — but present drafts as proposals to be checked, mark
+   every uncertain call explicitly (Step 17), and never let a plausible-looking mapping
+   pass as a verified one.
+2. **Push them to Phase 0 before Phase 4.** The common failure is building a scheduler
+   before confirming the mapping problem exists at their school, or scoping to a whole
+   curriculum instead of one unit.
+3. **Respect Step 4 absolutely.** Metadata and their own mapping only. Never generate,
+   reproduce, or reconstruct third-party video content, transcripts, slides, or question
+   text — not even as an example. Titles and durations are the line.
+4. **Carry the failures forward.** The warnings inside the steps, and Appendix W.7, are the
+   part a second school cannot rediscover cheaply. When they are about to make one of
+   those mistakes, say so with the specific reason.
+5. **Do not invent numbers.** Every figure in this document was measured. §A.5 lists what
+   was never recorded — hours spent, and whether the tool helps anyone pass anything. If
+   asked for those, say they do not exist rather than estimating.
+
+---
+
 # Build your own BRODY MODE
 
 **A step-by-step blueprint for a curriculum-mapped study scheduler at your medical school.**
@@ -852,9 +931,282 @@ constants in `index.html`, resolving every in-block item through the precedence 
 Step 15. The per-block Minimal-depth drop counts come from applying `contentTag` to every
 in-block item. The question-ID figures come from `uworld.json`.
 
+**Reading this as a packaged file:** you do not have that repository in front of you, and
+it may not be accessible to you — see Appendix P. The commands above are here so the
+figures are challengeable, not because you need to run them. Take the numbers as measured
+and recorded, and if a figure matters to a decision, ask the project's authors rather than
+re-deriving it from memory.
+
+---
+## Appendix W — A real worked example
+
+This is the actual Musculoskeletal & Skin unit from the source project, **abridged** so it
+fits in a conversation. It is included so that a Claude conversation can generate your
+equivalent by example rather than from the schema alone.
+
+Abridgements are marked `/* … */`. The full unit has 47 lectures across 3 weeks, 89
+per-item keys, 43 section keys and 47 inclusions, and places 488 items.
+
+### W.1 Catalog records, one per resource
+
+Real records, verbatim. Five required fields on all 3,315; `tag` and `sketch` optional.
+
+```json
+{"res":"bnb","sys":"Anesthesia","cat":"General Topics","name":"Inhaled Anesthetics","min":25}
+{"res":"pathoma","sys":"Pathology","cat":"Growth Adaptations, Cellular Injury, and Death","name":"1.1 Growth Adaptations","min":29,"tag":"#Pathoma::01_Growth_Adaptations::01_Growth_Adaptations"}
+{"res":"bootcamp","sys":"Biochemistry","cat":"Cell Biology","name":"Cell Trafficking","min":7}
+{"res":"skmicro","sys":"Infectious Disease","cat":"Gram Positive Cocci","name":"Staphylococcus aureus","min":11,"sketch":"Golden Staff of Moses"}
+{"res":"skpharm","sys":"Renal","cat":"Diuretics","name":"Acetazolamide & Mannitol","min":24}
+{"res":"uwlib","sys":"Neurology","cat":"","name":"Histology: Nerve tissue","min":0}
+```
+
+Note the last one: a written article, `min: 0`. A resource with no durations is budgeted
+in **items per day** rather than minutes (Step 25), which is why the duration field being
+zero is meaningful rather than missing.
+
+### W.2 The unit skeleton (Steps 12–13)
+
+```js
+{
+  "id": "msk-skin",
+  "name": "Musculoskeletal & Skin",
+  "systems": ["Musculoskeletal", "Dermatology"],
+  "shelf": "2026-11-09",                          // block exam
+  "checkpoints": ["2026-10-23", "2026-10-30"],    // quizzes = per-week deadlines
+  "weeks": [
+    { "n": 1, "start": "2026-10-19",
+      "label": "Skin, Dermatopathology & Anaesthesia",
+      "lectures": [
+        {"disc":"Path · Skin","title":"Dermatopathology: Benign (1 of 2)"},
+        {"disc":"Path · Skin","title":"Dermatopathology: Neoplastic"},
+        {"disc":"Path · MSK/Skin","title":"Soft Tissue: Neoplastic"},
+        {"disc":"Pharm","title":"General Anesthesia 1"},
+        {"disc":"Pharm","title":"Local Anesthetics"},
+        {"disc":"Clin App","title":"Derm Lesions"},
+        {"disc":"Clin App","title":"Skin Infections"},
+        {"disc":"Clin App","title":"Derm Emergencies"},
+        {"disc":"Psych","title":"Flipped Classroom. Personality Disorders"},
+        {"disc":"Ethics","title":"SDOH V (Disability Access)"}
+        /* … 16 lectures in week 1 … */
+      ] },
+    { "n": 2, "start": "2026-10-26", "label": "Bone, Joint & Muscle Pathology",
+      "lectures": [ /* … 17 … */ ] },
+    { "n": 3, "start": "2026-11-02", "label": "Spine, Limbs, Environment & Infection",
+      "lectures": [ /* … 14 … */ ] }
+  ],
+  /* videoWeek, bcWeek, include, exclude follow — see W.3 and W.4 */
+}
+```
+
+Three things worth copying from this skeleton:
+
+- **Week labels are themes, not dates.** "Bone, Joint & Muscle Pathology" is what the
+  student recognises; the Monday ISO date is what the scheduler uses.
+- **Discipline labels (`disc`) are the school's own**, down to `Clin App`, `FOD`, `PDRs`.
+  Do not normalise them into a tidy taxonomy — students recognise their own course's
+  words, and the audit view's whole job is to be recognisable.
+- **Non-content lectures stay in.** Ethics sessions and PBL blocks are listed even though
+  no commercial video maps to them, because their absence from the audit view would look
+  like an omission rather than a fact about the curriculum.
+
+### W.3 Per-item mapping, `videoWeek` (precedence 1)
+
+Key format: `res|sys|cat|name`. Value: week number.
+
+```js
+"videoWeek": {
+  "pathoma|Dermatology|Skin Pathology|19.1 Inflammatory Dermatoses": 1,
+  "pathoma|Dermatology|Skin Pathology|19.3 Epithelial Tumors": 1,
+  "bnb|Dermatology|General Topics|Skin Disorders I": 1,
+  "bnb|Dermatology|General Topics|Blistering Disorders": 1,
+  "bnb|Anesthesia|General Topics|Inhaled Anesthetics": 1,
+  "bnb|Anesthesia|General Topics|Neuromuscular Blockers": 1,
+  "skpharm|Neurology|Anesthetics & Analgesics|Local Anesthetics": 1,
+  "bootcamp|Psychiatry|Personality Disorders|Cluster A Personality Disorders": 1,
+
+  "pathoma|Musculoskeletal|Musculoskeletal Pathology|18.1 Skeletal System": 2,
+  "pathoma|Musculoskeletal|Musculoskeletal Pathology|18.3 Joint": 2,
+  "bnb|Musculoskeletal|Cell Biology|Skeletal Muscle": 2,
+  "bnb|Musculoskeletal|Pathology|Osteoporosis Drugs": 2,
+  "bnb|Musculoskeletal|Pathology|Arthritis": 2,
+
+  "bnb|Musculoskeletal|Anatomy and Orthopedics|Brachial Plexus": 3,
+  "bnb|Musculoskeletal|Anatomy and Orthopedics|Lumbar Radiculopathy": 3,
+  "bnb|Infectious Disease|Bacteria|Zoonotic Infections": 3,
+  "skmicro|Infectious Disease|Mycobacteria|Mycobacterium tuberculosis": 3,
+  "skmicro|Infectious Disease|Systemic Mycoses|Histoplasma capsulatum": 3
+  /* … 89 keys … */
+}
+```
+
+Read the pattern: **pathology and pharmacology are placed per item** because the
+curriculum's pathology lectures are specific, while anatomy is placed per section (W.4)
+because it marches through regions in a predictable order.
+
+Note also `pathoma 18.6 Soft Tissue Tumors` → **week 1**, while `18.1`–`18.5` → week 2.
+The published resource orders that chapter one way and this curriculum teaches it
+another. That single key is the entire reason the per-item tier exists.
+
+### W.4 Per-section mapping, `bcWeek` (precedence 2)
+
+Key format: `sys|category`. Applies to the one large resource whose sections are coherent.
+43 keys here place 399 of the unit's 488 items.
+
+```js
+"bcWeek": {
+  "Dermatology|General Principles": 1,
+  "Dermatology|Infectious Diseases of the Skin": 1,
+  "Dermatology|Malignant Skin Disorders": 1,
+  "Dermatology|Histology — Skin": 1,
+  "Musculoskeletal|Anatomy — Foundations of Anatomy": 1,
+  "Musculoskeletal|Anatomy — Skull": 1,
+  "Musculoskeletal|Anatomy — Face": 1,
+
+  "Musculoskeletal|Skeletal Muscle": 2,
+  "Musculoskeletal|Rheumatologic Diseases": 2,
+  "Musculoskeletal|Primary Bone Tumors": 2,
+  "Musculoskeletal|Vasculitides": 2,
+  "Musculoskeletal|Pharmacology": 2,
+  "Musculoskeletal|Histology — Bone": 2,
+  "Musculoskeletal|Anatomy — Shoulder & Scapular Region": 2,
+  "Musculoskeletal|Anatomy — Hand": 2,
+
+  "Musculoskeletal|Spine": 3,
+  "Musculoskeletal|Brachial Plexus Nerves & Lesions": 3,
+  "Musculoskeletal|Lower Extremity Nerves": 3,
+  "Musculoskeletal|Childhood Musculoskeletal Pathology": 3,
+  "Musculoskeletal|Anatomy — Back": 3,
+  "Musculoskeletal|Anatomy — Foot": 3
+  /* … 43 keys … */
+}
+```
+
+Watch the collision in weeks 2 and 3: `Anatomy — Hand` is section-mapped to week 2, while
+`bnb|Musculoskeletal|Anatomy and Orthopedics|Hand` is item-mapped to week 3. Those are
+different resources teaching the same region, and this curriculum covers the dissection
+before the clinical orthopaedics. **A single region can legitimately sit in two different
+weeks for two different resources.** Any mapping tool that assumes one topic → one week
+will fight you here.
+
+### W.5 Edge repair, `include` / `exclude` (Step 14)
+
+This unit's nominal systems are Musculoskeletal and Dermatology. Its lectures cover far
+more, so 47 items are pulled in from outside — the single heaviest use of `include` in the
+project, and the clearest evidence that the system-level model is an approximation:
+
+In the **generator source**, `include` is a map from item key to week number, grouped
+under a comment naming the lecture that justifies the group — verbatim:
+
+```js
+/* ---- videos pulled in from OUTSIDE the unit's two systems ----
+   Each one answers to a named lecture. This is the alternative to making
+   Infectious Disease, Anaesthesia, Psychiatry and Pathology whole systems. */
+const include = {
+  // PHARM 31-32 · anaesthesia (week 1)
+  "bnb|Anesthesia|General Topics|Inhaled Anesthetics": 1,
+  "bnb|Anesthesia|General Topics|Neuromuscular Blockers": 1,
+  "skpharm|Neurology|Anesthetics & Analgesics|Local Anesthetics": 1,
+
+  // Psych 28-30 · personality, psychiatric presentations, psychotherapy (week 1)
+  "bnb|Psychiatry|Pathology|Personality Disorders": 1,
+  "bootcamp|Psychiatry|Personality Disorders|Cluster A Personality Disorders": 1,
+  // Psych 31 · psychiatric emergencies (week 2)
+  "bootcamp|Psychiatry|Pharmacology|Psychiatric Emergencies": 2,
+
+  // PATH 77 · granulomatous disease (week 3)
+  "bnb|Pathology|General Topics|Granulomatous Inflammation": 3,
+  // PATH 74 · clinical diagnosis of infectious disease; laboratory practices (week 3)
+  "bnb|Infectious Disease|Basics of Microbiology|Bacteria": 3,
+  "skmicro|Infectious Disease|Mycobacteria|Mycobacterium leprae": 3
+  /* … 47 entries … */
+};
+```
+
+The generator then **validates each key against the catalog, folds its week into
+`videoWeek`, and emits `include` as a flat key list** — the shipped block carries
+`include: [...]` with no week numbers, because the week has already been recorded where
+the scheduler reads it. Two forms of the same fact, one authored and one derived, which is
+the generator discipline from Step 10 doing its job.
+
+The grouped comments are the practice from Step 17: **every inclusion names the lecture
+that justifies it.** A unit on bones and skin that schedules HIV drugs looks like a bug
+until the comment tells you an Immunocompromised Host lecture sits in week 3.
+
+For the opposite direction:
+
+```js
+"exclude": []   // this unit needs none
+```
+
+The Hematology & Renal unit is where `exclude` earns its place: commercial resources file
+cancer drugs under Hematology, and this curriculum teaches them in a later unit, so five
+items are dropped despite sharing the unit's system.
+
+### W.6 A reading-mode mapping, `artWeek`
+
+The Nervous & Sensory unit adds 108 written articles mapped the same way, for students who
+do not want video:
+
+Real keys, verbatim:
+
+```js
+"artWeek": {
+  "uwlib|Neurology||Histology: Nerve tissue": 1,
+  "uwlib|Neurology||Nerve physiology": 1,
+  "uwlib|Neurology||Physiology: Membrane potential": 1,
+  "uwlib|Neurology||Neuroanatomy: Cortical lobe function, basic tracts, arterial anatomy, and neurolocalization": 1,
+  /* … */
+  "uwlib|Neurology||Rett syndrome": 3,
+  "uwlib|Neurology||Fragile X syndrome": 3,
+  "uwlib|Neurology||Prader-Willi syndrome and Angelman syndrome": 3
+  /* … 108 keys … */
+}
+```
+
+The empty `cat` field is real — this resource has no section level, which is why its key
+has two consecutive pipes. If your identity scheme cannot represent an empty middle field,
+fix that before you have 108 of them.
+
+### W.7 What a correct unit looks like when you are done
+
+Run these as acceptance criteria for each unit you encode. All four of the project's units
+pass all six:
+
+| | Check | This unit |
+|---|---|---|
+| 1 | Every mapping key matches a real catalog item | 89 + 43 + 47, all matched |
+| 2 | Every in-block item resolves by precedence 1 or 2 — **zero** reach the silent default | 0 fall-throughs |
+| 3 | No section key is stale (names a section the catalog no longer has) | none |
+| 4 | Every `include` entry names the lecture that justifies it | 47 / 47 |
+| 5 | Every uncertain placement is marked in the source with a reason | marked `BALANCE` |
+| 6 | Total hours are plausible against the unit's length at a realistic pace | 81.9 h over 3 weeks |
+
+Criterion 6 is the one people skip, and it is the cheapest sanity check you have: 81.9
+hours across 3 weeks of study days is roughly 4 hours a day of video, which is high but
+real. If your arithmetic says 9, you have either over-included or your course does not
+actually expect students to watch all of it — and the honest response is Step 21, not a
+smaller font.
+
 ---
 
-*Prepared 2026-10-10 against commit `e9e72c9`, build `2026-10-10a`. Companion document:
-`docs/manuscript-facts.md`, which holds the project-history and feature-inventory figures
-for a written report — note its snapshot is 2026-09-05 and predates the four most recent
-features and five of the eight check files.*
+## Appendix P — Provenance of this package
+
+Packaged 2026-10-10 from `github.com/LowYieldOnly/step1` at commit `e9e72c9`, in-app build
+`2026-10-10a`. The source project at that commit: one 6,668-line program file, six data
+files, nine generators (2,043 lines), eight browser check files (308 assertions, all
+passing), four encoded course units covering 14 weeks.
+
+Every figure in this document was measured from that repository, not estimated. §A.5 lists
+what was never recorded. The checks were run green at packaging time.
+
+**Not included in this package, deliberately:** the application source, the full 3,315-item
+catalog, and any third-party content. §A.1 and Appendix W give the shapes and a worked
+example, which is what you need to build your own.
+
+**On reusing the source project itself:** the repository has no `LICENSE` file as of this
+packaging, so there is no grant to fork it. Ask the authors. The *method* in this document
+is yours to use; the code is not yet anyone's to take.
+
+Companion document in the source repository: `docs/manuscript-facts.md`, which holds the
+project-history and feature-inventory figures for a written report. Its snapshot is
+2026-09-05 and predates four features and five of the eight check files.
