@@ -198,6 +198,34 @@ const ITEMS = [
   ['bootcamp','Musculoskeletal','Skeletal Muscle','Sarcomere','physio'],
   ['bootcamp','Musculoskeletal','Skeletal Muscle','Muscle Proprioception','physio'],
   // 'Malignant Hyperthermia' and the question breakdown stay.
+
+  // ---- UWorld library · Musculoskeletal & Skin reading list ----
+  // Titles say what they are; clinical anatomy articles ("Neck pain", "Hip fractures")
+  // are not here and stay.
+  ['uwlib','Musculoskeletal','','Anatomy: Hip','anat'],
+  ['uwlib','Musculoskeletal','','Anatomy: Knee','anat'],
+  ['uwlib','Musculoskeletal','','Anatomy: Shoulder','anat'],
+  ['uwlib','Musculoskeletal','','Anatomy: Wrist','anat'],
+  ['uwlib','Musculoskeletal','','Anatomy: Vertebrae','anat'],
+  ['uwlib','Musculoskeletal','','Anatomy: Layers of the abdominal wall','anat'],
+  ['uwlib','Musculoskeletal','','Anatomy: Fascia (superficial and deep)','anat'],
+  ['uwlib','Musculoskeletal','','Anatomy: Neck','anat'],
+  ['uwlib','Musculoskeletal','','Anatomy: Elbow/forearm','anat'],
+  ['uwlib','Musculoskeletal','','Anatomy: Hand','anat'],
+  ['uwlib','Musculoskeletal','','Anatomy: Foot and ankle','anat'],
+  ['uwlib','Musculoskeletal','','Anatomy: Layers of the back','anat'],
+  ['uwlib','Musculoskeletal','','Sesamoid bones','anat'],
+  ['uwlib','Musculoskeletal','','Lumbosacral plexus','anat'],      // as B&B's Lumbosacral Plexus
+  ['uwlib','Musculoskeletal','','Histology: Cartilage','hist'],
+  ['uwlib','Musculoskeletal','','Histology: Muscle','hist'],
+  ['uwlib','Dermatology','','Histology: Skin appendages (hair follicles, sebaceous glands, sweat glands)','hist'],
+  ['uwlib','Cell Biology','','Histology: Epithelial tissue','hist'],
+  ['uwlib','Musculoskeletal','','Embryology of limb development','embryo'],
+  ['uwlib','Musculoskeletal','','Embryology of the musculoskeletal system','embryo'],
+  ['uwlib','Musculoskeletal','','Ossification and skeletal growth','embryo'],
+  ['uwlib','Endocrinology','','Formation and remodeling of bone','physio'],
+  ['uwlib','Neurology','','Peripheral nerve structure and function','physio'],
+  // 'Basic dermatology vocabulary' stays, as Bootcamp's 'Skin Lesions' does.
 ];
 
 /* ---------------- validate against the real catalog ---------------- */

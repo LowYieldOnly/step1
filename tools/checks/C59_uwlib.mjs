@@ -70,7 +70,8 @@ const A   = await p.evaluate(()=>{window.__mk({arts:true});            return wi
 // ---------- 1. the catalog entries ----------
 const cat=await p.evaluate(()=>{
   const a=catVideos().filter(isArticle);
-  return {n:a.length,sys:[...new Set(a.map(v=>v.sys))],
+  const neuro=a.filter(v=>brodyInBlock(brodyBlockById('neuro-sensory'),v));
+  return {n:neuro.length,sys:[...new Set(neuro.map(v=>v.sys))],
     anyMin:a.filter(v=>v.min!==0).length,
     ids:a.map(itemId),dupIds:(()=>{const s=new Set(a.map(itemId));return a.length-s.size;})(),
     order:RES_ORDER.indexOf('uwlib'),lastInOrder:RES_ORDER[RES_ORDER.length-1]==='uwlib',
@@ -79,7 +80,7 @@ const cat=await p.evaluate(()=>{
     // Articles must survive it, or their check-offs would be discarded on sync.
     inRealIds:realItemIds(a.map(itemId)).length===a.length};
 });
-chk('C59-1 all 108 Neurology articles are in the catalog',
+chk('C59-1 the Neuro unit reads exactly its 108 Neurology articles — no other unit\'s reading leaks in',
     cat.n===108&&cat.sys.length===1&&cat.sys[0]==='Neurology', cat.n+' / '+JSON.stringify(cat.sys));
 chk('C59-2 every article carries min:0 — no invented reading times',
     cat.anyMin===0, cat.anyMin+' articles have a non-zero runtime');

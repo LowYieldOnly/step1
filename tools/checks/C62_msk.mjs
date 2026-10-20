@@ -109,7 +109,9 @@ const id=await p.evaluate(()=>{
     hours:Math.round(scheduled.reduce((a,v)=>a+v.min,0)/6)/10,
     got:want.filter(n=>scheduled.some(v=>v.name===n)).length,wantN:want.length,
     leaked:unwanted.filter(n=>scheduled.some(v=>v.name===n)),
-    allWeek3:scheduled.every(v=>{const it=SCHED.planItems.find(x=>x.id===itemId(v));return it&&it.wk===3;})};
+    // one deliberate exception: terbinafine, for week 2's dermatologic-drugs lecture
+    allWeek3:scheduled.every(v=>{const it=SCHED.planItems.find(x=>x.id===itemId(v));
+      return it&&(it.wk===3||(v.cat==='Antifungals'&&it.wk===2));})};
 });
 chk('C62-12 only a slice of Infectious Disease is scheduled, not the whole system',
     id.scheduled>=15&&id.scheduled<=40&&id.catalogTotal>400,
@@ -118,7 +120,7 @@ chk('C62-13 …and it is the slice the five ID lectures actually need',
     id.got===id.wantN, id.got+' of '+id.wantN+' expected ID videos present');
 chk('C62-14 …with none of the general microbiology course leaking in',
     id.leaked.length===0, 'leaked: '+JSON.stringify(id.leaked));
-chk('C62-15 …all of it in week 3, where those lectures are',
+chk('C62-15 …all of it in week 3, where those lectures are (bar the week-2 derm-drug antifungal)',
     id.allWeek3===true, 'some included ID videos are not in week 3');
 const inc=await p.evaluate(()=>{
   window.__mk({});
@@ -143,6 +145,7 @@ const sch=await p.evaluate(()=>{
   const dayOf={};SCHED.days.forEach(d=>d.items.forEach(i=>dayOf[i.id]=d.iso));
   const b=brodyBlockById('msk-skin');
   return {n:SCHED.stats.totalItems,h:Math.round(SCHED.stats.totalMin/6)/10,
+    expect:catVideos().filter(v=>!isArticle(v)&&brodyInBlock(b,v)).length,
     placed:SCHED.planItems.filter(i=>dayOf[i.id]).length,
     pace:SCHED.brodyPace,feasible:SCHED.stats.feasible,
     heavy:SCHED.weekLoad.filter(w=>w.heavy).map(w=>w.n),
@@ -153,7 +156,7 @@ const sch=await p.evaluate(()=>{
     hero:__hero()};
 });
 chk('C62-18 all '+sch.n+' videos ('+sch.h+' h) get a day',
-    sch.placed===sch.n&&sch.n===488, sch.placed+' of '+sch.n);
+    sch.placed===sch.n&&sch.n===sch.expect, sch.placed+' placed of '+sch.n+' planned; the unit has '+sch.expect);
 chk('C62-19 nothing is scheduled on or after the shelf, or into the review buffer',
     sch.onOrAfterShelf===0&&sch.inBuffer===0,
     'at/after shelf '+sch.onOrAfterShelf+', in buffer '+sch.inBuffer);
