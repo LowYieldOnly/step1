@@ -748,6 +748,27 @@ details.ca-resgrp[open]>.ca-reslab::before{transform:rotate(90deg)}
 .ca-v{font-size:12.5px;color:var(--ink);line-height:1.45;padding:1px 0 1px 10px;border-left:2px solid var(--line)}
 .ca-v.def{border-left-color:var(--warning);color:var(--warning)}
 .ca-deftag{font-family:var(--mono);font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:.04em;color:var(--warning);border:1px solid color-mix(in srgb,var(--warning) 45%,transparent);border-radius:5px;padding:0 5px;margin-left:5px}
+/* content audit · lecture coverage — what teaches each Brody lecture */
+.ca-cov{font-size:12.5px;color:var(--text-2);margin:8px 0 2px;line-height:1.5}
+.ca-cov b{color:var(--ink)}
+.ca-covnote{border:1px solid var(--line);border-radius:11px;padding:10px 12px;margin:10px 0;font-size:12.5px}
+.ca-covnote .ca-flaghd{color:var(--ink)}
+.ca-covrow{padding:3px 0;line-height:1.45}
+.ca-covrow .ca-sc{margin-right:6px}
+details.ca-lc{margin:1px 0}
+.ca-lcs{display:flex;align-items:baseline;gap:7px;font-size:12.5px;color:var(--ink);line-height:1.5;cursor:pointer;list-style:none}
+.ca-lcs::-webkit-details-marker{display:none}
+.ca-lcs:hover .ca-lct{color:var(--ink)}
+.ca-lst{flex:0 0 auto;font-family:var(--mono);font-size:10px;font-weight:800;border-radius:5px;padding:0 5px;line-height:1.6}
+.ca-lst.s-covered{color:var(--success);background:var(--success-bg)}
+.ca-lst.s-partial,.ca-lst.s-gap{color:var(--warning);background:var(--warning-bg)}
+.ca-lst.s-none{color:var(--faint);background:color-mix(in srgb,var(--faint) 12%,transparent)}
+.ca-lct{margin-left:auto;font-family:var(--mono);font-size:10px;color:var(--faint);white-space:nowrap}
+.ca-lcb{margin:3px 0 7px 6px;padding-left:10px;border-left:2px solid color-mix(in srgb,var(--phos) 30%,transparent)}
+.ca-lcn{font-size:12px;color:var(--text-2);font-style:italic;margin:0 0 4px}
+.ca-lci{display:flex;align-items:center;gap:7px;font-size:12px;color:var(--ink);padding:1px 0;line-height:1.4}
+.ca-lci .ca-sc{margin-left:auto}
+@media (max-width:520px){.ca-lectgrp{grid-template-columns:1fr;gap:3px}.ca-lectgrp+.ca-lectgrp{margin-top:10px}}
 /* rapid reference — collapsible section › video › topic › points */
 .rrbar{display:flex;flex-wrap:wrap;gap:9px;align-items:center;margin:0 0 6px}
 .rrsearch{position:relative;flex:1 1 260px;min-width:200px}
@@ -5470,6 +5491,7 @@ const CHANGELOG=[
     "Already made your plan for this unit? It updates on its own the next time you open BRODY MODE: the new videos slot into your days, your hours per day stay the same, and your finish date moves back a day or two at most. Two exceptions. If you picked your own Pathoma chapters, tick chapter 2 under Plan \u2192 Pathoma chapters to get Wound Healing. If you had UWorld Library switched on, reading starts today at about 20 articles a day \u2014 lower it under Plan \u2192 Articles per day, or switch reading off there.",
     "An article you already read in the Neuro unit \u2014 malignant hyperthermia, low back pain, Guillain-Barr\u00e9 \u2014 shows as done here. It is the same article, not a copy.",
     "Every one of the unit\u2019s 47 lectures is now checked against the plan. 37 are fully covered and 3 partly; 4 are PBL, PDRs or case sessions. Three are taught by none of the six resources: SDOH (disability access), family care-giving, and the diathesis-stress model.",
+    "See what teaches every lecture: menu \u2192 Content audit now lists each of this unit\u2019s 47 lectures with the videos and articles that cover it \u2014 tap a lecture to open it \u2014 puts the six with gaps up front, and links a printable content map (PDF).",
     "Added for specific lectures: wound-healing videos from Pathoma and B&B for Skin Trauma, Bootcamp\u2019s interviewing videos for Difficult Encounters, and its terbinafine video for the dermatologic-drugs lecture. Video plans keep their shape \u2014 522 videos, 90 h, about 6 h a day, and every week still fits before its quiz.",
   ]},
   {id:"2026-10-10", date:"October 2026", title:"New: UWorld question IDs for every Boards & Beyond video", items:[
@@ -5744,6 +5766,24 @@ function menuAct(m){
    mapping the scheduler uses, and flags the objective problems (videos not
    mapped to a week, and mappings whose video no longer exists). Read-only —
    leads review and report; the map is edited in code. */
+/* Lecture coverage, as published by tools/generators/mk_coverage.js: for each Brody lecture,
+   the resources that teach it — or why none do. Read-only data for the Content Audit, fetched
+   the first time the audit opens. A unit with no entry simply hasn't been written yet. */
+let COV_DATA=null,COV_LOADING=false,COV_ERR=false;
+function loadCoverage(cb){
+  if(COV_DATA||COV_ERR){cb&&cb();return;}
+  if(COV_LOADING)return;
+  COV_LOADING=true;
+  fetch("coverage.json").then(r=>{if(!r.ok)throw 0;return r.json();})
+    .then(d=>{COV_DATA=d;COV_LOADING=false;cb&&cb();})
+    .catch(()=>{COV_LOADING=false;COV_ERR=true;cb&&cb();});
+}
+function unitCoverage(id){return (COV_DATA&&COV_DATA.units&&COV_DATA.units[id])||null;}
+/* Content-map PDFs published beside the app (tools/generators/mk_mapping_pdf.mjs). A check
+   fails if one is older than the mapping it describes, so a link here is never stale. */
+const CONTENT_MAPS={"msk-skin":"content-maps/msk-skin.pdf"};
+const COV_MARK={covered:"✓",partial:"½",gap:"✗",none:"—"};
+const COV_WORD={covered:"Covered",partial:"Partly covered",gap:"No resource teaches this",none:"Not board material"};
 function auditBlock(blk){
   // Articles are audited too — they are mapped by hand exactly like the videos, so
   // they carry exactly the same risk of an unmapped item or a stale key. They read
@@ -6460,15 +6500,29 @@ function renderM3Unit(sh,u){
 function renderContentAudit(){
   if(!catReady()){loadCatalog(()=>{if(document.getElementById("ca_root"))renderContentAudit();});
     app.innerHTML=chrome("")+'<div class="wrap" id="ca_root"><p class="cfmsg">Loading the catalog…</p></div>';wireChrome();return;}
+  if(!COV_DATA&&!COV_ERR)loadCoverage(()=>{if(document.getElementById("ca_root"))renderContentAudit();});
+  const keyMap={};catVideos().forEach(v=>{keyMap[brodyKey(v)]=v;});
   let body='<div class="wrap" id="ca_root"><button class="link pmback" id="ca_back">‹ Back</button><h1 class="pmhd">Content audit</h1>'
-    +'<p class="muted small" style="margin:-6px 0 18px;max-width:62ch">Read-only. For each Brody week you’ll see that week’s content topics, and beneath them the third-party videos mapped to that week — so you can see exactly what’s scheduled where. Spot something that looks off? Send it to Dylan; the map is edited in code.</p>';
+    +'<p class="muted small" style="margin:-6px 0 18px;max-width:62ch">Read-only. For each Brody week you’ll see that week’s lectures, and beneath them the third-party videos and articles mapped to that week — so you can see exactly what’s scheduled where. Where a unit’s lecture coverage has been written, tap any lecture to see what teaches it, and the lectures no resource covers are listed up front. Spot something that looks off? Send it to Dylan; the map is edited in code.</p>';
   BRODY_BLOCKS.forEach(blk=>{
     const a=auditBlock(blk);const issues=a.unmapped.length+a.orphans.length+a.bcOrphans.length;
-    body+='<div class="card"><div class="cardhd">'+escHTML(blk.name)+' <span class="pill">'+a.total+' videos</span>'
-      +'<button class="btn ghost sm" data-cacsv="'+escAttr(blk.id)+'" style="margin-left:auto">Export CSV</button></div>';
+    const cov=unitCoverage(blk.id);const pdf=CONTENT_MAPS[blk.id];
+    const nArt=a.weeks.reduce((n,w)=>n+w.vids.filter(v=>v.res==="uwlib").length,0);
+    body+='<div class="card"><div class="cardhd">'+escHTML(blk.name)+' <span class="pill">'+(a.total-nArt)+' videos'+(nArt?' · '+nArt+' articles':'')+'</span>'
+      +(pdf?'<a class="btn ghost sm" href="'+escAttr(pdf)+'" target="_blank" rel="noopener" style="margin-left:auto">Content map (PDF)</a>':'')
+      +'<button class="btn ghost sm" data-cacsv="'+escAttr(blk.id)+'"'+(pdf?'':' style="margin-left:auto"')+'>Export CSV</button></div>';
     body+='<div class="status '+(issues?"warn":"ok")+'">'+(issues
       ?('⚠ '+issues+' item'+(issues===1?"":"s")+' need attention — see below.')
       :'✓ Every video is mapped to a week, and every mapping points at a real video. Nothing auto-defaulted.')+'</div>';
+    // Lecture coverage — the other half of the map: not "where does each video go" but
+    // "what teaches each lecture", including the lectures nothing in the resources teaches.
+    if(cov){const sm=cov.summary;
+      body+='<div class="ca-cov"><b>'+sm.total+' Brody lectures</b> — '+sm.covered+' covered'+(sm.partial?' · '+sm.partial+' partly':'')
+        +(sm.gap?' · '+sm.gap+' that no resource teaches':'')+(sm.none?' · '+sm.none+' not board material (PBL, PDRs, cases)':'')+'. Tap a lecture below to see what teaches it.</div>';
+      const flagged=cov.lectures.filter(l=>l.status==="gap"||l.status==="partial");
+      if(flagged.length)body+='<div class="ca-covnote"><div class="ca-flaghd">Gaps and partial coverage ('+flagged.length+')</div>'
+        +flagged.map(l=>'<div class="ca-covrow"><span class="ca-sc">Wk '+l.w+'</span><b>'+escHTML(l.title)+'</b> — '+escHTML(l.note||"")+'</div>').join('')+'</div>';
+    } else if(COV_DATA||COV_ERR)body+='<div class="ca-cov">Lecture-by-lecture coverage hasn’t been written for this unit yet — the week-level map below is complete, but which resource teaches each individual lecture isn’t recorded.</div>';
     if(a.unmapped.length)body+='<div class="ca-flag"><div class="ca-flaghd">Not mapped to a week — dumped into the last week ('+a.unmapped.length+')</div>'
       +a.unmapped.map(v=>'<div class="ca-row">'+resBadge(v.res)+'<span class="ca-sc">'+escHTML(v.sys)+' · '+escHTML(v.cat)+'</span>'+escHTML(v.name)+'</div>').join('')+'</div>';
     if(a.orphans.length)body+='<div class="ca-flag"><div class="ca-flaghd">Orphaned mappings — video no longer in the catalog ('+a.orphans.length+')</div>'
@@ -6483,7 +6537,7 @@ function renderContentAudit(){
         w.lectures.forEach(l=>{const d=l.disc||"";if(!byDisc[d]){byDisc[d]=[];discOrder.push(d);}byDisc[d].push(l);});
         discOrder.forEach(d=>{
           body+='<div class="ca-lectgrp">'+(d?'<span class="ca-lectdisc">'+escHTML(d)+'</span>':'<span></span>')
-            +'<div class="ca-lecttopics">'+byDisc[d].map(l=>'<div class="ca-lect">'+escHTML(l.title||"")+'</div>').join('')+'</div></div>';});
+            +'<div class="ca-lecttopics">'+byDisc[d].map(l=>covLectHTML(cov,w.n,l,keyMap)).join('')+'</div></div>';});
       } else body+='<div class="ca-lect muted">Not entered yet — the Brody topics for this week haven’t been added to the map.</div>';
       body+='</div>';
       const byRes={};w.vids.forEach(v=>{(byRes[v.res]=byRes[v.res]||[]).push(v);});
@@ -6502,6 +6556,18 @@ function renderContentAudit(){
   const bk=document.getElementById("ca_back");if(bk)bk.onclick=()=>render();
   document.querySelectorAll("[data-cacsv]").forEach(b=>b.onclick=()=>auditCSV(b.dataset.cacsv));
   wireChrome();
+}
+/* One lecture in the audit. Without coverage data it is just the title; with it, a status
+   mark and a tap-to-open list of what teaches it (and, for a gap, why nothing does). */
+function covLectHTML(cov,wk,l,keyMap){
+  const e=cov&&cov.lectures.find(x=>x.w===wk&&x.title===l.title);
+  if(!e)return '<div class="ca-lect">'+escHTML(l.title||"")+'</div>';
+  const items=(e.items||[]).map(it=>{const v=keyMap[it.k];if(!v)return '';
+    return '<div class="ca-lci">'+resBadge(v.res)+'<span>'+escHTML(v.name)+'</span>'
+      +(it.earlier?'<span class="ca-sc">studied in '+escHTML(it.earlier)+'</span>':(it.w!==wk?'<span class="ca-sc">week '+it.w+'</span>':''))+'</div>';}).join('');
+  return '<details class="ca-lc"><summary class="ca-lcs"><span class="ca-lst s-'+e.status+'" title="'+escAttr(COV_WORD[e.status])+'">'+COV_MARK[e.status]+'</span>'
+    +'<span>'+escHTML(l.title||"")+'</span><span class="ca-lct">'+((e.items||[]).length?((e.items||[]).length+' resource'+((e.items||[]).length===1?'':'s')):escHTML(COV_WORD[e.status]))+'</span></summary>'
+    +'<div class="ca-lcb">'+(e.note?'<div class="ca-lcn">'+escHTML(COV_WORD[e.status])+' — '+escHTML(e.note)+'.</div>':'')+items+'</div></details>';
 }
 function auditCSV(blockId){
   const blk=brodyBlockById(blockId);if(!blk)return;const a=auditBlock(blk);

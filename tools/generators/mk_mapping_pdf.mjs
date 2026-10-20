@@ -8,16 +8,24 @@
  * The one thing it adds on top of the audit screen is runtime: the screen lists
  * titles, a document that goes to a course director needs hours.
  *
+ * Where the unit has lecture coverage (coverage.json, from mk_coverage.js), each week
+ * opens with a lecture table — what teaches each Brody lecture, and why nothing does
+ * where nothing does — before the resource-by-resource lists.
+ *
  *   node tools/generators/mk_mapping_pdf.mjs [blockId] [outPath]
  *
- * Defaults to the neuro-sensory block, written next to the repo.
+ * Defaults to content-maps/<blockId>.pdf, the copy the site links to, with the map's
+ * signature written beside it (content-maps/<blockId>.json). Check C66 fails if that
+ * signature no longer matches the mapping, so the published PDF can't quietly go stale.
  */
 import fs from 'fs';
 import path from 'path';
 import { openApp, REPO } from '../harness.mjs';
+import { mapSignature } from './lib/mapsig.js';
 
 const BLOCK = process.argv[2] || 'neuro-sensory';
-const OUT = path.resolve(process.argv[3] || path.join(REPO, 'brody-mapping-' + BLOCK + '.pdf'));
+const OUT = path.resolve(process.argv[3] || path.join(REPO, 'content-maps', BLOCK + '.pdf'));
+const PUBLISHED = !process.argv[3];   // the site's copy gets a signature; an ad-hoc path doesn't
 
 const esc = s => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;' }[c]));
 const hrs = m => (Math.round(m / 60 * 10) / 10).toFixed(1);
@@ -29,13 +37,26 @@ const longDate = iso => {
 
 /* ---- 1. pull the mapping out of the app ---------------------------------- */
 async function extract(page, id) {
-  return page.evaluate(blockId => {
+  return page.evaluate(async blockId => {
     const blk = BRODY_BLOCKS.find(b => b.id === blockId);
     if (!blk) throw new Error('no block "' + blockId + '" — have: ' + BRODY_BLOCKS.map(b => b.id).join(', '));
     const a = auditBlock(blk);
     const min = {};
     catVideos().forEach(v => { min[brodyKey(v)] = v.min; });
     const mOf = v => min[v.res + '|' + v.sys + '|' + (v.cat || '') + '|' + v.name] || 0;
+    const byKey = {};
+    catVideos().forEach(v => { byKey[brodyKey(v)] = v; });
+    const badgeOf = r => resBadge(r).replace(/<[^>]*>/g, '').trim();
+    const covAll = await fetch('coverage.json').then(r => r.ok ? r.json() : null).catch(() => null);
+    const covU = covAll && covAll.units && covAll.units[blockId];
+    const coverage = covU ? {
+      summary: covU.summary,
+      lectures: covU.lectures.map(l => ({ w: l.w, title: l.title, disc: l.disc, status: l.status, note: l.note || '',
+        // grouped by resource, in the app's resource order, so a row reads "B&B: … · Pathoma: …"
+        groups: RES_ORDER.map(r => ({ res: r, badge: badgeOf(r), label: resLabel(r),
+          items: (l.items || []).map(it => ({ v: byKey[it.k], it })).filter(x => x.v && x.v.res === r)
+            .map(x => ({ name: x.v.name, earlier: x.it.earlier || '', w: x.it.w || 0 })) })).filter(g => g.items.length) })),
+    } : null;
 
     const resTot = {};
     const weeks = a.weeks.map(w => {
@@ -72,7 +93,7 @@ async function extract(page, id) {
       nArts: weeks.reduce((s, w) => s + w.groups.filter(g => g.res === 'uwlib').reduce((t, g) => t + g.n, 0), 0),
       resTotals: RES_ORDER.filter(r => resTot[r]).map(r => ({ res:r, label:resLabel(r), n:resTot[r].n, min:resTot[r].min })),
       unmapped: a.unmapped, orphans: a.orphans, bcOrphans: a.bcOrphans,
-      weeks,
+      weeks, coverage,
     };
   }, id);
 }
@@ -130,6 +151,15 @@ tr.tot td{border-bottom:0;border-top:1pt solid #15181d;font-weight:700}
 .ok{background:#eef7ef;border-color:#a9cdb0}
 .warn{background:#fff4d6;border-color:#e0c37a}
 .mono{font-family:"SF Mono",Menlo,Consolas,monospace;font-size:8.5pt}
+.lc{font-size:8.8pt;margin:0 0 4mm}
+.lc td{padding:1.4mm 2mm 1.4mm 0}
+.lc .lt{width:34%;font-weight:600}
+.lc .ld{display:block;font-size:7pt;letter-spacing:.6pt;text-transform:uppercase;color:#6b7280;font-weight:700}
+.lc .st{display:inline-block;min-width:4.2mm;text-align:center;font-weight:800;border-radius:1.5pt;margin-right:1.2mm}
+.st.covered{color:#2e6b45;background:#e7eee7}.st.partial,.st.gap{color:#8a5a16;background:#f4ecd8}.st.none{color:#6b7280;background:#eef0f2}
+.lc .rg{margin:0 0 .6mm}.lc .rb{font-size:7pt;font-weight:700;color:#fff;background:#15181d;padding:.3mm 1.2mm;border-radius:1.5pt;margin-right:1mm}
+.lc .nt{font-style:italic;color:#4b5563}
+.lc .er{color:#6b7280;font-size:8pt}
 .foot{border-top:.75pt solid #c7ccd4;padding-top:2.5mm;font-size:8pt;color:#6b7280;line-height:1.5}
 `;
 
@@ -153,11 +183,23 @@ function render(d) {
   </div>`);
 
   P.push(`<div class="note">
-    <p><b>How to read this.</b> The unit is divided into Brody content weeks. Each week lists the course's own lecture topics for that week, then every third-party video mapped to it, grouped by resource. The scheduler's rule is that a week's videos are finished within that week, before that week's quiz — so this table is also the deadline structure.</p>
+    <p><b>How to read this.</b> The unit is divided into Brody content weeks. Each week lists the course's own lectures for that week${d.coverage ? ' — each with the resources that teach it, or the reason none do —' : ''} then every third-party ${d.nArts ? 'video and article' : 'video'} mapped to it, grouped by resource. The scheduler's rule is that a week's videos are finished within that week, before that week's quiz — so this table is also the deadline structure.</p>
     <p>Runtimes are the publishers' own. Hours are video time only: they exclude question banks, Anki and review.${d.nArts ? ` The ${d.nArts} UWorld Library articles are written material with no runtime, so they carry no hours and are scheduled by a separate count per day rather than by time.` : ''}</p>
     ${issues ? `<p><b>${issues}</b> item${issues === 1 ? '' : 's'} need attention — flagged at the end of this document.</p>`
              : `<p>Every video in this unit is explicitly mapped to a week, and every mapping points at a video that exists in the catalog. Nothing fell through to a default.</p>`}
   </div>`);
+
+  if (d.coverage) {
+    const sm = d.coverage.summary, fl = d.coverage.lectures.filter(l => l.status === 'gap' || l.status === 'partial');
+    P.push(`<h2>Lecture coverage</h2><table><thead><tr><th>Brody lectures</th><th class="num">Count</th></tr></thead><tbody>
+      <tr><td>Taught by at least one resource in this map</td><td class="num">${sm.covered}</td></tr>
+      <tr><td>Partly covered — something examinable in the lecture is in no resource</td><td class="num">${sm.partial}</td></tr>
+      <tr><td>Examinable, but taught by none of the resources</td><td class="num">${sm.gap}</td></tr>
+      <tr><td>Not board material (PBL, professional development, case sessions)</td><td class="num">${sm.none}</td></tr>
+      <tr class="tot"><td>Total</td><td class="num">${sm.total}</td></tr></tbody></table>`);
+    if (fl.length) P.push(`<div class="flag warn"><div class="flaghd">Gaps and partial coverage (${fl.length})</div>`
+      + fl.map(l => `<div class="v"><span class="t"><b>Week ${l.w} · ${esc(l.title)}</b> — ${esc(l.note)}.</span></div>`).join('') + `</div>`);
+  }
 
   /* summary tables */
   P.push(`<h2>By week</h2><table><thead><tr><th>Week</th><th>Content</th><th>Starts</th><th class="num">${d.nArts ? 'Items' : 'Videos'}</th><th class="num">Hours</th></tr></thead><tbody>`);
@@ -171,11 +213,23 @@ function render(d) {
   /* week by week */
   d.weeks.forEach(w => {
     P.push(`<div class="wk"><div class="wkhd"><span class="wkn">Week ${w.n}</span><span class="wklab">${esc(w.label)}</span><span class="wkct">${w.n_vids} ${d.nArts ? 'items' : 'videos'} · ${hrs(w.min)} h</span></div>`);
-    P.push(`<div class="lects"><div class="lecthd">Brody lecture topics · week of ${esc(longDate(w.start))}</div>`);
-    if (w.discs.length) w.discs.forEach(g => P.push(
-      `<div class="lgrp"><div class="ldisc">${esc(g.disc)}</div><div>${g.titles.map(t => `<div class="ltitle">${esc(t)}</div>`).join('')}</div></div>`));
-    else P.push(`<div class="ltitle">Not entered.</div>`);
-    P.push(`</div>`);
+    const lcs = d.coverage ? d.coverage.lectures.filter(l => l.w === w.n) : [];
+    if (lcs.length) {
+      const MARK = { covered:'✓', partial:'½', gap:'✗', none:'—' };
+      P.push(`<table class="lc"><thead><tr><th>Brody lecture</th><th>Taught by</th></tr></thead><tbody>`);
+      lcs.forEach(l => P.push(`<tr><td class="lt">${l.disc ? `<span class="ld">${esc(l.disc)}</span>` : ''}<span class="st ${l.status}">${MARK[l.status]}</span>${esc(l.title)}</td><td>`
+        + (l.note ? `<div class="nt">${esc(l.note)}.</div>` : '')
+        + l.groups.map(g => `<div class="rg"><span class="rb">${esc(g.badge)}</span>${g.items.map(it => esc(it.name)
+            + (it.earlier ? ` <span class="er">(${esc(it.earlier)})</span>` : (it.w && it.w !== w.n ? ` <span class="er">(week ${it.w})</span>` : ''))).join(' · ')}</div>`).join('')
+        + `</td></tr>`));
+      P.push(`</tbody></table>`);
+    } else {
+      P.push(`<div class="lects"><div class="lecthd">Brody lecture topics · week of ${esc(longDate(w.start))}</div>`);
+      if (w.discs.length) w.discs.forEach(g => P.push(
+        `<div class="lgrp"><div class="ldisc">${esc(g.disc)}</div><div>${g.titles.map(t => `<div class="ltitle">${esc(t)}</div>`).join('')}</div></div>`));
+      else P.push(`<div class="ltitle">Not entered.</div>`);
+      P.push(`</div>`);
+    }
 
     w.groups.forEach(g => {
       P.push(`<div class="grp"><div class="grphd"><span class="badge">${esc(g.badge)}</span><span class="grpnm">${esc(g.label)}</span><span class="grpct">${g.n} · ${hrs(g.min)} h</span></div>`);
@@ -220,6 +274,7 @@ try {
   if (app.errors.length) throw new Error('the app threw on load: ' + app.errors[0]);
   const data = await extract(app.page, BLOCK);
   const html = render(data);
+  fs.mkdirSync(path.dirname(OUT), { recursive: true });
   const tmp = path.join(path.dirname(OUT), '.mapping-' + BLOCK + '.html');
   fs.writeFileSync(tmp, html);
   const p = await app.ctx.newPage();
@@ -235,6 +290,8 @@ try {
     margin: { top:'18mm', bottom:'16mm', left:'14mm', right:'14mm' },
   });
   fs.unlinkSync(tmp);
+  if (PUBLISHED) fs.writeFileSync(OUT.replace(/\.pdf$/, '.json'),
+    JSON.stringify({ unit: BLOCK, signature: mapSignature(REPO, BLOCK), build: data.build, note: 'Written by mk_mapping_pdf.mjs. C66 fails if the mapping changes and this PDF is not regenerated.' }, null, 1) + '\n');
   const kb = Math.round(fs.statSync(OUT).size / 1024);
   console.log('wrote ' + OUT + '  (' + kb + ' KB)');
   console.log('  ' + data.name + ': ' + (data.total - data.nArts) + ' videos (' + hrs(data.totalMin) + ' h)' + (data.nArts ? ' + ' + data.nArts + ' articles' : '') + ' across ' + data.weeks.length + ' weeks');

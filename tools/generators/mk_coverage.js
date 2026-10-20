@@ -107,7 +107,38 @@ const gaps = rows.filter(r => r.l.gap).length;
 const none = rows.filter(r => r.l.none).length;
 console.log(unit.name + ': ' + total + ' lectures — ' + covered + ' covered, ' + partial + ' partly covered, '
   + gaps + ' with no resource in the six (gap), ' + none + ' not board material');
-if (checkOnly) process.exit(0);
+
+/* ---- coverage.json: what the site's Content Audit shows ----
+   The app can't read tools/, so the validated map is published as data. One entry per
+   unit; other units already in the file are kept. Each lecture carries its status and
+   the item keys that teach it, with where each is scheduled. */
+const discOf = l => ((unit.weeks.find(w => w.n === l.w) || {}).lectures || []).find(x => x.title === l.title)?.disc || '';
+const entry = {
+  name: unit.name,
+  summary: { total, covered, partial, gap: gaps, none },
+  lectures: rows.map(r => {
+    const o = { w: r.l.w, title: r.l.title, disc: discOf(r.l),
+      status: r.l.none ? 'none' : r.l.gap ? 'gap' : r.l.partial ? 'partial' : 'covered' };
+    const note = r.l.none || r.l.gap || r.l.partial; if (note) o.note = note;
+    if (r.found.length) o.items = [...new Map(r.found.map(f => [K(f.v), f])).values()]
+      .map(f => f.where.startsWith('earlier: ') ? { k: K(f.v), earlier: f.where.slice(9) } : { k: K(f.v), w: +f.where.replace('week ', '') });
+    return o;
+  }),
+};
+const COV = path.join(REPO, 'coverage.json');
+const cur = fs.existsSync(COV) ? JSON.parse(fs.readFileSync(COV, 'utf8')) : { version: 1, units: {} };
+const next = { version: 1, units: Object.assign({}, cur.units, { [unitId]: entry }) };
+next.units = Object.fromEntries(Object.keys(next.units).sort().map(k => [k, next.units[k]]));
+const text = JSON.stringify(next) + '\n';
+if (checkOnly) {
+  if (!fs.existsSync(COV) || fs.readFileSync(COV, 'utf8') !== text) {
+    console.error('coverage.json is out of date with tools/generators/coverage/' + unitId + '.js — run: node tools/generators/mk_coverage.js ' + unitId);
+    process.exit(1);
+  }
+  process.exit(0);
+}
+fs.writeFileSync(COV, text);
+console.log('wrote coverage.json (' + Math.round(text.length / 1024) + ' KB, ' + Object.keys(next.units).length + ' unit' + (Object.keys(next.units).length === 1 ? '' : 's') + ')');
 
 /* ---- report ---- */
 const RESNAME = { bnb:'B&B', pathoma:'Pathoma', skmicro:'Sketchy Micro', skpharm:'Sketchy Pharm', bootcamp:'Bootcamp', uwlib:'UWorld article' };
