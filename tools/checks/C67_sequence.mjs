@@ -170,6 +170,31 @@ chk('C67-19 adding a system appends it and grows the plan',
 chk('C67-20 reset restores the calendar order and keeps added systems',
     d6.afterReset.order&&d6.afterReset.keepsAdded, JSON.stringify(d6.afterReset));
 
+// ---------- 6b. the exam, on the Plan tab ----------
+const d6b=await p.evaluate(async()=>{
+  window.__seq({end:'2027-03-01'});
+  S.cfg.examLabel='your exam';
+  VIEW='adjust';ADJ_VIEW='edit';render();await new Promise(r=>setTimeout(r,30));
+  const before=S.cfg.brodyPace;
+  const chip=document.querySelector('[data-qexam="2026-11-09"]');
+  if(chip)chip.click();await new Promise(r=>setTimeout(r,30));
+  const after={iso:S.cfg.examISO,label:S.cfg.examLabel,pace:S.cfg.brodyPace,shelf:SCHED.brody.shelf};
+  const starts=[...document.querySelectorAll('.seqct')].filter(e=>/^from /.test(e.textContent)).length;
+  const planTxt=document.body.innerText;
+  VIEW='today';ADJ_VIEW=null;render();await new Promise(r=>setTimeout(r,30));
+  const todayTxt=document.body.innerText;
+  return {chip:!!chip,before,after,starts,
+    countdown:/days to Brody Exam 4/.test(todayTxt),
+    endDate:/end date/i.test(planTxt+' '+todayTxt),evenToExam:/even pace to the exam/i.test(todayTxt)};
+});
+chk('C67-27 picking a Brody exam on the Plan tab moves the plan to it and re-derives the pace',
+    d6b.chip&&d6b.after.iso==='2026-11-09'&&d6b.after.shelf==='2026-11-09'&&d6b.after.pace>d6b.before&&/Brody Exam 4/.test(d6b.after.label),
+    JSON.stringify(d6b));
+chk('C67-28 the countdown names the exam, and the plan speaks of the exam — never an "end date"',
+    d6b.countdown&&!d6b.endDate, JSON.stringify({countdown:d6b.countdown,endDate:d6b.endDate}));
+chk('C67-29 each topic in the order shows when it starts',
+    d6b.starts>=10, d6b.starts+' of the topics show a start date');
+
 // ---------- 7. setup builds one ----------
 const d7=await p.evaluate(()=>{
   AUTHED=true;todayISO=()=>'2026-10-20';
@@ -178,24 +203,69 @@ const d7=await p.evaluate(()=>{
   _ob.step=obSteps(_ob).indexOf('block');renderOnboard();
   document.querySelector('[data-oblk="'+SEQ_ID+'"]').click();
   const steps=obSteps(_ob);
-  const noEnd=obStepValid(_ob,'dates');
+  const dflt={iso:_ob.examISO,label:_ob.examLabel,valid:obStepValid(_ob,'dates')};
+  _ob.step=steps.indexOf('dates');renderOnboard();
+  const chips=[...document.querySelectorAll('[data-qexam]')].map(b=>b.dataset.qexam);
+  _ob.examISO=null;const noExam=obStepValid(_ob,'dates');
   _ob.examISO='2026-10-10';const before=obStepValid(_ob,'dates');
-  _ob.examISO='2027-05-01';const ok=obStepValid(_ob,'dates');
+  _ob.examISO='2027-05-01';_ob.examLabel='your exam';const ok=obStepValid(_ob,'dates');
   _ob.resources={bnb:true,pathoma:true,sketchy:false,bootcamp:false};
   _ob.step=steps.indexOf('sequence');renderOnboard();
   const editor=document.querySelectorAll('.seqrow').length;
   _ob.step=steps.indexOf('routine');renderOnboard();
   const quiz=!!document.querySelector('[data-obfree]');
   commitOnboard();
-  return {steps,noEnd,before,ok,editor,quiz,brody:S.cfg&&S.cfg.brody,topics:S.cfg&&S.cfg.seqTopics&&S.cfg.seqTopics.length,
+  return {steps,dflt,chips,noExam,before,ok,editor,quiz,brody:S.cfg&&S.cfg.brody,topics:S.cfg&&S.cfg.seqTopics&&S.cfg.seqTopics.length,
     end:S.cfg&&S.cfg.examISO,items:SCHED&&SCHED.stats.totalItems,label:S.cfg&&S.cfg.examLabel};
 });
 chk('C67-21 setup offers "my own order", then asks for the order and the dates',
     d7.steps.indexOf('sequence')>=0&&d7.steps.indexOf('dates')>d7.steps.indexOf('sequence')&&d7.editor===14, JSON.stringify(d7.steps));
-chk('C67-22 …won\'t continue without an end date after the start',
-    typeof d7.noEnd==='string'&&typeof d7.before==='string'&&d7.ok===true, JSON.stringify([d7.noEnd,d7.before,d7.ok]));
+chk('C67-22 it runs to an exam: the last Brody exam its units reach is chosen for you (Exam 4, Nov 9), with the upcoming exams one tap away',
+    d7.dflt.iso==='2026-11-09'&&/Brody Exam 4/.test(d7.dflt.label)&&d7.dflt.valid===true&&d7.chips.indexOf('2026-11-09')>=0,
+    JSON.stringify({dflt:d7.dflt,chips:d7.chips}));
+chk('C67-22b …and won\'t continue without an exam, or with one before the start',
+    typeof d7.noExam==='string'&&typeof d7.before==='string'&&d7.ok===true, JSON.stringify([d7.noExam,d7.before,d7.ok]));
 chk('C67-23 …shows no quiz toggle, and builds the sequence plan',
     !d7.quiz&&d7.brody===SEQ_ID_JS()&&d7.topics===14&&d7.end==='2027-05-01'&&d7.items>0, JSON.stringify(d7));
+
+// ---------- 7b. feature parity with a standard Brody plan ----------
+/* Every tab, side by side: a sequence plan must offer every card and every kind of control a
+   standard Brody plan does. The only differences allowed are the named replacements below —
+   so a feature added to Brody plans later, and forgotten here, fails this. */
+const ALLOWED={cardsOnlyStandard:['This block','Weekly plan'],attrsOnlyStandard:['data-bfree']};
+const parity=await p.evaluate(async()=>{
+  await new Promise(r=>loadUWorld(r));
+  const mk=kind=>{AUTHED=true;todayISO=()=>'2026-10-20';
+    S.settings={seenBrodyHelp:true,seenUpdate:LATEST_UPDATE};
+    PRACTICE_KEYS.forEach(k=>{S[k]={total:null,blocks:{}};});
+    Object.assign(S,{vdone:{},vdoneDate:{},vdoneAt:{},vundone:{},vskip:{},vshaky:{},akdone:{},notes:{},streak:{days:{}},assessments:{},_resetAt:0});
+    const res={bnb:true,pathoma:true,sketchy:true,bootcamp:true,uwlib:true,anking:true,uworld:true,fa:true};
+    const blk=brodyBlockById('msk-skin');
+    S.cfgs={step1:null,nbme:kind==='seq'
+      ?{examType:'nbme',brody:SEQ_ID,examLabel:'Brody Exam 4 · Musculoskeletal & Skin',startISO:'2026-10-20',examISO:'2026-11-09',restDays:[0],brodyReviewDays:3,resources:res}
+      :{examType:'nbme',brody:blk.id,examLabel:blk.name,examISO:blk.shelf,startISO:blk.weeks[0].start,restDays:[0],resources:res,systems:blk.systems.slice(),brodyReviewDays:3}};
+    normalizeCfg(S.cfgs.nbme,'nbme');activate('nbme');S.active='nbme';reflow();};
+  const scan=async()=>{const out={};
+    for(const v of ['today','stats','grades','adjust:menu','adjust:edit','uworld','ref','checklist']){
+      const [view,sub]=v.split(':');VIEW=view;ADJ_VIEW=sub==='edit'?'edit':null;render();await new Promise(r=>setTimeout(r,40));
+      const attrs=new Set();document.querySelectorAll('#app *').forEach(e=>{for(const a of e.attributes)if(a.name.startsWith('data-'))attrs.add(a.name);});
+      // titles compared with numbers masked: "Today · Tue, Oct 20 6.6h · 20 to read" is the same card at any load
+      out[v]={cards:[...new Set([...document.querySelectorAll('#app .cardhd')].map(e=>e.textContent.replace(/\s+/g,' ').trim().replace(/\d+(\.\d+)?/g,'#')))],attrs:[...attrs],
+        weekCopy:[...document.querySelectorAll('#app [data-uwlab]')].map(b=>b.textContent).filter(t=>/^All /.test(t))};}
+    VIEW='today';ADJ_VIEW=null;render();return out;};
+  mk('std');const std=await scan();mk('seq');const seq=await scan();
+  return {std,seq};
+});
+const gaps=[];
+Object.keys(parity.std).forEach(v=>{
+  parity.std[v].cards.filter(c=>parity.seq[v].cards.indexOf(c)<0&&ALLOWED.cardsOnlyStandard.indexOf(c)<0).forEach(c=>gaps.push(v+': card "'+c+'"'));
+  parity.std[v].attrs.filter(a=>parity.seq[v].attrs.indexOf(a)<0&&ALLOWED.attrsOnlyStandard.indexOf(a)<0).forEach(a=>gaps.push(v+': control '+a));
+});
+chk('C67-30 every tab offers a sequence plan every card and control a standard Brody plan has (bar the quiz toggle and the weekly table it replaces)',
+    gaps.length===0, JSON.stringify(gaps.slice(0,8)));
+chk('C67-31 the UWorld IDs copy for a whole topic, as they do for a Brody week',
+    parity.std.today.weekCopy.some(t=>/Brody week/.test(t))&&parity.seq.today.weekCopy.some(t=>/for topic \d+/.test(t)),
+    JSON.stringify({std:parity.std.today.weekCopy,seq:parity.seq.today.weekCopy}));
 
 // ---------- 8. every view, and the sync invariant ----------
 const d8=await p.evaluate(async()=>{
