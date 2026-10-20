@@ -206,6 +206,64 @@ const include = {
   "bootcamp|Psychiatry|Pharmacology|Psychiatric Emergencies":2,
   "bootcamp|Psychiatry|Psychotic and Mood Disorders|Suicide":2,
 
+  // Boards & Beyond files its rheumatology under Immunology, not Musculoskeletal, so
+  // the system filter never saw it — this unit shipped with no B&B rheum at all. It is
+  // all week 2. No other unit schedules any of these.
+  // Clin App · Polyarthritis, Monoarthritis, Connective Tissue Disease (week 2)
+  "bnb|Immunology|Autoimmune Disorders|Rheumatoid Arthritis":2,
+  "bnb|Immunology|Autoimmune Disorders|Systemic Lupus Erythematosus":2,
+  "bnb|Immunology|Autoimmune Disorders|Scleroderma":2,
+  "bnb|Immunology|Autoimmune Disorders|Sjögren Syndrome":2,
+  "bnb|Immunology|Autoimmune Disorders|Vasculitis":2,
+  "bnb|Immunology|Autoimmune Disorders|Seronegative Spondyloarthritis":2,
+  "bnb|Immunology|Inflammatory Disorders|Gout":2,
+  "bnb|Immunology|Inflammatory Disorders|CPPD":2,
+  // PHARM · Management of RA; Anti-gout Drugs (week 2)
+  "bnb|Immunology|Inflammatory Disorders|Gout Drugs":2,
+  "bnb|Immunology|Pharmacology|Glucocorticoids and NSAIDs":2,
+  "bnb|Immunology|Pharmacology|Immunosuppressive Drugs":2,
+
+  // Clin App · Skin Trauma (week 1) — wound healing is filed under general pathology
+  // by both resources and no other unit schedules it
+  "pathoma|Pathology|Inflammation, Inflammatory Disorders, and Healing|2.5 Wound Healing":1,
+  "bnb|Pathology|General Topics|Wound Healing and Scar":1,
+
+  // PHARM · Anti-gout Drugs and Dermatologic Drugs (week 2) — terbinafine, the
+  // dermatophyte drug, is in no other unit
+  "bootcamp|Infectious Disease|Antifungals|Allylamines, Echinocandins, and Polyenes":2,
+
+  // ---- Sketchy Pharm, from Sketchy's full list (2026-10-20), for named lectures ----
+  // Each video's own unit is elsewhere (or not built yet); these are the ones this
+  // unit's lectures teach, pulled in the same way as the ID videos above.
+  // Clin App · Skin Infections (week 1) — HSV / VZV
+  "skpharm|Infectious Disease|Other Antivirals|Acyclovir, Valacyclovir, Famciclovir":1,
+  // PHARM · Management of RA (week 2)
+  "skpharm|Hematology|Antimetabolites|Methotrexate, Leucovorin, 5-Fluorouracil, Hydroxyurea":2,
+  "skpharm|Hematology|Antimetabolites|Azathioprine, 6-Mercaptopurine, Mycophenolate Mofetil":2,
+  "skpharm|Hematology|Anti-Inflammatory|TNF Inhibitors":2,
+  "skpharm|Endocrinology|Thyroid, Parathyroid, Adrenal|Glucocorticoids":2,
+  // PHARM · Anti-gout and Dermatologic Drugs; Bone: Non-Neoplastic (week 2)
+  "skpharm|Infectious Disease|Antifungals|Griseofulvin, Terbinafine, Echinocandins":2,
+  "skpharm|Endocrinology|Thyroid, Parathyroid, Adrenal|Bisphosphonates, Raloxifene, Denosumab, Calcitonin":2,
+  "skpharm|Endocrinology|Thyroid, Parathyroid, Adrenal|Teriparatide, Vitamin D, Cinacalcet, Sevelamer":2,
+  // PATH · Skeletal Muscle (week 2) — in Neuro too, which finished before it existed
+  "skpharm|Neurology|Muscle Relaxants|Skeletal Muscle Relaxants":2,
+  // PATH · Granulomatous Diseases (week 3)
+  "skpharm|Infectious Disease|Antimycobacterials|Tuberculosis Drugs":3,
+  "skpharm|Infectious Disease|Antimycobacterials|Leprosy Drugs":3,
+  // PATH · Immunocompromised Host (week 3)
+  "skpharm|Infectious Disease|HIV Antivirals|NRTIs":3,
+  "skpharm|Infectious Disease|HIV Antivirals|NNRTIs":3,
+  "skpharm|Infectious Disease|HIV Antivirals|Protease Inhibitors":3,
+  "skpharm|Infectious Disease|HIV Antivirals|Maraviroc, Fusion Inhibitors, Integrase Inhibitors":3,
+  "skpharm|Infectious Disease|Antifungals|Amphotericin & Flucytosine":3,
+  "skpharm|Infectious Disease|Antifungals|Azoles":3,
+  "skpharm|Infectious Disease|Other Antivirals|Ganciclovir, Valganciclovir, Foscarnet, Cidofovir":3,
+
+  // Psych · Flipped Classroom. Difficult Encounters (week 3) — in no other unit
+  "bootcamp|Behavioral Science|Communication|Interviewing Patients":3,
+  "bootcamp|Behavioral Science|Communication|Inclusive Interviewing":3,
+
   // PATH 73 · environmental pathology (week 3)
   "bootcamp|Neurology|Side Effects and Toxins|Environmental Toxins and their Treatments":3,
   // PATH 77 · granulomatous disease (week 3)
@@ -249,7 +307,7 @@ const include = {
 const exclude = [];
 
 /* ================= build + validate ================= */
-const inBlock = cat.videos.filter(v => SYS.includes(v.sys));
+const inBlock = cat.videos.filter(v => SYS.includes(v.sys) && v.res !== 'uwlib');   // videos only; articles: mk_uwlib_msk.js
 const videoWeek = {};
 const used = { bnb:new Set(), pathoma:new Set() };
 const missed = [];
@@ -263,6 +321,8 @@ inBlock.forEach(v => {
     else missed.push(K(v));
   } else if (v.res === 'bootcamp') {
     if (bcWeek[v.sys + '|' + (v.cat || '')] == null) missed.push(K(v));
+  } else if (v.res === 'uwlib') {
+    // articles are mapped by mk_uwlib_msk.js into artWeek, and carried over below
   } else missed.push(K(v));
 });
 Object.keys(include).forEach(k => {
@@ -294,6 +354,16 @@ const blk = { id:"msk-skin", name:"Musculoskeletal & Skin", systems:SYS, weeks,
 
 /* ---- splice into index.html, and register the block ---- */
 let app = fs.readFileSync(APP, 'utf8');
+
+/* The reading list (artWeek) is owned by mk_uwlib_msk.js, not this script. Carry it over, or a
+   re-run here would silently strip every article from the unit. */
+{
+  const prev = app.match(/\nconst BRODY_MSK=(.*?);\n/);
+  if (prev) {
+    const old = JSON.parse(prev[1]);
+    if (old.artWeek) blk.artWeek = old.artWeek;
+  }
+}
 const anchor = '\nconst BRODY_BLOCKS=';
 const i = app.indexOf(anchor);
 if (i < 0) { console.error('could not find BRODY_BLOCKS in index.html'); process.exit(1); }

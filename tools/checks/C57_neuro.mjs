@@ -78,15 +78,16 @@ const audit=await p.evaluate(()=>BRODY_BLOCKS.map(b=>{
     artTotal:a.weeks.reduce((n,w)=>n+w.vids.filter(v=>v.res==='uwlib').length,0),
     perWeekVid:a.weeks.map(w=>w.vids.filter(v=>v.res!=='uwlib').length),
     perWeekArt:a.weeks.map(w=>w.vids.filter(v=>v.res==='uwlib').length),
-    perWeek:a.weeks.map(w=>w.vids.length),empty:a.weeks.filter(w=>!w.vids.length).map(w=>w.n)};
+    perWeek:a.weeks.map(w=>w.vids.length),empty:a.weeks.filter(w=>!w.vids.length).map(w=>w.n),
+    expectVid:catVideos().filter(v=>!isArticle(v)&&brodyInBlock(b,v)).length};
 }));
 const ns=audit.find(a=>a.id==='neuro-sensory');
 chk('C57-7 no video falls through to the last week ("defaulted")',
     ns.unmapped.length===0, ns.unmapped.slice(0,4).join(' ; '));
 chk('C57-8 no mapping points at a video that left the catalog',
     ns.orphans.length===0&&ns.bcOrphans.length===0, JSON.stringify([ns.orphans,ns.bcOrphans]).slice(0,300));
-chk('C57-9 every week has content ('+ns.perWeekVid.join(' / ')+' videos)',
-    ns.empty.length===0&&ns.vidTotal===547, JSON.stringify(ns.perWeekVid)+' total='+ns.vidTotal);
+chk('C57-9 every week has content, and the audit shows all '+ns.expectVid+' of the unit\'s videos ('+ns.perWeekVid.join(' / ')+')',
+    ns.empty.length===0&&ns.vidTotal===ns.expectVid, JSON.stringify(ns.perWeekVid)+' total='+ns.vidTotal);
 chk('C57-9b …and the UWorld articles are mapped across the weeks too ('+ns.perWeekArt.join(' / ')+')',
     ns.artTotal===108&&ns.perWeekArt.every(n=>n>0),
     JSON.stringify(ns.perWeekArt)+' total='+ns.artTotal);
@@ -123,8 +124,8 @@ const plan=await p.evaluate(()=>{
     weekLoad:SCHED.weekLoad.map(w=>({n:w.n,needH:Math.round(w.needH*10)/10,heavy:w.heavy})),
     feasible:SCHED.stats.feasible,pace:SCHED.brodyPace,hero:__hero()};
 });
-chk('C57-12 all 547 videos ('+plan.h+' h) get a day',
-    plan.n===547&&plan.placed===547, JSON.stringify({n:plan.n,placed:plan.placed}));
+chk('C57-12 all '+ns.expectVid+' videos ('+plan.h+' h) get a day',
+    plan.n===ns.expectVid&&plan.placed===plan.n, JSON.stringify({n:plan.n,placed:plan.placed}));
 chk('C57-13 nothing is scheduled on or after the Thursday exam',
     plan.onOrAfterShelf===0, 'late='+plan.onOrAfterShelf);
 chk('C57-14 the review buffer before the exam stays video-free, and Sundays stay empty',
@@ -161,15 +162,16 @@ const sk=await p.evaluate(()=>{
     dupes:catVideos().length!==new Set(catVideos().map(brodyKey)).size,
     otherSystems:catVideos().filter(x=>x.res==='skpharm'&&b.systems.indexOf(x.sys)<0).length};
 });
-chk('C57-15b all 23 Sketchy sketches for this unit are in the catalog, 310 min, none defaulted',
-    sk.n===23&&sk.min===310&&sk.mapped, JSON.stringify({n:sk.n,min:sk.min,mapped:sk.mapped}));
+chk('C57-15b every Sketchy sketch in this unit\'s systems has an explicit week ('+sk.n+' sketches, '+sk.min+' min) — none defaulted',
+    sk.n>=23&&sk.mapped, JSON.stringify({n:sk.n,min:sk.min,mapped:sk.mapped}));
 chk('C57-15c each lands on the week its PHARM lecture falls in',
     sk.wk['SSRIs, SNRIs, Cyproheptadine']===1&&sk.wk['Benzodiazepines & Flumazenil']===1
     &&sk.wk['First-Generation Antipsychotics']===1&&sk.wk['Ethosuximide']===1
     &&sk.wk['Opioids, Naloxone, Naltrexone']===2&&sk.wk['Narcolepsy Drugs']===2
     &&sk.wk['IV Anesthetics']===3, JSON.stringify(sk.wk));
-chk('C57-15d adding them left the earlier Sketchy sections untouched and the catalog free of duplicate keys',
-    !sk.dupes&&sk.otherSystems===25, 'dupes='+sk.dupes+' other='+sk.otherSystems);
+// 117 is Sketchy's whole library (tools/generators/data/sketchy-pharm.json; C65 checks the list itself)
+chk('C57-15d this unit and the others together hold Sketchy\'s 117 videos once each — no duplicate keys',
+    !sk.dupes&&sk.n+sk.otherSystems===117, 'dupes='+sk.dupes+' other='+sk.otherSystems);
 
 // ---------- 6. the density is reported honestly, not hidden ----------
 chk('C57-16 with Bootcamp on, all three weeks are flagged as more than fits before their quiz',

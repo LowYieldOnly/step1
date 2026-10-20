@@ -1,0 +1,707 @@
+{
+ "source": "SketchyPharm_Video_List.docx, supplied 2026-10-20: 117 videos across 8 units, 28 h 20 min (unit tests not listed)",
+ "videos": [
+  {
+   "unit": "Autonomic Drugs",
+   "cat": "Parasympathetic",
+   "name": "Cholinomimetics",
+   "min": 16
+  },
+  {
+   "unit": "Autonomic Drugs",
+   "cat": "Parasympathetic",
+   "name": "Acetylcholinesterase Inhibitors",
+   "min": 14
+  },
+  {
+   "unit": "Autonomic Drugs",
+   "cat": "Parasympathetic",
+   "name": "Muscarinic Antagonists",
+   "min": 20
+  },
+  {
+   "unit": "Autonomic Drugs",
+   "cat": "Sympathetic",
+   "name": "Sympathomimetics",
+   "min": 30
+  },
+  {
+   "unit": "Autonomic Drugs",
+   "cat": "Sympathetic",
+   "name": "Indirect Sympathomimetics",
+   "min": 17
+  },
+  {
+   "unit": "Autonomic Drugs",
+   "cat": "Sympathetic",
+   "name": "Alpha Drugs",
+   "min": 22
+  },
+  {
+   "unit": "Autonomic Drugs",
+   "cat": "Sympathetic",
+   "name": "Beta Blockers",
+   "min": 24
+  },
+  {
+   "unit": "Cardiovascular & Renal",
+   "cat": "Heart Failure Drugs",
+   "name": "Digoxin",
+   "min": 17
+  },
+  {
+   "unit": "Cardiovascular & Renal",
+   "cat": "Heart Failure Drugs",
+   "name": "ACE Inhibitors, ARBs, Aliskiren",
+   "min": 26
+  },
+  {
+   "unit": "Cardiovascular & Renal",
+   "cat": "Heart Failure Drugs",
+   "name": "Sacubitril-Valsartan, Milrinone, Nesiritide, Ivabradine",
+   "min": 12
+  },
+  {
+   "unit": "Cardiovascular & Renal",
+   "cat": "Diuretics",
+   "name": "Acetazolamide & Mannitol",
+   "min": 24
+  },
+  {
+   "unit": "Cardiovascular & Renal",
+   "cat": "Diuretics",
+   "name": "Loop Diuretics",
+   "min": 17
+  },
+  {
+   "unit": "Cardiovascular & Renal",
+   "cat": "Diuretics",
+   "name": "Thiazides",
+   "min": 20
+  },
+  {
+   "unit": "Cardiovascular & Renal",
+   "cat": "Diuretics",
+   "name": "Potassium-Sparing Diuretics",
+   "min": 25
+  },
+  {
+   "unit": "Cardiovascular & Renal",
+   "cat": "Antihypertensives",
+   "name": "Calcium Channel Blockers",
+   "min": 21
+  },
+  {
+   "unit": "Cardiovascular & Renal",
+   "cat": "Antihypertensives",
+   "name": "Primary Hypertension & Hypertensive Emergency",
+   "min": 17
+  },
+  {
+   "unit": "Cardiovascular & Renal",
+   "cat": "Antiarrhythmics",
+   "name": "Class I A-C Antiarrhythmics",
+   "min": 24
+  },
+  {
+   "unit": "Cardiovascular & Renal",
+   "cat": "Antiarrhythmics",
+   "name": "Class II Antiarrhythmics",
+   "min": 10
+  },
+  {
+   "unit": "Cardiovascular & Renal",
+   "cat": "Antiarrhythmics",
+   "name": "Class III Antiarrhythmics",
+   "min": 12
+  },
+  {
+   "unit": "Cardiovascular & Renal",
+   "cat": "Antiarrhythmics",
+   "name": "Class IV Antiarrhythmics",
+   "min": 9
+  },
+  {
+   "unit": "Cardiovascular & Renal",
+   "cat": "Antiarrhythmics",
+   "name": "Class V Antiarrhythmics",
+   "min": 13
+  },
+  {
+   "unit": "Blood & Inflammation",
+   "cat": "Anticoagulants & Thrombolytics",
+   "name": "Heparin, LMWH, Fondaparinux, Direct Thrombin Inhibitors, Xa Inhibitors",
+   "min": 30
+  },
+  {
+   "unit": "Blood & Inflammation",
+   "cat": "Anticoagulants & Thrombolytics",
+   "name": "Warfarin",
+   "min": 21
+  },
+  {
+   "unit": "Blood & Inflammation",
+   "cat": "Anticoagulants & Thrombolytics",
+   "name": "Antiplatelet Agents",
+   "min": 29
+  },
+  {
+   "unit": "Blood & Inflammation",
+   "cat": "Anticoagulants & Thrombolytics",
+   "name": "Thrombolytics",
+   "min": 15
+  },
+  {
+   "unit": "Blood & Inflammation",
+   "cat": "Dyslipidemia Drugs",
+   "name": "Statins",
+   "min": 26
+  },
+  {
+   "unit": "Blood & Inflammation",
+   "cat": "Dyslipidemia Drugs",
+   "name": "Cholestyramine & Ezetimibe",
+   "min": 17
+  },
+  {
+   "unit": "Blood & Inflammation",
+   "cat": "Dyslipidemia Drugs",
+   "name": "Fibrates & Niacin",
+   "min": 16
+  },
+  {
+   "unit": "Blood & Inflammation",
+   "cat": "Dyslipidemia Drugs",
+   "name": "PCSK9 Inhibitors",
+   "min": 10
+  },
+  {
+   "unit": "Blood & Inflammation",
+   "cat": "Anti-Inflammatory",
+   "name": "NSAIDs",
+   "min": 34
+  },
+  {
+   "unit": "Blood & Inflammation",
+   "cat": "Anti-Inflammatory",
+   "name": "Gout Drugs",
+   "min": 24
+  },
+  {
+   "unit": "Blood & Inflammation",
+   "cat": "Anti-Inflammatory",
+   "name": "Immunosuppressants",
+   "min": 7
+  },
+  {
+   "unit": "Blood & Inflammation",
+   "cat": "Anti-Inflammatory",
+   "name": "TNF Inhibitors",
+   "min": 7
+  },
+  {
+   "unit": "Smooth Muscle",
+   "cat": "Vasoactive",
+   "name": "Nitrates",
+   "min": 16
+  },
+  {
+   "unit": "Smooth Muscle",
+   "cat": "Vasoactive",
+   "name": "Triptans & Migraine",
+   "min": 9
+  },
+  {
+   "unit": "Smooth Muscle",
+   "cat": "Vasoactive",
+   "name": "Prostaglandins, Prostacyclin, Bosentan, PDE5 Inhibitors",
+   "min": 16
+  },
+  {
+   "unit": "Smooth Muscle",
+   "cat": "Allergy & Pulmonary",
+   "name": "Antihistamines",
+   "min": 16
+  },
+  {
+   "unit": "Smooth Muscle",
+   "cat": "Allergy & Pulmonary",
+   "name": "Asthma Therapy",
+   "min": 22
+  },
+  {
+   "unit": "GI & Endocrine",
+   "cat": "GI",
+   "name": "Antiemetic Agents",
+   "min": 15
+  },
+  {
+   "unit": "GI & Endocrine",
+   "cat": "GI",
+   "name": "H2 Receptor Blockers & PPIs",
+   "min": 22
+  },
+  {
+   "unit": "GI & Endocrine",
+   "cat": "GI",
+   "name": "Laxatives",
+   "min": 12
+  },
+  {
+   "unit": "GI & Endocrine",
+   "cat": "GI",
+   "name": "Antidiarrheal Agents",
+   "min": 9
+  },
+  {
+   "unit": "GI & Endocrine",
+   "cat": "Diabetes",
+   "name": "Insulin, Sulfonylureas, Meglitinides, GLP-1 Agonists, DPP-4 Inhibitors",
+   "min": 30
+  },
+  {
+   "unit": "GI & Endocrine",
+   "cat": "Diabetes",
+   "name": "Metformin, Thiazolidinediones, Pramlintide, SGLT2 Inhibitors",
+   "min": 17
+  },
+  {
+   "unit": "GI & Endocrine",
+   "cat": "Thyroid, Parathyroid, Adrenal",
+   "name": "Propylthiouracil, Methimazole, Levothyroxine",
+   "min": 16
+  },
+  {
+   "unit": "GI & Endocrine",
+   "cat": "Thyroid, Parathyroid, Adrenal",
+   "name": "Bisphosphonates, Raloxifene, Denosumab, Calcitonin",
+   "min": 18
+  },
+  {
+   "unit": "GI & Endocrine",
+   "cat": "Thyroid, Parathyroid, Adrenal",
+   "name": "Teriparatide, Vitamin D, Cinacalcet, Sevelamer",
+   "min": 19
+  },
+  {
+   "unit": "GI & Endocrine",
+   "cat": "Thyroid, Parathyroid, Adrenal",
+   "name": "Glucocorticoids",
+   "min": 21
+  },
+  {
+   "unit": "GI & Endocrine",
+   "cat": "Hypothalamic & Pituitary",
+   "name": "Growth Hormone, Mecasermin, Octreotide, Pegvisomant",
+   "min": 19
+  },
+  {
+   "unit": "GI & Endocrine",
+   "cat": "Hypothalamic & Pituitary",
+   "name": "ADH, DDAVP, ADH Receptor Antagonists",
+   "min": 18
+  },
+  {
+   "unit": "GI & Endocrine",
+   "cat": "Sex Hormones",
+   "name": "SERMs & Aromatase Inhibitors",
+   "min": 10
+  },
+  {
+   "unit": "GI & Endocrine",
+   "cat": "Sex Hormones",
+   "name": "LHRH Agonists/GnRH Analogs",
+   "min": 8
+  },
+  {
+   "unit": "GI & Endocrine",
+   "cat": "Sex Hormones",
+   "name": "Non-Steroidal Antiandrogens (NSAAs)",
+   "min": 7
+  },
+  {
+   "unit": "Neuro & Psych",
+   "cat": "Anesthetics & Analgesics",
+   "name": "IV Anesthetics",
+   "min": 15
+  },
+  {
+   "unit": "Neuro & Psych",
+   "cat": "Anesthetics & Analgesics",
+   "name": "Inhaled Anesthetics & Dantrolene",
+   "min": 15
+  },
+  {
+   "unit": "Neuro & Psych",
+   "cat": "Anesthetics & Analgesics",
+   "name": "Opioids, Naloxone, Naltrexone",
+   "min": 20
+  },
+  {
+   "unit": "Neuro & Psych",
+   "cat": "Anesthetics & Analgesics",
+   "name": "Local Anesthetics",
+   "min": 14
+  },
+  {
+   "unit": "Neuro & Psych",
+   "cat": "Antidepressants & Anxiolytics",
+   "name": "SSRIs, SNRIs, Cyproheptadine",
+   "min": 21
+  },
+  {
+   "unit": "Neuro & Psych",
+   "cat": "Antidepressants & Anxiolytics",
+   "name": "Tricyclic Antidepressants",
+   "min": 16
+  },
+  {
+   "unit": "Neuro & Psych",
+   "cat": "Antidepressants & Anxiolytics",
+   "name": "MAO Inhibitors",
+   "min": 13
+  },
+  {
+   "unit": "Neuro & Psych",
+   "cat": "Antidepressants & Anxiolytics",
+   "name": "Bupropion, Mirtazapine, Trazodone",
+   "min": 15
+  },
+  {
+   "unit": "Neuro & Psych",
+   "cat": "Antidepressants & Anxiolytics",
+   "name": "Buspirone",
+   "min": 4
+  },
+  {
+   "unit": "Neuro & Psych",
+   "cat": "Mood Stabilizers & Antiepileptic Drugs",
+   "name": "Lithium",
+   "min": 12
+  },
+  {
+   "unit": "Neuro & Psych",
+   "cat": "Mood Stabilizers & Antiepileptic Drugs",
+   "name": "Broad-Spectrum Antiepileptics",
+   "min": 14
+  },
+  {
+   "unit": "Neuro & Psych",
+   "cat": "Mood Stabilizers & Antiepileptic Drugs",
+   "name": "Ethosuximide",
+   "min": 6
+  },
+  {
+   "unit": "Neuro & Psych",
+   "cat": "Mood Stabilizers & Antiepileptic Drugs",
+   "name": "Carbamazepine, Oxcarbazepine, Phenytoin, Tiagabine, Vigabatrin",
+   "min": 20
+  },
+  {
+   "unit": "Neuro & Psych",
+   "cat": "Mood Stabilizers & Antiepileptic Drugs",
+   "name": "Gabapentin & Pregabalin",
+   "min": 3
+  },
+  {
+   "unit": "Neuro & Psych",
+   "cat": "Antipsychotics & Parkinson's",
+   "name": "First-Generation Antipsychotics",
+   "min": 9
+  },
+  {
+   "unit": "Neuro & Psych",
+   "cat": "Antipsychotics & Parkinson's",
+   "name": "Second-Generation Antipsychotics",
+   "min": 17
+  },
+  {
+   "unit": "Neuro & Psych",
+   "cat": "Antipsychotics & Parkinson's",
+   "name": "Parkinsonism Drugs",
+   "min": 20
+  },
+  {
+   "unit": "Neuro & Psych",
+   "cat": "Psychostimulants: Narcolepsy & ADHD",
+   "name": "Narcolepsy Drugs",
+   "min": 10
+  },
+  {
+   "unit": "Neuro & Psych",
+   "cat": "Psychostimulants: Narcolepsy & ADHD",
+   "name": "Amphetamine, Dexamphetamine, Lisdexamfetamine, Methylphenidate",
+   "min": 9
+  },
+  {
+   "unit": "Neuro & Psych",
+   "cat": "Sedative-Hypnotics",
+   "name": "Benzodiazepines & Flumazenil",
+   "min": 20
+  },
+  {
+   "unit": "Neuro & Psych",
+   "cat": "Sedative-Hypnotics",
+   "name": "Nonbenzodiazepine Hypnotics, Melatonin, Ramelteon",
+   "min": 13
+  },
+  {
+   "unit": "Neuro & Psych",
+   "cat": "Sedative-Hypnotics",
+   "name": "Barbiturates",
+   "min": 14
+  },
+  {
+   "unit": "Neuro & Psych",
+   "cat": "Smoking Cessation Aids",
+   "name": "Varenicline",
+   "min": 10
+  },
+  {
+   "unit": "Neuro & Psych",
+   "cat": "Alzheimer's Medications",
+   "name": "Alzheimer's Disease Medications",
+   "min": 7
+  },
+  {
+   "unit": "Neuro & Psych",
+   "cat": "Muscle Relaxants",
+   "name": "Skeletal Muscle Relaxants",
+   "min": 7
+  },
+  {
+   "unit": "Antimicrobials",
+   "cat": "Cell Wall & Membrane-Active Antibiotics",
+   "name": "Penicillin",
+   "min": 13
+  },
+  {
+   "unit": "Antimicrobials",
+   "cat": "Cell Wall & Membrane-Active Antibiotics",
+   "name": "Nafcillin, Oxacillin, Methicillin, Dicloxacillin",
+   "min": 6
+  },
+  {
+   "unit": "Antimicrobials",
+   "cat": "Cell Wall & Membrane-Active Antibiotics",
+   "name": "Ampicillin, Amoxicillin, Piperacillin, Ticarcillin",
+   "min": 13
+  },
+  {
+   "unit": "Antimicrobials",
+   "cat": "Cell Wall & Membrane-Active Antibiotics",
+   "name": "Cephalosporins",
+   "min": 15
+  },
+  {
+   "unit": "Antimicrobials",
+   "cat": "Cell Wall & Membrane-Active Antibiotics",
+   "name": "Monobactams & Carbapenems",
+   "min": 9
+  },
+  {
+   "unit": "Antimicrobials",
+   "cat": "Cell Wall & Membrane-Active Antibiotics",
+   "name": "Vancomycin",
+   "min": 11
+  },
+  {
+   "unit": "Antimicrobials",
+   "cat": "Cell Wall & Membrane-Active Antibiotics",
+   "name": "Daptomycin",
+   "min": 6
+  },
+  {
+   "unit": "Antimicrobials",
+   "cat": "Inhibitors of Bacterial Protein Synthesis",
+   "name": "Tetracyclines",
+   "min": 13
+  },
+  {
+   "unit": "Antimicrobials",
+   "cat": "Inhibitors of Bacterial Protein Synthesis",
+   "name": "Macrolides",
+   "min": 9
+  },
+  {
+   "unit": "Antimicrobials",
+   "cat": "Inhibitors of Bacterial Protein Synthesis",
+   "name": "Clindamycin",
+   "min": 11
+  },
+  {
+   "unit": "Antimicrobials",
+   "cat": "Inhibitors of Bacterial Protein Synthesis",
+   "name": "Chloramphenicol",
+   "min": 5
+  },
+  {
+   "unit": "Antimicrobials",
+   "cat": "Inhibitors of Bacterial Protein Synthesis",
+   "name": "Linezolid",
+   "min": 7
+  },
+  {
+   "unit": "Antimicrobials",
+   "cat": "Inhibitors of Bacterial Protein Synthesis",
+   "name": "Aminoglycosides",
+   "min": 13
+  },
+  {
+   "unit": "Antimicrobials",
+   "cat": "Antimycobacterials",
+   "name": "Tuberculosis Drugs",
+   "min": 17
+  },
+  {
+   "unit": "Antimicrobials",
+   "cat": "Antimycobacterials",
+   "name": "Leprosy Drugs",
+   "min": 7
+  },
+  {
+   "unit": "Antimicrobials",
+   "cat": "Other Antibiotics",
+   "name": "Trimethoprim/Sulfamethoxazole",
+   "min": 17
+  },
+  {
+   "unit": "Antimicrobials",
+   "cat": "Other Antibiotics",
+   "name": "Fluoroquinolones",
+   "min": 12
+  },
+  {
+   "unit": "Antimicrobials",
+   "cat": "Other Antibiotics",
+   "name": "Metronidazole",
+   "min": 9
+  },
+  {
+   "unit": "Antimicrobials",
+   "cat": "Antifungals",
+   "name": "Amphotericin & Flucytosine",
+   "min": 12
+  },
+  {
+   "unit": "Antimicrobials",
+   "cat": "Antifungals",
+   "name": "Azoles",
+   "min": 12
+  },
+  {
+   "unit": "Antimicrobials",
+   "cat": "Antifungals",
+   "name": "Griseofulvin, Terbinafine, Echinocandins",
+   "min": 9
+  },
+  {
+   "unit": "Antimicrobials",
+   "cat": "HIV Antivirals",
+   "name": "NRTIs",
+   "min": 12
+  },
+  {
+   "unit": "Antimicrobials",
+   "cat": "HIV Antivirals",
+   "name": "NNRTIs",
+   "min": 5
+  },
+  {
+   "unit": "Antimicrobials",
+   "cat": "HIV Antivirals",
+   "name": "Protease Inhibitors",
+   "min": 7
+  },
+  {
+   "unit": "Antimicrobials",
+   "cat": "HIV Antivirals",
+   "name": "Maraviroc, Fusion Inhibitors, Integrase Inhibitors",
+   "min": 10
+  },
+  {
+   "unit": "Antimicrobials",
+   "cat": "Other Antivirals",
+   "name": "Acyclovir, Valacyclovir, Famciclovir",
+   "min": 14
+  },
+  {
+   "unit": "Antimicrobials",
+   "cat": "Other Antivirals",
+   "name": "Hepatitis C: Direct-Acting Antivirals (DAAs)",
+   "min": 6
+  },
+  {
+   "unit": "Antimicrobials",
+   "cat": "Other Antivirals",
+   "name": "Ganciclovir, Valganciclovir, Foscarnet, Cidofovir",
+   "min": 12
+  },
+  {
+   "unit": "Antineoplastics",
+   "cat": "Antimetabolites",
+   "name": "Methotrexate, Leucovorin, 5-Fluorouracil, Hydroxyurea",
+   "min": 29
+  },
+  {
+   "unit": "Antineoplastics",
+   "cat": "Antimetabolites",
+   "name": "Azathioprine, 6-Mercaptopurine, Mycophenolate Mofetil",
+   "min": 15
+  },
+  {
+   "unit": "Antineoplastics",
+   "cat": "Antimetabolites",
+   "name": "Cytotoxic Nucleoside Analogs",
+   "min": 7
+  },
+  {
+   "unit": "Antineoplastics",
+   "cat": "DNA & Cellular Division",
+   "name": "Alkylating Agents",
+   "min": 12
+  },
+  {
+   "unit": "Antineoplastics",
+   "cat": "DNA & Cellular Division",
+   "name": "Platins",
+   "min": 6
+  },
+  {
+   "unit": "Antineoplastics",
+   "cat": "DNA & Cellular Division",
+   "name": "Cytotoxic Antibiotics",
+   "min": 8
+  },
+  {
+   "unit": "Antineoplastics",
+   "cat": "DNA & Cellular Division",
+   "name": "Topoisomerase Inhibitors",
+   "min": 6
+  },
+  {
+   "unit": "Antineoplastics",
+   "cat": "DNA & Cellular Division",
+   "name": "Mitotic Inhibitors",
+   "min": 7
+  },
+  {
+   "unit": "Antineoplastics",
+   "cat": "Kinase Inhibitors & Monoclonal Antibodies",
+   "name": "Kinase Inhibitors",
+   "min": 15
+  },
+  {
+   "unit": "Antineoplastics",
+   "cat": "Kinase Inhibitors & Monoclonal Antibodies",
+   "name": "Monoclonal Antibody Therapy",
+   "min": 23
+  },
+  {
+   "unit": "Antineoplastics",
+   "cat": "Immunology",
+   "name": "Interferons",
+   "min": 10
+  }
+ ]
+}

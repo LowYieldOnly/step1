@@ -109,16 +109,20 @@ const id=await p.evaluate(()=>{
     hours:Math.round(scheduled.reduce((a,v)=>a+v.min,0)/6)/10,
     got:want.filter(n=>scheduled.some(v=>v.name===n)).length,wantN:want.length,
     leaked:unwanted.filter(n=>scheduled.some(v=>v.name===n)),
-    allWeek3:scheduled.every(v=>{const it=SCHED.planItems.find(x=>x.id===itemId(v));return it&&it.wk===3;})};
+    // two deliberate exceptions, each for an earlier lecture: the dermatophyte antifungals
+    // for week 2's dermatologic drugs, and acyclovir for week 1's skin infections (HSV/VZV)
+    allWeek3:scheduled.every(v=>{const it=SCHED.planItems.find(x=>x.id===itemId(v));
+      return it&&(it.wk===3||(v.cat==='Antifungals'&&it.wk===2)
+        ||(v.name==='Acyclovir, Valacyclovir, Famciclovir'&&it.wk===1));})};
 });
 chk('C62-12 only a slice of Infectious Disease is scheduled, not the whole system',
-    id.scheduled>=15&&id.scheduled<=40&&id.catalogTotal>400,
+    id.scheduled>=15&&id.scheduled<id.catalogTotal*0.1,
     id.scheduled+' of '+id.catalogTotal+' ID videos ('+id.hours+' h)');
 chk('C62-13 …and it is the slice the five ID lectures actually need',
     id.got===id.wantN, id.got+' of '+id.wantN+' expected ID videos present');
 chk('C62-14 …with none of the general microbiology course leaking in',
     id.leaked.length===0, 'leaked: '+JSON.stringify(id.leaked));
-chk('C62-15 …all of it in week 3, where those lectures are',
+chk('C62-15 …all of it in week 3, where those lectures are (bar the antifungals and acyclovir, for earlier lectures)',
     id.allWeek3===true, 'some included ID videos are not in week 3');
 const inc=await p.evaluate(()=>{
   window.__mk({});
@@ -143,6 +147,7 @@ const sch=await p.evaluate(()=>{
   const dayOf={};SCHED.days.forEach(d=>d.items.forEach(i=>dayOf[i.id]=d.iso));
   const b=brodyBlockById('msk-skin');
   return {n:SCHED.stats.totalItems,h:Math.round(SCHED.stats.totalMin/6)/10,
+    expect:catVideos().filter(v=>!isArticle(v)&&brodyInBlock(b,v)).length,
     placed:SCHED.planItems.filter(i=>dayOf[i.id]).length,
     pace:SCHED.brodyPace,feasible:SCHED.stats.feasible,
     heavy:SCHED.weekLoad.filter(w=>w.heavy).map(w=>w.n),
@@ -153,7 +158,7 @@ const sch=await p.evaluate(()=>{
     hero:__hero()};
 });
 chk('C62-18 all '+sch.n+' videos ('+sch.h+' h) get a day',
-    sch.placed===sch.n&&sch.n===488, sch.placed+' of '+sch.n);
+    sch.placed===sch.n&&sch.n===sch.expect, sch.placed+' placed of '+sch.n+' planned; the unit has '+sch.expect);
 chk('C62-19 nothing is scheduled on or after the shelf, or into the review buffer',
     sch.onOrAfterShelf===0&&sch.inBuffer===0,
     'at/after shelf '+sch.onOrAfterShelf+', in buffer '+sch.inBuffer);
@@ -200,8 +205,12 @@ chk('C62-24 Minimal works on this unit from day one — no retrofit needed',
    carries the 47 included ID/anaesthesia/psych videos, all of which Minimal keeps, so
    the cut across what is actually scheduled is smaller. Two honest numbers with
    different denominators — this asserts the one a student experiences. */
-chk('C62-25 …cutting over half of what is scheduled, the biggest drop of any unit so far',
-    Math.round((1-depth.min.h/depth.full.h)*100)>=50,
+const drops=await p.evaluate(()=>{const off={anat:1,hist:1,embryo:1,physio:1};
+  return BRODY_BLOCKS.map(b=>{const v=catVideos().filter(x=>!isArticle(x)&&brodyInBlock(b,x));
+    const all=v.reduce((a,x)=>a+x.min,0),cut=v.filter(x=>off[contentTag(x)]).reduce((a,x)=>a+x.min,0);
+    return {id:b.id,pct:Math.round(cut/all*100)};});});
+chk('C62-25 …cutting close to half of what is scheduled — the biggest drop of any unit ('+JSON.stringify(drops.map(d=>d.id+' '+d.pct+'%'))+')',
+    drops.every(d=>d.id==='msk-skin'||d.pct<drops.find(x=>x.id==='msk-skin').pct)&&Math.round((1-depth.min.h/depth.full.h)*100)>=40,
     Math.round(depth.full.h/60)+' h → '+Math.round(depth.min.h/60)+' h ('
       +Math.round((1-depth.min.h/depth.full.h)*100)+'%)');
 chk('C62-26 …and dropping the pace from '+depth.full.pace+' to '+depth.min.pace+' h/day',

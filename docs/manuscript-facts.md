@@ -1,5 +1,17 @@
 # BRODY MODE — Factual reference for a medical education innovation report
 
+> **Status note added 2026-10-10.** This document's snapshot is commit `37ad8f7`
+> (2026-09-05) and is now **stale in four places**: the feature inventory (§3) predates
+> even-pace mode, reading/article mode, Minimal/Comprehensive content depth, and the
+> question-ID map; the block table (§4.4) lists two blocks where four now exist
+> (Nervous & Sensory, Musculoskeletal & Skin); the catalog totals (§4.2) predate 108
+> articles and 23 Sketchy Pharm additions; and §6.4's claim that no tests are committed
+> is **no longer true** — `tools/checks/` holds 8 check files and 308 assertions, and
+> `tools/generators/` holds the generators it reports as lost. Everything else, including
+> the whole of §5 (instrumentation) and §6.2 (defects), still holds. Re-measure before
+> quoting any figure from §3 or §4. For the replication-facing material, see
+> `docs/BLUEPRINT.md`, which supersedes §4.6.
+
 **Purpose.** Source data for a manuscript describing this tool. Every number here was
 measured from the repository at the commit noted below, with the command used given
 where it matters, so any claim can be re-derived or challenged. This is not

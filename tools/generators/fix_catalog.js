@@ -37,6 +37,10 @@ const RENAMES = [
     from:'17.7 Dementia and Degenerative Disorders',
     to:'17.7 Dementia & Degenerative Disorders',
     note:'Matches the published title (ampersand, not "and").' },
+  { res:'skpharm', sys:'Psychiatry', cat:'Sedative-Hypnotics',
+    from:'Nonbenzodiazepine Hypnotics, Melatonin, Ramelteon, Suvorexant',
+    to:'Nonbenzodiazepine Hypnotics, Melatonin, Ramelteon',
+    note:'The title was reconstructed by hand; Sketchy\'s own video list (2026-10-20) has no "Suvorexant". Same 13-minute video.' },
 ];
 
 const cat = JSON.parse(fs.readFileSync(FILE, 'utf8'));
