@@ -663,6 +663,11 @@ b{color:var(--ink)}
 .catnm{flex:1;font-size:12.5px;color:var(--ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .sysnm{flex:1;min-width:0;font-size:13.5px;border-left:3px solid;padding-left:9px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .ordbtns{flex:0 0 auto;display:flex;gap:4px}
+/* sequence order editor: numbered, wrapping topic names, a content count under each */
+.seqrow{flex-wrap:wrap;row-gap:3px}
+.seqrow .sysnm{white-space:normal;line-height:1.35}
+.seqn{flex:0 0 auto;min-width:20px;text-align:right;font-family:var(--mono);font-size:11px;font-weight:800;color:var(--faint)}
+.seqct{order:3;flex:1 0 100%;padding-left:41px;font-family:var(--mono);font-size:10.5px;color:var(--faint)}
 .ordbtn{width:30px;height:28px;border-radius:8px;border:1px solid var(--line2);background:var(--panel2);color:var(--muted);font-size:12px;cursor:pointer;transition:all .14s}
 .ordbtn:hover:not([disabled]){color:var(--phos);border-color:var(--phos-dim)}
 /* Pathoma chapter picker */
@@ -1576,7 +1581,7 @@ function effectivePathChapters(c){
   // A Brody plan defaults to the chapters its unit schedules — including one a unit pulls in
   // from outside its systems (Wound Healing, ch 2, for Skin Trauma), which the by-system
   // default would silently switch off.
-  const blk=c&&c.brody&&brodyBlockById(c.brody);
+  const blk=c&&c.brody&&brodyBlock(c);
   if(blk&&catVideos().length)return new Set(catVideos().filter(v=>v.res==="pathoma"&&brodyInBlock(blk,v)).map(pathChapterOf));
   const selSys=new Set((c&&c.systems&&c.systems.length)?c.systems:SYS);
   return new Set(PATHOMA_CH.filter(ch=>selSys.has(ch[2])).map(ch=>ch[0]));
@@ -1613,7 +1618,7 @@ function planVideosFor(c){
   const en=resEnabledFor(c);
   const pathSel=en.pathoma?effectivePathChapters(c):new Set();
   if(c.brody){
-    const blk=brodyBlockById(c.brody);if(!blk)return [];
+    const blk=brodyBlock(c);if(!blk)return [];
     return catVideos().filter(v=>brodyInBlock(blk,v)&&en[v.res]&&contentIncluded(c,v)
       &&(v.res!=="pathoma"||pathSel.has(pathChapterOf(v))));
   }
@@ -1840,7 +1845,67 @@ function isSkip(id){return !!(S.vskip&&S.vskip[id])||!!(S.cfg&&S.cfg.skip&&S.cfg
 function brodyBlockById(id){return BRODY_BLOCKS.find(b=>b.id===id)||null;}
 /* The block to study now: the first whose shelf hasn't passed; else the last. */
 function brodyCurrentBlockId(){const t=todayISO();const act=BRODY_BLOCKS.find(b=>t<=b.shelf);return (act||BRODY_BLOCKS[BRODY_BLOCKS.length-1]).id;}
-function brodyBlock(c){return (c&&c.brody)?brodyBlockById(c.brody):null;}
+function brodyBlock(c){if(!c||!c.brody)return null;return c.brody===SEQ_ID?brodySeqBlock(c):brodyBlockById(c.brody);}
+/* ---------- MY OWN SEQUENCE — every Brody unit, in the student's order ----------
+   A Brody plan whose content is EVERY unit's map rather than one unit's, studied in an
+   order the student chooses, plus any systems they add. It is built as a synthetic unit
+   so the whole Brody machinery — the pour, the stamped pace, done-work-stays-put, the
+   review buffer, reading, Minimal, opt-outs, re-fit — runs on it unchanged; nothing
+   here is a second scheduler.
+
+   A TOPIC is the unit of order:
+     "u:<unitId>:<week>"  one Brody week of one unit — that week's mapped videos and
+                          articles, exactly as the class calendar has them
+     "s:<System>"         an added system — every item of that system not already in a
+                          Brody topic, in each resource's own order (B&B's order, then
+                          Pathoma's, and so on), so a student can watch a whole system the
+                          way its publisher intended
+   Its "weeks" are the topics in the student's order. They have no calendar dates — the
+   pour decides when each is reached — so every topic carries the plan's start date and
+   the end date is the student's own. There are no quizzes: the pace is always the even
+   spread to the end date.
+
+   One item, one place: an item several units share (psychiatry threads, the anaesthetics,
+   cross-listed articles) or that an added system also holds is scheduled at its FIRST
+   topic in the student's order, never twice. */
+const SEQ_ID="seq";
+function seqDefaultTopics(){const t=[];BRODY_BLOCKS.forEach(b=>b.weeks.forEach(w=>t.push("u:"+b.id+":"+w.n)));return t;}
+function seqTopics(c){return (c&&Array.isArray(c.seqTopics)&&c.seqTopics.length)?c.seqTopics:seqDefaultTopics();}
+function seqParse(t){const m=/^u:([^:]+):(\d+)$/.exec(t||"");if(m){const b=brodyBlockById(m[1]);const w=b&&b.weeks.find(x=>x.n===+m[2]);return w?{kind:"u",blk:b,wk:w}:null;}
+  if(/^s:/.test(t||""))return {kind:"s",sys:t.slice(2)};return null;}
+function seqTopicLabel(t){const p=seqParse(t);if(!p)return t;return p.kind==="u"?(p.blk.name+" · "+p.wk.label):(p.sys+" — added, in each resource’s order");}
+function seqTopicShort(t){const p=seqParse(t);if(!p)return t;return p.kind==="u"?(p.blk.name+" · Wk "+p.wk.n):p.sys;}
+let _seqCache={sig:null,blk:null};
+function brodySeqBlock(c){
+  const topics=seqTopics(c).filter(t=>seqParse(t));
+  const start=c.startISO||todayISO(),end=c.examISO||start;
+  const sig=JSON.stringify([topics,start,end,catVideos().length]);
+  if(_seqCache.sig!==sig)_seqCache={sig,blk:seqBuild(topics,start,end)};
+  return _seqCache.blk;
+}
+function seqBuild(topics,start,end){
+  const member={},videoWeek={},artWeek={},weeks=[],counts={};
+  const mins={},arts={};
+  const place=(v,n)=>{const k=brodyKey(v);if(member[k])return;member[k]=n;
+    if(isArticle(v)){artWeek[k]=n;arts[n]=(arts[n]||0)+1;}else{videoWeek[k]=n;counts[n]=(counts[n]||0)+1;mins[n]=(mins[n]||0)+v.min;}};
+  topics.forEach((t,i)=>{const n=i+1,p=seqParse(t);
+    weeks.push({n,start,label:seqTopicLabel(t),topic:t,lectures:p.kind==="u"?(p.wk.lectures||[]).slice():[]});
+    if(p.kind==="u")catVideos().forEach(v=>{if(!brodyInBlock(p.blk,v))return;
+      if((isArticle(v)?brodyArtWeek(p.blk,v):brodyVideoWeek(p.blk,v))===p.wk.n)place(v,n);});
+    else catVideos().forEach(v=>{if(v.sys===p.sys)place(v,n);});});
+  return {id:SEQ_ID,seq:true,name:"My Brody sequence",systems:[],weeks,shelf:end,checkpoints:[],
+    videoWeek,bcWeek:{},artWeek,include:[],exclude:[],member,counts,mins,arts};
+}
+/* Systems a student can add: any with items no Brody topic in their sequence holds —
+   the systems no unit covers, and the leftovers of ones a unit does (Heme/Renal leaves
+   cancer pharmacology to a later unit, for instance). */
+function seqAddable(c){
+  const blk=seqBuild(seqTopics(c).filter(t=>/^u:/.test(t)&&seqParse(t)),todayISO(),todayISO());
+  const have=new Set(seqTopics(c).filter(t=>/^s:/.test(t)).map(t=>t.slice(2)));
+  const left={};catVideos().forEach(v=>{if(blk.member[brodyKey(v)])return;if(isArticle(v))return;
+    (left[v.sys]=left[v.sys]||{n:0,min:0});left[v.sys].n++;left[v.sys].min+=v.min;});
+  return Object.keys(left).filter(s=>!have.has(s)).sort().map(s=>({sys:s,n:left[s].n,h:Math.round(left[s].min/6)/10}));
+}
 function brodyKey(v){return v.res+"|"+v.sys+"|"+(v.cat||"")+"|"+v.name;}   // unique across systems + categories
 /* Which Brody week a video belongs to. Per-video videoWeek keys win; Bootcamp
    falls back to a per-section map (bcWeek, keyed sys|category) since it has
@@ -1862,6 +1927,7 @@ function brodyIncluded(blk,v){return !!(blk.include&&blk.include.indexOf(brodyKe
 // just because another unit's reading list needed it. The list is explicit, so an article
 // can never fall through to a default week.
 function brodyInBlock(blk,v){
+  if(blk.member)return !!blk.member[brodyKey(v)];   // a sequence lists every item it holds
   if(isArticle(v))return !!(blk.artWeek&&blk.artWeek[brodyKey(v)]!=null);
   return (blk.systems.indexOf(v.sys)>=0||brodyIncluded(blk,v))&&!brodyExcluded(blk,v);}
 /* Review/practice buffer: the last N study days before the block shelf are kept
@@ -1888,14 +1954,14 @@ function brodyReviewBuf(c){return Math.max(0,(c&&c.brodyReviewDays!=null)?c.brod
    The quiz dates stay VISIBLE (brodyWeekLoads still reports each week's real quiz
    in `quiz`) — they just stop setting the pace. Off by default; a plan opts in from
    Plan → Study days & pace. */
-function brodyFree(c){return !!((c||S.cfg||{}).brodyFree);}
+function brodyFree(c){const x=c||S.cfg||{};return !!x.brodyFree||x.brody===SEQ_ID;}   // a sequence has no quizzes
 /* Switching modes has to re-derive the pace. The pace is deliberately STAMPED on the
    plan (see reflowBrody) so that checking a video off can't move it — which means a
    stamp made under quiz deadlines would survive the switch, and flipping the toggle
    would appear to do nothing at all. Undoable, because it overwrites a number the
    student may have hand-nudged. */
 function setBrodyFree(c,free){
-  c=c||S.cfg;if(!c||!c.brody)return;
+  c=c||S.cfg;if(!c||!c.brody||c.brody===SEQ_ID)return;
   const wasFree=brodyFree(c);if(wasFree===!!free)return;
   const prevPace=c.brodyPace;
   if(free)c.brodyFree=true;else delete c.brodyFree;
@@ -1921,6 +1987,9 @@ function brodyWeekOf(blk,iso){let n=0;for(let i=0;i<blk.weeks.length;i++){if(iso
    videos forward instead of silently deleting them. Stamped once (at plan creation,
    or lazily for plans saved before this existed) and kept for the block's life. */
 function brodyJoinWk(c,blk){
+  // A sequence's topics all carry the plan start, so "the week you joined" would read as
+  // the LAST topic and silently drop everything before it. It always starts at topic 1.
+  if(blk.seq){if(c){c.brodyJoinWk=1;c.brodyJoinDate=blk.weeks[0].start;}return 1;}
   if(c&&c.brodyJoinWk!=null){
     if(c.brodyJoinDate==null)c.brodyJoinDate=blk.weeks[Math.max(0,Math.min(blk.weeks.length,c.brodyJoinWk)-1)].start; // backfill legacy plans to their join week's start
     return Math.max(1,Math.min(blk.weeks.length,c.brodyJoinWk));
@@ -1936,6 +2005,7 @@ function brodyJoinWk(c,blk){
    back for any of it. On-time joiners (join date = block start) get an empty set,
    so a student who merely falls behind still has their work roll forward as owed. */
 function brodyEarlierIds(c,blk){
+  if(blk.seq)return {ids:new Set(),dayOf:{}};   // nothing in a sequence is "before you arrived"
   const jd=(c&&c.brodyJoinDate)||blk.weeks[0].start;
   if(jd<=blk.weeks[0].start)return {ids:new Set(),dayOf:{}};
   const R=c.resources||{};const en={bnb:R.bnb,pathoma:R.pathoma,skmicro:R.sketchy,skpharm:R.sketchy,bootcamp:R.bootcamp};
@@ -1992,7 +2062,7 @@ function brodyWeekFrame(c,blk){
     const dl=free?blk.shelf:quiz;
     const effDl=(dl>=blk.shelf)?cutoff:dl;              // the final deadline is capped by the review buffer
     const odbd=openBefore(effDl);
-    let days=0,dd=isoToDate(w.start);for(let k=0;k<10;k++){const iso=isoFromDate(dd);if(iso>=end)break;if(iso>=cursor&&iso<cutoff&&dayIsOpen(c,iso,dd.getDay()))days++;dd=addDays(dd,1);}
+    let days=0,dd=isoToDate(w.start);for(let k=0;k<(blk.seq?400:10);k++){const iso=isoFromDate(dd);if(iso>=end)break;if(iso>=cursor&&iso<cutoff&&dayIsOpen(c,iso,dd.getDay()))days++;dd=addDays(dd,1);}
     return {n:w.n,label:w.label,days:days,odbd:odbd,deadline:dl,quiz:quiz,past:days===0,pre:pre};});
 }
 /* Per-week VIDEO loads (minutes) on top of that frame. The pace is derived so the
@@ -2120,7 +2190,7 @@ function reflowBrody(c,blk){
   const cursorISO=(todayISO()>wkStart[0])?todayISO():wkStart[0];
   const reviewCutoff=brodyReviewCutoff(c,blk);   // last N study days before shelf stay video-free
   const weekOf=iso=>{let n=0;for(let i=0;i<blk.weeks.length;i++){if(iso>=wkStart[i])n=blk.weeks[i].n;}return n;};
-  const currentWk=weekOf(cursorISO);
+  let currentWk=weekOf(cursorISO);
   // The plan starts at the week you JOINED (no forced catch-up for late joiners).
   // Weeks from your join onward stay in the plan even after they pass — falling
   // behind rolls the unwatched videos forward, it never silently deletes them.
@@ -2224,6 +2294,19 @@ function reflowBrody(c,blk){
   const skippedWeeks=Math.max(0,joinWk-1);   // weeks that ended before you joined
   const donePins={};
   for(const id in vdd){if(earlierSet.has(id))continue;const it=byId[id];if(it){(donePins[vdd[id]]=donePins[vdd[id]]||[]).push(it);}}
+  /* A sequence's topics have no dates of their own, so "which topic is this day" comes from
+     what the pour put there: the topic of the first item packed (or done) that day. The
+     current topic is the first with anything left, and each topic's start is the first
+     day it appears — a projection that moves with the plan, used only for labels. */
+  const dayTopic={},topicStart={},topicDays={};
+  if(blk.seq){
+    const firstOf=iso=>{const a=(dayItems[iso]||[]).concat(artItems[iso]||[]).concat(donePins[iso]||[]);
+      let m=0;a.forEach(x=>{if(x.wk&&(!m||x.wk<m))m=x.wk;});return m;};
+    {let dd=isoToDate(wkStart[0]),g=0;while(isoFromDate(dd)<shelf&&g++<400){const iso=isoFromDate(dd);const t=firstOf(iso);
+      if(t){dayTopic[iso]=t;if(!topicStart[t])topicStart[t]=iso;topicDays[t]=(topicDays[t]||0)+1;}dd=addDays(dd,1);}}
+    const left=vids.find(v=>!doneOrSkip(v.id))||arts.find(v=>!doneOrSkip(v.id));
+    currentWk=left?left.wk:blk.weeks.length;
+  }
   // Assemble days from the BLOCK START (not just today) so a late joiner's past days show
   // the earlier videos they skipped; days before today are flagged past.
   const days=[];const dayMap={};const todayI=todayISO_;
@@ -2238,7 +2321,7 @@ function reflowBrody(c,blk){
     const packed=(dayItems[iso]||[]).concat(artItems[iso]||[]);
     const pinned=donePins[iso]||[];const early=earlierByDay[iso]||[];
     const items=packed.concat(pinned).concat(early).sort((a,b)=>((orderIndex[a.id]!=null?orderIndex[a.id]:1e9)-(orderIndex[b.id]!=null?orderIndex[b.id]:1e9)));
-    const row={iso,past,earlier:early.length>0,off:isOff&&!past,rest:isRest&&!isOff&&!past,review:isReview,items,brodyWeek:weekOf(iso),
+    const row={iso,past,earlier:early.length>0,off:isOff&&!past,rest:isRest&&!isOff&&!past,review:isReview,items,brodyWeek:blk.seq?(dayTopic[iso]||0):weekOf(iso),
       min:items.reduce((a,b)=>a+b.min,0),todo:packed.reduce((a,b)=>a+b.min,0),
       // article counts are tracked beside the minutes so a day can say "3h · 4 to read"
       arts:items.filter(x=>x.art).length,artsTodo:(artItems[iso]||[]).filter(x=>!doneOrSkip(x.id)).length};
@@ -2260,7 +2343,7 @@ function reflowBrody(c,blk){
     // Free-paced, dl is the exam for every week, so needH climbs to the even spread
     // on the last row and `heavy` means the one thing it can still mean: the unit as
     // a whole doesn't fit before the exam at a realistic pace.
-    return {n:w.n,label:w.label,start:w.start,load,deadline:dl,quiz:wlLoads[i].quiz,needH:needH,cap:odbd*paceMin,heavy:(!dead&&needH>BRODY_QUIZ_MAX),past,days:weekDays[w.n].length};});
+    return {n:w.n,label:w.label,start:blk.seq?(topicStart[w.n]||null):w.start,load,deadline:dl,quiz:wlLoads[i].quiz,needH:needH,cap:odbd*paceMin,heavy:(!dead&&needH>BRODY_QUIZ_MAX),past,days:blk.seq?(topicDays[w.n]||0):weekDays[w.n].length};});
   const remaining=vids.filter(v=>!doneOrSkip(v.id));const remMin=remaining.reduce((a,b)=>a+b.min,0);
   const artsRem=arts.filter(v=>!doneOrSkip(v.id));
   // planItems is the authoritative "what's in this plan" list every progress figure
@@ -2652,7 +2735,7 @@ function uwDayBarHTML(iso){
   return '<div class="uwbar">'
     +'<button type="button" class="btn ghost sm" data-uwids="'+escAttr(dayIds.join(","))+'" data-uwlab="this day">Copy '+dayIds.length+' UWorld IDs for this day</button>'
     +((weekIds.length>dayIds.length)
-      ? '<button type="button" class="btn ghost sm" data-uwids="'+escAttr(weekIds.join(","))+'" data-uwlab="Brody week '+wk+'">All '+weekIds.length+' for Brody week '+wk+'</button>'
+      ? '<button type="button" class="btn ghost sm" data-uwids="'+escAttr(weekIds.join(","))+'" data-uwlab="'+(SCHED.brody.seq?'topic ':'Brody week ')+wk+'">All '+weekIds.length+' for '+(SCHED.brody.seq?'topic ':'Brody week ')+wk+'</button>'
       : '')
     +'</div>';
 }
@@ -2707,7 +2790,7 @@ function brodyChip(iso){
   if(!(SCHED&&SCHED.brody))return "";
   const row=SCHED.dayMap[iso];const wn=row&&row.brodyWeek;if(!wn)return "";
   const wl=(SCHED.weekLoad||[]).find(w=>w.n===wn);if(!wl)return "";
-  return '<div class="brodychip'+(wl.heavy?' heavy':'')+'"><span class="bc-wk">Brody Wk '+wn+'</span>'
+  return '<div class="brodychip'+(wl.heavy?' heavy':'')+'"><span class="bc-wk">'+(SCHED.brody.seq?'Topic ':'Brody Wk ')+wn+'</span>'
     +'<span><b>'+escHTML(wl.label)+'</b></span>'
     +(wl.heavy?'<span class="bc-heavy">Heavy ⚠</span>':'')+'</div>';
 }
@@ -2991,7 +3074,7 @@ function paceHero(){const st=SCHED.stats;
     // waiting behind it \u2014 a block with a structurally heavy week (Cardiopulm week 3)
     // is warned about all block long, and studying ahead would never get credited.
     const spare=SCHED.days.filter(d2=>d2.review).length, banked=spare-(SCHED.reviewBuf||0);
-    const bank=(banked>0)?(' \u00b7 +'+banked+' day'+(banked===1?'':'s')+' banked ('+spare+' video-free before the exam)'):'';
+    const bank=(banked>0)?(' \u00b7 +'+banked+' day'+(banked===1?'':'s')+' banked ('+spare+' video-free before '+(SCHED.brody.seq?'your end date':'the exam')+')'):'';
     // Working ahead is the moment the button matters most, so it's offered here too \u2014
     // but the cost is named first. Re-fitting now spreads what's left over every
     // remaining day, which is lighter days bought with the days you just banked.
@@ -3006,7 +3089,7 @@ function paceHero(){const st=SCHED.stats;
       const wks=(ns.length===1)?('week '+ns[0]+' is')
         :('weeks '+ns.slice(0,-1).join(', ')+' and '+ns[ns.length-1]+' are');
       return '<div class="herostat warn"><span class="hsdot"></span><span>~'+SCHED.brodyPace+' h/day of video \u00b7 '+wks+' more than fits before '+(ns.length===1?'its':'their')+' quiz \u2014 trim a resource'+bank+ease+'</span>'+btn+'</div>';}
-    return '<div class="herostat ok"><span class="hsdot"></span><span>On pace at ~'+SCHED.brodyPace+' h/day of video \u00b7 '+(free?'even pace to the exam':'ahead of every quiz')+skTxt+bank+ease+'</span>'+btn+'</div>';}
+    return '<div class="herostat ok"><span class="hsdot"></span><span>On pace at ~'+SCHED.brodyPace+' h/day of video \u00b7 '+(free?(SCHED.brody.seq?'even pace to your end date':'even pace to the exam'):'ahead of every quiz')+skTxt+bank+ease+'</span>'+btn+'</div>';}
   const hpd=Math.round(st.reqPerDay/60*10)/10;let cls,txt;
   // Same offer on the custom planner, moving the hours the student set instead of a
   // derived pace: up when the work no longer fits, down once they've worked ahead.
@@ -4045,7 +4128,7 @@ function archiveUnit(cfg){
   S.settings=S.settings||{};
   S.settings.pastUnits=S.settings.pastUnits||[];
   S.settings.pastUnits.unshift({cfg:JSON.parse(JSON.stringify(cfg)),label:unitLabel(cfg),
-    sys:(cfg.systems||[]).join(", "),savedISO:todayISO()});
+    sys:(cfg.brody===SEQ_ID?(seqTopics(cfg).length+" topics, your order"):(cfg.systems||[]).join(", ")),savedISO:todayISO()});
   if(S.settings.pastUnits.length>12)S.settings.pastUnits.length=12;
 }
 function reopenUnit(i){
@@ -4113,8 +4196,11 @@ function renderAdjustBrody(c){
   const cDropTotal=CONTENT_TYPES.reduce((a,t)=>a+(cOff[t.k]?(cDrop[t.k]||0):0),0);
   const cDropH=Math.round(CONTENT_TYPES.reduce((a,t)=>a+(cOff[t.k]?(cDropMin[t.k]||0):0),0)/60*10)/10;
   let body='',colB='';
-  body+='<div class="card"><div class="cardhd">This block</div>'
-    +'<p class="muted small" style="margin:0"><b>'+escHTML(blk.name)+'</b> <span class="pill">'+(free?'Brody content':'Brody calendar')+'</span> — weeks of '+fmtShort(blk.weeks[0].start)+' → block exam '+fmtShort(blk.shelf)+'.</p>'
+  const seq=!!blk.seq;
+  body+='<div class="card"><div class="cardhd">'+(seq?'Your sequence':'This block')+'</div>'
+    +'<p class="muted small" style="margin:0">'+(seq
+      ?('<b>Every Brody unit, your order</b> <span class="pill">'+blk.weeks.length+' topics</span> — '+fmtShort(blk.weeks[0].start)+' → '+fmtShort(blk.shelf)+'.')
+      :('<b>'+escHTML(blk.name)+'</b> <span class="pill">'+(free?'Brody content':'Brody calendar')+'</span> — weeks of '+fmtShort(blk.weeks[0].start)+' → block exam '+fmtShort(blk.shelf)+'.'))+'</p>'
     +'<div class="grid2" style="margin-top:12px"><div><div class="kv">'+st.remItems+'</div><div class="kvl">'+(artsOn?'items left':'videos left')+'</div></div>'
     +(artsOn&&!anyVid
       ?'<div><div class="kv">'+st.remArts+'</div><div class="kvl">articles left</div></div>'
@@ -4122,18 +4208,22 @@ function renderAdjustBrody(c){
       :'<div><div class="kv">'+Math.round(st.remMin/60)+'h</div><div class="kvl">video time left</div></div>'
        +'<div><div class="kv">'+pace+'h'+(artsOn?' + '+artPace:'')+'</div><div class="kvl">'+(artsOn?'video / day + reads':'video / day')+'</div></div>')
     +(free
-      ?'<div><div class="kv">'+(heavy.length?'⚠':'✓')+'</div><div class="kvl">'+(heavy.length?'over the exam':'fits by exam')+'</div></div>'
+      ?'<div><div class="kv">'+(heavy.length?'⚠':'✓')+'</div><div class="kvl">'+(heavy.length?(seq?'over your end date':'over the exam'):(seq?'fits by end date':'fits by exam'))+'</div></div>'
       :'<div><div class="kv">'+heavy.length+'</div><div class="kvl">firehose week'+(heavy.length===1?'':'s')+'</div></div>')
     +'</div></div>';
   body+='<div class="card"><div class="cardhd">Study days &amp; pace</div>'
     +brodyPaceBanner(c)
     +'<div class="form">'
-    +'<div class="flab">What sets your deadlines</div>'
+    +(seq
+      ?('<label>Start date'+dateTriggerHTML("seq_start",c.startISO,"Pick a start date")+'</label>'
+        +'<label>End date'+dateTriggerHTML("seq_end",c.examISO,"Pick your end date")+'</label>'
+        +'<p class="muted small" style="margin:9px 0 0"><b>Even pace to your end date.</b> Your own order has no quizzes, so everything left is spread evenly over your open days and finishes before your review days.</p>')
+      :('<div class="flab">What sets your deadlines</div>'
     +'<div class="togrow"><button type="button" class="tog '+(free?'':'on')+'" data-bfree="0">Brody quiz weeks</button>'
     +'<button type="button" class="tog '+(free?'on':'')+'" data-bfree="1">Even pace to the exam</button></div>'
     +'<p class="muted small" style="margin:9px 0 0">'+(free
       ?'<b>Even pace.</b> Same videos, same Brody order — but the weekly quizzes stop being deadlines. Everything left is spread evenly over your open days so no week is heavier than another, and it all finishes before the exam. Quiz dates still show, they just don’t drive your pace.'
-      :'<b>Quiz weeks.</b> Each Brody week’s videos are finished before that week’s quiz, so you’re never behind the material you’re about to be tested on. Heavy weeks stay heavy.')+'</p>'
+      :'<b>Quiz weeks.</b> Each Brody week’s videos are finished before that week’s quiz, so you’re never behind the material you’re about to be tested on. Heavy weeks stay heavy.')+'</p>'))
     +'<div class="flab mt">No-video / rest days</div><div class="togrow">'+dows+'</div>'
     +(anyVid?'<div class="flab mt">Daily pace</div>'
     +'<div class="pacerow"><button type="button" class="pacebtn" data-fpace="dec" aria-label="less">−</button>'
@@ -4146,13 +4236,15 @@ function renderAdjustBrody(c){
     +'<div class="paceval"><b>'+artPace+'</b><span>UWorld article'+(artPace===1?'':'s')+' · per day</span></div>'
     +'<button type="button" class="pacebtn" data-apace="inc" aria-label="more">+</button></div>'
     +'<p class="muted small" style="margin:9px 0 0">Articles don’t have a runtime, so reading is paced by count. '+st.remArts+' left of '+st.totalArts+' in this unit'+(anyVid?' — on top of your video hours.':'.')+'</p>':'')
-    +'<div class="flab mt">Review buffer before the block exam</div>'
+    +'<div class="flab mt">Review buffer before '+(seq?'your end date':'the block exam')+'</div>'
     +'<div class="pacerow"><button type="button" class="pacebtn" data-fbuf="dec" aria-label="fewer">−</button>'
     +'<div class="paceval"><b>'+brodyReviewBuf(c)+' day'+(brodyReviewBuf(c)===1?'':'s')+'</b><span>video-free for UWorld / review</span></div>'
     +'<button type="button" class="pacebtn" data-fbuf="inc" aria-label="more">+</button></div>'
-    +'<p class="muted small" style="margin:9px 0 0">'+(brodyReviewBuf(c)>0?('All videos finish by <b>'+fmtShort(SCHED.reviewCutoff)+'</b> — the last '+brodyReviewBuf(c)+' study day'+(brodyReviewBuf(c)===1?'':'s')+' before the block exam stay open for review.'+(free?'':' You still never fall behind Brody’s quizzes.')):'No buffer — content runs right up to the exam.')+'</p>'
+    +'<p class="muted small" style="margin:9px 0 0">'+(brodyReviewBuf(c)>0?('All videos finish by <b>'+fmtShort(SCHED.reviewCutoff)+'</b> — the last '+brodyReviewBuf(c)+' study day'+(brodyReviewBuf(c)===1?'':'s')+' before '+(seq?'your end date':'the block exam')+' stay open for review.'+(free?'':' You still never fall behind Brody’s quizzes.')):'No buffer — content runs right up to '+(seq?'your end date.':'the exam.'))+'</p>'
     +'</div></div>';
-  body+='<div class="card soft"><div class="cardhd">Weekly plan</div>'+brodyPreview(c)+'</div>';
+  body+=seq
+    ?('<div class="card"><div class="cardhd">Your order</div>'+seqEditorHTML(c)+'</div>')
+    :('<div class="card soft"><div class="cardhd">Weekly plan</div>'+brodyPreview(c)+'</div>');
   colB+='<div class="card"><div class="cardhd">Video resources</div><div class="togrow">'
     +resBtn("bnb","Boards &amp; Beyond")+resBtn("pathoma","Pathoma")+resBtn("sketchy","Sketchy")+resBtn("bootcamp","Bootcamp")
     +'</div><p class="muted small">Turn on the video resources you use — the plan re-flows live.</p>'
@@ -4191,6 +4283,14 @@ function renderAdjustBrody(c){
   document.querySelectorAll("[data-res]").forEach(b=>b.onclick=()=>{c.resources=c.resources||{};c.resources[b.dataset.res]=!hasRes(b.dataset.res);apply();});
   document.querySelectorAll("[data-fpace]").forEach(b=>b.onclick=()=>{const cur=brodyPace(c);c.brodyPace=Math.max(0.5,cur+(b.dataset.fpace==="inc"?0.5:-0.5));apply();});
   document.querySelectorAll("[data-bfree]").forEach(b=>b.onclick=()=>{setBrodyFree(c,b.dataset.bfree==="1");apply();});
+  if(seq){
+    // content changes re-derive the stamped paces, like a resource switch; a reorder doesn't
+    seqEditorBind(c,content=>{if(content){delete c.brodyPace;delete c.artPerDay;}apply();});
+    const ds=document.getElementById("seq_start");if(ds)ds.onclick=()=>openDatePicker({value:c.startISO,title:"Start date",onPick:iso=>{
+      if(c.examISO&&iso>=c.examISO){toast("Start has to be before your end date");return;}c.startISO=iso;delete c.brodyPace;delete c.artPerDay;apply();}});
+    const de=document.getElementById("seq_end");if(de)de.onclick=()=>openDatePicker({value:c.examISO,min:todayISO(),title:"End date",onPick:iso=>{
+      if(iso<=c.startISO){toast("End date has to be after your start date");return;}c.examISO=iso;delete c.brodyPace;delete c.artPerDay;apply();}});
+  }
   document.querySelectorAll("[data-apace]").forEach(b=>b.onclick=()=>{const cur=Math.max(1,Math.round(brodyArtPace(c)));c.artPerDay=Math.max(1,cur+(b.dataset.apace==="inc"?1:-1));apply();});
   /* Changing what's in the plan changes how much work is left, so the stamped paces
      are re-derived — exactly as switching quiz/even pace does. Leaving a pace set for
@@ -4236,6 +4336,7 @@ function brodyPaceBanner(c){
   const free=brodyFree(c);
   const st=SCHED.stats;
   const artsOn=!!SCHED.artsOn;
+  const endTxt=d=>blk.seq?('your '+fmtShort(d)+' end date'):('the '+fmtShort(d)+' exam');
   /* A reading-only plan has no hours, so the whole hours banner would be a lie
      told in a large font. It gets its own, in the currency it actually uses. */
   if(artsOn&&!((st.totalMin||0)>0)){
@@ -4250,8 +4351,8 @@ function brodyPaceBanner(c){
         ?('<span class="pbok">On track</span> you’re set to '+curA+' article'+(curA===1?'':'s')+' a day — '+st.remArts+' left of '+st.totalArts+'.')
         :('<span class="pbwarn">Behind</span> you’re set to '+curA+' a day; about <b>'+recA+' a day</b> clears the '+st.remArts+' left in time.'))+'</div>'
       +'<div class="pbbuf">📅 '+(brodyReviewBuf(c)>0
-        ?('All reading finishes by <b>'+fmtShort(SCHED.reviewCutoff)+'</b>, leaving <b>'+brodyReviewBuf(c)+' free day'+(brodyReviewBuf(c)===1?'':'s')+'</b> before the '+fmtShort(blk.shelf)+' exam for UWorld &amp; review.')
-        :('Reading runs right up to the '+fmtShort(blk.shelf)+' exam — no review buffer reserved.'))+'</div>'
+        ?('All reading finishes by <b>'+fmtShort(SCHED.reviewCutoff)+'</b>, leaving <b>'+brodyReviewBuf(c)+' free day'+(brodyReviewBuf(c)===1?'':'s')+'</b> before '+endTxt(blk.shelf)+' for UWorld &amp; review.')
+        :('Reading runs right up to '+endTxt(blk.shelf)+' — no review buffer reserved.'))+'</div>'
       +'<div class="pbnote">📖 Articles have <b>no runtime</b>, so this plan is paced by count rather than hours. Your Brody lectures, Anki, UWorld and review are <b>on top of this</b>.</div>'
       +(diffA?'<button type="button" class="btn ghost pbbtn" id="brodyUseArts">Set my reading to '+recA+'/day</button>':'')
       +'</div>';
@@ -4269,7 +4370,7 @@ function brodyPaceBanner(c){
   // be "more than fits" — both states still exist, they're just measured against the
   // exam, so they get their own words rather than quiz words.
   if(free){
-    if(heavy.length)stat='<span class="pbwarn">Doesn’t fit</span> this unit packs more third-party video than fits before the exam, even at a high pace — trim a resource.';
+    if(heavy.length)stat='<span class="pbwarn">Doesn’t fit</span> '+(blk.seq?'your sequence packs more third-party video than fits before your end date, even at a high pace — move the date, leave a topic out, or trim a resource.':'this unit packs more third-party video than fits before the exam, even at a high pace — trim a resource.');
     else if(behind)stat='<span class="pbwarn">Won’t finish</span> you’re set to '+cur+' h/day — about <b>'+rec+' h/day</b> clears every video before your buffer.';
     else stat='<span class="pbok">On track</span> you’re set to '+cur+' h/day, evenly — every video is done before your buffer. Change anything below and this updates instantly.';
   }
@@ -4277,12 +4378,12 @@ function brodyPaceBanner(c){
   else if(behind)stat='<span class="pbwarn">Behind a quiz</span> you’re set to '+cur+' h/day — about <b>'+rec+' h/day</b> keeps you ahead of every weekly quiz.';
   else stat='<span class="pbok">On track</span> you’re set to '+cur+' h/day — every week finishes before its quiz. Change anything below and this updates instantly.';
   const bufTxt=buf>0
-    ? 'All videos finish by <b>'+fmtShort(SCHED.reviewCutoff)+'</b>, leaving <b>'+buf+' video-free day'+(buf===1?'':'s')+'</b> before the '+fmtShort(blk.shelf)+' exam for UWorld &amp; review.'
-    : 'Videos run right up to the '+fmtShort(blk.shelf)+' exam — no review buffer reserved.';
+    ? 'All videos finish by <b>'+fmtShort(SCHED.reviewCutoff)+'</b>, leaving <b>'+buf+' video-free day'+(buf===1?'':'s')+'</b> before '+endTxt(blk.shelf)+' for UWorld &amp; review.'
+    : 'Videos run right up to '+endTxt(blk.shelf)+' — no review buffer reserved.';
   return '<div class="pacebanner '+(ok?'ok':'warn')+'">'
     +'<div class="pbtop"><div class="pbnum">'+rec+'<i>h/day</i></div>'
     +'<div class="pblab"><b>Recommended pace</b><span>hours of <b>video to watch</b> per day to '
-    +(free?'clear every video in this unit at an even pace, finishing before your buffer'
+    +(free?('clear every video in '+(blk.seq?'your sequence':'this unit')+' at an even pace, finishing before your buffer')
           :'stay ahead of every quiz and finish before your buffer')+'</span></div></div>'
     +'<div class="pbstat">'+stat+'</div>'
     +'<div class="pbbuf">📅 '+bufTxt+'</div>'
@@ -4298,7 +4399,7 @@ function renderAdjust(){
   renderPlanMenu();
 }
 function renderPlanMenu(){
-  const c=S.cfg;const brody=(c&&c.brody)?brodyBlockById(c.brody):null;
+  const c=S.cfg;const brody=(c&&c.brody)?brodyBlock(c):null;
   const label=brody?brody.name:((c&&c.examLabel)||"Your plan");
   const dateTxt=brody?('Block exam '+fmtShort(brody.shelf)):((c&&c.examISO)?('Exam '+fmtShort(c.examISO)):'No exam date set yet');
   const past=(S.settings&&S.settings.pastUnits)||[];
@@ -4959,7 +5060,7 @@ function enterHub(key){if(!S.cfgs[key]){startOnboard(key);return;}activate(key);
 let _ob=null;
 function defaultsForHub(key,fresh){const ex=fresh?null:S.cfgs[key];
   let o;
-  if(ex)o={hub:key,fresh:false,brody:ex.brody||null,brodyPace:ex.brodyPace||null,brodyFree:(ex.brodyFree?true:undefined),artPerDay:(ex.artPerDay||undefined),contentOff:(ex.contentOff?JSON.parse(JSON.stringify(ex.contentOff)):undefined),brodyJoinWk:(ex.brodyJoinWk!=null?ex.brodyJoinWk:undefined),brodyJoinDate:(ex.brodyJoinDate||undefined),brodyReviewDays:(ex.brodyReviewDays!=null?ex.brodyReviewDays:undefined),examLabel:ex.examLabel||"",examISO:ex.examISO||"",startISO:ex.startISO||todayISO(),wkdayHrs:ex.wkdayHrs,wkendHrs:ex.wkendHrs,restDays:(ex.restDays||[0]).slice(),reviewDays:ex.reviewDays,resources:Object.assign({bnb:true,pathoma:true,sketchy:true,fa:true,anking:true,uworld:true},ex.resources||{}),systems:(ex.systems||SYS).slice(),sysOrder:(ex.sysOrder&&ex.sysOrder.length===SYS.length?ex.sysOrder:SYS_ORDER_DEFAULT).slice(),pathChapters:(Array.isArray(ex.pathChapters)?ex.pathChapters.slice():undefined),threadTopics:(Array.isArray(ex.threadTopics)?ex.threadTopics.slice():undefined),weeklyQGoal:(ex.weeklyQGoal||0),qGoalPer:(ex.qGoalPer||"week"),catOrder:(ex.catOrder?JSON.parse(JSON.stringify(ex.catOrder)):undefined),quizzes:(Array.isArray(ex.quizzes)?JSON.parse(JSON.stringify(ex.quizzes)):[]),skip:Object.assign({},ex.skip||{}),step:0};
+  if(ex)o={hub:key,fresh:false,brody:ex.brody||null,seqTopics:(Array.isArray(ex.seqTopics)?ex.seqTopics.slice():undefined),brodyPace:ex.brodyPace||null,brodyFree:(ex.brodyFree?true:undefined),artPerDay:(ex.artPerDay||undefined),contentOff:(ex.contentOff?JSON.parse(JSON.stringify(ex.contentOff)):undefined),brodyJoinWk:(ex.brodyJoinWk!=null?ex.brodyJoinWk:undefined),brodyJoinDate:(ex.brodyJoinDate||undefined),brodyReviewDays:(ex.brodyReviewDays!=null?ex.brodyReviewDays:undefined),examLabel:ex.examLabel||"",examISO:ex.examISO||"",startISO:ex.startISO||todayISO(),wkdayHrs:ex.wkdayHrs,wkendHrs:ex.wkendHrs,restDays:(ex.restDays||[0]).slice(),reviewDays:ex.reviewDays,resources:Object.assign({bnb:true,pathoma:true,sketchy:true,fa:true,anking:true,uworld:true},ex.resources||{}),systems:(ex.systems||SYS).slice(),sysOrder:(ex.sysOrder&&ex.sysOrder.length===SYS.length?ex.sysOrder:SYS_ORDER_DEFAULT).slice(),pathChapters:(Array.isArray(ex.pathChapters)?ex.pathChapters.slice():undefined),threadTopics:(Array.isArray(ex.threadTopics)?ex.threadTopics.slice():undefined),weeklyQGoal:(ex.weeklyQGoal||0),qGoalPer:(ex.qGoalPer||"week"),catOrder:(ex.catOrder?JSON.parse(JSON.stringify(ex.catOrder)):undefined),quizzes:(Array.isArray(ex.quizzes)?JSON.parse(JSON.stringify(ex.quizzes)):[]),skip:Object.assign({},ex.skip||{}),step:0};
   // a brand-new plan starts with every resource unchecked — the student picks
   else o={hub:key,fresh:!!fresh,examLabel:key==="step1"?"Step 1":"",examISO:"",startISO:todayISO(),wkdayHrs:6,wkendHrs:4,restDays:[0],reviewDays:14,resources:{bnb:false,pathoma:false,sketchy:false,fa:false,anking:false,uworld:false},systems:(key==="nbme"?[]:SYS.slice()),sysOrder:SYS_ORDER_DEFAULT.slice(),threadTopics:[],weeklyQGoal:0,qGoalPer:"week",catOrder:undefined,quizzes:[],skip:{},step:0};
   // NBME hub now selects individual systems (like Step 1); migrate any legacy block selection
@@ -5126,6 +5227,7 @@ function obIsNbme(){return _ob&&_ob.hub==="nbme";}
 /* the ordered wizard steps for the current plan type — one thing per page */
 function obSteps(ob){
   const nbme=ob.hub==="nbme";
+  if(ob.brody===SEQ_ID)return (nbme?["plan"]:[]).concat(["block","sequence","dates","resources","skip","routine","practice","review"]);
   if(ob.brody)return (nbme?["plan"]:[]).concat(["block","resources","skip","routine","practice","review"]);
   const s=[];if(nbme)s.push("plan","name");
   s.push("dates","resources","systems","skip","quizzes","routine","practice","review");
@@ -5133,7 +5235,8 @@ function obSteps(ob){
 }
 const OB_STEP_META={
   plan:["Choose your plan","How do you want this schedule built?"],
-  block:["Pick your block","Which Brody unit are you on?"],
+  block:["Pick your block","Which Brody unit are you on — or all of them, in your own order?"],
+  sequence:["Your order","Put the Brody topics in the order you want, and add any systems you’re studying alongside."],
   name:["Name your exam","What are you studying for?"],
   dates:["Set your dates","When is your exam, and when do you start?"],
   resources:["Pick your resources","Which ones do you actually use, and how deep should the plan go?"],
@@ -5150,23 +5253,26 @@ function obHasVideoRes(ob){return !!(ob.resources&&["bnb","pathoma","sketchy","b
    blocked setup on the step where you'd just chosen to read instead. */
 function obHasAnyRes(ob){
   if(obHasVideoRes(ob))return true;
-  const blk=ob.brody?brodyBlockById(ob.brody):null;
+  const blk=ob.brody?brodyBlock(ob):null;
   return !!(blk&&brodyHasArts(blk)&&ob.resources&&ob.resources.uwlib);
 }
 /* per-step gate for Next — true to allow, or a string to show why it's blocked */
 function obStepValid(ob,key){
-  if(key==="dates")return ob.examISO?true:"Pick your exam date to continue.";
+  if(key==="dates"){if(!ob.examISO)return ob.brody===SEQ_ID?"Pick your end date to continue.":"Pick your exam date to continue.";
+    if(ob.brody===SEQ_ID&&ob.startISO&&ob.examISO<=ob.startISO)return "Your end date has to be after your start date.";return true;}
+  if(key==="sequence")return seqTopics(ob).length?true:"Keep at least one topic in your sequence.";
   if(key==="resources")return obHasAnyRes(ob)?true:"Turn on at least one resource to continue.";
   if(key==="systems"){if(!ob.systems.length)return "Pick at least one system this exam covers.";const un=threadUnconfigured(ob);if(un)return "Choose which "+un+" sections to include — or drop it from your systems.";}
   return true;
 }
 function obReviewHTML(ob){
-  const brody=ob.brody?brodyBlockById(ob.brody):null;
+  const brody=ob.brody?brodyBlock(ob):null;
   const RESNM={bnb:"B&B",pathoma:"Pathoma",sketchy:"Sketchy",bootcamp:"Bootcamp",fa:"First Aid",anking:"AnKing",uworld:"UWorld"};
   const res=Object.keys(RESNM).filter(k=>ob.resources&&ob.resources[k]).map(k=>RESNM[k]);
   const rows=[];
-  rows.push(["Plan",brody?("Brody calendar · "+brody.name):"Custom exam countdown"]);
-  if(brody)rows.push(["Block exam",fmtShort(brody.shelf)]);
+  rows.push(["Plan",brody?(brody.seq?("My Brody sequence · "+brody.weeks.length+" topics, your order"):("Brody calendar · "+brody.name)):"Custom exam countdown"]);
+  if(brody&&brody.seq)rows.push(["Dates",fmtShort(brody.weeks[0].start)+" → "+fmtShort(brody.shelf)]);
+  else if(brody)rows.push(["Block exam",fmtShort(brody.shelf)]);
   else{rows.push(["Exam",(ob.examLabel||"Shelf exam")+" · "+(ob.examISO?fmtShort(ob.examISO):"—")]);rows.push(["Start",fmtShort(ob.startISO)]);}
   rows.push(["Resources",res.join(", ")||"—"]);
   if(!brody)rows.push(["Systems",ob.systems.length+" selected"]);
@@ -5202,16 +5308,24 @@ function renderOnboard(){
     +'<button type="button" class="tog '+(ob.brody?"on":"")+'" data-oplan="brody">Follow my Brody calendar</button>'
     +'<button type="button" class="tog '+(!ob.brody?"on":"")+'" data-oplan="exam">Custom schedule</button>'
     +'</div><p class="muted small">'+(ob.brody?'Videos line up with each week of the Brody calendar so you’re covered for every quiz.':'Set an exam date and the plan paces itself to it — great for a remediation exam, a custom shelf, or Step prep.')+'</p></div>';
-  if(key==="block"){const blk=brodyBlockById(ob.brody)||BRODY_BLOCKS[0];
+  if(key==="block"){const seq=ob.brody===SEQ_ID;const blk=seq?null:(brodyBlockById(ob.brody)||BRODY_BLOCKS[0]);
     const chips=BRODY_BLOCKS.map(b=>'<button type="button" class="tog '+(ob.brody===b.id?"on":"")+'" data-oblk="'+b.id+'">'+escHTML(b.name)+'</button>').join('');
     body+='<div class="card"><div class="cardhd">Brody block</div><div class="togrow">'+chips+'</div>'
-      +'<p class="muted small" style="margin:9px 0 0"><b>'+escHTML(blk.name)+'</b> — weeks of '+fmtShort(blk.weeks[0].start)+' → block exam '+fmtShort(blk.shelf)+'. Each week’s videos match what Brody teaches that week, all finished before the exam.</p></div>';}
+      +'<div class="togrow" style="margin-top:8px"><button type="button" class="tog '+(seq?"on":"")+'" data-oblk="'+SEQ_ID+'">All units — my own order</button></div>'
+      +'<p class="muted small" style="margin:9px 0 0">'+(seq
+        ?'<b>My own order.</b> Every Brody unit’s content — the same videos and articles mapped to every lecture — in whatever order you choose, plus any systems you add, paced evenly to an end date you set. No quizzes set your deadlines.'
+        :('<b>'+escHTML(blk.name)+'</b> — weeks of '+fmtShort(blk.weeks[0].start)+' → block exam '+fmtShort(blk.shelf)+'. Each week’s videos match what Brody teaches that week, all finished before the exam.'))+'</p></div>';}
+  if(key==="sequence")body+='<div class="card"><div class="cardhd">Your order</div>'
+    +'<p class="muted small" style="margin:0">Each topic is one Brody week of one unit, with exactly the videos and articles the class calendar maps to it. Move them with ▲▼, leave any out with ✕, and add systems Brody doesn’t schedule.</p>'
+    +seqEditorHTML(ob)+'</div>';
   if(key==="name")body+='<div class="card"><div class="cardhd">Which exam?</div><div class="form"><label>Name this exam<input type="text" id="o_label" value="'+escAttr(ob.examLabel)+'" placeholder="e.g. Cardiology shelf"></label></div><p class="muted small">Just a label so you can tell your plans apart.</p></div>';
-  if(key==="dates")body+='<div class="card"><div class="cardhd">Dates</div><div class="form">'
-    +'<label>Exam date'+dateTriggerHTML("o_exam",ob.examISO,"Pick your exam date")+'</label>'
-    +'<label>Start date'+dateTriggerHTML("o_start",ob.startISO,"Pick a start date")+'</label></div></div>';
+  if(key==="dates"){const sq=ob.brody===SEQ_ID;
+    body+='<div class="card"><div class="cardhd">Dates</div><div class="form">'
+    +'<label>'+(sq?'End date':'Exam date')+dateTriggerHTML("o_exam",ob.examISO,sq?"Pick your end date":"Pick your exam date")+'</label>'
+    +'<label>Start date'+dateTriggerHTML("o_start",ob.startISO,"Pick a start date")+'</label></div>'
+    +(sq?'<p class="muted small">Your sequence is spread evenly between these dates, finishing before your review days. Pick the date you want to be done by — a Step 1 date, the end of the year, anything.</p>':'')+'</div>';}
   if(key==="resources"){
-    const oblk=ob.brody?brodyBlockById(ob.brody):null;
+    const oblk=ob.brody?brodyBlock(ob):null;
     body+='<div class="card"><div class="cardhd">Video resources</div><div class="togrow">'
     +resBtn("bnb","Boards &amp; Beyond")+resBtn("pathoma","Pathoma")+resBtn("sketchy","Sketchy")+resBtn("bootcamp","Bootcamp")
     +'</div><p class="muted small">Turn on the video resources you use — they interleave into '+(ob.brody?'each Brody week':'the plan')+'.</p>'
@@ -5247,14 +5361,15 @@ function renderOnboard(){
     body+=threadTopicsHTML(ob,"ob");}
   if(key==="routine"){
     if(ob.brody){
-      const oFree=brodyFree(ob);
+      const oFree=brodyFree(ob),oSeq=ob.brody===SEQ_ID;
       body+='<div class="card"><div class="cardhd">Study days &amp; pace</div><div class="form">'
-        +'<div class="flab">What sets your deadlines</div>'
+        +(oSeq?'<p class="muted small" style="margin:0"><b>Even pace to your end date.</b> Your own order has no quizzes, so everything spreads evenly over your open days.</p>'
+        :('<div class="flab">What sets your deadlines</div>'
         +'<div class="togrow"><button type="button" class="tog '+(oFree?'':'on')+'" data-obfree="0">Brody quiz weeks</button>'
         +'<button type="button" class="tog '+(oFree?'on':'')+'" data-obfree="1">Even pace to the exam</button></div>'
         +'<p class="muted small" style="margin:9px 0 0">'+(oFree
           ?'<b>Even pace.</b> Same videos, same Brody order, but the weekly quizzes stop being deadlines — everything spreads evenly over your open days instead.'
-          :'<b>Quiz weeks.</b> Each Brody week’s videos finish before that week’s quiz, so you’re never behind the material you’re about to be tested on.')+'</p>'
+          :'<b>Quiz weeks.</b> Each Brody week’s videos finish before that week’s quiz, so you’re never behind the material you’re about to be tested on.')+'</p>'))
         +'<div class="flab mt">No-video / rest days</div><div class="togrow">'+dows+'</div>'
         +'<div class="flab mt">Daily pace</div>'
         +'<div class="pacerow"><button type="button" class="pacebtn" data-opace="dec" aria-label="less">−</button>'
@@ -5262,11 +5377,11 @@ function renderOnboard(){
         +'<button type="button" class="pacebtn" data-opace="inc" aria-label="more">+</button></div>'
         +'<p class="muted small" id="ob_pacehelp" style="margin:9px 0 0">'+obPaceHelp(ob)+'</p>'
         +'<p class="muted small" style="margin:5px 0 0">This is hours of <b>video</b> per study day — not your total study time. Anki, UWorld, and review sit on top.</p>'
-        +'<div class="flab mt">Review buffer before the block exam</div>'
+        +'<div class="flab mt">Review buffer before '+(oSeq?'your end date':'the block exam')+'</div>'
         +'<div class="pacerow"><button type="button" class="pacebtn" data-obuf="dec" aria-label="fewer">−</button>'
         +'<div class="paceval"><b>'+brodyReviewBuf(ob)+' day'+(brodyReviewBuf(ob)===1?'':'s')+'</b><span>video-free for UWorld / review</span></div>'
         +'<button type="button" class="pacebtn" data-obuf="inc" aria-label="more">+</button></div>'
-        +'<p class="muted small" style="margin:9px 0 0">'+(brodyReviewBuf(ob)>0?('The last '+brodyReviewBuf(ob)+' study day'+(brodyReviewBuf(ob)===1?'':'s')+' before the block exam stay open for UWorld &amp; review.'):'No buffer — content runs right up to the exam.')+'</p>'
+        +'<p class="muted small" style="margin:9px 0 0">'+(brodyReviewBuf(ob)>0?('The last '+brodyReviewBuf(ob)+' study day'+(brodyReviewBuf(ob)===1?'':'s')+' before '+(oSeq?'your end date':'the block exam')+' stay open for UWorld &amp; review.'):'No buffer — content runs right up to the exam.')+'</p>'
         +'</div></div>';
     } else {
       body+='<div class="card"><div class="cardhd">How much can you study?</div><div class="form">'
@@ -5303,7 +5418,11 @@ function renderOnboard(){
   document.querySelectorAll("[data-odow]").forEach(b=>b.onclick=()=>{const i=+b.dataset.odow;const k=ob.restDays.indexOf(i);if(k>=0)ob.restDays.splice(k,1);else ob.restDays.push(i);renderObTogs();obLive();});
   document.querySelectorAll("[data-ores]").forEach(b=>b.onclick=()=>{ob.resources[b.dataset.ores]=!ob.resources[b.dataset.ores];renderOnboard();});   // full re-render so the step's Next-gate updates
   document.querySelectorAll("[data-oplan]").forEach(b=>b.onclick=()=>{if(b.dataset.oplan==="brody"){const bl=brodyBlockById(brodyCurrentBlockId());if(ob.brody!==bl.id)ob.brodyJoinWk=null;ob.brody=bl.id;ob.systems=bl.systems.slice();ob.examLabel=bl.name;}else ob.brody=null;renderOnboard();});
-  document.querySelectorAll("[data-oblk]").forEach(b=>b.onclick=()=>{const bl=brodyBlockById(b.dataset.oblk);if(bl){if(ob.brody!==bl.id)ob.brodyJoinWk=null;ob.brody=bl.id;ob.systems=bl.systems.slice();ob.examLabel=bl.name;}renderOnboard();});
+  document.querySelectorAll("[data-oblk]").forEach(b=>b.onclick=()=>{
+    if(b.dataset.oblk===SEQ_ID){if(ob.brody!==SEQ_ID){ob.brody=SEQ_ID;ob.brodyJoinWk=null;ob.seqTopics=seqDefaultTopics();
+      ob.startISO=todayISO();ob.examISO=null;ob.examLabel="My Brody sequence";delete ob.brodyPace;delete ob.artPerDay;}renderOnboard();return;}
+    const bl=brodyBlockById(b.dataset.oblk);if(bl){if(ob.brody!==bl.id)ob.brodyJoinWk=null;ob.brody=bl.id;ob.systems=bl.systems.slice();ob.examLabel=bl.name;}renderOnboard();});
+  if(_ob&&_ob.brody===SEQ_ID)seqEditorBind(ob,content=>{if(content){delete ob.brodyPace;delete ob.artPerDay;}renderOnboard();});
   document.querySelectorAll("[data-opace]").forEach(b=>b.onclick=()=>{const cur=brodyPace(ob);ob.brodyPace=Math.max(0.5,cur+(b.dataset.opace==="inc"?0.5:-0.5));renderOnboard();});
   document.querySelectorAll("[data-obuf]").forEach(b=>b.onclick=()=>{const cur=brodyReviewBuf(ob);ob.brodyReviewDays=Math.max(0,Math.min(14,cur+(b.dataset.obuf==="inc"?1:-1)));renderOnboard();});
   /* Changing the pace mode or what's in the plan drops the stamped pace so the next
@@ -5337,7 +5456,7 @@ function renderObTogs(){
   document.querySelectorAll("[data-odow]").forEach(b=>b.classList.toggle("on",_ob.restDays.includes(+b.dataset.odow)));
   document.querySelectorAll("[data-ores]").forEach(b=>b.classList.toggle("on",!!_ob.resources[b.dataset.ores]));
 }
-function obPaceHelp(ob){const pace=brodyPace(ob),rec=brodyRecPace(ob,brodyBlockById(ob.brody)||BRODY_BLOCKS[0]);
+function obPaceHelp(ob){const pace=brodyPace(ob),rec=brodyRecPace(ob,brodyBlock(ob)||BRODY_BLOCKS[0]);
   const short=brodyFree(ob)?' Below the ~'+rec+' h/day this block needs — you may not finish before the exam.':' Below the ~'+rec+' h/day this block needs — you may fall behind a quiz.';
   return ob.brodyPace?('Set to '+pace+' h/day.'+(pace<rec?short:' You’ll finish with room to spare.')):('Recommended ~'+rec+' h/day, spread evenly across your open days — nudge it to fit your schedule.');}
 function obLive(){const c=document.getElementById("o_reco");if(c){c.innerHTML='<div class="cardhd">Recommended pace</div>'+obPreview();bindUsePace();}
@@ -5369,6 +5488,57 @@ function obReco(){const ob=_ob;
   let cap=0;for(let i=0;i<content&&i<sdw.length;i++){cap+=((sdw[i]===0||sdw[i]===6)?(ob.wkendHrs||0):(ob.wkdayHrs||0));}
   const feasible=cap>=totalH-0.05;const gap=Math.max(0,totalH-cap);
   return {ok:true,totalH:Math.round(totalH),nVids:nv,nSys:order.length,sd:sd,content:content,perDay:perDay,perWeek:perWeek,reviewDays:(ob.reviewDays||0),feasible:feasible,gap:gap,wd:ob.wkdayHrs,we:ob.wkendHrs,fromISO:cur,examISO:ob.examISO};
+}
+/* The order editor, shared by setup and the Plan tab. Brody topics can be moved and left
+   out; left-out ones stay listed so they can come back, because a Brody topic missing from
+   the plan should be a visible choice, never an accident. Added systems can be moved and
+   removed like any topic. Counts are the topic's full content, before resource switches. */
+function seqTopicColor(t){const p=seqParse(t);if(!p)return "#999";return SYS_COLOR[p.kind==="u"?p.blk.systems[0]:p.sys]||"#999";}
+function seqEditorHTML(c){
+  const topics=seqTopics(c);const b=seqBuild(topics.filter(t=>seqParse(t)),c.startISO||todayISO(),c.examISO||todayISO());
+  const idx={};topics.filter(t=>seqParse(t)).forEach((t,i)=>idx[t]=i+1);
+  const out=seqDefaultTopics().filter(t=>topics.indexOf(t)<0);
+  const add=seqAddable(c);
+  let h='<div class="sysord">'+topics.map((t,i)=>{const n=idx[t];const v=b.counts[n]||0,m=b.mins[n]||0,a=b.arts[n]||0;
+    return '<div class="sysrow on seqrow"><span class="seqn">'+(i+1)+'</span>'
+      +'<span class="sysnm" style="border-color:'+seqTopicColor(t)+'">'+escHTML(seqTopicLabel(t))+'</span>'
+      +'<span class="seqct">'+v+' video'+(v===1?'':'s')+' · '+(Math.round(m/6)/10)+' h'+(a?' · '+a+' article'+(a===1?'':'s'):'')+'</span>'
+      +'<span class="ordbtns"><button type="button" class="ordbtn" data-qup="'+i+'"'+(i===0?' disabled':'')+' aria-label="move up">▲</button>'
+      +'<button type="button" class="ordbtn" data-qdn="'+i+'"'+(i===topics.length-1?' disabled':'')+' aria-label="move down">▼</button>'
+      +'<button type="button" class="ordbtn" data-qrm="'+i+'"'+(topics.length===1?' disabled':'')+' aria-label="leave out" title="Leave this out">✕</button></span></div>';}).join('')+'</div>';
+  h+='<button class="link" id="seqReset">↺ Back to the Brody calendar order</button>';
+  if(out.length)h+='<div class="flab mt">Brody topics you’ve left out</div><div class="togrow">'
+    +out.map(t=>'<button type="button" class="tog" data-qback="'+escAttr(t)+'">+ '+escHTML(seqTopicShort(t))+'</button>').join('')+'</div>'
+    +'<p class="muted small" style="margin:6px 0 0">Tap one to put it back, at the end of your order.</p>';
+  if(add.length)h+='<div class="flab mt">Add a system</div><div class="togrow">'
+    +add.map(a=>'<button type="button" class="tog" data-qadd="'+escAttr(a.sys)+'">+ '+escHTML(a.sys)+' <span class="tognum">'+a.n+'</span></button>').join('')+'</div>'
+    +'<p class="muted small" style="margin:6px 0 0">An added system brings every video of it that no Brody topic in your plan already has — in each resource’s own order, so you watch it the way its publisher laid it out. The number is how many videos that is.</p>';
+  return h;
+}
+/* changed(true) when the CONTENT changed (add, remove, put back, reset) — the stamped paces
+   are re-derived then, exactly as for a resource switch; a pure reorder keeps them. */
+function seqEditorBind(c,changed){
+  const T=()=>{c.seqTopics=seqTopics(c).slice();return c.seqTopics;};
+  const mv=(i,d)=>{const t=T();const j=i+d;if(j<0||j>=t.length)return;const x=t[i];t[i]=t[j];t[j]=x;changed(false);};
+  document.querySelectorAll("[data-qup]").forEach(b=>b.onclick=()=>mv(+b.dataset.qup,-1));
+  document.querySelectorAll("[data-qdn]").forEach(b=>b.onclick=()=>mv(+b.dataset.qdn,1));
+  document.querySelectorAll("[data-qrm]").forEach(b=>b.onclick=()=>{const t=T();if(t.length>1){t.splice(+b.dataset.qrm,1);changed(true);}});
+  document.querySelectorAll("[data-qback]").forEach(b=>b.onclick=()=>{T().push(b.dataset.qback);changed(true);});
+  document.querySelectorAll("[data-qadd]").forEach(b=>b.onclick=()=>{T().push("s:"+b.dataset.qadd);changed(true);});
+  const r=document.getElementById("seqReset");if(r)r.onclick=()=>{c.seqTopics=seqDefaultTopics().concat(seqTopics(c).filter(t=>/^s:/.test(t)));changed(true);};
+}
+/* A sequence has no calendar weeks to tabulate, so its preview is the order itself with
+   the arithmetic that matters: how much there is, the even pace to the end date, and when
+   the review days start. */
+function seqPreviewHTML(c){
+  const blk=brodyBlock(c);if(!blk)return '';
+  const loads=brodyWeekLoads(c,blk);const tot=loads.reduce((a,w)=>a+w.loadMin,0);
+  const rec=brodyRecPace(c,blk);const cut=brodyReviewCutoff(c,blk);
+  const days=brodyStudyDays(c,blk,blk.weeks[0].start).filter(d=>d<cut).length;
+  let h='<p class="muted small" style="margin:0 0 10px">'+blk.weeks.length+' topics, '+fmtShort(blk.weeks[0].start)+' → '+fmtShort(blk.shelf)
+    +' · '+(Math.round(tot/6)/10)+' h of video over '+days+' study days → about <b>'+rec+' h/day</b>, evenly, finishing by '+fmtShort(cut)+'.</p>';
+  h+='<div class="brodywks">'+loads.map(w=>'<div class="brodywk"><span class="bw-n">'+w.n+'</span><span class="bw-l">'+escHTML(w.label)+'</span><span class="bw-h">'+(Math.round(w.loadMin/6)/10)+' h</span></div>').join('')+'</div>';
+  return h;
 }
 function brodyPreview(ob){
   if(!catReady())return '<p class="muted small" style="margin:0">Loading the video catalog…</p>';
@@ -5410,6 +5580,7 @@ function brodyPreview(ob){
   return h;
 }
 function obPreview(){const ob=_ob;
+  if(ob&&ob.brody===SEQ_ID)return seqPreviewHTML(ob);
   if(ob&&ob.brody)return brodyPreview(ob);
   const r=obReco();
   if(!r.ok)return '<p class="muted small" style="margin:0">'+r.msg+'</p>';
@@ -5422,7 +5593,7 @@ function obPreview(){const ob=_ob;
 }
 function bindUsePace(){const u=document.getElementById("o_usepace");if(u)u.onclick=()=>{const r=obReco();if(r.ok){const pd=Math.max(0.5,Math.ceil(r.perDay*2)/2);_ob.wkdayHrs=pd;_ob.wkendHrs=pd;renderOnboard();}};}
 function commitOnboard(){const ob=_ob;
-  const brody=ob.brody?brodyBlockById(ob.brody):null;
+  const brody=ob.brody?brodyBlock(ob):null;
   if(!brody&&!ob.examISO){toast("Pick an exam date first");return;}
   if(!brody&&!ob.systems.length){toast("Pick at least one system");return;}
   if(!obHasAnyRes(ob)){toast("Pick at least one resource");return;}
@@ -5434,7 +5605,7 @@ function commitOnboard(){const ob=_ob;
     // brodyPace is locked to the plan at creation (reflowBrody stamps it if the catalog wasn't ready yet)
     // carried on an edit, cleared by a brand-new plan — a fresh plan starts on Brody's
     // own quiz weeks, which is the mode the calendar is named after
-    brody:(brody?brody.id:undefined),brodyFree:((brody&&ob.brodyFree)?true:undefined),artPerDay:((brody&&ob.artPerDay)?ob.artPerDay:undefined),contentOff:((brody&&ob.contentOff&&Object.keys(ob.contentOff).length)?JSON.parse(JSON.stringify(ob.contentOff)):undefined),brodyPace:(brody?(ob.brodyPace||(catReady()?brodyPace(ob):undefined)):undefined),brodyJoinWk:(brody?(ob.brodyJoinWk!=null?ob.brodyJoinWk:undefined):undefined),brodyJoinDate:(brody?(ob.brodyJoinDate||todayISO()):undefined),brodyReviewDays:(brody?brodyReviewBuf(ob):undefined),
+    brody:(brody?brody.id:undefined),seqTopics:((brody&&brody.seq)?seqTopics(ob).slice():undefined),brodyFree:((brody&&ob.brodyFree)?true:undefined),artPerDay:((brody&&ob.artPerDay)?ob.artPerDay:undefined),contentOff:((brody&&ob.contentOff&&Object.keys(ob.contentOff).length)?JSON.parse(JSON.stringify(ob.contentOff)):undefined),brodyPace:(brody?(ob.brodyPace||(catReady()?brodyPace(ob):undefined)):undefined),brodyJoinWk:(brody?(ob.brodyJoinWk!=null?ob.brodyJoinWk:undefined):undefined),brodyJoinDate:(brody?(ob.brodyJoinDate||todayISO()):undefined),brodyReviewDays:(brody?brodyReviewBuf(ob):undefined),
     examISO:(brody?brody.shelf:ob.examISO),startISO:(brody?brody.weeks[0].start:ob.startISO),wkdayHrs:ob.wkdayHrs,wkendHrs:ob.wkendHrs,restDays:ob.restDays.slice(),
     reviewDays:(brody?0:ob.reviewDays),resources:Object.assign({},ob.resources),systems:(brody?brody.systems.slice():ob.systems.slice()),sysOrder:(ob.sysOrder||SYS_ORDER_DEFAULT).slice(),pathChapters:(Array.isArray(ob.pathChapters)?ob.pathChapters.slice():undefined),threadTopics:(brody?undefined:(Array.isArray(ob.threadTopics)?ob.threadTopics.slice():undefined)),weeklyQGoal:(ob.weeklyQGoal>0?ob.weeklyQGoal:0),qGoalPer:qGoalPer(ob),catOrder:(ob.catOrder?JSON.parse(JSON.stringify(ob.catOrder)):undefined),quizzes:(Array.isArray(ob.quizzes)?ob.quizzes.filter(q=>q&&q.iso):[]),skip:Object.assign({},ob.skip||{})});
   c.off=c.off||{};c.on=c.on||{};
@@ -5483,6 +5654,14 @@ const BUILD="2026-10-20a";
    Newest entry first. Bump the top entry's id whenever you add one and the
    pop-up shows once per person (tracked in synced settings.seenUpdate). */
 const CHANGELOG=[
+  {id:"2026-10-20b", date:"October 2026", title:"New: the Brody calendar in your own order", items:[
+    "Want all of Brody\u2019s content but not on Brody\u2019s schedule? Start a new plan (Plan \u2192 Start a new plan), choose Follow my Brody calendar, then pick All units \u2014 my own order. You get every Brody unit\u2019s videos and articles, mapped to every lecture exactly as the class calendar has them.",
+    "Put the topics in any order. Each topic is one Brody week of one unit \u2014 move it up or down, or leave it out. Anything you leave out stays listed, so you can put it back.",
+    "Add systems Brody doesn\u2019t schedule: Endocrinology, GI, Reproductive, Infectious Disease, Biochemistry and more. An added system brings every one of its videos in each resource\u2019s own order, so you watch it the way B&B, Pathoma or Bootcamp laid it out.",
+    "Pick a start and an end date \u2014 a Step 1 date, the end of the year, anything \u2014 and the plan paces itself evenly to it, with review days before the end. There are no quizzes in this mode, so nothing else sets your deadlines.",
+    "Everything else works the same: your resources, reading, Minimal or Comprehensive, opting out of videos, Re-fit. A video two units share is scheduled once, wherever it first comes in your order, and anything you\u2019ve already checked off stays checked.",
+    "Starting one doesn\u2019t lose the plan you have now \u2014 it\u2019s kept under the \u22ee menu \u2192 Past schedules, and you can switch back any time.",
+  ]},
   {id:"2026-10-20", date:"October 2026", title:"Musculoskeletal & Skin: the rheumatology videos, a full reading list, and every lecture checked", items:[
     "Boards & Beyond\u2019s rheumatology was missing from this unit \u2014 RA, lupus, scleroderma, Sj\u00f6gren, vasculitis, spondyloarthritis, gout, CPPD, and the RA and gout drugs. B&B files it under Immunology, so it was never picked up. All 11 videos (2.6 h) are now in week 2, with their UWorld question IDs. Your plan picks them up on its own; if the extra time makes your days tight, use Re-fit.",
     "Reading mode now covers this unit with 272 UWorld library articles: every Dermatology and Rheumatology/Orthopedics article, plus the ones UWorld files elsewhere that this unit\u2019s lectures teach \u2014 anaesthetics, NSAIDs and immunosuppressants, environmental injuries and poisonings, the zoonoses, granulomatous disease and the immunocompromised host.",
