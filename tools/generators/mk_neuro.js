@@ -4,10 +4,10 @@
  * from the printed course calendar, the video mapping is assigned by hand, and then
  * the script CHECKS the result against the live catalog — every mapping key must hit
  * a real video, every video in the block must be mapped, and every mapping must
- * still match something. It prints the block on stdout and refuses to print anything
- * if the mapping has drifted.
+ * still match something. It splices the block into index.html (keeping the reading
+ * list, which mk_uwlib.js owns) and refuses to write anything if the mapping has drifted.
  *
- *   node tools/generators/mk_neuro.js > block.js
+ *   node tools/generators/mk_neuro.js
  */
 import fs from 'fs';
 import path from 'path';
@@ -128,7 +128,7 @@ const skpharm = {
  "SSRIs, SNRIs, Cyproheptadine":1,"Tricyclic Antidepressants":1,"MAO Inhibitors":1,
  "Bupropion, Mirtazapine, Trazodone":1,                       // PHARM 20 Anti-Depressants
  "Benzodiazepines & Flumazenil":1,"Barbiturates":1,
- "Nonbenzodiazepine Hypnotics, Melatonin, Ramelteon, Suvorexant":1,  // PHARM 21 Sedatives / Hypnotics
+ "Nonbenzodiazepine Hypnotics, Melatonin, Ramelteon":1,  // PHARM 21 Sedatives / Hypnotics
  "First-Generation Antipsychotics":1,"Second-Generation Antipsychotics":1,
  "Lithium":1,                                                 // PHARM 22 Anti-Psychotics / Bipolar
  "Buspirone":1,"Broad-Spectrum Antiepileptics":1,"Ethosuximide":1,
@@ -140,6 +140,15 @@ const skpharm = {
  "Opioids, Naloxone, Naltrexone":2,                           // PHARM 28, 29
  "Varenicline":2,                                             // with the substance-use half
  "IV Anesthetics":3,"Inhaled Anesthetics & Dantrolene":3,"Local Anesthetics":3,
+ // ---- added from Sketchy's full video list (2026-10-20) ----
+ "Alzheimer's Disease Medications":1,                         // PHARM Neurodegenerative Drugs
+ "Skeletal Muscle Relaxants":1,                               // spasticity, with the demyelinating disease
+ "Triptans & Migraine":2,                                     // PHARM Anti-migraine Drugs
+ // Sketchy's whole Autonomic unit, at PHARM Ophthalmic Drugs: glaucoma and the pupil
+ // are autonomic pharmacology (pilocarpine, timolol, brimonidine, atropine, the
+ // cocaine/phenylephrine tests), and this unit has no other autonomic pharm lecture.
+ "Cholinomimetics":3,"Acetylcholinesterase Inhibitors":3,"Muscarinic Antagonists":3,
+ "Sympathomimetics":3,"Indirect Sympathomimetics":3,"Alpha Drugs":3,"Beta Blockers":3,
 };
 // Bootcamp maps by section — it runs to hundreds of videos per unit.
 const bcWeek = {
@@ -193,7 +202,7 @@ const include = {
 const exclude = [];
 
 /* ---- resolve against the catalog, refusing to guess ---- */
-const inBlock = cat.videos.filter(v => SYS.indexOf(v.sys) >= 0);
+const inBlock = cat.videos.filter(v => SYS.indexOf(v.sys) >= 0 && v.res !== 'uwlib');   // videos only; articles: mk_uwlib.js
 const videoWeek = {}, missed = [];
 const used = { pathoma:new Set(), bnb:new Set(), skpharm:new Set() };
 inBlock.forEach(v => {
@@ -251,4 +260,14 @@ weeks.forEach(w => {
 });
 console.error('total: ' + all.length + ' videos, ' + (Math.round(all.reduce((a, v) => a + v.min, 0) / 6) / 10) + ' h');
 console.error('checks: every video mapped, every mapping resolves, no mapping points at a missing week');
-process.stdout.write('const BRODY_NEURO=' + JSON.stringify(blk) + ';\n');
+/* Splice in place. The reading list (artWeek) is owned by mk_uwlib.js — carry it over,
+   or re-running this would silently strip every article from the unit. */
+const APP = path.join(REPO, 'index.html');
+let app = fs.readFileSync(APP, 'utf8');
+const prev = app.match(/\nconst BRODY_NEURO=(.*?);\n/);
+if (!prev) { console.error('could not find BRODY_NEURO in index.html'); process.exit(1); }
+const old = JSON.parse(prev[1]);
+if (old.artWeek) blk.artWeek = old.artWeek;
+app = app.slice(0, prev.index) + '\nconst BRODY_NEURO=' + JSON.stringify(blk) + ';\n' + app.slice(prev.index + prev[0].length);
+fs.writeFileSync(APP, app);
+console.error('spliced BRODY_NEURO into index.html (reading list carried over: ' + Object.keys(blk.artWeek || {}).length + ' articles)');

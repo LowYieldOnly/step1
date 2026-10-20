@@ -126,8 +126,10 @@ chk('C61-13 …the content depth',
     JSON.stringify(built.contentOff));
 chk('C61-14 …and the pace mode',
     built.free===true, 'brodyFree '+built.free);
+const fullMin=await p.evaluate(()=>{const c=S.cfg,off=c.contentOff;delete c.contentOff;reflow();
+  const m=SCHED.stats.totalMin;c.contentOff=off;reflow();return m;});
 chk('C61-15 …and the plan that comes out is the Minimal one, not the full one',
-    built.min_ < 50*60 && built.pace<=4.5, Math.round(built.min_/60)+' h at '+built.pace+' h/day');
+    built.min_ < fullMin*0.75, Math.round(built.min_/60)+' h Minimal vs '+Math.round(fullMin/60)+' h in full');
 
 // ---------- 4. a reading-only plan can be BUILT, which the old gate blocked ----------
 const readOnly=await p.evaluate(()=>{

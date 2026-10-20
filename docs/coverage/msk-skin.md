@@ -17,7 +17,7 @@ does not exist, and a resource scheduled after its lecture's quiz.
 
 - **Week 1 · Medical Disorders Presenting as Psychiatric Disorders** — nothing addresses medical mimics of psychiatric illness as a topic; delirium is the nearest, studied in Nervous & Sensory
 - **Week 1 · SDOH V (Disability Access)** — social determinants / disability access — no resource in the six covers it
-- **Week 2 · Anti-gout Drugs and Dermatologic Drugs (2 of 2)** — dermatologic drugs as a topic (retinoids, topical steroids, calcineurin inhibitors) are in none of the six resources; only imiquimod and terbinafine have videos
+- **Week 2 · Anti-gout Drugs and Dermatologic Drugs (2 of 2)** — dermatologic drugs as a topic (retinoids, topical steroids, calcineurin inhibitors) are in none of the six resources; only imiquimod and the antifungals (terbinafine, griseofulvin) have videos
 - **Week 2 · Family Care-Giving** — caregiving / caregiver burden — no resource in the six covers it
 - **Week 3 · Fever of Unknown Origin** — no resource covers FUO itself; the differential (TB, Still disease, vasculitis, neutropenic fever) is covered piecemeal
 - **Week 3 · Flipped Classroom. Diathesis-Stress Model** — the diathesis-stress model of psychopathology — no resource in the six covers it
@@ -77,6 +77,7 @@ does not exist, and a resource scheduled after its lecture's quiz.
 
 - **B&B** (1): Skin Infections
 - **Pathoma** (1): 19.5 Infectious Disorders
+- **Sketchy Pharm** (1): Acyclovir, Valacyclovir, Famciclovir
 - **Bootcamp** (5): Bacterial Infectious Diseases · Herpes Simplex and Varicella Infections · Viral Infectious Conditions · Candida · Fungal Infectious Conditions
 - **UWorld article** (15): Cellulitis and skin abscess (skin and soft tissue infections) · Impetigo · Erysipelas · Dermatophyte (tinea) infections · Tinea versicolor · Cutaneous warts · Molluscum contagiosum · Scabies · Lice · Herpes simplex virus (HSV) · Herpes zoster (shingles) · Staphylococcus · Pediatric viral exanthems · Scarlet fever · Sporotrichosis
 
@@ -123,6 +124,7 @@ does not exist, and a resource scheduled after its lecture's quiz.
 
 - **B&B** (1): Muscle Disorders
 - **Pathoma** (2): 18.4 Skeletal Muscle · 18.5 Neuromuscular Junction
+- **Sketchy Pharm** (1): Skeletal Muscle Relaxants
 - **Bootcamp** (8): Skeletal Muscle - Overview · Skeletal Muscle Depolarization · Muscle Contraction and Relaxation · Malignant Hyperthermia · Metabolic Exercise Physiology · Sarcomere · Muscle Proprioception · Board-style Question Breakdown
 - **UWorld article** (9): Idiopathic inflammatory myopathies: Dermatomyositis and polymyositis · Polymyalgia rheumatica · Rhabdomyolysis · Drug-induced myopathy · Mitochondrial myopathies · Duchenne and Becker muscular dystrophy · Adult-onset Still disease · Autoinflammatory diseases (including familial Mediterranean fever) · IgG4-related disease
 
@@ -154,20 +156,23 @@ does not exist, and a resource scheduled after its lecture's quiz.
 ### Management of Rheumatoid Arthritis · Pharm
 
 - **B&B** (2): Immunosuppressive Drugs · Glucocorticoids and NSAIDs
+- **Sketchy Pharm** (5): Methotrexate, Leucovorin, 5-Fluorouracil, Hydroxyurea · Azathioprine, 6-Mercaptopurine, Mycophenolate Mofetil · TNF Inhibitors · Glucocorticoids · Immunosuppressants _(earlier: Hematology & Renal)_
 - **Bootcamp** (2): TNF-a Inhibitors & Monoclonal Antibodies · Imiquimod & Leflunomide
 - **UWorld article** (2): Immunosuppressive therapy: Conventional immunosuppressants · Immunosuppressive therapy: Biologics & targeted immunosuppressants
 
 ### Anti-gout Drugs and Dermatologic Drugs (1 of 2) · Pharm
 
 - **B&B** (1): Gout Drugs
+- **Sketchy Pharm** (2): Gout Drugs _(earlier: Hematology & Renal)_ · NSAIDs _(earlier: Hematology & Renal)_
 - **Bootcamp** (4): Gout Medications · NSAIDs · Aspirin & Celecoxib · Arachidonic Acid Pathways
 - **UWorld article** (4): Nonsteroidal anti-inflammatory drugs (NSAIDs) · COX-1 and COX-2 inhibitors · Eicosanoids · Crystal arthropathies: gout and pseudogout
 
 ### Anti-gout Drugs and Dermatologic Drugs (2 of 2) · Pharm
 
-**Partly covered.** dermatologic drugs as a topic (retinoids, topical steroids, calcineurin inhibitors) are in none of the six resources; only imiquimod and terbinafine have videos.
+**Partly covered.** dermatologic drugs as a topic (retinoids, topical steroids, calcineurin inhibitors) are in none of the six resources; only imiquimod and the antifungals (terbinafine, griseofulvin) have videos.
 
 - **B&B** (1): Osteoporosis Drugs
+- **Sketchy Pharm** (3): Griseofulvin, Terbinafine, Echinocandins · Bisphosphonates, Raloxifene, Denosumab, Calcitonin · Teriparatide, Vitamin D, Cinacalcet, Sevelamer
 - **Bootcamp** (3): Imiquimod & Leflunomide · Allylamines, Echinocandins, and Polyenes · Bisphosphonates, Denosumab, & Teriparatide
 - **UWorld article** (2): Osteoporosis management · Vitamin D analogues
 
@@ -228,6 +233,7 @@ _Not board material — problem-based learning and advising._
 
 - **B&B** (4): HIV · HIV CNS Infections · HIV Drugs · Opportunistic Fungal Infections
 - **Sketchy Micro** (5): Candida albicans · Aspergillus fumigatus · Crytococcus neoformans · Mucormycosis (Mucor spp. & Rhizopus spp.) · Pneumocystis jirovecii
+- **Sketchy Pharm** (7): NRTIs · NNRTIs · Protease Inhibitors · Maraviroc, Fusion Inhibitors, Integrase Inhibitors · Amphotericin & Flucytosine · Azoles · Ganciclovir, Valganciclovir, Foscarnet, Cidofovir
 - **UWorld article** (13): Acute HIV infection · HIV lifecycle · HIV antiretroviral therapy (ART) and the immune reconstitution inflammatory syndrome (IRIS) · Pneumocystis jirovecii pneumonia · Candida infections · Aspergillosis · Cryptococcal meningoencephalitis · Cytomegalovirus (CMV) · Toxoplasmosis · Acute invasive fungal rhinosinusitis · Neutropenic fever · Solid organ transplant: Complications · Kaposi sarcoma
 
 ### Zoonotic Infections · Path · ID
@@ -240,6 +246,7 @@ _Not board material — problem-based learning and advising._
 
 - **B&B** (1): Granulomatous Inflammation
 - **Sketchy Micro** (7): Mycobacterium tuberculosis · Mycobacterium leprae · Mycobacterium avium intracellulare, scrofulaceum, marinum · Histoplasma capsulatum · Blastomycosis dermatitidis · Coccidiomycosis immitis · Paracoccidioidomycosis brasiliensis
+- **Sketchy Pharm** (2): Tuberculosis Drugs · Leprosy Drugs
 - **UWorld article** (9): Tuberculosis · Nontuberculous mycobacteria (NTM) · Leprosy (Hansen disease): Mycobacterium leprae infection · Histoplasmosis · Blastomycosis · Coccidioidomycosis · Paracoccidioidomycosis · Sarcoidosis · Chronic granulomatous disease
 
 ### Back Pain · Clin App

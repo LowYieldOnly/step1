@@ -93,6 +93,8 @@ const pharm=await p.evaluate(()=>{
     skAll:catVideos().filter(v=>v.res==='skpharm'&&v.sys!=='Cardiology'&&v.sys!=='Pulmonary').length,
     skKept:SCHED.planItems.filter(v=>v.res==='skpharm').length,
     paKept:SCHED.planItems.filter(v=>v.res==='pathoma').length,
+    skAll:catVideos().filter(v=>v.res==='skpharm'&&brodyInBlock(brodyBlockById('neuro-sensory'),v)).length,
+    paAll:catVideos().filter(v=>v.res==='pathoma'&&brodyInBlock(brodyBlockById('neuro-sensory'),v)).length,
     // B&B's own drug videos sitting inside an otherwise-physiology section
     bnbDrugs:['Adrenergic Drugs I','Adrenergic Drugs II','Cholinergic Drugs','Cholinergic Toxidromes',
               'Anticonvulsants I','Anticonvulsants II','Antidepressants','Lithium','Antipsychotics']
@@ -108,7 +110,7 @@ chk('C60-5 Minimal keeps all 15 autonomic DRUG videos Bootcamp files under a phy
 chk('C60-6 …while dropping the 5 autonomic physiology videos beside them',
     pharm.nPhysio===5&&pharm.physioDropped===5, pharm.physioDropped+' of '+pharm.nPhysio+' dropped');
 chk('C60-7 Minimal keeps every Sketchy Pharm sketch and every Pathoma chapter',
-    pharm.skKept===23&&pharm.paKept===7, 'sketchy '+pharm.skKept+', pathoma '+pharm.paKept);
+    pharm.skKept===pharm.skAll&&pharm.paKept===pharm.paAll&&pharm.skAll>=23, 'sketchy '+pharm.skKept+', pathoma '+pharm.paKept);
 chk('C60-8 …and B&B’s drug videos, including those inside physiology sections',
     pharm.bnbDrugs===9, pharm.bnbDrugs+' of 9 kept');
 chk('C60-9 …and pathology that shares a heading with anatomy',
@@ -121,8 +123,8 @@ chk('C60-10 Minimal is a strict subset of Comprehensive — it only ever removes
 chk('C60-11 …dropping 228 items and 33 of the 82 hours',
     FULL.items-MIN.items===228&&Math.round((FULL.min-MIN.min)/60)===33,
     'items '+FULL.items+'→'+MIN.items+', h '+Math.round(FULL.min/60)+'→'+Math.round(MIN.min/60));
-chk('C60-12 …which is what takes this unit from 7 h/day to 4.5',
-    FULL.pace===7&&MIN.pace===4.5, FULL.pace+' → '+MIN.pace);
+chk('C60-12 …which takes this unit from '+FULL.pace+' h/day to '+MIN.pace+' — at least two hours a day less',
+    MIN.pace<=FULL.pace-2, FULL.pace+' → '+MIN.pace);
 chk('C60-13 …and everything still lands before the review buffer',
     MIN.tail!==null&&MIN.tail<MIN.cutoff&&MIN.scheduled===MIN.items,
     'tail '+MIN.tail+' cutoff '+MIN.cutoff+', scheduled '+MIN.scheduled+' of '+MIN.items);
@@ -216,10 +218,12 @@ chk('C60-25 the opt-out picker does not offer what Minimal already removed',
 const audit=await p.evaluate(()=>{
   window.__mk({off:window.ALLOFF});
   const a=auditBlock(brodyBlockById('neuro-sensory'));
-  return {total:a.total,unmapped:a.unmapped.length,orphans:a.orphans.length};
+  const b=brodyBlockById('neuro-sensory');
+  return {total:a.total,unmapped:a.unmapped.length,orphans:a.orphans.length,
+    expect:catVideos().filter(v=>brodyInBlock(b,v)).length};
 });
 chk('C60-26 the content audit is unaffected — it audits the map, not your switches',
-    audit.total===655&&audit.unmapped===0&&audit.orphans===0, JSON.stringify(audit));
+    audit.total===audit.expect&&audit.unmapped===0&&audit.orphans===0, JSON.stringify(audit));
 
 // ---------- 8. persistence ----------
 const sync=await p.evaluate(()=>{

@@ -232,6 +232,34 @@ const include = {
   // dermatophyte drug, is in no other unit
   "bootcamp|Infectious Disease|Antifungals|Allylamines, Echinocandins, and Polyenes":2,
 
+  // ---- Sketchy Pharm, from Sketchy's full list (2026-10-20), for named lectures ----
+  // Each video's own unit is elsewhere (or not built yet); these are the ones this
+  // unit's lectures teach, pulled in the same way as the ID videos above.
+  // Clin App · Skin Infections (week 1) — HSV / VZV
+  "skpharm|Infectious Disease|Other Antivirals|Acyclovir, Valacyclovir, Famciclovir":1,
+  // PHARM · Management of RA (week 2)
+  "skpharm|Hematology|Antimetabolites|Methotrexate, Leucovorin, 5-Fluorouracil, Hydroxyurea":2,
+  "skpharm|Hematology|Antimetabolites|Azathioprine, 6-Mercaptopurine, Mycophenolate Mofetil":2,
+  "skpharm|Hematology|Anti-Inflammatory|TNF Inhibitors":2,
+  "skpharm|Endocrinology|Thyroid, Parathyroid, Adrenal|Glucocorticoids":2,
+  // PHARM · Anti-gout and Dermatologic Drugs; Bone: Non-Neoplastic (week 2)
+  "skpharm|Infectious Disease|Antifungals|Griseofulvin, Terbinafine, Echinocandins":2,
+  "skpharm|Endocrinology|Thyroid, Parathyroid, Adrenal|Bisphosphonates, Raloxifene, Denosumab, Calcitonin":2,
+  "skpharm|Endocrinology|Thyroid, Parathyroid, Adrenal|Teriparatide, Vitamin D, Cinacalcet, Sevelamer":2,
+  // PATH · Skeletal Muscle (week 2) — in Neuro too, which finished before it existed
+  "skpharm|Neurology|Muscle Relaxants|Skeletal Muscle Relaxants":2,
+  // PATH · Granulomatous Diseases (week 3)
+  "skpharm|Infectious Disease|Antimycobacterials|Tuberculosis Drugs":3,
+  "skpharm|Infectious Disease|Antimycobacterials|Leprosy Drugs":3,
+  // PATH · Immunocompromised Host (week 3)
+  "skpharm|Infectious Disease|HIV Antivirals|NRTIs":3,
+  "skpharm|Infectious Disease|HIV Antivirals|NNRTIs":3,
+  "skpharm|Infectious Disease|HIV Antivirals|Protease Inhibitors":3,
+  "skpharm|Infectious Disease|HIV Antivirals|Maraviroc, Fusion Inhibitors, Integrase Inhibitors":3,
+  "skpharm|Infectious Disease|Antifungals|Amphotericin & Flucytosine":3,
+  "skpharm|Infectious Disease|Antifungals|Azoles":3,
+  "skpharm|Infectious Disease|Other Antivirals|Ganciclovir, Valganciclovir, Foscarnet, Cidofovir":3,
+
   // Psych · Flipped Classroom. Difficult Encounters (week 3) — in no other unit
   "bootcamp|Behavioral Science|Communication|Interviewing Patients":3,
   "bootcamp|Behavioral Science|Communication|Inclusive Interviewing":3,

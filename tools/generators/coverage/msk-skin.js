@@ -60,7 +60,7 @@ export const LECTURES = [
     'uw:Cellulitis and skin abscess (skin and soft tissue infections)', 'uw:Impetigo', 'uw:Erysipelas',
     'uw:Dermatophyte (tinea) infections', 'uw:Tinea versicolor', 'uw:Cutaneous warts', 'uw:Molluscum contagiosum',
     'uw:Scabies', 'uw:Lice', 'uw:Herpes simplex virus (HSV)', 'uw:Herpes zoster (shingles)', 'uw:Staphylococcus',
-    'uw:Pediatric viral exanthems', 'uw:Scarlet fever', 'uw:Sporotrichosis'] },
+    'uw:Pediatric viral exanthems', 'uw:Scarlet fever', 'uw:Sporotrichosis', 'skpharm:Acyclovir, Valacyclovir, Famciclovir'] },
   { w:1, title:'Skin Signs of Internal Disorders', items:[
     'uw:Acanthosis nigricans', 'uw:Erythema nodosum', 'uw:Pyoderma gangrenosum', 'uw:Dermatitis herpetiformis',
     'uw:Sturge-Weber syndrome', 'bnb:Neurocutaneous Disorders'] },
@@ -90,7 +90,7 @@ export const LECTURES = [
     'uw:Idiopathic inflammatory myopathies: Dermatomyositis and polymyositis', 'uw:Polymyalgia rheumatica',
     'uw:Rhabdomyolysis', 'uw:Drug-induced myopathy', 'uw:Mitochondrial myopathies',
     'uw:Duchenne and Becker muscular dystrophy', 'uw:Adult-onset Still disease',
-    'uw:Autoinflammatory diseases (including familial Mediterranean fever)', 'uw:IgG4-related disease'] },
+    'uw:Autoinflammatory diseases (including familial Mediterranean fever)', 'uw:IgG4-related disease', 'skpharm:Skeletal Muscle Relaxants'] },
   { w:2, title:'Joints', items:[
     'pathoma:18.3 Joint', 'bnb:Arthritis', 'uw:Osteoarthritis', 'uw:Histology: Cartilage'] },
   { w:2, title:'Bone: Non-Neoplastic (1 of 2)', items:[
@@ -109,18 +109,22 @@ export const LECTURES = [
     'bc:Musculoskeletal|Pharmacology|TNF-a Inhibitors & Monoclonal Antibodies',
     'bc:Musculoskeletal|Pharmacology|Imiquimod & Leflunomide',
     'uw:Immunosuppressive therapy: Conventional immunosuppressants',
-    'uw:Immunosuppressive therapy: Biologics & targeted immunosuppressants'] },
+    'uw:Immunosuppressive therapy: Biologics & targeted immunosuppressants',
+    'skpharm:Methotrexate, Leucovorin, 5-Fluorouracil, Hydroxyurea', 'skpharm:Azathioprine, 6-Mercaptopurine, Mycophenolate Mofetil',
+    'skpharm:TNF Inhibitors', 'skpharm:Glucocorticoids', 'skpharm:Immunosuppressants'] },
   { w:2, title:'Anti-gout Drugs and Dermatologic Drugs (1 of 2)', items:[
     'bnb:Gout Drugs', 'bc:Musculoskeletal|Pharmacology|Gout Medications', 'bc:Musculoskeletal|Pharmacology|NSAIDs',
     'bc:Musculoskeletal|Pharmacology|Aspirin & Celecoxib', 'bc:Musculoskeletal|Pharmacology|Arachidonic Acid Pathways',
     'uw:Nonsteroidal anti-inflammatory drugs (NSAIDs)', 'uw:COX-1 and COX-2 inhibitors', 'uw:Eicosanoids',
-    'uw:Crystal arthropathies: gout and pseudogout'] },
+    'uw:Crystal arthropathies: gout and pseudogout', 'skpharm:Gout Drugs', 'skpharm:NSAIDs'] },
   { w:2, title:'Anti-gout Drugs and Dermatologic Drugs (2 of 2)', items:[
     'bc:Musculoskeletal|Pharmacology|Imiquimod & Leflunomide',
     'bc:Infectious Disease|Antifungals|Allylamines, Echinocandins, and Polyenes',
     'bc:Musculoskeletal|Pharmacology|Bisphosphonates, Denosumab, & Teriparatide', 'bnb:Osteoporosis Drugs',
-    'uw:Osteoporosis management', 'uw:Vitamin D analogues'],
-    partial:'dermatologic drugs as a topic (retinoids, topical steroids, calcineurin inhibitors) are in none of the six resources; only imiquimod and terbinafine have videos' },
+    'uw:Osteoporosis management', 'uw:Vitamin D analogues',
+    'skpharm:Griseofulvin, Terbinafine, Echinocandins',
+    'skpharm:Bisphosphonates, Raloxifene, Denosumab, Calcitonin', 'skpharm:Teriparatide, Vitamin D, Cinacalcet, Sevelamer'],
+    partial:'dermatologic drugs as a topic (retinoids, topical steroids, calcineurin inhibitors) are in none of the six resources; only imiquimod and the antifungals (terbinafine, griseofulvin) have videos' },
   { w:2, title:'Soft Tissue', items:[
     'uw:Bursitis', 'uw:Adhesive capsulitis', 'uw:Rotator cuff syndrome', 'uw:Elbow tendinopathy',
     'uw:De Quervain tendinopathy', 'uw:Dupuytren contracture', 'uw:Ganglion cyst', 'uw:Popliteal (Baker) cyst',
@@ -172,7 +176,9 @@ export const LECTURES = [
     'uw:Pneumocystis jirovecii pneumonia', 'uw:Candida infections', 'uw:Aspergillosis',
     'uw:Cryptococcal meningoencephalitis', 'uw:Cytomegalovirus (CMV)', 'uw:Toxoplasmosis',
     'uw:Acute invasive fungal rhinosinusitis', 'uw:Neutropenic fever', 'uw:Solid organ transplant: Complications',
-    'uw:Kaposi sarcoma'] },
+    'uw:Kaposi sarcoma',
+    'skpharm:NRTIs', 'skpharm:NNRTIs', 'skpharm:Protease Inhibitors', 'skpharm:Maraviroc, Fusion Inhibitors, Integrase Inhibitors',
+    'skpharm:Amphotericin & Flucytosine', 'skpharm:Azoles', 'skpharm:Ganciclovir, Valganciclovir, Foscarnet, Cidofovir'] },
   { w:3, title:'Zoonotic Infections', items:[
     'bnb:Zoonotic Infections', 'skmicro:Bartonella henselae', 'skmicro:Brucella', 'skmicro:Francisella tularensis',
     'skmicro:Pasturella multocida', 'skmicro:Anaplasma phagocytophilum & Ehrlichia chaffeensis',
@@ -186,7 +192,8 @@ export const LECTURES = [
     'skmicro:Blastomycosis dermatitidis', 'skmicro:Coccidiomycosis immitis', 'skmicro:Paracoccidioidomycosis brasiliensis',
     'uw:Tuberculosis', 'uw:Nontuberculous mycobacteria (NTM)',
     'uw:Leprosy (Hansen disease): Mycobacterium leprae infection', 'uw:Histoplasmosis', 'uw:Blastomycosis',
-    'uw:Coccidioidomycosis', 'uw:Paracoccidioidomycosis', 'uw:Sarcoidosis', 'uw:Chronic granulomatous disease'] },
+    'uw:Coccidioidomycosis', 'uw:Paracoccidioidomycosis', 'uw:Sarcoidosis', 'uw:Chronic granulomatous disease',
+    'skpharm:Tuberculosis Drugs', 'skpharm:Leprosy Drugs'] },
   { w:3, title:'Back Pain', items:[
     'bnb:Lumbar Radiculopathy', 'bnb:Common Musculoskeletal Conditions', 'bc:Musculoskeletal|Spine',
     'bc:Musculoskeletal|Anatomy — Back', 'uw:Low back pain', 'uw:Cauda equina syndrome', 'uw:Neck pain',
