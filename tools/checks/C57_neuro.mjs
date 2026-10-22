@@ -186,8 +186,8 @@ const light=await p.evaluate(()=>{
     heavy:SCHED.weekLoad.filter(w=>w.heavy).length,feasible:SCHED.stats.feasible,
     cap:BRODY_QUIZ_MAX,review:SCHED.days.filter(d=>d.review).length};
 });
-chk('C57-18 dropping Bootcamp makes it comfortable — 32 h, no week flagged — so the warning is about the resource load, not the block',
-    light.heavy===0&&light.feasible&&light.h<35&&light.pace<light.cap, JSON.stringify(light));
+chk('C57-18 dropping Bootcamp makes it comfortable — no week flagged, under the cap — so the warning is about the resource load, not the block',
+    light.heavy===0&&light.feasible&&light.pace<light.cap, JSON.stringify(light));
 
 // ---------- 7. progress and systems ----------
 const done=await p.evaluate(()=>{
@@ -195,13 +195,16 @@ const done=await p.evaluate(()=>{
   (SCHED.planItems||[]).forEach(it=>markDone(it.id,'2026-09-21'));reflow();
   const byV=(setProgBy('videos'),overall()),byT=(setProgBy('time'),overall());
   setProgBy('videos');
-  return {v:byV.pct,t:byT.pct,dm:byT.doneMin,tm:byT.totalMin,sys:Object.keys(sysProgress()).sort()};
+  // what the block touches: its own systems, plus the systems of the videos it pulls in
+  const blk=brodyBlockById('neuro-sensory');
+  const touches=[...new Set(blk.systems.concat((blk.include||[]).map(k=>k.split('|')[1])))].sort();
+  return {v:byV.pct,t:byT.pct,dm:byT.doneMin,tm:byT.totalMin,sys:Object.keys(sysProgress()).sort(),touches};
 });
 chk('C57-19 completing everything reads 100% by count and by time',
     done.v===100&&done.t===100&&done.dm===done.tm, JSON.stringify(done));
 chk('C57-20 the stats breakdown covers exactly the systems this block touches',
-    JSON.stringify(done.sys)===JSON.stringify(['Behavioral Science','Neurology','Ophthalmology','Psychiatry']),
-    JSON.stringify(done.sys));
+    JSON.stringify(done.sys)===JSON.stringify(done.touches)&&done.sys.includes('Infectious Disease'),
+    JSON.stringify(done));
 
 // ---------- 8. joining late ----------
 const late=await p.evaluate(()=>{

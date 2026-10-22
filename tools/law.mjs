@@ -8,7 +8,8 @@
  *   L1  a unit's lecture coverage doesn't pass (tools/generators/mk_coverage.js --check)
  *   L2  a video a unit holds has no explicit week (it would silently fall to the last week)
  *   L3  a catalog video that no unit holds and nothing declares — or whose declared unit's
- *       start date has passed without it being held (tools/law-homes.js)
+ *       start date has passed without it being held (tools/law-homes.js). A resource that
+ *       has left the repertoire (RETIRED there) is no longer owed new homes.
  *   L4  a lecture that teaches a system (by title) with no video of that system in its week
  * PENDING (listed, never silent): units without a coverage file yet, and videos declared as
  *   waiting for a named unit that hasn't started or whose calendar hasn't been supplied.
@@ -21,7 +22,7 @@ import fs from 'fs';
 import path from 'path';
 import { spawnSync } from 'child_process';
 import { fileURLToPath } from 'url';
-import { WAITING, SENTINELS } from './law-homes.js';
+import { WAITING, SENTINELS, RETIRED } from './law-homes.js';
 
 const REPO = path.join(path.dirname(fileURLToPath(import.meta.url)), '..');
 const brief = process.argv.includes('--brief');
@@ -60,8 +61,10 @@ const declared = (v) => {
 };
 const groups = {};   // unit name → {n, from, note, systems}
 const undeclared = {};   // system → videos no unit holds and nothing declares
+const retiredUnheld = {};   // resource → videos no unit holds, not owed a home any more
 vids.forEach(v => {
   if (units.some(u => holds(u, v))) return;
+  if (RETIRED[v.res]) { (retiredUnheld[v.res] = retiredUnheld[v.res] || []).push(v); return; }
   const excludedBy = units.find(u => u.systems.includes(v.sys) && (u.exclude || []).includes(K(v)));
   const d = declared(v) || (excludedBy ? WAITING['§excluded'] && WAITING['§excluded'].rules.find(r => r.match(v)) : null);
   if (!d) { (undeclared[v.sys] = undeclared[v.sys] || []).push(v); return; }
@@ -92,4 +95,5 @@ console.log(LAW);
 console.log(fail.length ? 'LAW BROKEN — ' + fail.length + ' failure' + (fail.length === 1 ? '' : 's') : 'Law holds — no failures.');
 process.stdout.write(list('FAILURES', fail));
 process.stdout.write(list('PENDING — named, outstanding, never silent', pending).replace(/✗/g, '…'));
+Object.entries(RETIRED).forEach(([r, d]) => console.log('RETIRED ' + r + ': ' + (retiredUnheld[r] || []).length + ' of its videos held by no unit and no longer owed one — ' + d.note));
 process.exit(fail.length ? 1 : 0);

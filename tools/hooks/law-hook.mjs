@@ -1,7 +1,7 @@
 /* Claude Code hooks that keep the #1 law in front of every session (.claude/settings.json).
  *
- *   session  SessionStart: states the law verbatim and runs the audit, so every session —
- *            and every session after a compaction — starts knowing where the law stands.
+ *   session  SessionStart: states the law verbatim, the deploy rule, and runs the audit, so
+ *            every session — and every session after a compaction — starts knowing both.
  *   post     PostToolUse: if index.html, the catalog, coverage, the declarations or a
  *            generator changed since the last audit, re-runs it and feeds the result back.
  *            Silent when nothing relevant changed, so it costs nothing on ordinary edits.
@@ -19,6 +19,8 @@ const STATE = path.join(REPO, '.git', 'law-hook-state.json');
 const mode = process.argv[2];
 
 const LAW = 'THE #1 LAW (Dylan, verbatim): "Always remember that our #1 law is to make sure every brody lecture is mapped to third party, and that the sum total videos within a resource are watched in that specific system even if brody does not cover that topic."';
+// Dylan, 2026-10-22: "don't deploy a new plan/plan update without my approval".
+const DEPLOY = 'THE DEPLOY RULE (Dylan): never deploy a new plan or a plan update — no PR merge to main, no Pages deploy — without Dylan\'s explicit approval of that specific deploy. Committing and pushing to the working branch is fine; going live is his call, every time.';
 
 function signature() {
   const files = ['index.html', 'catalog.json', 'coverage.json', 'tools/law-homes.js', 'tools/law.mjs'];
@@ -39,7 +41,8 @@ const writeState = s => { try { fs.writeFileSync(STATE, JSON.stringify(s)); } ca
 if (mode === 'session') {
   const a = audit();
   writeState({ sig: signature(), ok: a.ok, out: a.out });
-  console.log(LAW + '\n\nIt is non-negotiable: when a lecture or a resource system has no home, fix it — do not ask whether to. Run `node tools/law.mjs` for the full audit.\n\n' + a.out);
+  console.log(LAW + '\n\nIt is non-negotiable: when a lecture or a resource system has no home, fix it — do not ask whether to. Run `node tools/law.mjs` for the full audit.\n\n'
+    + DEPLOY + '\n\n' + a.out);
   process.exit(0);
 }
 
