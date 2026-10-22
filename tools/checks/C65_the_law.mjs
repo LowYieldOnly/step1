@@ -77,6 +77,11 @@ const r = spawnSync(process.execPath, [path.join(REPO, 'tools/generators/mk_skph
 chk('C65-7 mk_skpharm.js passes: every Sketchy video is in its system\'s unit, excluded with a reason, or waiting for a unit',
     r.status === 0 && /already has all 117/.test(r.stdout), (r.stdout + r.stderr).trim().split('\n').slice(0, 4).join(' | '));
 
+// ---------- the full audit, the same one every session and every edit runs ----------
+const audit = spawnSync(process.execPath, [path.join(REPO, 'tools/law.mjs'), '--brief'], { encoding: 'utf8' });
+chk('C65-9 tools/law.mjs passes: every video held by a unit or waiting for a named one, every infection lecture has infection videos',
+    audit.status === 0, (audit.stdout + audit.stderr).trim().split('\n').filter(l => /✗|BROKEN/.test(l)).slice(0, 6).join(' | '));
+
 chk('C65-8 no uncaught page errors', errors.length === 0, errors.slice(0, 3).join(' | '));
 await close();
 process.exit(report() ? 1 : 0);
