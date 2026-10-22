@@ -17,6 +17,14 @@
  */
 import { WAITING as ID_WAITING, matchRef } from './generators/data/id-homes.js';
 
+/* Resources that have left the repertoire. Their videos are no longer owed a home: the units
+   already built keep the ones they hold (students mid-plan still use them), but nothing new
+   is mapped and the audit doesn't ask for it. */
+export const RETIRED = {
+  bootcamp: { since: '2026-10-22',
+    note: 'leaves the repertoire after the Musculoskeletal & Skin unit (Dylan, 2026-10-22); the four built units keep theirs' },
+};
+
 export const WAITING = {
   'Gastroenterology': { unit: 'GI, Nutrition & Multisystem (SYST 9500)', from: '2026-11-09',
     note: 'the next M2 unit; build it before it starts' },

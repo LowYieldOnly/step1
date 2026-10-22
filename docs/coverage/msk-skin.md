@@ -75,8 +75,9 @@ does not exist, and a resource scheduled after its lecture's quiz.
 
 ### Skin Infections · Clin App
 
-- **B&B** (1): Skin Infections
+- **B&B** (6): Staphylococci · Streptococci · Fungal Skin Infections · Herpes Viruses · DNA Viruses · Skin Infections
 - **Pathoma** (1): 19.5 Infectious Disorders
+- **Sketchy Micro** (18): Staphylococcus aureus · Staphylococcus epidermidis, saprophyticus · Streptococcus pyogenes (Group A Strep) · Clostridium perfringens · Pseudomonas · Herpes Simplex Virus Types 1 & 2 (Herpesviridae) · Varicella Zoster Virus (Herpesviridae) · HHV6 & Roseola (Herpesviridae) · Human Papillomavirus (HPV) (Papillomaviridae) · Smallpox Virus, Cowpox Virus, and Molluscum Contagiosum Virus (Poxviridae) · Parvovirus B19 (Parvoviridae) · Measles, Mumps, Parainfluenza Viruses (Paramyxovirus) · Rubella VIrus (Matonaviridae) · Malassezia furfur, Pityriasis versicolor · Dermatophytes (Epidermophyton spp., Trichophyton spp., Microsporum spp.) · Sporothrix schenckii · Leishmania species · Scabies, Lice, Crabs
 - **Sketchy Pharm** (1): Acyclovir, Valacyclovir, Famciclovir
 - **Bootcamp** (5): Bacterial Infectious Diseases · Herpes Simplex and Varicella Infections · Viral Infectious Conditions · Candida · Fungal Infectious Conditions
 - **UWorld article** (15): Cellulitis and skin abscess (skin and soft tissue infections) · Impetigo · Erysipelas · Dermatophyte (tinea) infections · Tinea versicolor · Cutaneous warts · Molluscum contagiosum · Scabies · Lice · Herpes simplex virus (HSV) · Herpes zoster (shingles) · Staphylococcus · Pediatric viral exanthems · Scarlet fever · Sporotrichosis
@@ -226,26 +227,26 @@ _Not board material — problem-based learning and advising._
 
 ### Clinical Diagnosis of Infectious Diseases; Laboratory Practices · Path · ID
 
-- **B&B** (7): Bacteria · Shapes and Stains · Bacterial Culture · Special Growth Requirements · Virulence · Growth and Genetics · Bacterial Identification
+- **B&B** (8): Virus Structures · Bacteria · Shapes and Stains · Bacterial Culture · Special Growth Requirements · Virulence · Growth and Genetics · Bacterial Identification
 - **UWorld article** (1): Basic bacteriology: Structure, virulence factors, and genetics
 
 ### Immunocompromised Host · Path · ID
 
-- **B&B** (4): HIV · HIV CNS Infections · HIV Drugs · Opportunistic Fungal Infections
-- **Sketchy Micro** (5): Candida albicans · Aspergillus fumigatus · Cryptococcus neoformans · Mucor spp. & Rhizopus spp. (Mucormycetes) · Pneumocystis jirovecii
+- **B&B** (7): Protozoa · Antifungal Drugs · Antiviral Drugs · HIV · HIV CNS Infections · HIV Drugs · Opportunistic Fungal Infections
+- **Sketchy Micro** (11): Nocardia · HIV Overview (Retroviridae) · HIV Life Cycle (Retroviridae) · Cytomegalovirus (Herpesviridae) · HHV8 & Kaposi's sarcoma (Herpesviridae) · Toxoplasmosis · Candida albicans · Aspergillus fumigatus · Crytococcus neoformans · Mucormycosis (Mucor spp. & Rhizopus spp.) · Pneumocystis jirovecii
 - **Sketchy Pharm** (7): NRTIs · NNRTIs · Protease Inhibitors · Maraviroc, Fusion Inhibitors, Integrase Inhibitors · Amphotericin & Flucytosine · Azoles · Ganciclovir, Valganciclovir, Foscarnet, Cidofovir
 - **UWorld article** (13): Acute HIV infection · HIV lifecycle · HIV antiretroviral therapy (ART) and the immune reconstitution inflammatory syndrome (IRIS) · Pneumocystis jirovecii pneumonia · Candida infections · Aspergillosis · Cryptococcal meningoencephalitis · Cytomegalovirus (CMV) · Toxoplasmosis · Acute invasive fungal rhinosinusitis · Neutropenic fever · Solid organ transplant: Complications · Kaposi sarcoma
 
 ### Zoonotic Infections · Path · ID
 
-- **B&B** (1): Zoonotic Infections
-- **Sketchy Micro** (5): Bartonella henselae · Brucella spp. · Francisella tularensis · Pasteurella multocida · Anaplasma phagocytophilum & Ehrlichia chaffeensis
+- **B&B** (2): Spirochetes · Zoonotic Infections
+- **Sketchy Micro** (17): Borrelia burgdorferi · Borrelia recurrentis · Leptospirosis interrogans · Coxiella burnetii · Rickettsia Species Overview · Rickettsia prowazekii · Rickettsia rickettsii · Yersinia enterocolitica, pestis · Bacillus anthracis, cereus · Rabies Virus (Rhabdovirus) · Ebolavirus & Marburgvirus (Filoviridae) · Tissue Nematodes · Bartonella henselae · Brucella · Francisella tularensis · Pasturella multocida · Anaplasma phagocytophilum & Ehrlichia chaffeensis
 - **UWorld article** (12): Bartonella henselae infections · Brucellosis · Ehrlichia and Anaplasma · Q fever (Coxiella burnetii infection) · Leptospirosis · Lyme disease · Rocky Mountain Spotted Fever · Yersinia pestis · Anthrax · Rabies · Animal and human bites · Cutaneous larva migrans
 
 ### Granulomatous Diseases · Path · ID
 
-- **B&B** (1): Granulomatous Inflammation
-- **Sketchy Micro** (7): Mycobacterium tuberculosis · Mycobacterium leprae · Mycobacterium avium intracellulare, Mycobacterium scrofulaceum, Mycobacterium marinum · Histoplasma capsulatum · Blastomyces dermatitidis · Coccidioides immitis · Paracoccidioides brasiliensis
+- **B&B** (3): Mycobacteria · Fungal Pneumonias · Granulomatous Inflammation
+- **Sketchy Micro** (8): Actinomyces israelii · Mycobacterium tuberculosis · Mycobacterium leprae · Mycobacterium avium intracellulare, scrofulaceum, marinum · Histoplasma capsulatum · Blastomycosis dermatitidis · Coccidiomycosis immitis · Paracoccidioidomycosis brasiliensis
 - **Sketchy Pharm** (2): Tuberculosis Drugs · Leprosy Drugs
 - **UWorld article** (9): Tuberculosis · Nontuberculous mycobacteria (NTM) · Leprosy (Hansen disease): Mycobacterium leprae infection · Histoplasmosis · Blastomycosis · Coccidioidomycosis · Paracoccidioidomycosis · Sarcoidosis · Chronic granulomatous disease
 
@@ -268,6 +269,8 @@ _Not board material — case-based learning session; the cases are the school's 
 
 **Partly covered.** no resource covers FUO itself; the differential (TB, Still disease, vasculitis, neutropenic fever) is covered piecemeal.
 
+- **B&B** (1): Malaria _(earlier: Hematology & Renal)_
+- **Sketchy Micro** (1): Plasmodium: Infection & Lifecycle _(earlier: Hematology & Renal)_
 - **UWorld article** (4): Tuberculosis · Adult-onset Still disease · Neutropenic fever · Giant cell (temporal) arteritis
 
 ### Flipped Classroom. Difficult Encounters · Psych

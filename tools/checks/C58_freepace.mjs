@@ -169,11 +169,15 @@ chk('C58-18 on Neuro the unit still does not fit, and says so',
       +' vs quiz '+JSON.stringify(M['neuro-sensory'].quiz.heavy));
 
 // ---------- 5. the days get flatter, and everything still lands ----------
-const sd=v=>{const a=v.perDay.filter(x=>x>0);if(a.length<2)return 0;
+// The last day with work holds the remainder of the division (a 14-minute tail after a run of
+// 270-minute days is arithmetic, not lumpiness), so it is left out in both modes.
+const sd=v=>{const a=v.perDay.filter(x=>x>0).slice(0,-1);if(a.length<2)return 0;
   const m=a.reduce((x,y)=>x+y,0)/a.length;
   return Math.sqrt(a.reduce((x,y)=>x+(y-m)*(y-m),0)/a.length);};
-chk('C58-19 daily loads are no lumpier than under quiz pacing',
-    every((f,q)=>sd(f)<=sd(q)+1e-9),
+// Whole videos are packed into days, so day totals carry a few minutes of granularity either
+// way; a 5-minute tolerance absorbs that and still catches the staircase coming back (tens of minutes).
+chk('C58-19 daily loads are no lumpier than under quiz pacing (within 5 min of packing granularity)',
+    every((f,q)=>sd(f)<=sd(q)+5),
     BLOCKS.map(id=>id+' '+sd(M[id].free).toFixed(1)+'m vs '+sd(M[id].quiz).toFixed(1)+'m').join('; '));
 chk('C58-20 the content still all lands before the review buffer',
     every(f=>f.tail!==null&&f.tail<f.reviewCutoff),
