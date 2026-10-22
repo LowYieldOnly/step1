@@ -236,5 +236,5 @@ Current M2s need it before Nov 9, and it holds the cancer pharmacology that Heme
 
 ## 7. What doesn't change
 
-- Every M2 plan: same unit ids, same schedule (C68 proves it), same sync shape, and same resources, including Bootcamp and Pathoma.
+- Every M2 plan: same unit ids, same schedule (C68 proves it) and the same sync shape. (Bootcamp leaves the repertoire after the Musculoskeletal & Skin unit, decided 2026-10-22; units built before that keep it.)
 - The old M1 Resource Hub and its `m1schedule.json`; the M3 Resource Hub; Step 1 Dedicated; the legacy Step 1 Command Center.

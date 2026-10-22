@@ -4,6 +4,7 @@
  * their own unit's homes), so every writer produces the same blocks.
  */
 import { HOMES, WAITING, matchRef } from '../data/id-homes.js';
+import { RETIRED } from '../../law-homes.js';
 
 export const ID = 'Infectious Disease';
 export const K = v => v.res + '|' + v.sys + '|' + (v.cat || '') + '|' + v.name;
@@ -30,7 +31,7 @@ export function resolveIdHomes(catalogVideos) {
   vids.forEach(v => {
     const k = K(v);
     if (homed.has(k) && waiting.has(k)) problems.push('both homed and waiting: ' + k);
-    if (!homed.has(k) && !waiting.has(k)) problems.push('no home and not waiting: ' + v.res + ' · ' + (v.cat || '') + ' · ' + v.name);
+    if (!homed.has(k) && !waiting.has(k) && !RETIRED[v.res]) problems.push('no home and not waiting: ' + v.res + ' · ' + (v.cat || '') + ' · ' + v.name);
   });
   return { vids, homes, waiting, problems };
 }

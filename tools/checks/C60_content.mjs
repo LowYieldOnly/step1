@@ -188,7 +188,7 @@ chk('C60-21 a plan with no content setting behaves as Comprehensive',
 const combo=await p.evaluate(()=>{
   window.__mk({off:window.ALLOFF,free:true});
   const free={pace:SCHED.brodyPace,heavy:SCHED.weekLoad.filter(w=>w.heavy).length,
-              feasible:SCHED.stats.feasible,items:SCHED.stats.totalItems};
+              feasible:SCHED.stats.feasible,items:SCHED.stats.totalItems,cap:BRODY_QUIZ_MAX};
   window.__mk({off:window.ALLOFF,arts:false});
   const noArts={items:SCHED.stats.totalItems,arts:SCHED.stats.totalArts};
   // opting a video out on top of Minimal
@@ -203,8 +203,8 @@ const combo=await p.evaluate(()=>{
   const picker=planVideosFor(c).length,plan=SCHED.stats.totalItems;
   return {free,noArts,before,skipped,picker,plan};
 });
-chk('C60-22 Minimal + even pace compose, and together make this unit feasible',
-    !combo.empty&&combo.free.pace<=4.5&&combo.free.heavy===0&&combo.free.feasible===true,
+chk('C60-22 Minimal + even pace compose, and together make this unit feasible — under the cap, no week flagged',
+    !combo.empty&&combo.free.pace<combo.free.cap&&combo.free.heavy===0&&combo.free.feasible===true,
     'pace '+combo.free.pace+', flagged weeks '+combo.free.heavy+', feasible '+combo.free.feasible);
 chk('C60-23 Minimal composes with the reading toggle',
     !combo.empty&&combo.noArts.arts===0&&combo.noArts.items===MIN.items-MIN.arts,

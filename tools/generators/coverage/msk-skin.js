@@ -56,6 +56,14 @@ export const LECTURES = [
     'uw:Hidradenitis suppurativa', 'uw:Diaper dermatitis', 'uw:Benign neonatal rashes',
     'uw:Recurrent aphthous stomatitis (canker sores)', 'bnb:Hypersensitivity Disorders'] },
   { w:1, title:'Skin Infections', items:[
+    'bnb:Staphylococci', 'bnb:Streptococci', 'bnb:Fungal Skin Infections', 'bnb:Herpes Viruses', 'bnb:DNA Viruses',
+    'skmicro:Staphylococcus aureus', 'skmicro:Staphylococcus epidermidis, saprophyticus', 'skmicro:Streptococcus pyogenes (Group A Strep)',
+    'skmicro:Clostridium perfringens', 'skmicro:Pseudomonas', 'skmicro:Herpes Simplex Virus Types 1 & 2 (Herpesviridae)',
+    'skmicro:Varicella Zoster Virus (Herpesviridae)', 'skmicro:HHV6 & Roseola (Herpesviridae)', 'skmicro:Human Papillomavirus (HPV) (Papillomaviridae)',
+    'skmicro:Smallpox Virus, Cowpox Virus, and Molluscum Contagiosum Virus (Poxviridae)', 'skmicro:Parvovirus B19 (Parvoviridae)',
+    'skmicro:Measles, Mumps, Parainfluenza Viruses (Paramyxovirus)', 'skmicro:Rubella VIrus (Matonaviridae)',
+    'skmicro:Malassezia furfur, Pityriasis versicolor', 'skmicro:Dermatophytes (Epidermophyton spp., Trichophyton spp., Microsporum spp.)',
+    'skmicro:Sporothrix schenckii', 'skmicro:Leishmania species', 'skmicro:Scabies, Lice, Crabs',
     'pathoma:19.5 Infectious Disorders', 'bnb:Skin Infections', 'bc:Dermatology|Infectious Diseases of the Skin',
     'uw:Cellulitis and skin abscess (skin and soft tissue infections)', 'uw:Impetigo', 'uw:Erysipelas',
     'uw:Dermatophyte (tinea) infections', 'uw:Tinea versicolor', 'uw:Cutaneous warts', 'uw:Molluscum contagiosum',
@@ -164,10 +172,14 @@ export const LECTURES = [
     'uw:Drowning (submersion injury)', 'uw:High altitude illness', 'uw:Decompression illness',
     'uw:Snakebites', 'uw:Spider bites', 'uw:Arthropod bites and infestations'] },
   { w:3, title:'Clinical Diagnosis of Infectious Diseases; Laboratory Practices', items:[
+    'bnb:Virus Structures',
     'bnb:Bacteria', 'bnb:Shapes and Stains', 'bnb:Bacterial Culture', 'bnb:Special Growth Requirements',
     'bnb:Virulence', 'bnb:Growth and Genetics', 'bnb:Bacterial Identification',
     'uw:Basic bacteriology: Structure, virulence factors, and genetics'] },
   { w:3, title:'Immunocompromised Host', items:[
+    'bnb:Protozoa', 'bnb:Antifungal Drugs', 'bnb:Antiviral Drugs', 'skmicro:Nocardia',
+    'skmicro:HIV Overview (Retroviridae)', 'skmicro:HIV Life Cycle (Retroviridae)', 'skmicro:Cytomegalovirus (Herpesviridae)',
+    "skmicro:HHV8 & Kaposi's sarcoma (Herpesviridae)", 'skmicro:Toxoplasmosis',
     'bnb:HIV', 'bnb:HIV CNS Infections', 'bnb:HIV Drugs', 'bnb:Opportunistic Fungal Infections',
     'skmicro:Candida albicans', 'skmicro:Aspergillus fumigatus', 'skmicro:Cryptococcus neoformans',
     'skmicro:Mucor spp. & Rhizopus spp. (Mucormycetes)', 'skmicro:Pneumocystis jirovecii',
@@ -180,13 +192,18 @@ export const LECTURES = [
     'skpharm:NRTIs', 'skpharm:NNRTIs', 'skpharm:Protease Inhibitors', 'skpharm:Maraviroc, Fusion Inhibitors, Integrase Inhibitors',
     'skpharm:Amphotericin & Flucytosine', 'skpharm:Azoles', 'skpharm:Ganciclovir, Valganciclovir, Foscarnet, Cidofovir'] },
   { w:3, title:'Zoonotic Infections', items:[
-    'bnb:Zoonotic Infections', 'skmicro:Bartonella henselae', 'skmicro:Brucella spp.', 'skmicro:Francisella tularensis',
-    'skmicro:Pasteurella multocida', 'skmicro:Anaplasma phagocytophilum & Ehrlichia chaffeensis',
+    'bnb:Spirochetes', 'skmicro:Borrelia burgdorferi', 'skmicro:Borrelia recurrentis', 'skmicro:Leptospirosis interrogans',
+    'skmicro:Coxiella burnetii', 'skmicro:Rickettsia Species Overview', 'skmicro:Rickettsia prowazekii', 'skmicro:Rickettsia rickettsii',
+    'skmicro:Yersinia enterocolitica, pestis', 'skmicro:Bacillus anthracis, cereus', 'skmicro:Rabies Virus (Rhabdovirus)',
+    'skmicro:Ebolavirus & Marburgvirus (Filoviridae)', 'skmicro:Tissue Nematodes',
+    'bnb:Zoonotic Infections', 'skmicro:Bartonella henselae', 'skmicro:Brucella', 'skmicro:Francisella tularensis',
+    'skmicro:Pasturella multocida', 'skmicro:Anaplasma phagocytophilum & Ehrlichia chaffeensis',
     'uw:Bartonella henselae infections', 'uw:Brucellosis', 'uw:Ehrlichia and Anaplasma',
     'uw:Q fever (Coxiella burnetii infection)', 'uw:Leptospirosis', 'uw:Lyme disease',
     'uw:Rocky Mountain Spotted Fever', 'uw:Yersinia pestis', 'uw:Anthrax', 'uw:Rabies',
     'uw:Animal and human bites', 'uw:Cutaneous larva migrans'] },
   { w:3, title:'Granulomatous Diseases', items:[
+    'bnb:Mycobacteria', 'bnb:Fungal Pneumonias', 'skmicro:Actinomyces israelii',
     'bnb:Granulomatous Inflammation', 'skmicro:Mycobacterium tuberculosis', 'skmicro:Mycobacterium leprae',
     'skmicro:Mycobacterium avium intracellulare, Mycobacterium scrofulaceum, Mycobacterium marinum', 'skmicro:Histoplasma capsulatum',
     'skmicro:Blastomyces dermatitidis', 'skmicro:Coccidioides immitis', 'skmicro:Paracoccidioides brasiliensis',
@@ -206,6 +223,7 @@ export const LECTURES = [
     'uw:Transient synovitis', 'uw:Osgood-Schlatter disease', 'uw:Upper and lower extremity fractures'] },
   { w:3, title:'CBL Cases 6', none:'case-based learning session; the cases are the school\'s own' },
   { w:3, title:'Fever of Unknown Origin', items:[
+    'bnb:Malaria', 'skmicro:Plasmodium: Infection & Lifecycle',
     'uw:Tuberculosis', 'uw:Adult-onset Still disease', 'uw:Neutropenic fever', 'uw:Giant cell (temporal) arteritis'],
     partial:'no resource covers FUO itself; the differential (TB, Still disease, vasculitis, neutropenic fever) is covered piecemeal' },
   { w:3, title:'Flipped Classroom. Difficult Encounters', items:[

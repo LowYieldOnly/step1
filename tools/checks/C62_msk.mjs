@@ -11,7 +11,10 @@
  * opens the next unit's week), and the first that is comfortably feasible at the
  * default pace rather than a firehose.
  */
-import { openApp, checker } from '../harness.mjs';
+import { openApp, checker, REPO } from '../harness.mjs';
+import { resolveIdHomes } from '../generators/lib/idhomes.js';
+import fs from 'fs';
+import path from 'path';
 
 const { page: p, errors, mobilePage, close } = await openApp();
 const { chk, report } = checker('Brody block — Musculoskeletal & Skin');
@@ -26,7 +29,7 @@ await p.evaluate(()=>{window.__mk=(opts)=>{
     notes:{},streak:{days:{}},assessments:{},_resetAt:0});
   S.cfgs.nbme={examType:'nbme',brody:blk.id,examLabel:blk.name,examISO:blk.shelf,
     startISO:blk.weeks[0].start,restDays:[0],
-    resources:{bnb:true,pathoma:true,sketchy:true,bootcamp:true,uwlib:false},
+    resources:opts.res||{bnb:true,pathoma:true,sketchy:true,bootcamp:true,uwlib:false},
     systems:blk.systems.slice(),brodyReviewDays:3,
     brodyJoinWk:opts.join||1,brodyJoinDate:blk.weeks[(opts.join||1)-1].start};
   if(opts.off)S.cfgs.nbme.contentOff=opts.off;
@@ -95,35 +98,36 @@ const other=await p.evaluate(()=>BRODY_BLOCKS.filter(b=>b.id!=='msk-skin').map(b
 chk('C62-11 adding a fourth block left the first three audit-clean',
     other.every(o=>o.bad===0), JSON.stringify(other));
 
-// ---------- 3. THE decision: ID is included, not absorbed ----------
-const id=await p.evaluate(()=>{
+// ---------- 3. THE decision: ID is distributed by lecture, as data/id-homes.js declares ----------
+/* Brody has no Infectious Disease unit, so the #1 law homes every ID video at the lecture
+   that teaches it. This unit holds exactly what the declarations give it — skin infections
+   in week 1, the terbinafine drugs in week 2, Brody's ID week in week 3 — and nothing homed
+   elsewhere (the respiratory organisms belong to Cardiopulm, the enteric ones to GI). */
+const ID_HOMES=resolveIdHomes(JSON.parse(fs.readFileSync(path.join(REPO,'catalog.json'),'utf8')).videos);
+const id=await p.evaluate(homes=>{
   window.__mk({});
-  const inPlan=new Set(SCHED.planItems.map(v=>v.id));
-  const idVids=catVideos().filter(v=>v.sys==='Infectious Disease');
-  const scheduled=idVids.filter(v=>inPlan.has(itemId(v)));
-  const want=['Zoonotic Infections','Opportunistic Fungal Infections','Bacterial Culture',
-              'Mycobacterium tuberculosis','Histoplasma capsulatum','Pneumocystis jirovecii',
-              'Brucella','Scabies, Lice, Crabs','HIV'];
-  const unwanted=['Streptococcus pyogenes','Influenza Virus','Plasmodium','Clostridium difficile'];
+  const inPlan={};SCHED.planItems.forEach(v=>{inPlan[v.id]=v.wk;});
+  const idVids=catVideos().filter(v=>v.sys==='Infectious Disease'&&!isArticle(v));
+  const scheduled=idVids.filter(v=>inPlan[itemId(v)]!=null);
+  const want=['Zoonotic Infections','Opportunistic Fungal Infections','Bacterial Culture','Staphylococcus aureus',
+              'Dermatophytes (Epidermophyton spp., Trichophyton spp., Microsporum spp.)','Mycobacterium tuberculosis',
+              'Histoplasma capsulatum','Pneumocystis jirovecii','Brucella','Scabies, Lice, Crabs','HIV'];
   return {catalogTotal:idVids.length,scheduled:scheduled.length,
     hours:Math.round(scheduled.reduce((a,v)=>a+v.min,0)/6)/10,
     got:want.filter(n=>scheduled.some(v=>v.name===n)).length,wantN:want.length,
-    leaked:unwanted.filter(n=>scheduled.some(v=>v.name===n)),
-    // two deliberate exceptions, each for an earlier lecture: the dermatophyte antifungals
-    // for week 2's dermatologic drugs, and acyclovir for week 1's skin infections (HSV/VZV)
-    allWeek3:scheduled.every(v=>{const it=SCHED.planItems.find(x=>x.id===itemId(v));
-      return it&&(it.wk===3||(v.cat==='Antifungals'&&it.wk===2)
-        ||(v.name==='Acyclovir, Valacyclovir, Famciclovir'&&it.wk===1));})};
-});
-chk('C62-12 only a slice of Infectious Disease is scheduled, not the whole system',
-    id.scheduled>=15&&id.scheduled<id.catalogTotal*0.1,
-    id.scheduled+' of '+id.catalogTotal+' ID videos ('+id.hours+' h)');
-chk('C62-13 …and it is the slice the five ID lectures actually need',
+    missing:Object.keys(homes).filter(k=>!scheduled.some(v=>brodyKey(v)===k)),
+    extra:scheduled.filter(v=>homes[brodyKey(v)]==null).map(brodyKey),
+    wrongWeek:scheduled.filter(v=>homes[brodyKey(v)]!=null&&homes[brodyKey(v)]!==inPlan[itemId(v)]).map(v=>v.name+' wk'+inPlan[itemId(v)]+'≠'+homes[brodyKey(v)])};
+}, ID_HOMES.homes['msk-skin']);
+chk('C62-12 the unit holds exactly the Infectious Disease videos data/id-homes.js homes in it',
+    ID_HOMES.problems.length===0&&id.missing.length===0&&id.extra.length===0,
+    id.scheduled+' of '+id.catalogTotal+' ID videos ('+id.hours+' h); missing '+JSON.stringify(id.missing.slice(0,3))+' extra '+JSON.stringify(id.extra.slice(0,3)));
+chk('C62-13 …which covers the organisms its six ID lectures teach',
     id.got===id.wantN, id.got+' of '+id.wantN+' expected ID videos present');
-chk('C62-14 …with none of the general microbiology course leaking in',
-    id.leaked.length===0, 'leaked: '+JSON.stringify(id.leaked));
-chk('C62-15 …all of it in week 3, where those lectures are (bar the antifungals and acyclovir, for earlier lectures)',
-    id.allWeek3===true, 'some included ID videos are not in week 3');
+chk('C62-14 …and nothing homed in another unit leaks in (respiratory, enteric, CNS organisms)',
+    id.extra.length===0, 'leaked: '+JSON.stringify(id.extra.slice(0,5)));
+chk('C62-15 …each at its lecture\'s week: skin infections wk 1, the dermatologic antifungals wk 2, the ID week wk 3',
+    id.wrongWeek.length===0, JSON.stringify(id.wrongWeek.slice(0,5)));
 const inc=await p.evaluate(()=>{
   window.__mk({});
   const inPlan=new Set(SCHED.planItems.map(v=>v.id));
@@ -168,11 +172,20 @@ chk('C62-20 no video lands on a rest day', sch.sundays===0, sch.sundays+' Sunday
 chk('C62-21 week deadlines resolve to the two quizzes then the Monday exam',
     JSON.stringify(sch.deadlines)==='["2026-10-23","2026-10-30","2026-11-09"]',
     JSON.stringify(sch.deadlines));
-chk('C62-22 the unit is feasible at the default pace, unlike Nervous & Sensory',
-    sch.feasible===true&&sch.heavy.length===0&&sch.pace<=6,
-    'pace '+sch.pace+' h/day, flagged weeks '+JSON.stringify(sch.heavy));
-chk('C62-23 …and the Today line says so rather than warning',
-    /On pace/.test(sch.hero)&&!/more than fits/.test(sch.hero), sch.hero);
+/* With every resource on, the law's Infectious Disease homes make this unit as dense as Neuro:
+   the plan must say so plainly. Bootcamp, the bulk of it, leaves the repertoire after this
+   unit; without it the unit fits comfortably — so the warning is about the resource load. */
+const lite=await p.evaluate(()=>{
+  window.__mk({res:{bnb:true,pathoma:true,sketchy:true,bootcamp:false,uwlib:false}});
+  return {pace:SCHED.brodyPace,feasible:SCHED.stats.feasible,heavy:SCHED.weekLoad.filter(w=>w.heavy).map(w=>w.n),
+    cap:BRODY_QUIZ_MAX,hero:__hero()};
+});
+chk('C62-22 with every resource on, the unit is more than fits — and the Today line says so rather than hiding it',
+    sch.feasible===false&&sch.heavy.length>0&&/more than fits before their quiz/.test(sch.hero),
+    'pace '+sch.pace+' h/day, flagged weeks '+JSON.stringify(sch.heavy)+' · '+sch.hero.slice(0,90));
+chk('C62-23 without Bootcamp it fits at the default pace, under the cap, and reads "On pace"',
+    lite.feasible===true&&lite.heavy.length===0&&lite.pace<lite.cap&&/On pace/.test(lite.hero)&&!/more than fits/.test(lite.hero),
+    JSON.stringify(lite));
 
 // ---------- 5. content depth works on it from day one ----------
 const depth=await p.evaluate(()=>{
