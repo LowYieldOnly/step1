@@ -86,8 +86,8 @@ Each rule is enforced by a check, not by convention:
 |---|---|
 | Resources | An M1 plan offers **B&B, Sketchy, UWorld Library and AnKing** only. The Bootcamp and Pathoma toggles don't appear in M1 setup or the M1 Plan tab, and no M1 plan ever schedules a Bootcamp or Pathoma item. |
 | Unit picker | An M1 sees only M1 units, and an M2 only M2 units. |
-| Your own order | "Add a topic" offers only B&B and Sketchy series. It never offers an M2 unit, Bootcamp or Pathoma. |
-| Every plan | An M1 plan is built only from M1 units and M1 resources, and an M2 plan only from M2 units. |
+| Your own order | "Add a topic" offers only the M1 list (3.4): other systems' anatomy and physiology, and Biochemistry. It never offers M2 pathology, Bootcamp or Pathoma. |
+| Every plan | An M1 plan schedules only the M1 list plus the unit's declared lecture includes. Nothing else. |
 | What's new | Each entry is tagged by class. M1s never get M2 unit notices, and the reverse; general entries go to both. |
 | Content Audit and content maps | Show the student's own class. |
 | Past schedules | Listed by class. |
@@ -107,38 +107,56 @@ units/m1-2027-spring.json   the Spring M1 units
 - Generators write JSON instead of splicing into the page, and `lib/mapsig.js` reads JSON instead of regex-parsing the page.
 - Each unit gains `cls` and `term`. Existing M2 ids (`heme-renal`, `msk-skin`, …) don't change, so every saved and archived plan still opens. New units get year-stamped ids (`m1-2026f-u4`, `m2-2027t3-msk`).
 
-### 3.4 M1 scope: whole series, and law #1 for M1
+### 3.4 M1 scope: anatomy and physiology, plus all of Biochemistry
 
-**Decided: M1 units get whole series, not hand-picked sections.** When an M1 unit teaches a system, it schedules that system's entire Boards & Beyond series, with the Sketchy Pharm videos filed under the same system. The series are short and each M1 unit runs about a month, so they fit.
+**Decided.**
+- For each organ system an M1 unit teaches, M1s get Boards & Beyond's **anatomy, physiology and embryology** videos for that system, not its pathology.
+- **Biochemistry is the exception:** all 28 videos (9.1 h), placed across the four units by topic.
+- Everything else (genetics, immunology, biostatistics, pharmacology, Sketchy) comes in **only where a specific lecture needs it**. That is the same `include` mechanism the M2 units use for one-off videos.
 
-**The rule is the same as M2's.** Each M1 unit declares its systems and gets every video in them, plus `include` for single videos a lecture needs from elsewhere. There is no section-level scope to maintain, and **law #1(b) reads exactly as it does for M2:** every video of a unit's systems is scheduled in that unit at an explicit week, even where Brody doesn't lecture it.
+**The M1 list.** B&B mixes anatomy and physiology with disease inside some sections, so the list is a mix of whole sections and named videos. It is written once, as a declared list the generator enforces:
 
-**Proposed Fall assignment, with whole series and dates from the official schedule.** Pace assumes Sundays off and the default three review days before the exam:
+| System | M1 videos (Boards & Beyond) |
+|---|---|
+| Musculoskeletal | "Anatomy and Orthopedics" (8): shoulder and elbow, brachial plexus, wrist, hand, hip, knee, lumbosacral plexus, lumbar radiculopathy · Skeletal, Cardiac and Smooth Muscle, Bone (4) |
+| Cardiology | "Anatomy and Physiology" (9) · Cardiac Embryology · EKG Basics |
+| Pulmonary | "Embryology, Anatomy and Physiology" (14) |
+| Hematology | Coagulation I and II, Platelets (for flipped classroom 10, Coagulation & Connective Tissue) |
+| Gastroenterology | "Anatomy" (7) · "GI Physiology" (5) |
+| Renal | "Embryology, Anatomy and Physiology" (10) · Acid Excretion · Acid-Base Principles |
+| Reproductive | "Embryology" (10) · Spermatogenesis and Oogenesis · Placenta · Pregnancy |
+| Endocrinology | Thyroid Anatomy & Physiology · Thyroid Hormone Synthesis & Labs · Adrenal Glands · Insulin · Glucagon & Hypoglycemia · Pituitary Anatomy & Physiology · Parathyroid Glands · Signaling Pathways · Reproductive, Male and Female Reproductive Hormones · Menstrual Cycle |
+| Biochemistry | **All 28**, comprehensive |
+| Spring, once the schedule arrives | Neurology's Introduction, Nervous System Structures and Autonomic Nervous System sections; the rest of Hematology's normal physiology; any other system Spring teaches |
 
-| Unit | Series (B&B, plus Sketchy Pharm for the same systems) | Videos | Video time | Study days | Pace |
-|---|---|---|---|---|---|
-| 1 (Aug 3 – Sep 1) | Cell Biology · Genetics · Basic Pharmacology · Musculoskeletal, plus Sketchy's 7 autonomic videos for the ANS session | 58 | ~15 h | 22 | **~0.7 h/day** |
-| 2 (Sep 3 – Oct 9) | Cardiology · Pulmonary · Biostats/Epi | 106 | ~35 h | 28 | **~1.3 h/day** |
-| 3 (Oct 13 – Nov 10) | Gastroenterology · Renal · Biochemistry | 95 | ~31 h | 21 | **~1.5 h/day** |
-| 4 (Nov 12 – Dec 15) | Reproductive · Endocrinology · Immunology | 97 | ~28 h | 25 | **~1.1 h/day** |
+**Placed in the Fall units by topic** (pace with Sundays off and three review days):
 
-- **Series Brody splits across units are split by topic.** Biochemistry runs through all four units (flipped classrooms 1–20), Genetics through Units 1–2, Biostats through Units 2–4, and Reproductive through Units 3–4. Each video goes to the unit whose lectures teach it. The hours above put each series wholly in its main unit, so the real split evens them out a little.
-- **Every video of an M1 series lands in at least one M1 unit across the year.** A video two lectures share in two units (the M2 psychiatry threads already do this) is done once and shows as done in both. The check runs per unit now, and across the whole year once the Spring units exist.
-- **Spring takes the rest.** That is Neurology, Infectious Disease with all of Sketchy Micro (118 videos), Hematology, Psychiatry, Behavioral Science, general Pathology and the smaller series, placed once the Spring schedule arrives. If Spring covers them, an M1 finishes the year having watched all of Boards & Beyond (496 videos, 151 h) and all of Sketchy.
-- **UWorld Library follows the same rule.** A unit's reading is the whole UWorld category for each of its systems, e.g. Unit 2: Cardiology (122) + Pulmonary (92) articles, about 8 a day if switched on. Reading stays optional, as for M2.
-- **Histology will still be thin.** B&B and Sketchy have almost no histology, so UWorld's Anatomy & Histology articles are the only third-party coverage for those sessions. Law #1(a) is still met, because the coverage files say so lecture by lecture, but the content maps will show it.
+| Unit | What it gets | Videos | Video time | Pace |
+|---|---|---|---|---|
+| 1 (Aug 3 – Sep 1) | Upper-limb anatomy, muscle and bone; Biochemistry: DNA Structure | 9 | ~2.7 h | ~0.1 h/day |
+| 2 (Sep 3 – Oct 9) | Cardiac and pulmonary anatomy, physiology and embryology; coagulation; Biochemistry: the three vitamin videos (flipped classroom 11, Human Nutrition) | 31 | ~10.9 h | ~0.4 h/day |
+| 3 (Oct 13 – Nov 10) | GI and renal anatomy and physiology; spermatogenesis; Biochemistry: carbohydrate, TCA, electron transport, fatty acids, ketones, lipid metabolism (flipped classrooms 12–15) | 38 | ~12.3 h | ~0.6 h/day |
+| 4 (Nov 12 – Dec 15) | Reproductive embryology and pregnancy; endocrine physiology; lower-limb anatomy; Biochemistry: ethanol, exercise, cholesterol and lipid drugs, amino acids, ammonia, purines and pyrimidines, inborn errors, lysosomal storage (flipped classrooms 16–20) | 39 | ~11.3 h | ~0.5 h/day |
+
+Lecture includes add a little to each unit: genetics for the inheritance classrooms, B&B and Sketchy autonomic videos for the ANS session, basic immunology for week 19, biostatistics for FOD, and the pharmacology sessions.
+
+What this means:
+- **M1 plans are light: about 3–12 hours of video per unit.** The plan's minimum pace is 0.5 h/day, so most M1 plans will finish well before their exam. For M1, UWorld Library reading and the daily AnKing search carry more of the load than video does.
+- **UWorld Library follows the same rule:** Anatomy & Histology (54), Embryology (34), Physiology (titles still missing), and the biochemistry articles in Cell Bio, Biochem, Genetics (59).
+- **Law #1(b) for M1:** every video on the M1 list is scheduled in an M1 unit at an explicit week, all of Biochemistry included. That's checked per unit now, and across the whole year once the Spring units exist.
+- **Histology is still thin.** B&B has almost none, so UWorld's Anatomy & Histology articles are the only third-party coverage for those sessions. The coverage files say so lecture by lecture, so law #1(a) is still met.
+
+**One question this leaves open: Genetics and Cell Biology.** MBOM teaches them as heavily as metabolism: flipped classrooms 1–8 are DNA replication, transcription, inheritance, translation, gene expression and clinical genetics. As written, B&B Genetics (12 videos, 2.4 h) and Cell Biology (14, 3.3 h) come in lecture by lecture. Making them comprehensive like Biochemistry would add about 6 hours across Units 1–2 (D12).
 
 **Law #1(a)** is unchanged: every M1 lecture mapped, or a stated reason why not, in a coverage file per unit. C65 already fails any unit without one, so M1 units fall under the law the moment they exist.
 
-### 3.5 M2, a year later: watch it again
+### 3.5 M2, a year later
 
-With whole series, an M1 watches nearly all of B&B before M2. Progress is one record per video, so today's rule (done is done, across units) would leave next year's M2 units almost empty. M2 is meant to be the second pass, so that would be wrong.
+M1s will have watched the anatomy, physiology and embryology sections of most systems, plus all of Biochemistry: roughly 40 hours. M2 units schedule those same videos again as part of each whole system. Progress is one record per video, so by default they show as done in M2.
 
-**Recommendation:** an M2 plan schedules everything in its unit again by default, and progress from an earlier class year doesn't count toward it. Each plan gets an option, "Count what I watched as an M1", for anyone who wants the M1 credit.
+**Recommendation: leave that default, with an option to watch them again.** It is foundation material, M2's Minimal mode already drops it, and counting it as done keeps M2 days lighter. An M2 who wants the second pass turns on "Re-watch what I saw as an M1" for that plan.
 
-- Nothing is lost. M1 progress stays in the record, and Stats can show "watched in M1" beside the M2 tick.
-- In the engine this is a per-plan start line for counting progress. "Before you arrived" already works this way inside one unit.
-- It doesn't affect anyone until the Class of 2030 reaches M2 in summer 2027, but the shape of the progress data should be settled before the first M1 tick is stored.
+(When M1 units held whole series, this default would have emptied M2 plans, and the recommendation was the reverse. With anatomy and physiology only, it no longer does.)
 
 ### 3.6 Profile size
 
@@ -155,12 +173,13 @@ Each done item costs about 170 bytes across `vdone`, `vdoneDate` and `vdoneAt`. 
 | D3 | M1s stay within the M1 schedule; nothing from M2 reaches them | **Decided**, enforced as in 3.2 |
 | D4 | M1 resources are B&B, Sketchy, UWorld and AnKing; no Bootcamp or Pathoma | **Decided** |
 | D5 | M1 units come from the official schedule, not `m1schedule.json` | **Decided** (2, above) |
-| D6 | M1 scope: whole series for each system a unit teaches | **Decided** (3.4). The Fall assignment of series to units is proposed there; confirm or move any. |
-| D7 | M2, a year after M1 | Recommend: M2 plans schedule everything again by default, with "Count what I watched as an M1" as an option (3.5) |
+| D6 | M1 scope: anatomy and physiology for each system a unit teaches, plus all of Biochemistry; everything else lecture by lecture | **Decided** (3.4). The video list is proposed there; confirm or edit. |
+| D7 | M2, a year after M1 | Recommend: what an M1 watched counts as done in M2, with "Re-watch what I saw as an M1" as an option (3.5) |
 | D8 | First M1 unit | Recommend: **Unit 4 as a quiet trial** with a few M1 volunteers. It will likely land partway through the unit (Nov 12 – Dec 15). **Spring Unit 1 as the launch.** |
 | D9 | Who maps M1 lectures | You, or an M1 content lead (the Governing Body slot is open), with the generators enforcing correctness |
 | D10 | M1 unit names | The official ones if Brody names them; otherwise "Unit 1–4", with exams as "Exam 1–4" |
 | D11 | Can a student change class? | Recommend: yes, from the ⋮ menu with a confirmation; the plan is archived, never deleted |
+| D12 | Genetics and Cell Biology: comprehensive like Biochemistry, or lecture by lecture? | **Your call** (3.4). As written: lecture by lecture. |
 
 **Inputs still needed:**
 - **The Spring 2027 M1 schedule**, in the same form. The one sent covers Fall only.
@@ -187,15 +206,15 @@ Current M2s need it before Nov 9, and it holds the cancer pharmacology that Heme
 1. Choose your class on first entry; the class label; ⋮ → Change class.
 2. Units, What's new, past schedules and the Content Audit filtered by class.
 3. M1 resource toggles: B&B, Sketchy, UWorld Library, AnKing only.
-4. "Add a topic" limited to the class's resources: B&B and Sketchy series for M1.
+4. "Add a topic" limited to the M1 list for M1 plans.
 5. **New check, C69:** an M1 never sees an M2 unit, notice, past plan, or a Bootcamp/Pathoma toggle, and the reverse; no M1 plan schedules a Bootcamp or Pathoma item; the class survives a reload and a sync merge; changing class archives the plan and loses nothing; `mergeState(x,x) === x` with an M1 plan.
 6. **Exit:** the section works end to end with a test unit, and you've seen it on a phone.
 
 ### Phase 3: Fall Unit 4 (the trial)
 1. **Transcribe** Unit 4 from the official schedule into `tools/generators/data/m1-2026-fall.json`: every session with its day, discipline and kind, plus the quizzes, exam and reassessments. This is a hand transcription, checked against the PDF, as the M2 Term 3 calendar was.
-2. Write `mk_m1_unit.js`: it reads the transcription, cuts units at the exams (handling split weeks), and splices the unit into `units/m1-2026-fall.json`. It refuses to write if a mapping key misses the catalog, a video of the unit's systems lacks a week, or a key is a Bootcamp or Pathoma item.
+2. Write `mk_m1_unit.js`: it reads the transcription, cuts units at the exams (handling split weeks), and splices the unit into `units/m1-2026-fall.json`. It refuses to write if a mapping key misses the catalog, a video on the M1 list for the unit's systems lacks a week, a key is neither on the M1 list nor a declared lecture include, or a key is a Bootcamp or Pathoma item.
 3. Write the lecture coverage and the content-map PDF.
-4. **New check, C70:** dates, quizzes, exam and reassessment match the transcription; the split-week and no-quiz-week boundaries hold; every session is accounted for; every video of the unit's systems is at an explicit week; no Bootcamp or Pathoma item is scheduled; it fits at a realistic pace; Minimal, even pace and your own order all build. C65 enforces the law on it with no edits.
+4. **New check, C70:** dates, quizzes, exam and reassessment match the transcription; the split-week and no-quiz-week boundaries hold; every session is accounted for; every M1-list video of the unit's systems is at an explicit week; nothing off the list is scheduled except declared lecture includes; no Bootcamp or Pathoma item is scheduled; it fits at a realistic pace; Minimal, even pace and your own order all build. C65 enforces the law on it with no edits.
 5. **Exit:** 3–5 M1 volunteers use it for the rest of Unit 4.
 
 ### Phase 4: Spring launch
@@ -207,8 +226,8 @@ Current M2s need it before Nov 9, and it holds the cancer pharmacology that Heme
 
 ## 6. Risks, stated plainly
 
-- **Mapping is the real cost.** Each Fall unit is M2-sized, and every semester brings more. Two things help: there are two video resources to map instead of four, and whole series mean placing videos by week, not choosing which ones belong. Without an M1 content lead, this is your time.
-- **The M2 re-watch default (D7) must be settled before the first M1 tick is stored.** Whole series mean M1s will have watched most of B&B by M2. If done stays done, next year's M2 plans come up nearly empty.
+- **Mapping is the real cost.** Each Fall unit is M2-sized, and every semester brings more. Two things help: there are two video resources to map instead of four, and the M1 list is short (about 120 videos for Fall). Without an M1 content lead, this is your time.
+- **The M1 list is a judgment call, video by video.** Where B&B mixes physiology with disease (Endocrine, Reproductive, Renal acid-base), the line is drawn by name. It's one declared list, reviewed once, and the generator holds every unit to it.
 - **Thin histology coverage** is a consequence of the resource choice, not a defect, but students will see it on the content maps.
 - **The UWorld Physiology list is missing**, and physiology is most of M1. Without it, Library reading for M1 will skip physiology.
 - **Competing with M2 deadlines.** M2 units are dated, and students are on them now. Every phase yields to an M2 unit that's due.
