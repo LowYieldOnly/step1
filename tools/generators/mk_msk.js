@@ -8,14 +8,14 @@
  *
  * TWO THINGS ABOUT THIS UNIT ARE UNLIKE THE OTHERS.
  *
- * 1. Infectious Disease is touched, not taught. Week 3 carries five ID lectures
- *    (clinical diagnosis, zoonotics, granulomatous disease, the immunocompromised
- *    host, fever of unknown origin), but the Infectious Disease system in the
- *    catalog is 466 videos / 83 h — the whole microbiology course. Making it a
- *    system would have doubled the unit to ~156 h, about 8.7 h/day, for five
- *    lectures. So those five are served by a targeted `include` instead. Same for
- *    anaesthesia (two PHARM lectures), the psychiatry thread, and the two general
- *    pathology lectures.
+ * 1. Week 3 is Brody's Infectious Disease week (clinical diagnosis, zoonotics,
+ *    granulomatous disease, the immunocompromised host, fever of unknown origin), and
+ *    week 1 teaches skin infections. Brody has no ID unit, so the #1 law puts every ID
+ *    video somewhere: the ones these lectures teach, plus the microbiology basics and
+ *    antimicrobial drugs no lecture on any calendar names, are homed here. The homes
+ *    are declared in data/id-homes.js (shared with mk_id.js) and merged below.
+ *    Anaesthesia, the psychiatry thread and the two general pathology lectures are
+ *    still a targeted `include`.
  *
  * 2. There is no anatomy lecture, and Bootcamp's MSK course is 192 anatomy videos
  *    plus 44 histology — over half of it. No week "owns" that material, so its
@@ -29,6 +29,7 @@
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import { resolveIdHomes, applyIdHomes } from './lib/idhomes.js';
 
 const REPO = path.join(path.dirname(fileURLToPath(import.meta.url)), '..', '..');
 const APP = path.join(REPO, 'index.html');
@@ -186,6 +187,8 @@ const bcWeek = {
    Each one answers to a named lecture. This is the alternative to making
    Infectious Disease, Anaesthesia, Psychiatry and Pathology whole systems. */
 const include = {
+  // Infectious Disease is not listed here: every ID video's home is declared in
+  // data/id-homes.js and merged below, the same homes mk_id.js splices into the other units.
   // PHARM 31-32 · anaesthesia (week 1)
   "bnb|Anesthesia|General Topics|Inhaled Anesthetics":1,
   "bnb|Anesthesia|General Topics|Intravenous Anesthetics":1,
@@ -228,37 +231,19 @@ const include = {
   "pathoma|Pathology|Inflammation, Inflammatory Disorders, and Healing|2.5 Wound Healing":1,
   "bnb|Pathology|General Topics|Wound Healing and Scar":1,
 
-  // PHARM · Anti-gout Drugs and Dermatologic Drugs (week 2) — terbinafine, the
-  // dermatophyte drug, is in no other unit
-  "bootcamp|Infectious Disease|Antifungals|Allylamines, Echinocandins, and Polyenes":2,
-
   // ---- Sketchy Pharm, from Sketchy's full list (2026-10-20), for named lectures ----
   // Each video's own unit is elsewhere (or not built yet); these are the ones this
-  // unit's lectures teach, pulled in the same way as the ID videos above.
-  // Clin App · Skin Infections (week 1) — HSV / VZV
-  "skpharm|Infectious Disease|Other Antivirals|Acyclovir, Valacyclovir, Famciclovir":1,
+  // unit's lectures teach.
   // PHARM · Management of RA (week 2)
   "skpharm|Hematology|Antimetabolites|Methotrexate, Leucovorin, 5-Fluorouracil, Hydroxyurea":2,
   "skpharm|Hematology|Antimetabolites|Azathioprine, 6-Mercaptopurine, Mycophenolate Mofetil":2,
   "skpharm|Hematology|Anti-Inflammatory|TNF Inhibitors":2,
   "skpharm|Endocrinology|Thyroid, Parathyroid, Adrenal|Glucocorticoids":2,
   // PHARM · Anti-gout and Dermatologic Drugs; Bone: Non-Neoplastic (week 2)
-  "skpharm|Infectious Disease|Antifungals|Griseofulvin, Terbinafine, Echinocandins":2,
   "skpharm|Endocrinology|Thyroid, Parathyroid, Adrenal|Bisphosphonates, Raloxifene, Denosumab, Calcitonin":2,
   "skpharm|Endocrinology|Thyroid, Parathyroid, Adrenal|Teriparatide, Vitamin D, Cinacalcet, Sevelamer":2,
   // PATH · Skeletal Muscle (week 2) — in Neuro too, which finished before it existed
   "skpharm|Neurology|Muscle Relaxants|Skeletal Muscle Relaxants":2,
-  // PATH · Granulomatous Diseases (week 3)
-  "skpharm|Infectious Disease|Antimycobacterials|Tuberculosis Drugs":3,
-  "skpharm|Infectious Disease|Antimycobacterials|Leprosy Drugs":3,
-  // PATH · Immunocompromised Host (week 3)
-  "skpharm|Infectious Disease|HIV Antivirals|NRTIs":3,
-  "skpharm|Infectious Disease|HIV Antivirals|NNRTIs":3,
-  "skpharm|Infectious Disease|HIV Antivirals|Protease Inhibitors":3,
-  "skpharm|Infectious Disease|HIV Antivirals|Maraviroc, Fusion Inhibitors, Integrase Inhibitors":3,
-  "skpharm|Infectious Disease|Antifungals|Amphotericin & Flucytosine":3,
-  "skpharm|Infectious Disease|Antifungals|Azoles":3,
-  "skpharm|Infectious Disease|Other Antivirals|Ganciclovir, Valganciclovir, Foscarnet, Cidofovir":3,
 
   // Psych · Flipped Classroom. Difficult Encounters (week 3) — in no other unit
   "bootcamp|Behavioral Science|Communication|Interviewing Patients":3,
@@ -268,40 +253,6 @@ const include = {
   "bootcamp|Neurology|Side Effects and Toxins|Environmental Toxins and their Treatments":3,
   // PATH 77 · granulomatous disease (week 3)
   "bnb|Pathology|General Topics|Granulomatous Inflammation":3,
-  // PATH 74 · clinical diagnosis of infectious disease; laboratory practices (week 3)
-  "bnb|Infectious Disease|Basics of Microbiology|Bacteria":3,
-  "bnb|Infectious Disease|Basics of Microbiology|Shapes and Stains":3,
-  "bnb|Infectious Disease|Basics of Microbiology|Bacterial Culture":3,
-  "bnb|Infectious Disease|Basics of Microbiology|Special Growth Requirements":3,
-  "bnb|Infectious Disease|Basics of Microbiology|Virulence":3,
-  "bnb|Infectious Disease|Basics of Microbiology|Growth and Genetics":3,
-  "bnb|Infectious Disease|Basics of Microbiology|Bacterial Identification":3,
-  // PATH 76 · zoonotic infections (week 3)
-  "bnb|Infectious Disease|Bacteria|Zoonotic Infections":3,
-  "skmicro|Infectious Disease|Gram Negative Bacilli - Zoonotics|Bartonella henselae":3,
-  "skmicro|Infectious Disease|Gram Negative Bacilli - Zoonotics|Brucella":3,
-  "skmicro|Infectious Disease|Gram Negative Bacilli - Zoonotics|Francisella tularensis":3,
-  "skmicro|Infectious Disease|Gram Negative Bacilli - Zoonotics|Pasturella multocida":3,
-  "skmicro|Infectious Disease|Gram Negative Bacilli - Zoonotics|Anaplasma phagocytophilum & Ehrlichia chaffeensis":3,
-  "skmicro|Infectious Disease|Ectoparasites|Scabies, Lice, Crabs":3,
-  // PATH 77 · the granulomatous organisms (week 3)
-  "skmicro|Infectious Disease|Mycobacteria|Mycobacterium tuberculosis":3,
-  "skmicro|Infectious Disease|Mycobacteria|Mycobacterium leprae":3,
-  "skmicro|Infectious Disease|Mycobacteria|Mycobacterium avium intracellulare, scrofulaceum, marinum":3,
-  "skmicro|Infectious Disease|Systemic Mycoses|Histoplasma capsulatum":3,
-  "skmicro|Infectious Disease|Systemic Mycoses|Blastomycosis dermatitidis":3,
-  "skmicro|Infectious Disease|Systemic Mycoses|Coccidiomycosis immitis":3,
-  "skmicro|Infectious Disease|Systemic Mycoses|Paracoccidioidomycosis brasiliensis":3,
-  // PATH 75 / CLINAPP 50 · the immunocompromised host and fever of unknown origin (week 3)
-  "bnb|Infectious Disease|Fungi|Opportunistic Fungal Infections":3,
-  "bnb|Infectious Disease|Parasites and Helminths|HIV":3,
-  "bnb|Infectious Disease|Parasites and Helminths|HIV CNS Infections":3,
-  "bnb|Infectious Disease|Parasites and Helminths|HIV Drugs":3,
-  "skmicro|Infectious Disease|Opportunistic Fungal Infections|Candida albicans":3,
-  "skmicro|Infectious Disease|Opportunistic Fungal Infections|Aspergillus fumigatus":3,
-  "skmicro|Infectious Disease|Opportunistic Fungal Infections|Crytococcus neoformans":3,
-  "skmicro|Infectious Disease|Opportunistic Fungal Infections|Mucormycosis (Mucor spp. & Rhizopus spp.)":3,
-  "skmicro|Infectious Disease|Opportunistic Fungal Infections|Pneumocystis jirovecii":3,
 };
 
 const exclude = [];
@@ -351,6 +302,11 @@ if (bad.length) { console.error('MAPPINGS POINTING AT A WEEK THAT DOES NOT EXIST
 const blk = { id:"msk-skin", name:"Musculoskeletal & Skin", systems:SYS, weeks,
   shelf:"2026-11-09", checkpoints:["2026-10-23","2026-10-30"],
   videoWeek, exclude, include:Object.keys(include), bcWeek };
+{
+  const id = resolveIdHomes(cat.videos);
+  if (id.problems.length) { console.error('ID HOMES:'); id.problems.forEach(p => console.error('  ' + p)); process.exit(1); }
+  applyIdHomes(blk, id.homes['msk-skin'], cat.videos.map(K));
+}
 
 /* ---- splice into index.html, and register the block ---- */
 let app = fs.readFileSync(APP, 'utf8');
@@ -386,7 +342,7 @@ const weekOf = v => {
   if (v.res === 'bootcamp' && bcWeek[v.sys + '|' + (v.cat || '')] != null) return bcWeek[v.sys + '|' + (v.cat || '')];
   return weeks.length;
 };
-const all = inBlock.concat(Object.keys(include).map(k => cat.videos.find(v => K(v) === k)));
+const all = inBlock.concat(blk.include.map(k => cat.videos.find(v => K(v) === k)));
 const tally = {};
 all.forEach(v => { const w = weekOf(v); (tally[w] = tally[w] || { n:0, m:0 }); tally[w].n++; tally[w].m += v.min; });
 console.log('Musculoskeletal & Skin — spliced into index.html and registered\n');
@@ -403,6 +359,6 @@ all.forEach(v => { byRes[v.res] = byRes[v.res] || { n:0, m:0 }; byRes[v.res].n++
 console.log('\n  by resource:');
 Object.keys(byRes).sort().forEach(r => console.log('    ' + r.padEnd(10) + String(byRes[r].n).padStart(4)
   + (byRes[r].m / 60).toFixed(1).padStart(8) + ' h'));
-console.log('\n  ' + Object.keys(include).length + ' videos pulled in from outside the unit’s systems'
+console.log('\n  ' + blk.include.length + ' videos pulled in from outside the unit’s systems'
   + ' (ID, anaesthesia, psych, general pathology)');
 console.log('  checks: every video mapped, every mapping resolves, no mapping points at a missing week');

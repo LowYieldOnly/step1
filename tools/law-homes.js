@@ -15,6 +15,8 @@
  *          null = the unit's calendar hasn't been supplied yet — listed loudly, every session.
  *   note   why, in a sentence
  */
+import { WAITING as ID_WAITING, matchRef } from './generators/data/id-homes.js';
+
 export const WAITING = {
   'Gastroenterology': { unit: 'GI, Nutrition & Multisystem (SYST 9500)', from: '2026-11-09',
     note: 'the next M2 unit; build it before it starts' },
@@ -39,9 +41,9 @@ export const WAITING = {
   'Pathology': { unit: 'no Brody unit identified', from: null,
     note: 'general pathology (Pathoma 1–3, B&B General Topics); M1 Pathology course — decision needed' },
   // Brody has no Infectious Disease unit: infections are taught inside Cardiopulm, Neuro and
-  // MSK. So ID is declared video by video — each one held by the unit whose lecture teaches
-  // it, or matched by a rule below naming the unit that will. Anything else fails.
-  'Infectious Disease': { rules: [] },
+  // MSK. So ID is declared video by video in tools/generators/data/id-homes.js — each one held
+  // by the unit whose lecture teaches it, or waiting there for a named unit. Anything else fails.
+  'Infectious Disease': { rules: ID_WAITING.map(w => ({ match: v => w.items.some(r => matchRef(r, v)), unit: w.unit, from: w.from, note: w.note })) },
   // Videos a unit EXCLUDES from its own system, and where they go instead.
   '§excluded': { rules: [
     { match: v => (v.res === 'bnb' && v.cat === 'Cancer Drugs')

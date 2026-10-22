@@ -12,6 +12,7 @@
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import { resolveIdHomes, applyIdHomes } from './lib/idhomes.js';
 
 const REPO = path.join(path.dirname(fileURLToPath(import.meta.url)), '..', '..');
 const cat = JSON.parse(fs.readFileSync(path.join(REPO, 'catalog.json'), 'utf8'));
@@ -243,6 +244,13 @@ if (badWeek.length) { console.error('MAPPINGS POINTING AT A WEEK THAT DOES NOT E
 const blk = { id:"neuro-sensory", name:"Nervous & Sensory", systems:SYS, weeks,
   shelf:"2026-10-08", checkpoints:["2026-09-25","2026-10-02"],
   videoWeek, exclude, include:Object.keys(include), bcWeek };
+// Infectious Disease: CNS infections (week 2) and tetanus/botulism (week 1), from the homes
+// declared in data/id-homes.js — the same ones mk_id.js splices.
+{
+  const id = resolveIdHomes(cat.videos);
+  if (id.problems.length) { console.error('ID HOMES:'); id.problems.forEach(p => console.error('  ' + p)); process.exit(1); }
+  applyIdHomes(blk, id.homes['neuro-sensory'], cat.videos.map(K));
+}
 
 /* ---- report the shape of what was built ---- */
 const weekOf = v => {
@@ -251,7 +259,7 @@ const weekOf = v => {
   if (v.res === 'bootcamp' && bcWeek[v.sys + '|' + (v.cat || '')] != null) return bcWeek[v.sys + '|' + (v.cat || '')];
   return weeks.length;
 };
-const all = inBlock.concat(Object.keys(include).map(k => cat.videos.find(v => K(v) === k)));
+const all = inBlock.concat(blk.include.map(k => cat.videos.find(v => K(v) === k)));
 const tally = {};
 all.forEach(v => { const w = weekOf(v); (tally[w] = tally[w] || { n:0, m:0 }).n++; tally[w].m += v.min; });
 weeks.forEach(w => {
