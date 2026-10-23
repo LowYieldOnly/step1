@@ -1,0 +1,613 @@
+# DRAFT for review (not yet in the app) — UWorld Medical Videos → B&B system › chapter, and the Brody week that teaches each.
+# Home codes: HR1-4 Heme & Renal, CP1-4 Cardiopulm, NS1-3 Nervous & Sensory, MSK1-3 MSK & Skin;
+# GI = SYST 9500 (from Nov 9, calendar pending); T4E/T4R = Term 4 endocrine/reproductive (calendar pending);
+# M1 = M1 section (planned); IMM = Immunology (no Brody unit — decision pending).
+# "A+B" = scheduled in both (psych: Brody's psych lecture in another unit, and the Nervous & Sensory unit that holds Psychiatry).
+# Line: Title | home | note   (note: the lecture it sits with, and any judgment call — "?" marks one to check)
+
+## Cardiology › Anatomy and Physiology
+Cardiomyocyte structure & function | CP1 | with B&B Cardiac Physiology
+## Cardiology › The Developing Heart
+Normal fetal circulation | CP2 | CHD; Heart Sounds — also listed by UWorld under Pregnancy
+Atrial septal defect | CP2 | CHD; Heart Sounds
+Ventricular septal defect | CP2 | CHD; Heart Sounds
+Patent foramen ovale | CP2 | CHD; Heart Sounds
+Eisenmenger syndrome | CP2 | CHD; Heart Sounds
+Tetralogy of Fallot | CP2 | CHD; Heart Sounds
+Transposition of the great arteries | CP2 | CHD; Heart Sounds
+Coarctation of the aorta | CP2 | CHD; Heart Sounds
+## Cardiology › Cardiac Ischemia
+Chronic stable angina | CP2 | Cardiac Ischemia — Angina (with B&B Stable Angina)
+Vasospastic angina | CP2 | Cardiac Ischemia — Angina
+Acute coronary syndrome | CP2 | Cardiac Ischemia — Infarct (with B&B STEMI, NSTEMI)
+## Cardiology › Arrhythmias
+Bradycardia & AV blocks | CP2 | EKG/Arrhythmias
+Atrial fibrillation and atrial flutter | CP2 | EKG/Arrhythmias
+Supraventricular tachycardia | CP2 | EKG/Arrhythmias
+Wolff-Parkinson-White syndrome | CP2 | EKG/Arrhythmias
+Ventricular tachycardia & ventricular fibrillation | CP2 | EKG/Arrhythmias
+Sudden cardiac arrest | CP2 | EKG/Arrhythmias
+## Cardiology › Cardiac Auscultation
+Aortic stenosis | CP1 | Valvular Heart Disease
+Aortic regurgitation | CP1 | Valvular Heart Disease
+Mitral stenosis | CP1 | Valvular Heart Disease
+Mitral regurgitation | CP1 | Valvular Heart Disease
+## Cardiology › Heart Failure
+Heart failure | CP1 | Heart Failure lecture
+Dilated cardiomyopathy | CP1 | Myocarditis; Cardiomyopathies
+Hypertrophic cardiomyopathy | CP1 | Myocarditis; Cardiomyopathies
+Restrictive cardiomyopathy | CP1 | Myocarditis; Cardiomyopathies
+## Cardiology › Other Cardiovascular Topics
+Acute rheumatic fever | CP1 | Valvular Heart Disease — UWorld also lists it under Immunology and Infectious Diseases
+Rheumatic heart disease | CP1 | Valvular Heart Disease
+Infective endocarditis | CP1 | with B&B Infective Endocarditis, Pathoma 8.5
+Acute pericarditis | CP1 | Heart Failure, Cardiac Neoplasms, Pericardial Disease
+Cardiac tamponade | CP1 | Pericardial Disease
+Aortic dissection | CP1 | VD: Arteriosclerosis, Dissection, Connective Tissue Disease, Aneurysm
+Marfan syndrome | CP1 | same lecture (connective tissue disease, aneurysm) — the Library article is at MSK2 ?
+Kawasaki disease | CP1 | BVD: Vasculitis (coronary aneurysms) — the Library article is at MSK2 ?
+Peripheral arterial disease | CP1 | Atherosclerosis and Lipids
+Acute limb ischemia | CP1 | Atherosclerosis and Lipids
+Chronic venous insufficiency | CP4 | Vascular (with B&B DVT & PE) ?
+## Infectious Disease › Parasites and Helminths
+Chagas disease | CP1 | with Sketchy Trypanosoma cruzi (Chagas cardiomyopathy)
+
+## Pulmonary › Embryology, Anatomy and Physiology
+Respiratory mechanics | CP3 | Airway Physiology Review
+Gas exchange | CP3 | Airway Physiology Review
+Oxygen-hemoglobin dissociation curve | CP3 | Airway Physiology Review (with B&B Hemoglobin)
+Pulmonary hypertension | CP3 | Vascular, Upper Respiratory, Pleural (B&B files it here)
+Congenital diaphragmatic hernia | CP3 | Overview / Congenital Diseases / ARDS
+Choanal atresia | CP3 | Congenital Diseases (UWorld: ENT) ?
+Laryngomalacia | CP3 | Congenital Diseases (UWorld: ENT and Pulmonary)
+Neonatal respiratory distress syndrome | CP3 | Congenital Diseases / ARDS
+Transient tachypnea of the newborn | CP3 | Congenital Diseases
+Meconium aspiration syndrome | CP3 | Congenital Diseases
+Persistent pulmonary hypertension of the newborn | CP3 | Congenital Diseases
+## Pulmonary › Obstructive and Restrictive Diseases
+Pulmonary function testing | CP3 | Airway Physiology Review / Obstructive Lung Disease
+Asthma | CP3 | Asthma; Obstructive Disease
+Chronic obstructive pulmonary disease (COPD) | CP3 | Obstructive Disease
+Alpha-1 antitrypsin deficiency | CP3 | Obstructive Disease
+Large airway obstructions | CP3 | Obstructive Disease ?
+Idiopathic pulmonary fibrosis | CP3 | Restrictive Disease
+Hypersensitivity pneumonitis | CP3 | Restrictive Disease
+Sarcoidosis | CP3 | Restrictive Disease (B&B Sarcoidosis CP3; the Library article is at MSK3)
+Asbestos related disease | CP3 | Pneumoconiosis / Environmental
+Silicosis | CP3 | Pneumoconiosis / Environmental
+## Pulmonary › Other Pulmonary Topics
+Acute respiratory distress syndrome (ARDS) | CP3 | Overview / Congenital Diseases / ARDS
+Pleural effusion | CP3 | Vascular, Upper Respiratory, Pleural
+Pneumothorax | CP3 | Vascular, Upper Respiratory, Pleural
+Lung cancer | CP3 | Neoplasia: Non-Small Cell Carcinomas
+Pneumonia | CP4 | Infectious: Lower Respiratory Tract
+Tuberculosis | CP4 | Infectious: Lower Respiratory Tract (B&B TB CP4; Sketchy and the Library are at MSK3)
+Pulmonary embolism | CP4 | Vascular (with B&B DVT & PE)
+Atelectasis | CP4 | Respiratory Failure ?
+Sleep apnea | CP4 | with B&B Sleep Apnea
+Acute otitis media | CP4 | Infectious: Upper Respiratory Tract (UWorld: ENT)
+Acute rhinosinusitis | CP4 | Infectious: Upper Respiratory Tract (UWorld: ENT)
+Otitis externa | CP4 | Infectious: Upper Respiratory Tract (UWorld: ENT)
+Necrotizing otitis externa | CP4 | Infectious: Upper Respiratory Tract (Pseudomonas)
+Peritonsillar abscess | CP4 | Infectious: Upper Respiratory Tract
+Retropharygneal abscess | CP4 | Infectious: Upper Respiratory Tract
+Ludwig angina | CP4 | Infectious: Upper Respiratory Tract
+Epiglottitis | CP4 | Infectious: Upper Respiratory Tract
+Laryngotracheobronchitis (croup) | CP4 | Infectious: Upper Respiratory Tract
+## Infectious Disease › Bacteria
+Diphtheria | CP4 | with Sketchy Corynebacterium diphtheriae
+Bordatella pertussis | CP4 | with Sketchy Bordetella pertussis
+Legionella | CP4 | with Sketchy Legionella pneumophila
+Pseudomonas aeruginosa | CP4 | with Sketchy Pseudomonas aeruginosa
+## Infectious Disease › Viruses
+Influenza | CP4 | with Sketchy Influenzavirus
+Respiratory syncytial virus | CP4 | with Sketchy RSV
+Mumps | CP4 | with Sketchy Measles, Mumps, Parainfluenza ?
+
+## Hematology › Red Blood Cells
+Blood cell types | HR1 | RBC: Hematopoiesis, Hemoglobin, Tools for evaluation
+Anemia | HR1 | RBC: Hematopoiesis, Hemoglobin, Tools for evaluation
+Methemoglobinemia | HR1 | RBC: Hemoglobin ?
+Iron deficiency anemia | HR1 | Anemia – Production deficits
+Alpha thalassemia | HR1 | Anemia – Production deficits
+Beta thalassemia | HR1 | Anemia – Production deficits
+Porphyria | HR1 | with B&B Porphyrias
+Pernicious anemia | HR1 | Anemia – Production deficits
+Aplastic anemia | HR1 | Anemia – Production deficits
+Hereditary spherocytosis | HR1 | Anemia – Destruction
+Glucose-6-phosphate dehydrogenase deficiency | HR1 | Anemia – Destruction
+Pyruvate kinase deficiency | HR1 | Anemia – Destruction
+Paroxysmal nocturnal hemoglobinuria | HR1 | Anemia – Destruction
+Rh alloimmunization | HR2 | Transfusion medicine (UWorld: also Pregnancy) ?
+## Hematology › White Blood Cells
+Acute lymphoblastic leukemia and lymphoblastic lymphoma | HR1 | WBC: Neoplasms overview, Leukemia
+Acute myeloid leukemia | HR1 | WBC: Leukemia
+Chronic lymphocytic leukemia | HR1 | WBC: Leukemia
+Chronic myeloid leukemia | HR1 | WBC: Leukemia / Myeloproliferative
+Hairy cell leukemia | HR1 | WBC: Leukemia
+Hodgkin lymphoma | HR1 | WBC: Lymphomas
+Burkitt lymphoma | HR1 | WBC: Lymphomas
+Myelodysplastic syndromes | HR1 | Myeloproliferative and Myelodysplastic disease
+Myelofibrosis | HR1 | Myeloproliferative and Myelodysplastic disease
+Multiple myeloma | HR1 | Plasma cell disease
+## Hematology › Hemostasis
+Normal hemostasis | HR2 | Hemostasis/Thrombosis
+Hemophilia | HR2 | Hemostasis/Thrombosis: Bleeding
+von Willebrand disease | HR2 | Hemostasis/Thrombosis: Bleeding
+Hereditary hemorrhagic telangiectasia | HR2 | Hemostasis/Thrombosis: Bleeding ?
+Thrombotic thrombocytopenic purpura | HR2 | Hemostasis/Thrombosis: Bleeding
+Disseminated intravascular coagulation | HR2 | Hemostasis/Thrombosis: Bleeding
+Heparin-induced thrombocytopenia | HR2 | Anti-coagulants
+Factor V Leiden | HR2 | Hemostasis/Thrombosis: Thrombosing
+## Immunology › Clinical Immunology
+Graft-versus-host disease | HR2 | Transfusion medicine ?
+Transplant rejection | HR4 | Urolithiasis, Hydronephrosis, Transplant disease ?
+## Immunology › Basic Immunology
+Lymph node structure & function | HR1 | WBC: Reactive WBC proliferation (with Pathoma Lymphadenopathy) ?
+## Infectious Disease › Viruses
+Parvovirus B19 infection | HR1 | Anemia – Production deficits (with Sketchy Parvovirus B19)
+Infectious mononucleosis | HR1 | WBC: Reactive WBC proliferation (with Sketchy EBV)
+## Infectious Disease › Parasites and Helminths
+Malaria | HR1 | with B&B Malaria and Sketchy Plasmodium
+
+## Renal › Embryology, Anatomy and Physiology
+Renal electrolyte handling | HR3 | Evaluation of renal disease (with B&B tubule physiology)
+Continence and micturition | HR4 | Urinary tract: Ureter, bladder, urethra
+Posterior urethral valves | HR4 | Cysts & neoplasms / Urinary tract (with Pathoma 12.1 Congenital)
+Vesicoureteral reflux | HR4 | Urinary tract: Ureter, bladder, urethra
+## Renal › Acid-Base
+Acid-base physiology | HR3 | with B&B Acid-Base Principles
+Arterial blood gas interpretation | HR3 | with B&B Respiratory Acid Base Disorders (UWorld: also Pulmonary)
+Lactic acidosis | HR3 | with B&B Metabolic Acidosis (UWorld: Pulmonary & Critical Care) ?
+Renal tubular acidosis | HR3 | Tubulointerstitial disease
+## Renal › Electrolytes
+Syndrome of inappropriate antidiuretic hormone (SIADH) | HR3 | with B&B Hyponatremia (UWorld: also Endocrine)
+## Renal › Diseases of the Nephron
+Nephritic syndrome | HR3 | Glomerular disease – Nephritic
+Poststreptococcal glomerulonephritis | HR3 | Glomerular disease – Nephritic
+Membranoproliferative glomerulonephritis | HR3 | Glomerular disease – Nephritic
+Nephrotic syndrome | HR3 | Glomerular disease – Nephrotic
+Minimal change disease | HR3 | Glomerular disease – Nephrotic
+Focal segmental glomerulosclerosis | HR3 | Glomerular disease – Nephrotic
+Membranous nephropathy | HR3 | Glomerular disease – Nephrotic
+Acute kidney injury | HR3 | Tubulointerstitial disease
+Rhabdomylosis | HR3 | Tubulointerstitial disease — pigment injury (UWorld: also Rheumatology) ?
+## Renal › Other Renal Topics
+Diuretics | HR3 | Diuretics 1 & 2
+Polycystic kidney disease | HR4 | Cysts & neoplasms
+Nephrolithiasis | HR4 | Urolithiasis, Hydronephrosis
+Renal cell carcinoma | HR4 | Cysts & neoplasms
+Wilms tumor | HR4 | Cysts & neoplasms
+Bladder cancer | HR4 | Urinary tract: Ureter, bladder, urethra
+Urinary incontinence | HR4 | Urinary tract: Ureter, bladder, urethra (UWorld: Female Reproductive) ?
+Urethral injuries | HR4 | Urinary tract: Ureter, bladder, urethra
+
+## Neurology › Introduction to Neurology
+Nerve physiology | NS1 | Intro (the Library article is NS1)
+Neurotransmitters & related medications | NS1 | Intro (the Library article is NS1)
+## Neurology › Nervous System Structures
+Clinical evaluation of hearing loss | NS2 | Peripheral & Cranial Nerve Disorders (with B&B Auditory System)
+Presbycusis | NS2 | with B&B Auditory System
+Otosclerosis | NS2 | with B&B Auditory System
+Benign paroxysmal positional vertigo | NS2 | with B&B Vestibular System
+Meniere disease | NS2 | with B&B Vestibular System
+## Neurology › Autonomic Nervous System
+Autonomic nervous system | NS1 | with B&B Autonomic Nervous System (the Library article is NS1)
+Horner syndrome | NS1 | the Library article is NS1
+Organophosphate poisoning | NS1 | with B&B Cholinergic Toxidromes (UWorld: Poisoning)
+## Neurology › Neurovascular Disorders
+Brain herniation syndromes | NS1 | Seizure Etiology; Edema & Herniation
+Traumatic brain injury | NS1 | Intro / Trauma
+Epidural and subdural hematoma | NS1 | Intro / Trauma ?
+Intraventricular hemorrhage | NS1 | Vascular (the Library article is NS1)
+Ischemic stroke | NS2 | Cerebrovascular Disease 1 & 2
+Hemorrhagic stroke | NS2 | Cerebrovascular Disease 1 & 2
+Subarachnoid hemorrhage | NS2 | Cerebrovascular Disease (the Library article is NS2)
+Carotid artery stenosis | NS2 | Cerebrovascular Disease (the Library article is NS2; UWorld: also Cardiovascular)
+Cavernous sinus thrombosis | NS2 | Cerebrovascular Disease (UWorld: ENT) ?
+## Neurology › Other Neurology Topics
+Febrile seizure | NS1 | Seizures
+Alzheimer disease | NS1 | Degenerative
+Dementia with Lewy bodies | NS1 | Degenerative
+Frontotemporal dementia | NS1 | Degenerative
+Vascular dementia | NS1 | Degenerative / Vascular
+Creutzfeldt-Jakob disease | NS1 | Degenerative (with Pathoma Dementia) ?
+Normal pressure hydrocephalus | NS1 | Edema & Herniation ?
+Parkinson disease | NS1 | Movement Disorders
+Huntington disease | NS1 | Movement Disorders
+Friedreich ataxia | NS1 | Degenerative (the Library article is NS1)
+Amyotrophic lateral sclerosis | NS1 | Degenerative
+Spinal muscular atrophy | NS1 | Degenerative (motor neuron, with ALS) ?
+Multiple sclerosis | NS1 | Inflammatory
+Transverse myelitis | NS1 | Inflammatory
+Guillain-Barre syndrome | NS1 | Nerve, Neuromuscular Junction ?
+Charcot-Marie-Tooth disease | NS1 | Nerve, Neuromuscular Junction
+Myasthenia gravis | NS1 | Nerve, Neuromuscular Junction
+Neuroblastoma | NS1 | Neoplastic — as the Library article; B&B and Pathoma teach it with the adrenal medulla (Term 4) ?
+Migraine disorder | NS2 | Headache; Anti-migraine Drugs
+Cluster headache | NS2 | Headache
+Tension headache | NS2 | Headache
+Idiopathic intracranial hypertension | NS2 | Headache ?
+Trigeminal neuralgia | NS2 | Peripheral & Cranial Nerve Disorders
+Bacterial meningitis | NS2 | Central Nervous System Infections
+Viral meningitis | NS2 | Central Nervous System Infections
+Duchenne and Becker muscular dystrophy | NS2 | Muscle (the Library article is NS2)
+Myotonic dystrophy | NS2 | Muscle
+Neural tube defects | NS2 | Developmental Disease
+Chiari and Dandy-Walker malformations | NS2 | Developmental Disease
+Syringomyelia | NS2 | Developmental Disease
+Neurofibromatosis type 1 | NS2 | Developmental Disease (neurocutaneous)
+Tuberous sclerosis complex | NS2 | Developmental Disease (neurocutaneous)
+Sturge-Weber syndrome | NS2 | Developmental Disease (neurocutaneous)
+Ataxia-telangiectasia | NS2 | Developmental Disease (the Library article is NS2; UWorld: also Immunology)
+Narcolepsy | NS2 | Sleep-Wake Disorders
+Sleep disorders | NS2 | Sleep-Wake Disorders
+Rett syndrome | NS3 | Neurodevelopmental Disorders (the Library article is NS3)
+Fragile X syndrome | NS3 | Neurodevelopmental Disorders (the Library article is NS3)
+## Infectious Disease › Bacteria
+Botulism | NS1 | with Sketchy Clostridium botulinum
+Tetanus | NS1 | with Sketchy Clostridium tetani
+Meningococcal meningitis | NS2 | Central Nervous System Infections (with Sketchy N. meningitidis)
+Listeriosis | NS2 | Central Nervous System Infections (with Sketchy Listeria)
+## Infectious Disease › Viruses
+Poliomyelitis | NS2 | Central Nervous System Infections (with Sketchy Poliovirus)
+## Biochemistry › Amino Acids
+Phenylketonuria | NS2 | Developmental Disease — as the Library article; B&B teaches it in M1 Biochemistry ?
+
+## Psychiatry › Psychology
+Defense mechanisms | HR1+NS1 | Psychodynamic model (B&B Ego Defenses is HR1 and NS1)
+## Psychiatry › Pathology
+Schizophrenia | HR4+NS1 | Schizophrenia spectrum & other psychotic disorders
+Schizophreniform disorder | HR4+NS1 | Schizophrenia spectrum
+Brief psychotic disorder | HR4+NS1 | Schizophrenia spectrum
+Delusional disorder | HR4+NS1 | Schizophrenia spectrum
+Bipolar I disorder | CP1+NS1 | Bipolar and Related Disorders
+Bipolar II disorder | CP1+NS1 | Bipolar and Related Disorders
+Cyclothymic disorder | CP1+NS1 | Bipolar and Related Disorders
+Major depressive disorder | CP1+NS1 | Depressive Disorders
+Persistent depressive disorder | CP1+NS1 | Depressive Disorders
+Seasonal affective disorder | CP1+NS1 | Depressive Disorders
+Premenstrual syndrome and premenstrual dysphoric disorder | CP1+NS1 | Depressive Disorders (PMDD is a depressive disorder; UWorld: also Female Reproductive)
+Postpartum blues and peripartum psychiatric disorders | CP1+NS1 | Depressive Disorders (UWorld: also Female Reproductive)
+Obsessive-compulsive disorder | CP1+NS1 | Obsessive Compulsive & Related Disorders
+Body dysmorphic disorder | CP1+NS1 | Obsessive Compulsive & Related Disorders
+Generalized anxiety disorder | CP2+NS1 | Anxiety Disorders
+Panic disorder | CP2+NS1 | Anxiety Disorders
+Social anxiety disorder | CP2+NS1 | Anxiety Disorders
+Dissociative disorders | CP2+NS1 | Dissociative Disorders
+Posttraumatic stress disorder | CP2+NS1 | Trauma- and Stressor-Related Disorders
+Acute stress disorder | CP2+NS1 | Trauma- and Stressor-Related Disorders
+Grief and prolonged grief disorder | NS1 | Grief and Depression lecture and patient interview
+Functional neurologic symptom disorder | NS1 | Somatic Symptom and Related Disorders (UWorld: also Nervous System)
+Factitious disorder | NS1 | Somatic Symptom and Related Disorders and Malingering
+Attention deficit hyperactivity disorder | NS1 | Child & Adolescent Psychiatry: ADHD, ODD, CD
+Oppositional defiant disorder and conduct disorder | NS1 | Child & Adolescent Psychiatry: ADHD, ODD, CD
+Impulse control disorders | NS1 | Child & Adolescent Psychiatry: ADHD, ODD, CD (same DSM chapter as ODD and CD) ?
+Separation anxiety disorder | NS2 | Child & Adolescent Psychiatry: Mood & Anxiety Disorders
+Autism spectrum disorder | NS3 | Neurodevelopmental Disorders (the Library article is NS3)
+Tourette syndrome | NS3 | Neurodevelopmental Disorders (tic disorders) ?
+Anorexia nervosa | NS3 | Feeding & Eating Disorders
+Bulimia nervosa | NS3 | Feeding & Eating Disorders
+Personality disorders | MSK1+NS1 | Personality Disorders
+Borderline personality disorder | MSK1+NS1 | Personality Disorders
+## Psychiatry › Pharmacology
+Selective serotonin reuptake inhibitors (SSRIs) | NS1 | Anti-Depressants
+Serotonin-norepinephrine reuptake inhibitors (SNRIs) | NS1 | Anti-Depressants
+Tricyclic antidepressants | NS1 | Anti-Depressants
+Monoamine oxidase inhibitors (MAOIs) | NS1 | Anti-Depressants
+Serotonin toxicity | NS1 | Anti-Depressants
+Lithium | NS1 | Anti-Psychotics / Bipolar Drugs
+Antipsychotics | NS1 | Anti-Psychotics / Bipolar Drugs
+Second-generation antipsychotics | NS1 | Anti-Psychotics / Bipolar Drugs
+Extrapyramidal symptoms | NS1 | Anti-Psychotics; Pharmacology of Movement Disorders
+Neuroleptic malignant syndrome | NS1 | Anti-Psychotics (the Library article is NS1)
+Prescription stimulants | NS2 | ADHD Drugs / Stimulants
+
+## Ophthalmology › General Topics
+Visual pathways and field defects | NS3 | Eye (with B&B Visual Field Defects)
+Refractive errors | NS3 | Eye
+Amblyopia | NS3 | Eye
+Strabismus | NS3 | Eye
+Cataracts | NS3 | Eye
+Acute angle-closure glaucoma | NS3 | Eye; Ophthalmic Drugs
+Age-related macular degeneration | NS3 | Eye
+Vascular retinal disorders | NS3 | Eye
+Hypertensive retinopathy | NS3 | Eye (UWorld: also Cardiovascular)
+Retinitis pigmentosa | NS3 | Eye
+Retinoblastoma | NS3 | Eye
+Conjunctivitis | NS3 | Eye (UWorld: also Infectious Diseases)
+Neonatal conjunctivitis | NS3 | Eye
+Trachoma | NS3 | Eye (UWorld: also Infectious Diseases)
+Endophthalmitis | NS3 | Eye (UWorld: also Infectious Diseases)
+Preseptal cellulitis | NS3 | Eye
+Orbital cellulitis | NS3 | Eye
+Orbital fractures | NS3 | Eye
+
+## Dermatology › General Topics
+Wound healing | MSK1 | Skin Trauma (with B&B Wound Healing and Scar)
+Burns | MSK1 | Skin Trauma (the Library article is MSK1)
+Pressure ulcers | MSK1 | Skin Trauma (the Library article is MSK1)
+Eczema (atopic dermatitis) | MSK1 | Common Skin Disorders
+Seborrheic dermatitis | MSK1 | Common Skin Disorders
+Diaper dermatitis | MSK1 | Common Skin Disorders
+Psoriasis | MSK1 | Common Skin Disorders
+Lichen planus | MSK1 | Dermatopathology: Benign
+Pityriasis rosea | MSK1 | Common Skin Disorders
+Acne vulgaris | MSK1 | Common Skin Disorders
+Hidradenitis suppurativa | MSK1 | Common Skin Disorders
+Vitiligo | MSK1 | Dermatopathology: Benign
+Seborrheic keratosis | MSK1 | Derm Lesions
+Bullous pemphigoid | MSK1 | Dermatopathology: Benign (blistering)
+Pemphigus vulgaris | MSK1 | Dermatopathology: Benign (blistering)
+Stevens-Johnson syndrome and toxic epidermal necrolysis | MSK1 | Derm Emergencies
+DRESS | MSK1 | Derm Emergencies (UWorld: also Immunology)
+Cellulitis | MSK1 | Skin Infections
+Erysipelas | MSK1 | Skin Infections
+Impetigo | MSK1 | Skin Infections
+Staphylococcal scalded skin syndrome | MSK1 | Skin Infections
+Toxic shock syndrome | MSK1 | Derm Emergencies (with Sketchy S. aureus)
+Molluscum contagiosum | MSK1 | Skin Infections
+Basal cell carcinoma | MSK1 | Dermatopathology: Neoplastic
+Cutaneous squamous cell carcinoma | MSK1 | Dermatopathology: Neoplastic
+Melanoma | MSK1 | Dermatopathology: Neoplastic
+Cutaneous T-cell lymphoma | MSK1 | Dermatopathology: Neoplastic (the Library article is MSK1; UWorld: also Heme/Onc)
+Kaposi sarcoma | MSK3 | Immunocompromised Host (with Sketchy HHV-8; the Library article is MSK3)
+## Immunology › Clinical Immunology
+Anaphylaxis | MSK1 | Derm Emergencies, beside angioedema ?
+Angioedema & urticaria | MSK1 | Derm Emergencies (the Library article is MSK1)
+## Infectious Disease › Viruses
+Chickenpox | MSK1 | Skin Infections (with Sketchy VZV)
+Herpes zoster | MSK1 | Skin Infections (with Sketchy VZV)
+Measles | MSK1 | Skin Infections (the Library article is MSK1)
+Rubella | MSK1 | Skin Infections (with Sketchy Rubella)
+Roseola | MSK1 | Skin Infections (with Sketchy HHV-6)
+## Infectious Disease › Fungi
+Tinea versicolor | MSK1 | Skin Infections (with B&B Fungal Skin Infections)
+Onychomycosis | MSK1 | Skin Infections (with B&B Fungal Skin Infections)
+## Infectious Disease › Parasites and Helminths
+Scabies | MSK1 | Skin Infections (with Sketchy Scabies, Lice)
+## Anesthesia › General Topics
+Malignant hyperthermia | MSK1 | General Anesthesia (with B&B Inhaled Anesthetics)
+
+## Musculoskeletal › Cell Biology
+Skeletal muscle physiology | MSK2 | Skeletal Muscle (with B&B Skeletal Muscle)
+## Musculoskeletal › Pathology
+Achondroplasia | MSK2 | Bone: Non-Neoplastic
+Osteogenesis imperfecta | MSK2 | Bone: Non-Neoplastic
+Ehlers-Danlos syndrome | MSK2 | Connective Tissue Disease ?
+Paget disease of bone | MSK2 | Bone: Non-Neoplastic
+Osteosarcoma | MSK2 | Bone: Neoplastic
+Ewing sarcoma | MSK2 | Bone: Neoplastic
+Giant cell tumor of bone | MSK2 | Bone: Neoplastic
+Osteoarthritis | MSK2 | Joints
+Crystal arthropathies | MSK2 | Joints; Anti-gout Drugs (with B&B Gout, CPPD)
+Juvenile idiopathic arthritis | MSK2 | Polyarthritis
+Polymyalgia rheumatica | MSK2 | Skeletal Muscle & Systemic Inflammatory
+Giant cell arteritis | MSK2 | Skeletal Muscle & Systemic Inflammatory (with PMR; B&B Vasculitis is MSK2) ?
+Raynaud phenomenon | MSK2 | Connective Tissue Disease
+Adhesive capsulitis | MSK2 | Soft Tissue
+Elbow tendinopathy | MSK2 | Soft Tissue
+## Musculoskeletal › Anatomy and Orthopedics
+Carpal tunnel syndrome | MSK3 | with B&B Wrist ?
+Plantar fasciitis | MSK3 | the Library article is MSK3
+Compartment syndrome | MSK3 | the Library article is MSK3
+Developmental dysplasia of the hip | MSK3 | Pediatric Fractures (pediatric orthopedics)
+Legg-Calve-Perthes disease | MSK3 | Pediatric Fractures (pediatric orthopedics)
+Slipped capital femoral epiphysis | MSK3 | Pediatric Fractures (pediatric orthopedics)
+Osgood-Schlatter disease | MSK3 | Pediatric Fractures (pediatric orthopedics)
+Radial head subluxation | MSK3 | Pediatric Fractures (pediatric orthopedics)
+Transient synovitis | MSK3 | Pediatric Fractures (pediatric orthopedics)
+## Immunology › Clinical Immunology
+Chronic granulomatous disease | MSK3 | Immunocompromised Host (the Library article is MSK3)
+X-linked agammaglobulinemia | MSK3 | Immunocompromised Host ?
+Common variable immunodeficiency | MSK3 | Immunocompromised Host ?
+Selective IgA deficiency | MSK3 | Immunocompromised Host ?
+DiGeorge syndrome | MSK3 | Immunocompromised Host ?
+Severe combined immunodeficiency | MSK3 | Immunocompromised Host ?
+Leukocyte adhesion deficiency | MSK3 | Immunocompromised Host ?
+## Infectious Disease › Bacteria
+Leprosy (Hansen disease) | MSK3 | Granulomatous Diseases (with Sketchy M. leprae)
+Nontuberculous mycobacteria | MSK3 | Granulomatous Diseases (with Sketchy MAI)
+Bartonella henselae infections | MSK3 | Zoonotic Infections (the Library article is MSK3)
+Rocky mountain spotted fever | MSK3 | Zoonotic Infections (the Library article is MSK3)
+Yersinia pestis | MSK3 | Zoonotic Infections (the Library article is MSK3)
+## Infectious Disease › Viruses
+Lifecycle of human immunodeficiency virus (HIV) | MSK3 | Immunocompromised Host (with Sketchy HIV Life Cycle)
+Dengue virus infection | MSK3 | Fever of Unknown Origin / Zoonotic Infections ?
+## Infectious Disease › Fungi
+Aspergillosis | MSK3 | Immunocompromised Host (the Library article is MSK3)
+Pneumocystis jirovecii pneumonia | MSK3 | Immunocompromised Host (the Library article is MSK3)
+## Infectious Disease › Parasites and Helminths
+Toxoplasmosis | MSK3 | Immunocompromised Host (the Library article is MSK3)
+## Pathology › General Topics
+High altitude illness | MSK3 | Environmental Pathology (the Library article is MSK3)
+Carbon monoxide poisoning | MSK3 | Environmental Pathology (the Library article is MSK3)
+Cyanide poisoning | MSK3 | Environmental Pathology (the Library article is MSK3)
+Lead poisoning | MSK3 | Environmental Pathology (the Library article is MSK3)
+Arsenic poisoning | MSK3 | Environmental Pathology (the Library article is MSK3)
+Methanol poisoning | MSK3 | Environmental Pathology ?
+Ethylene glycol poisoning | MSK3 | Environmental Pathology ?
+Salicylate toxicity | MSK3 | Environmental Pathology ?
+Reye syndrome | MSK3 | Environmental Pathology, beside salicylate toxicity ?
+
+## Behavioral Science › General Topics
+Ethical principles of medicine | HR1 | Ethics in health systems (with B&B Ethics Principles)
+Informed consent | HR2 | with B&B Informed Consent
+Decision making capacity | HR2 | with B&B Decision-Making Capacity
+Patient confidentiality and privacy | HR2 | with B&B Confidentiality (the Library article is MSK3) ?
+Advanced care planning | HR2 | with B&B Informed Consent, Decision-Making Capacity ?
+Delivering bad news | HR2 | The psychiatric interview ?
+Stages of behavioral change | NS2 | Substance use (motivational interviewing) ?
+
+## Gastroenterology › Anatomy
+Annular pancreas | GI | GI embryology
+Duodenal atresia | GI | GI embryology
+Malrotation | GI | GI embryology
+Meckel diverticulum | GI | GI embryology
+Gastroschisis | GI | GI embryology
+Omphalocele | GI | GI embryology
+Pyloric stenosis | GI | GI embryology
+Hirschsprung disease | GI | GI embryology
+Biliary atresia | GI | GI embryology
+Hiatal hernias | GI | with B&B Hernias
+Groin hernias | GI | with B&B Hernias
+## Gastroenterology › GI Physiology
+Hereditary hyperbilirubinemias | GI | with B&B Bilirubin
+## Gastroenterology › Clinical Gastroenterology
+Achalasia | GI | Esophagus
+Zenker diverticulum | GI | Esophagus
+Esophagitis | GI | Esophagus
+Eosinophilic esophagitis | GI | Esophagus
+Barrett esophagus | GI | Esophagus
+Esophageal cancer | GI | Esophagus
+Peptic ulcer disease | GI | Stomach
+Gastric cancer | GI | Stomach
+Celiac disease | GI | Malabsorption
+Lactose intolerance | GI | Malabsorption
+Whipple disease | GI | Malabsorption (UWorld: also Infectious Diseases)
+Inflammatory bowel disease | GI | Intestine
+Appendicitis | GI | Intestine
+Intussusception | GI | Intestine
+Necrotizing enterocolitis | GI | Intestine
+Acute mesenteric ischemia | GI | Intestine
+Diverticular disease | GI | Colon
+Hemorrhoids | GI | Colon
+Colorectal cancer | GI | Colon
+Anal cancer | GI | Colon
+Acute cholecystitis | GI | Gallbladder and biliary tract
+Acute cholangitis | GI | Gallbladder and biliary tract
+Primary biliary cholangitis | GI | Gallbladder and biliary tract
+Primary sclerosing cholangitis | GI | Gallbladder and biliary tract
+Cholangiocarcinoma | GI | Gallbladder and biliary tract
+Acute pancreatitis | GI | Pancreas
+Chronic pancreatitis | GI | Pancreas
+Pancreatic cancer | GI | Pancreas
+Metabolic dysfunction-associated steatotic liver disease (MASLD) | GI | Liver
+Autoimmune hepatitis | GI | Liver
+Acute liver failure | GI | Liver
+Cirrhosis | GI | Liver
+Pyogenic liver abscess | GI | Liver
+Wilson disease | GI | Liver (with B&B Wilson Disease and Hemochromatosis; the Library article is NS2) ?
+Hereditary hemochromatosis | GI | Liver (with B&B Wilson Disease and Hemochromatosis; UWorld: Heme/Onc) ?
+## Infectious Disease › Bacteria
+Escherichia coli | GI | the enteric organisms wait for GI (as Sketchy)
+Salmonella | GI | as Sketchy
+Shigella infection (shigellosis) | GI | as Sketchy
+Campylobacter | GI | as Sketchy
+Cholera | GI | as Sketchy (Vibrio)
+Clostridioides difficle infection | GI | as Sketchy
+## Infectious Disease › Viruses
+Norovirus | GI | as Sketchy
+Rotavirus | GI | as Sketchy
+Hepatitis C virus infection | GI | as Sketchy (hepatitis viruses wait for GI)
+## Infectious Disease › Parasites and Helminths
+Giardiasis | GI | as Sketchy
+Entamoeba histolytica | GI | as Sketchy
+
+## Endocrinology › Thyroid
+Thyroid physiology | T4E | Term 4 endocrine
+Hyperthyroidism | T4E | Term 4 endocrine
+Graves disease | T4E | Term 4 endocrine
+Hypothyroidism | T4E | Term 4 endocrine
+Thyroid nodules | T4E | Term 4 endocrine
+Thyroid cancers | T4E | Term 4 endocrine (UWorld: also Heme/Onc)
+## Endocrinology › Adrenals
+Adrenal insufficiency | T4E | Term 4 endocrine
+Cushing syndrome | T4E | Term 4 endocrine
+Congenital adrenal hyperplasia | T4E | Term 4 endocrine
+Pheochromocytoma | T4E | Term 4 endocrine (B&B Adrenal Tumors; UWorld: also Cardiovascular) ?
+## Endocrinology › Pancreas
+Type 1 diabetes mellitus | T4E | Term 4 endocrine
+Type 2 diabetes mellitus | T4E | Term 4 endocrine
+Macrovascular and microvascular complications of diabetes | T4E | Term 4 endocrine (UWorld: also Renal)
+## Endocrinology › Reproductive
+The menstrual cycle | T4E | with B&B Menstrual Cycle
+Precocious puberty | T4E | Term 4 endocrine
+Hypothalamic amenorrhea | T4E | with B&B Secondary Amenorrhea
+Primary ovarian insufficiency | T4E | with B&B Secondary Amenorrhea ?
+## Endocrinology › Other Topics
+Sheehan syndrome | T4E | with B&B Pituitary Pathology
+
+## Reproductive › Embryology
+Cleft lip and palate | T4R | with B&B Cleft Lip and Palate (UWorld: ENT)
+Müllerian agenesis | T4R | with B&B Genital Embryology
+Hypospadias | T4R | with B&B Genital Embryology
+Epispadias | T4R | with B&B Genital Embryology
+Cryptorchidism | T4R | with B&B Genital Embryology
+## Reproductive › Pregnancy
+Oogenesis | T4R | with B&B Spermatogenesis and Oogenesis
+Spermatogenesis | T4R | with B&B Spermatogenesis and Oogenesis
+Normal labor | T4R | Term 4 reproductive
+Fetal heart rate tracings | T4R | Term 4 reproductive
+Abnormal labor | T4R | Term 4 reproductive
+Shoulder dystocia | T4R | Term 4 reproductive
+Twin gestation | T4R | with B&B Twins
+Ectopic pregnancy | T4R | Term 4 reproductive
+Hyperemesis gravidarum | T4R | Term 4 reproductive
+Gestational diabetes mellitus | T4R | with B&B Maternal-Fetal Disorders (UWorld: also Endocrine)
+Placenta previa | T4R | with B&B Placental Complications
+Placenta accreta | T4R | with B&B Placental Complications
+Vasa previa | T4R | with B&B Placental Complications
+Abruptio placentae (placental abruption) | T4R | with B&B Placental Complications
+Hydatidiform mole | T4R | with B&B Gestational Tumors
+Acute fatty liver of pregnancy | T4R | Term 4 reproductive
+Intrahepatic cholestasis of pregnancy | T4R | Term 4 reproductive
+Amniotic fluid embolism | T4R | Term 4 reproductive
+Intraamniotic infection | T4R | Term 4 reproductive
+Uterine rupture | T4R | Term 4 reproductive
+Uterine inversion | T4R | Term 4 reproductive
+Postpartum hemorrhage | T4R | Term 4 reproductive
+Postpartum endometritis | T4R | Term 4 reproductive
+## Reproductive › Vagina, Cervix, Uterus
+Bartholin gland cyst and abscess | T4R | Term 4 reproductive
+Bacterial vaginosis | T4R | with Sketchy Gardnerella
+Acute cervicitis | T4R | the sexually transmitted organisms wait for Term 4 (as Sketchy)
+Pelvic inflammatory disease | T4R | as Sketchy (UWorld: also Infectious Diseases)
+Vulvar cancer | T4R | with Pathoma Vulva
+Cervical cancer | T4R | with B&B Cervical Cancer
+Intrauterine adhesions | T4R | with B&B Endometrial Disorders
+Endometrial polyps | T4R | with B&B Endometrial Disorders
+Adenomyosis | T4R | with B&B Endometriosis
+Endometriosis | T4R | with B&B Endometriosis
+Uterine fibroids | T4R | Term 4 reproductive
+Endometrial cancer | T4R | with B&B Endometrial Cancer
+Pelvic organ prolapse | T4R | Term 4 reproductive
+## Reproductive › Ovary
+Polycystic ovary syndrome | T4R | with B&B Ovarian Cysts
+Ovarian torsion | T4R | Term 4 reproductive
+Epithelial ovarian cancer | T4R | with B&B Ovarian Epithelial Tumors
+## Reproductive › Breast
+Inflammatory breast cancer | T4R | with B&B Breast Carcinoma
+Paget disease of the breast | T4R | with B&B Breast Carcinoma
+## Reproductive › Male Disorders
+Infectious urethritis | T4R | as Sketchy (UWorld: also Infectious Diseases)
+Acute epididymitis | T4R | with B&B Scrotal Disorders
+Testicular torsion | T4R | with B&B Scrotal Disorders
+Varicocele | T4R | with B&B Scrotal Disorders
+Acute bacterial prostatitis | T4R | with B&B Prostate
+Benign prostatic hyperplasia | T4R | with B&B Prostate (UWorld: also Renal)
+Prostate cancer | T4R | with B&B Prostate
+## Reproductive › Other Topics
+Androgen insensitivity syndrome | T4R | with B&B Disorders of Sexual Development
+
+## Biochemistry › Metabolism
+Glycogen metabolism | M1 | with B&B Glycogen
+Glycogen storage diseases | M1 | with B&B Glycogen (UWorld: also GI & Nutrition) ?
+Galactosemia | M1 | with B&B Fructose and Galactose (UWorld: GI & Nutrition) ?
+## Biochemistry › Amino Acids
+Urea cycle | M1 | with B&B Ammonia
+Alkaptonuria | M1 | with B&B Phenylalanine and Tyrosine
+Maple syrup urine disease | M1 | with B&B Other Amino Acids
+## Biochemistry › Other Topics
+Lysosomal storage disease | M1 | with B&B Lysosomal Storage Diseases (UWorld: also GI & Nutrition) ?
+## Cell Biology › Cellular Biology
+Ubiquitin-proteasome system | M1 | M1 cell biology
+## Genetics › Genetic Disorders
+Trisomy 21 | M1 | with B&B Down Syndrome ?
+Trisomy 13, 18, and 21 | M1 | with B&B Trisomies ?
+
+## Immunology › Basic Immunology
+Immunoglobulin structure and function | IMM | with B&B B-cells — Immunology has no Brody unit yet
+Complement system | IMM | with B&B The Complement System
+## Immunology › Clinical Immunology
+Hypersensitivity reactions | IMM | with B&B Hypersensitivity
