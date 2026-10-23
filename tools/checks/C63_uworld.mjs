@@ -99,7 +99,7 @@ const sched = await p.evaluate(async ()=>{
   return {
     bnbOnDay:bnbOnDay.length, withQ:withQ.length,
     rows:document.querySelectorAll('.uwrow').length,
-    bar:!!document.querySelector('.uwbar'),
+    bar:!!document.querySelector('.uwt'),
     dayIds:dayIds.length, dayDupes:dayIds.length-new Set(dayIds).size,
     naive:naive.length, naiveDupes:naive.length-new Set(naive).size,
     wkIds:wkIds.length, wkDupes:wkIds.length-new Set(wkIds).size,
@@ -112,7 +112,7 @@ const sched = await p.evaluate(async ()=>{
 chk('C63-10 every B&B video on the day that has questions shows them, collapsed',
     sched.rows === sched.withQ && sched.withQ > 0,
     sched.rows + ' disclosures for ' + sched.withQ + ' videos with questions (of ' + sched.bnbOnDay + ' B&B)');
-chk('C63-11 the day carries a copy bar', sched.bar === true, 'no .uwbar rendered');
+chk('C63-11 the day carries a UWorld test builder', sched.bar === true, 'no .uwt rendered');
 chk('C63-12 a whole-day copy is de-duplicated',
     sched.dayDupes === 0 && sched.dayIds > 0, sched.dayIds + ' ids, ' + sched.dayDupes + ' dupes');
 chk('C63-13 a whole-week copy is de-duplicated, and contains the day',
@@ -198,10 +198,10 @@ const noBnb = await p.evaluate(()=>{
   S.cfg.resources={bnb:false,pathoma:true,sketchy:true,bootcamp:true};
   reflow();VIEW='today';render();
   return {rows:document.querySelectorAll('.uwrow').length,
-          bar:!!document.querySelector('.uwbar'),
+          bar:!!document.querySelector('.uwt'),
           tabStillThere:[...document.querySelectorAll('.navb')].map(b=>b.dataset.view).includes('checklist')};
 });
-chk('C63-23 a plan with B&B off shows no question rows or copy bar',
+chk('C63-23 a plan with B&B off shows no question rows or test builder',
     noBnb.rows===0 && noBnb.bar===false, 'rows '+noBnb.rows+', bar '+noBnb.bar);
 chk('C63-24 …but the library, with its question sets, is still reachable for browsing',
     noBnb.tabStillThere===true, 'tab missing');
