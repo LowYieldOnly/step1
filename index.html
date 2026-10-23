@@ -1492,11 +1492,14 @@ function moveCatOrder(c,res,sys,i,dir){
   if(j<0||j>=a.length)return false;
   const t=a[j];a[j]=a[i];a[i]=t;setCatOrder(c,res,sys,a);return true;}
 function planSystems(){const c=S.cfg;const sel=new Set((c.systems&&c.systems.length)?c.systems:SYS);const ord=(c.sysOrder&&c.sysOrder.length)?c.sysOrder:SYS_ORDER_DEFAULT;return ord.filter(s=>sel.has(s));}
-function hasRes(k){const r=S.cfg&&S.cfg.resources;if(!r)return (k==="fa"||k==="anking");return !!r[k];}
-/* which catalog resources each toggle enables (Sketchy covers Micro + Pharm,
-   kept as distinct res values so the two never blend in a day's list; Sketchy Immuno
-   has its own toggle, so plans made before it existed don't gain it unasked) */
-function resEnabled(){return {bnb:hasRes("bnb"),pathoma:hasRes("pathoma"),skmicro:hasRes("sketchy"),skpharm:hasRes("sketchy"),skimmuno:hasRes("skimmuno"),bootcamp:hasRes("bootcamp")};}
+function hasRes(k){const r=S.cfg&&S.cfg.resources;if(!r)return (k==="fa"||k==="anking");return resOn(r,k);}
+/* Sketchy Pharm, Sketchy Micro and Sketchy Immunology are three resources, each with its own
+   switch. Plans made while one "Sketchy" switch covered Micro and Pharm carry
+   resources.sketchy; until a plan sets skmicro / skpharm one by one, that old switch still
+   stands for both — so no existing plan gains or loses a video. */
+function resOn(R,k){if(!R)return false;if((k==="skmicro"||k==="skpharm")&&R[k]==null)return !!R.sketchy;return !!R[k];}
+/* which catalog resources each switch enables — one switch per Sketchy course (resOn) */
+function resEnabled(){return {bnb:hasRes("bnb"),pathoma:hasRes("pathoma"),skmicro:hasRes("skmicro"),skpharm:hasRes("skpharm"),skimmuno:hasRes("skimmuno"),bootcamp:hasRes("bootcamp")};}
 /* stable item ids: B&B/Pathoma keep their historic prefix so prior progress
    carries over; the newer resources namespace by system to stay unique. Bootcamp
    also keys on category — its section-review videos repeat by name within a system. */
@@ -1610,7 +1613,7 @@ const THREAD_SYS=new Set(["Psychiatry","Behavioral Science"]);
    and an article you don't want scheduled has to be droppable like any other item.
    Kept separate from resEnabled(), which drives the minute-based video pour and must
    never see an article. */
-function resEnabledFor(c){const R=(c&&c.resources)||{};return {bnb:!!R.bnb,pathoma:!!R.pathoma,skmicro:!!R.sketchy,skpharm:!!R.sketchy,skimmuno:!!R.skimmuno,bootcamp:!!R.bootcamp,uwlib:!!R.uwlib};}
+function resEnabledFor(c){const R=(c&&c.resources)||{};return {bnb:!!R.bnb,pathoma:!!R.pathoma,skmicro:resOn(R,"skmicro"),skpharm:resOn(R,"skpharm"),skimmuno:!!R.skimmuno,bootcamp:!!R.bootcamp,uwlib:!!R.uwlib};}
 /* ============================================================
    OPT OUT OF SPECIFIC VIDEOS
    The skip set lives on the CONFIG, not in global state. It's part of
@@ -1979,6 +1982,9 @@ function brodyIncluded(blk,v){return !!(blk.include&&blk.include.indexOf(brodyKe
 // system — so matching by system would drop a Pulmonary article into Cardiopulm with no week
 // just because another unit's reading list needed it. The list is explicit, so an article
 // can never fall through to a default week.
+/* The three Sketchy courses, each its own resource and switch. On a Brody unit a switch is
+   offered only where the unit (or your own order) holds that course's videos. */
+const SK_RES=[["skpharm","Sketchy Pharm"],["skmicro","Sketchy Micro"],["skimmuno","Sketchy Immunology"]];
 /* Does this Brody block (or your own order) hold any video of a resource? A toggle for a
    resource the unit has none of would do nothing, so it isn't offered. */
 function blkHasRes(blk,res){return !!blk&&catVideos().some(v=>v.res===res&&brodyInBlock(blk,v));}
@@ -2064,7 +2070,7 @@ function brodyEarlierIds(c,blk){
   if(blk.seq)return {ids:new Set(),dayOf:{}};   // nothing in a sequence is "before you arrived"
   const jd=(c&&c.brodyJoinDate)||blk.weeks[0].start;
   if(jd<=blk.weeks[0].start)return {ids:new Set(),dayOf:{}};
-  const R=c.resources||{};const en={bnb:R.bnb,pathoma:R.pathoma,skmicro:R.sketchy,skpharm:R.sketchy,skimmuno:R.skimmuno,bootcamp:R.bootcamp};
+  const R=c.resources||{};const en={bnb:R.bnb,pathoma:R.pathoma,skmicro:resOn(R,"skmicro"),skpharm:resOn(R,"skpharm"),skimmuno:R.skimmuno,bootcamp:R.bootcamp};
   const pathSel=en.pathoma?effectivePathChapters(c):new Set();
   const cutoff=brodyReviewCutoff(c,blk);
   const wkStart=blk.weeks.map(w=>w.start);const weekOf=iso=>{let n=0;for(let i=0;i<blk.weeks.length;i++){if(iso>=wkStart[i])n=blk.weeks[i].n;}return n;};
@@ -2126,7 +2132,7 @@ function brodyWeekFrame(c,blk){
    actual quiz you're about to take. */
 function brodyWeekLoads(c,blk,live){
   const R=c.resources||{};
-  const en={bnb:R.bnb,pathoma:R.pathoma,skmicro:R.sketchy,skpharm:R.sketchy,skimmuno:R.skimmuno,bootcamp:R.bootcamp};
+  const en={bnb:R.bnb,pathoma:R.pathoma,skmicro:resOn(R,"skmicro"),skpharm:resOn(R,"skpharm"),skimmuno:R.skimmuno,bootcamp:R.bootcamp};
   const pathSel=en.pathoma?effectivePathChapters(c):new Set();
   // loads count only what's still OWED (undone/unskipped, plus today's check-offs
   // for intra-day stability) — a watched video is off the books, so the pace math
@@ -2709,7 +2715,7 @@ function ring(pct,size){size=size||64;const fs=Math.round(size*0.62);
   return '<div class="statpct"><div class="statpct-n" style="font-size:'+fs+'px">'+pct+'<span>%</span></div><div class="statpct-l">complete</div></div>';}
 
 function resBadge(res){const m={bnb:["B&B","bnb"],pathoma:["Pa","pa"],skmicro:["SkM","sk"],skpharm:["SkP","sk"],skimmuno:["SkI","sk"],bootcamp:["BC","bc"],uwlib:["UW","uw"]};const x=m[res]||["·","bnb"];return '<span class="badge '+x[1]+'">'+x[0]+'</span>';}
-function resLabel(res){return {bnb:"Boards & Beyond",pathoma:"Pathoma",skmicro:"Sketchy Micro",skpharm:"Sketchy Pharm",skimmuno:"Sketchy Immuno",bootcamp:"Bootcamp",uwlib:"UWorld Library (reading)"}[res]||"Videos";}
+function resLabel(res){return {bnb:"Boards & Beyond",pathoma:"Pathoma",skmicro:"Sketchy Micro",skpharm:"Sketchy Pharm",skimmuno:"Sketchy Immunology",bootcamp:"Bootcamp",uwlib:"UWorld Library (reading)"}[res]||"Videos";}
 function vName(it){let n=it.name;if(it.res==="pathoma")n=n.replace(/^\d+\.\d+(-\d+\.\d+)?\s*/,"");return n;}
 
 /* One rendered row = exactly one video. Rows are keyed on the item's own id
@@ -4341,7 +4347,7 @@ function renderAdjustBrody(c){
     ?('<div class="card"><div class="cardhd">Your order</div>'+seqEditorHTML(c)+'</div>')
     :('<div class="card soft"><div class="cardhd">Weekly plan</div>'+brodyPreview(c)+'</div>');
   colB+='<div class="card"><div class="cardhd">Video resources</div><div class="togrow">'
-    +resBtn("bnb","Boards &amp; Beyond")+resBtn("pathoma","Pathoma")+resBtn("sketchy","Sketchy")+(blkHasRes(blk,"skimmuno")?resBtn("skimmuno","Sketchy Immuno"):"")+resBtn("bootcamp","Bootcamp")
+    +resBtn("bnb","Boards &amp; Beyond")+resBtn("pathoma","Pathoma")+SK_RES.map(([k,lab])=>blkHasRes(blk,k)?resBtn(k,lab):"").join("")+resBtn("bootcamp","Bootcamp")
     +'</div><p class="muted small">Turn on the video resources you use — the plan re-flows live.</p>'
     +'<div class="flab mt">Content depth</div>'
     +'<div class="togrow">'
@@ -4544,7 +4550,7 @@ function renderPlanEditor(){
     +'<div><div class="kv">'+Math.round(st.remMin/60)+'h</div><div class="kvl">video time left</div></div>'
     +'<div><div class="kv">'+(isFinite(st.reqPerDay)?(Math.round(st.reqPerDay/60*10)/10+'h'):'—')+'</div><div class="kvl">video needed / day</div></div></div></div>';
   colB+='<div class="card"><div class="cardhd">Video resources</div><div class="togrow">'
-    +resBtn("bnb","Boards &amp; Beyond")+resBtn("pathoma","Pathoma")+resBtn("sketchy","Sketchy")+resBtn("skimmuno","Sketchy Immuno")+resBtn("bootcamp","Bootcamp")
+    +resBtn("bnb","Boards &amp; Beyond")+resBtn("pathoma","Pathoma")+SK_RES.map(([k,lab])=>resBtn(k,lab)).join("")+resBtn("bootcamp","Bootcamp")
     +'</div><p class="muted small">Pick the video resources to weave into this plan — turn any off you\'re not using.</p>'
     +'<div class="flab mt">Anki</div><div class="togrow">'+resBtn("anking","Daily AnKing tags")+'</div>'
     +'<p class="muted small">Adds a copy-ready AnKing Browse search for each day’s videos to your Study page. Doesn’t change the schedule.</p></div>';
@@ -5349,7 +5355,7 @@ const OB_STEP_META={
   practice:["Practice questions","Optionally set a practice-question goal."],
   review:["Review & start","One last look before you build it."]
 };
-function obHasVideoRes(ob){return !!(ob.resources&&["bnb","pathoma","sketchy","skimmuno","bootcamp"].some(k=>ob.resources[k]));}
+function obHasVideoRes(ob){return !!(ob.resources&&["bnb","pathoma","skpharm","skmicro","skimmuno","bootcamp"].some(k=>resOn(ob.resources,k)));}
 /* Reading counts as content, so a plan with UWorld Library on and every video
    resource off is a real plan. The old gate only knew about video and would have
    blocked setup on the step where you'd just chosen to read instead. */
@@ -5369,8 +5375,8 @@ function obStepValid(ob,key){
 }
 function obReviewHTML(ob){
   const brody=ob.brody?brodyBlock(ob):null;
-  const RESNM={bnb:"B&B",pathoma:"Pathoma",sketchy:"Sketchy",skimmuno:"Sketchy Immuno",bootcamp:"Bootcamp",fa:"First Aid",anking:"AnKing",uworld:"UWorld"};
-  const res=Object.keys(RESNM).filter(k=>ob.resources&&ob.resources[k]).map(k=>RESNM[k]);
+  const RESNM={bnb:"B&B",pathoma:"Pathoma",skpharm:"Sketchy Pharm",skmicro:"Sketchy Micro",skimmuno:"Sketchy Immunology",bootcamp:"Bootcamp",fa:"First Aid",anking:"AnKing",uworld:"UWorld"};
+  const res=Object.keys(RESNM).filter(k=>resOn(ob.resources,k)).map(k=>RESNM[k]);
   const rows=[];
   rows.push(["Plan",brody?(brody.seq?(brody.name+" · your order, "+brody.weeks.length+" topics"):("Brody calendar · "+brody.name)):"Custom exam countdown"]);
   if(brody&&brody.seq)rows.push(["Dates",fmtShort(brody.weeks[0].start)+" → "+fmtShort(brody.shelf)]);
@@ -5400,7 +5406,7 @@ function renderOnboard(){
   const editing=(!!S.cfgs[ob.hub])&&!ob.fresh;
   const meta=OB_STEP_META[key]||["",""];
   const dows=DOW.map((d,i)=>'<button type="button" class="tog '+(ob.restDays.includes(i)?"on":"")+'" data-odow="'+i+'">'+d+'</button>').join('');
-  const resBtn=(k,lab)=>'<button type="button" class="tog '+(ob.resources[k]?"on":"")+'" data-ores="'+k+'">'+lab+'</button>';
+  const resBtn=(k,lab)=>'<button type="button" class="tog '+(resOn(ob.resources,k)?"on":"")+'" data-ores="'+k+'">'+lab+'</button>';
   let body='<div class="onboard wiz">';
   body+='<div class="wizhead"><button class="link wizcancel" id="o_cancel">✕ Cancel</button>'
     +'<div class="wizprog"><div class="wizprog-bar" style="width:'+Math.round((ob.step+1)/steps.length*100)+'%"></div></div>'
@@ -5435,7 +5441,7 @@ function renderOnboard(){
   if(key==="resources"){
     const oblk=ob.brody?brodyBlock(ob):null;
     body+='<div class="card"><div class="cardhd">Video resources</div><div class="togrow">'
-    +resBtn("bnb","Boards &amp; Beyond")+resBtn("pathoma","Pathoma")+resBtn("sketchy","Sketchy")+((!oblk||blkHasRes(oblk,"skimmuno"))?resBtn("skimmuno","Sketchy Immuno"):"")+resBtn("bootcamp","Bootcamp")
+    +resBtn("bnb","Boards &amp; Beyond")+resBtn("pathoma","Pathoma")+SK_RES.map(([k,lab])=>(!oblk||blkHasRes(oblk,k))?resBtn(k,lab):"").join("")+resBtn("bootcamp","Bootcamp")
     +'</div><p class="muted small">Turn on the video resources you use — they interleave into '+(ob.brody?'each Brody week':'the plan')+'.</p>'
     // Reading and content depth are Brody-only: both are driven by per-unit maps that
     // only exist for a Brody block.
@@ -5525,7 +5531,7 @@ function renderOnboard(){
   bindN("o_wk","wkdayHrs");bindN("o_we","wkendHrs");
   const orv=document.getElementById("o_rev");if(orv)orv.onchange=()=>{let v=parseInt(orv.value,10);if(isNaN(v)||v<0)v=0;ob.reviewDays=v;obLive();};
   document.querySelectorAll("[data-odow]").forEach(b=>b.onclick=()=>{const i=+b.dataset.odow;const k=ob.restDays.indexOf(i);if(k>=0)ob.restDays.splice(k,1);else ob.restDays.push(i);renderObTogs();obLive();});
-  document.querySelectorAll("[data-ores]").forEach(b=>b.onclick=()=>{ob.resources[b.dataset.ores]=!ob.resources[b.dataset.ores];renderOnboard();});   // full re-render so the step's Next-gate updates
+  document.querySelectorAll("[data-ores]").forEach(b=>b.onclick=()=>{ob.resources[b.dataset.ores]=!resOn(ob.resources,b.dataset.ores);renderOnboard();});   // full re-render so the step's Next-gate updates
   // tapping the Brody plan again keeps the unit and order already chosen
   document.querySelectorAll("[data-oplan]").forEach(b=>b.onclick=()=>{if(b.dataset.oplan==="brody"){if(!ob.brody){const bl=brodyBlockById(brodyCurrentBlockId());ob.brodyJoinWk=null;ob.brody=bl.id;ob.systems=bl.systems.slice();ob.examLabel=bl.name;}}else ob.brody=null;renderOnboard();});
   document.querySelectorAll("[data-oblk]").forEach(b=>b.onclick=()=>{const bl=brodyBlockById(b.dataset.oblk);if(!bl)return;
@@ -5570,7 +5576,7 @@ function renderOnboard(){
 }
 function renderObTogs(){
   document.querySelectorAll("[data-odow]").forEach(b=>b.classList.toggle("on",_ob.restDays.includes(+b.dataset.odow)));
-  document.querySelectorAll("[data-ores]").forEach(b=>b.classList.toggle("on",!!_ob.resources[b.dataset.ores]));
+  document.querySelectorAll("[data-ores]").forEach(b=>b.classList.toggle("on",resOn(_ob.resources,b.dataset.ores)));
 }
 function obPaceHelp(ob){const pace=brodyPace(ob),rec=brodyRecPace(ob,brodyBlock(ob)||BRODY_BLOCKS[0]);
   const short=brodyFree(ob)?' Below the ~'+rec+' h/day this block needs — you may not finish before the exam.':' Below the ~'+rec+' h/day this block needs — you may fall behind a quiz.';
@@ -5586,7 +5592,7 @@ function obReco(){const ob=_ob;
   if(!catReady())return {ok:false,msg:"Loading the video catalog…"};
   const order=(ob.sysOrder||SYS_ORDER_DEFAULT).filter(s=>new Set(ob.systems).has(s));
   const selSys=new Set(order);const R=ob.resources||{};
-  const en={bnb:R.bnb,pathoma:R.pathoma,skmicro:R.sketchy,skpharm:R.sketchy,skimmuno:R.skimmuno,bootcamp:R.bootcamp};
+  const en={bnb:R.bnb,pathoma:R.pathoma,skmicro:resOn(R,"skmicro"),skpharm:resOn(R,"skpharm"),skimmuno:R.skimmuno,bootcamp:R.bootcamp};
   const pathSel=en.pathoma?effectivePathChapters(ob):new Set();
   const threadSel=Array.isArray(ob.threadTopics)?new Set(ob.threadTopics):null;
   let total=0,nv=0;catVideos().forEach(v=>{
@@ -5775,11 +5781,15 @@ function doResetAll(){
     S.cfgs=snap.cfgs;S.active=snap.active;S.cfg=S.active?S.cfgs[S.active]:null;_prevSig=progressSig();save();
     if(S.cfg){reflow();render();}else renderWelcome();toast("Restored ✓");});
 }
-const BUILD="2026-10-23b";
+const BUILD="2026-10-23c";
 /* ---------- What's new (changelog) ----------
    Newest entry first. Bump the top entry's id whenever you add one and the
    pop-up shows once per person (tracked in synced settings.seenUpdate). */
 const CHANGELOG=[
+  {id:"2026-10-23c", date:"October 2026", title:"Sketchy Pharm, Sketchy Micro and Sketchy Immunology are separate resources", items:[
+    "Each Sketchy course now has its own switch under Plan \u2192 Video resources, so you can use Sketchy Micro without Sketchy Pharm, or the other way round.",
+    "Your plan doesn\u2019t change. If Sketchy was on, Sketchy Pharm and Sketchy Micro stay on, and Sketchy Immunology stays off until you turn it on.",
+  ]},
   {id:"2026-10-23b", date:"October 2026", title:"The Resource Library: every video and its UWorld questions in one place", items:[
     "The Checklist and the Questions tab are now one tab, Resource Library / Question IDs. Every video is there by resource, system and category, and each of those is a drop-down. Every Boards & Beyond video has its UWorld question IDs in a drop-down of its own, ready to copy.",
     "One search covers the whole library: a video, a category or a system. You can also paste a UWorld question ID to find the video that teaches it.",
