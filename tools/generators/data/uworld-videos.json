@@ -1,0 +1,2725 @@
+{
+ "source": "UWorld Medical Library video lectures, as listed in UWorld_Video_Lectures.docx (supplied by Dylan, 2026-10-23). Titles and runtimes verbatim, including UWorld's own spellings.",
+ "total": {
+  "listed": 654,
+  "unique": 514
+ },
+ "categories": [
+  {
+   "name": "Allergy & Immunology",
+   "videos": [
+    {
+     "name": "Acute rheumatic fever",
+     "runtime": "08:01"
+    },
+    {
+     "name": "Anaphylaxis",
+     "runtime": "08:40"
+    },
+    {
+     "name": "Angioedema & urticaria",
+     "runtime": "08:13"
+    },
+    {
+     "name": "Ataxia-telangiectasia",
+     "runtime": "06:54"
+    },
+    {
+     "name": "Chronic granulomatous disease",
+     "runtime": "06:57"
+    },
+    {
+     "name": "Common variable immunodeficiency",
+     "runtime": "06:47"
+    },
+    {
+     "name": "Complement system",
+     "runtime": "12:15"
+    },
+    {
+     "name": "DiGeorge syndrome",
+     "runtime": "08:52"
+    },
+    {
+     "name": "DRESS",
+     "runtime": "07:05"
+    },
+    {
+     "name": "Graft-versus-host disease",
+     "runtime": "07:23"
+    },
+    {
+     "name": "Hypersensitivity reactions",
+     "runtime": "09:37"
+    },
+    {
+     "name": "Immunoglobulin structure and function",
+     "runtime": "13:41"
+    },
+    {
+     "name": "Leukocyte adhesion deficiency",
+     "runtime": "05:51"
+    },
+    {
+     "name": "Lymph node structure & function",
+     "runtime": "05:50"
+    },
+    {
+     "name": "Psoriasis",
+     "runtime": "08:33"
+    },
+    {
+     "name": "Selective IgA deficiency",
+     "runtime": "05:31"
+    },
+    {
+     "name": "Severe combined immunodeficiency",
+     "runtime": "06:46"
+    },
+    {
+     "name": "Silicosis",
+     "runtime": "06:12"
+    },
+    {
+     "name": "Transplant rejection",
+     "runtime": "09:24"
+    },
+    {
+     "name": "Tuberculosis",
+     "runtime": "09:57"
+    },
+    {
+     "name": "Ubiquitin-proteasome system",
+     "runtime": "07:56"
+    },
+    {
+     "name": "X-linked agammaglobulinemia",
+     "runtime": "06:58"
+    }
+   ]
+  },
+  {
+   "name": "Basic Sciences",
+   "videos": [
+    {
+     "name": "Acid-base physiology",
+     "runtime": "14:26"
+    },
+    {
+     "name": "Alkaptonuria",
+     "runtime": "06:24"
+    },
+    {
+     "name": "Anemia",
+     "runtime": "12:22"
+    },
+    {
+     "name": "Arterial blood gas interpretation",
+     "runtime": "16:42"
+    },
+    {
+     "name": "Autonomic nervous system",
+     "runtime": "10:33"
+    },
+    {
+     "name": "Blood cell types",
+     "runtime": "11:10"
+    },
+    {
+     "name": "Complement system",
+     "runtime": "12:15"
+    },
+    {
+     "name": "Gas exchange",
+     "runtime": "06:03"
+    },
+    {
+     "name": "Glycogen metabolism",
+     "runtime": "10:06"
+    },
+    {
+     "name": "Glycogen storage diseases",
+     "runtime": "08:35"
+    },
+    {
+     "name": "Lymph node structure & function",
+     "runtime": "05:50"
+    },
+    {
+     "name": "Lysosomal storage disease",
+     "runtime": "10:17"
+    },
+    {
+     "name": "Maple syrup urine disease",
+     "runtime": "07:06"
+    },
+    {
+     "name": "Nerve physiology",
+     "runtime": "07:58"
+    },
+    {
+     "name": "Neurotransmitters & related medications",
+     "runtime": "17:41"
+    },
+    {
+     "name": "Oogenesis",
+     "runtime": "05:18"
+    },
+    {
+     "name": "Oxygen-hemoglobin dissociation curve",
+     "runtime": "06:50"
+    },
+    {
+     "name": "Respiratory mechanics",
+     "runtime": "09:25"
+    },
+    {
+     "name": "Skeletal muscle physiology",
+     "runtime": "06:58"
+    },
+    {
+     "name": "Spermatogenesis",
+     "runtime": "05:57"
+    },
+    {
+     "name": "The menstrual cycle",
+     "runtime": "04:40"
+    },
+    {
+     "name": "Trisomy 13, 18, and 21",
+     "runtime": "07:08"
+    },
+    {
+     "name": "Trisomy 21",
+     "runtime": "06:30"
+    },
+    {
+     "name": "Ubiquitin-proteasome system",
+     "runtime": "07:56"
+    },
+    {
+     "name": "Urea cycle",
+     "runtime": "07:19"
+    },
+    {
+     "name": "Visual pathways and field defects",
+     "runtime": "10:31"
+    },
+    {
+     "name": "Wound healing",
+     "runtime": "08:01"
+    },
+    {
+     "name": "X-linked agammaglobulinemia",
+     "runtime": "06:58"
+    }
+   ]
+  },
+  {
+   "name": "Cardiovascular System",
+   "videos": [
+    {
+     "name": "Acute coronary syndrome",
+     "runtime": "09:35"
+    },
+    {
+     "name": "Acute limb ischemia",
+     "runtime": "06:36"
+    },
+    {
+     "name": "Acute pericarditis",
+     "runtime": "08:47"
+    },
+    {
+     "name": "Acute rheumatic fever",
+     "runtime": "08:01"
+    },
+    {
+     "name": "Aortic dissection",
+     "runtime": "10:19"
+    },
+    {
+     "name": "Aortic regurgitation",
+     "runtime": "10:52"
+    },
+    {
+     "name": "Aortic stenosis",
+     "runtime": "11:13"
+    },
+    {
+     "name": "Atrial fibrillation and atrial flutter",
+     "runtime": "15:28"
+    },
+    {
+     "name": "Atrial septal defect",
+     "runtime": "08:03"
+    },
+    {
+     "name": "Bradycardia & AV blocks",
+     "runtime": "11:14"
+    },
+    {
+     "name": "Cardiac tamponade",
+     "runtime": "10:33"
+    },
+    {
+     "name": "Cardiomyocyte structure & function",
+     "runtime": "11:28"
+    },
+    {
+     "name": "Carotid artery stenosis",
+     "runtime": "06:32"
+    },
+    {
+     "name": "Chagas disease",
+     "runtime": "09:40"
+    },
+    {
+     "name": "Chronic stable angina",
+     "runtime": "11:25"
+    },
+    {
+     "name": "Chronic venous insufficiency",
+     "runtime": "09:07"
+    },
+    {
+     "name": "Coarctation of the aorta",
+     "runtime": "09:06"
+    },
+    {
+     "name": "Dilated cardiomyopathy",
+     "runtime": "07:45"
+    },
+    {
+     "name": "Eisenmenger syndrome",
+     "runtime": "07:10"
+    },
+    {
+     "name": "Heart failure",
+     "runtime": "11:04"
+    },
+    {
+     "name": "Hypertensive retinopathy",
+     "runtime": "06:53"
+    },
+    {
+     "name": "Hypertrophic cardiomyopathy",
+     "runtime": "08:17"
+    },
+    {
+     "name": "Infective endocarditis",
+     "runtime": "13:25"
+    },
+    {
+     "name": "Kawasaki disease",
+     "runtime": "04:12"
+    },
+    {
+     "name": "Marfan syndrome",
+     "runtime": "07:17"
+    },
+    {
+     "name": "Mitral regurgitation",
+     "runtime": "11:39"
+    },
+    {
+     "name": "Mitral stenosis",
+     "runtime": "10:02"
+    },
+    {
+     "name": "Normal fetal circulation",
+     "runtime": "06:34"
+    },
+    {
+     "name": "Patent foramen ovale",
+     "runtime": "06:35"
+    },
+    {
+     "name": "Peripheral arterial disease",
+     "runtime": "09:53"
+    },
+    {
+     "name": "Pheochromocytoma",
+     "runtime": "05:15"
+    },
+    {
+     "name": "Restrictive cardiomyopathy",
+     "runtime": "08:43"
+    },
+    {
+     "name": "Rheumatic heart disease",
+     "runtime": "07:23"
+    },
+    {
+     "name": "Sudden cardiac arrest",
+     "runtime": "08:26"
+    },
+    {
+     "name": "Supraventricular tachycardia",
+     "runtime": "17:46"
+    },
+    {
+     "name": "Tetralogy of Fallot",
+     "runtime": "08:11"
+    },
+    {
+     "name": "Transposition of the great arteries",
+     "runtime": "06:09"
+    },
+    {
+     "name": "Vasospastic angina",
+     "runtime": "06:56"
+    },
+    {
+     "name": "Ventricular septal defect",
+     "runtime": "07:20"
+    },
+    {
+     "name": "Ventricular tachycardia & ventricular fibrillation",
+     "runtime": "11:55"
+    },
+    {
+     "name": "Wolff-Parkinson-White syndrome",
+     "runtime": "12:46"
+    }
+   ]
+  },
+  {
+   "name": "Dermatology",
+   "videos": [
+    {
+     "name": "Acne vulgaris",
+     "runtime": "08:32"
+    },
+    {
+     "name": "Basal cell carcinoma",
+     "runtime": "05:13"
+    },
+    {
+     "name": "Bullous pemphigoid",
+     "runtime": "04:46"
+    },
+    {
+     "name": "Burns",
+     "runtime": "13:31"
+    },
+    {
+     "name": "Cellulitis",
+     "runtime": "08:28"
+    },
+    {
+     "name": "Chickenpox",
+     "runtime": "07:35"
+    },
+    {
+     "name": "Cutaneous squamous cell carcinoma",
+     "runtime": "05:38"
+    },
+    {
+     "name": "Cutaneous T-cell lymphoma",
+     "runtime": "07:53"
+    },
+    {
+     "name": "Diaper dermatitis",
+     "runtime": "04:50"
+    },
+    {
+     "name": "DRESS",
+     "runtime": "07:05"
+    },
+    {
+     "name": "Eczema (atopic dermatitis)",
+     "runtime": "07:23"
+    },
+    {
+     "name": "Erysipelas",
+     "runtime": "04:24"
+    },
+    {
+     "name": "Hidradenitis suppurativa",
+     "runtime": "06:12"
+    },
+    {
+     "name": "Impetigo",
+     "runtime": "07:34"
+    },
+    {
+     "name": "Kaposi sarcoma",
+     "runtime": "08:47"
+    },
+    {
+     "name": "Lichen planus",
+     "runtime": "05:28"
+    },
+    {
+     "name": "Measles",
+     "runtime": "06:41"
+    },
+    {
+     "name": "Melanoma",
+     "runtime": "07:35"
+    },
+    {
+     "name": "Molluscum contagiosum",
+     "runtime": "03:08"
+    },
+    {
+     "name": "Onychomycosis",
+     "runtime": "07:03"
+    },
+    {
+     "name": "Pemphigus vulgaris",
+     "runtime": "04:58"
+    },
+    {
+     "name": "Pityriasis rosea",
+     "runtime": "03:27"
+    },
+    {
+     "name": "Pressure ulcers",
+     "runtime": "08:37"
+    },
+    {
+     "name": "Psoriasis",
+     "runtime": "08:33"
+    },
+    {
+     "name": "Roseola",
+     "runtime": "04:05"
+    },
+    {
+     "name": "Rubella",
+     "runtime": "06:17"
+    },
+    {
+     "name": "Scabies",
+     "runtime": "06:46"
+    },
+    {
+     "name": "Seborrheic dermatitis",
+     "runtime": "05:43"
+    },
+    {
+     "name": "Seborrheic keratosis",
+     "runtime": "03:16"
+    },
+    {
+     "name": "Staphylococcal scalded skin syndrome",
+     "runtime": "06:25"
+    },
+    {
+     "name": "Stevens-Johnson syndrome and toxic epidermal necrolysis",
+     "runtime": "08:10"
+    },
+    {
+     "name": "Sturge-Weber syndrome",
+     "runtime": "06:03"
+    },
+    {
+     "name": "Tinea versicolor",
+     "runtime": "02:57"
+    },
+    {
+     "name": "Toxic shock syndrome",
+     "runtime": "08:55"
+    },
+    {
+     "name": "Vitiligo",
+     "runtime": "07:32"
+    },
+    {
+     "name": "Wound healing",
+     "runtime": "08:01"
+    }
+   ]
+  },
+  {
+   "name": "Ear, Nose & Throat (ENT)",
+   "videos": [
+    {
+     "name": "Acute otitis media",
+     "runtime": "10:16"
+    },
+    {
+     "name": "Acute rhinosinusitis",
+     "runtime": "06:29"
+    },
+    {
+     "name": "Benign paroxysmal positional vertigo",
+     "runtime": "04:40"
+    },
+    {
+     "name": "Cavernous sinus thrombosis",
+     "runtime": "06:03"
+    },
+    {
+     "name": "Choanal atresia",
+     "runtime": "06:30"
+    },
+    {
+     "name": "Cleft lip and palate",
+     "runtime": "05:52"
+    },
+    {
+     "name": "Clinical evaluation of hearing loss",
+     "runtime": "07:41"
+    },
+    {
+     "name": "Diphtheria",
+     "runtime": "07:28"
+    },
+    {
+     "name": "Epiglottitis",
+     "runtime": "05:33"
+    },
+    {
+     "name": "Laryngomalacia",
+     "runtime": "05:25"
+    },
+    {
+     "name": "Laryngotracheobronchitis (croup)",
+     "runtime": "05:54"
+    },
+    {
+     "name": "Ludwig angina",
+     "runtime": "05:28"
+    },
+    {
+     "name": "Meniere disease",
+     "runtime": "05:49"
+    },
+    {
+     "name": "Necrotizing otitis externa",
+     "runtime": "06:00"
+    },
+    {
+     "name": "Otitis externa",
+     "runtime": "06:37"
+    },
+    {
+     "name": "Otosclerosis",
+     "runtime": "07:14"
+    },
+    {
+     "name": "Peritonsillar abscess",
+     "runtime": "04:52"
+    },
+    {
+     "name": "Presbycusis",
+     "runtime": "06:58"
+    },
+    {
+     "name": "Retropharygneal abscess",
+     "runtime": "08:04"
+    }
+   ]
+  },
+  {
+   "name": "Endocrine, Diabetes & Metabolism",
+   "videos": [
+    {
+     "name": "Adrenal insufficiency",
+     "runtime": "10:22"
+    },
+    {
+     "name": "Congenital adrenal hyperplasia",
+     "runtime": "13:53"
+    },
+    {
+     "name": "Cushing syndrome",
+     "runtime": "07:55"
+    },
+    {
+     "name": "Gestational diabetes mellitus",
+     "runtime": "08:12"
+    },
+    {
+     "name": "Graves disease",
+     "runtime": "11:11"
+    },
+    {
+     "name": "Hyperthyroidism",
+     "runtime": "12:18"
+    },
+    {
+     "name": "Hypothyroidism",
+     "runtime": "09:21"
+    },
+    {
+     "name": "Macrovascular and microvascular complications of diabetes",
+     "runtime": "12:37"
+    },
+    {
+     "name": "Pheochromocytoma",
+     "runtime": "05:15"
+    },
+    {
+     "name": "Precocious puberty",
+     "runtime": "08:09"
+    },
+    {
+     "name": "Sheehan syndrome",
+     "runtime": "07:15"
+    },
+    {
+     "name": "Syndrome of inappropriate antidiuretic hormone (SIADH)",
+     "runtime": "09:58"
+    },
+    {
+     "name": "The menstrual cycle",
+     "runtime": "04:40"
+    },
+    {
+     "name": "Thyroid cancers",
+     "runtime": "08:40"
+    },
+    {
+     "name": "Thyroid nodules",
+     "runtime": "05:27"
+    },
+    {
+     "name": "Thyroid physiology",
+     "runtime": "09:51"
+    },
+    {
+     "name": "Type 1 diabetes mellitus",
+     "runtime": "12:19"
+    },
+    {
+     "name": "Type 2 diabetes mellitus",
+     "runtime": "11:32"
+    }
+   ]
+  },
+  {
+   "name": "Female Reproductive System & Breast",
+   "videos": [
+    {
+     "name": "Acute cervicitis",
+     "runtime": "07:00"
+    },
+    {
+     "name": "Adenomyosis",
+     "runtime": "05:19"
+    },
+    {
+     "name": "Androgen insensitivity syndrome",
+     "runtime": "08:55"
+    },
+    {
+     "name": "Bacterial vaginosis",
+     "runtime": "08:24"
+    },
+    {
+     "name": "Bartholin gland cyst and abscess",
+     "runtime": "04:15"
+    },
+    {
+     "name": "Cervical cancer",
+     "runtime": "13:10"
+    },
+    {
+     "name": "Continence and micturition",
+     "runtime": "03:08"
+    },
+    {
+     "name": "Endometrial cancer",
+     "runtime": "08:53"
+    },
+    {
+     "name": "Endometrial polyps",
+     "runtime": "04:02"
+    },
+    {
+     "name": "Endometriosis",
+     "runtime": "08:50"
+    },
+    {
+     "name": "Epithelial ovarian cancer",
+     "runtime": "09:20"
+    },
+    {
+     "name": "Hypothalamic amenorrhea",
+     "runtime": "06:20"
+    },
+    {
+     "name": "Inflammatory breast cancer",
+     "runtime": "06:08"
+    },
+    {
+     "name": "Intrauterine adhesions",
+     "runtime": "06:12"
+    },
+    {
+     "name": "Müllerian agenesis",
+     "runtime": "07:19"
+    },
+    {
+     "name": "Oogenesis",
+     "runtime": "05:18"
+    },
+    {
+     "name": "Ovarian torsion",
+     "runtime": "06:57"
+    },
+    {
+     "name": "Paget disease of the breast",
+     "runtime": "04:15"
+    },
+    {
+     "name": "Pelvic inflammatory disease",
+     "runtime": "09:06"
+    },
+    {
+     "name": "Pelvic organ prolapse",
+     "runtime": "07:42"
+    },
+    {
+     "name": "Polycystic ovary syndrome",
+     "runtime": "07:23"
+    },
+    {
+     "name": "Postpartum blues and peripartum psychiatric disorders",
+     "runtime": "09:35"
+    },
+    {
+     "name": "Precocious puberty",
+     "runtime": "08:09"
+    },
+    {
+     "name": "Premenstrual syndrome and premenstrual dysphoric disorder",
+     "runtime": "06:42"
+    },
+    {
+     "name": "Primary ovarian insufficiency",
+     "runtime": "06:46"
+    },
+    {
+     "name": "Sheehan syndrome",
+     "runtime": "07:15"
+    },
+    {
+     "name": "The menstrual cycle",
+     "runtime": "04:40"
+    },
+    {
+     "name": "Urinary incontinence",
+     "runtime": "09:01"
+    },
+    {
+     "name": "Uterine fibroids",
+     "runtime": "07:48"
+    },
+    {
+     "name": "Vulvar cancer",
+     "runtime": "05:17"
+    }
+   ]
+  },
+  {
+   "name": "Gastrointestinal & Nutrition",
+   "videos": [
+    {
+     "name": "Achalasia",
+     "runtime": "05:40"
+    },
+    {
+     "name": "Acute cholangitis",
+     "runtime": "07:18"
+    },
+    {
+     "name": "Acute cholecystitis",
+     "runtime": "08:30"
+    },
+    {
+     "name": "Acute liver failure",
+     "runtime": "09:48"
+    },
+    {
+     "name": "Acute mesenteric ischemia",
+     "runtime": "08:17"
+    },
+    {
+     "name": "Acute pancreatitis",
+     "runtime": "10:03"
+    },
+    {
+     "name": "Anal cancer",
+     "runtime": "04:56"
+    },
+    {
+     "name": "Annular pancreas",
+     "runtime": "03:55"
+    },
+    {
+     "name": "Appendicitis",
+     "runtime": "07:04"
+    },
+    {
+     "name": "Autoimmune hepatitis",
+     "runtime": "06:44"
+    },
+    {
+     "name": "Barrett esophagus",
+     "runtime": "04:28"
+    },
+    {
+     "name": "Biliary atresia",
+     "runtime": "05:48"
+    },
+    {
+     "name": "Campylobacter",
+     "runtime": "07:14"
+    },
+    {
+     "name": "Celiac disease",
+     "runtime": "06:00"
+    },
+    {
+     "name": "Chagas disease",
+     "runtime": "09:40"
+    },
+    {
+     "name": "Cholangiocarcinoma",
+     "runtime": "06:26"
+    },
+    {
+     "name": "Cholera",
+     "runtime": "08:46"
+    },
+    {
+     "name": "Chronic pancreatitis",
+     "runtime": "06:12"
+    },
+    {
+     "name": "Cirrhosis",
+     "runtime": "09:50"
+    },
+    {
+     "name": "Clostridioides difficle infection",
+     "runtime": "09:44"
+    },
+    {
+     "name": "Colorectal cancer",
+     "runtime": "11:46"
+    },
+    {
+     "name": "Diverticular disease",
+     "runtime": "09:20"
+    },
+    {
+     "name": "Duodenal atresia",
+     "runtime": "04:26"
+    },
+    {
+     "name": "Entamoeba histolytica",
+     "runtime": "10:25"
+    },
+    {
+     "name": "Eosinophilic esophagitis",
+     "runtime": "04:50"
+    },
+    {
+     "name": "Escherichia coli",
+     "runtime": "11:03"
+    },
+    {
+     "name": "Esophageal cancer",
+     "runtime": "05:31"
+    },
+    {
+     "name": "Esophagitis",
+     "runtime": "06:35"
+    },
+    {
+     "name": "Galactosemia",
+     "runtime": "05:33"
+    },
+    {
+     "name": "Gastric cancer",
+     "runtime": "06:44"
+    },
+    {
+     "name": "Gastroschisis",
+     "runtime": "05:44"
+    },
+    {
+     "name": "Giardiasis",
+     "runtime": "06:45"
+    },
+    {
+     "name": "Glycogen storage diseases",
+     "runtime": "08:35"
+    },
+    {
+     "name": "Groin hernias",
+     "runtime": "14:31"
+    },
+    {
+     "name": "Hemorrhoids",
+     "runtime": "06:15"
+    },
+    {
+     "name": "Hepatitis C virus infection",
+     "runtime": "11:42"
+    },
+    {
+     "name": "Hereditary hyperbilirubinemias",
+     "runtime": "06:41"
+    },
+    {
+     "name": "Hiatal hernias",
+     "runtime": "06:06"
+    },
+    {
+     "name": "Hirschsprung disease",
+     "runtime": "05:14"
+    },
+    {
+     "name": "Inflammatory bowel disease",
+     "runtime": "11:15"
+    },
+    {
+     "name": "Intussusception",
+     "runtime": "05:13"
+    },
+    {
+     "name": "Lactose intolerance",
+     "runtime": "06:45"
+    },
+    {
+     "name": "Lysosomal storage disease",
+     "runtime": "10:17"
+    },
+    {
+     "name": "Malrotation",
+     "runtime": "05:29"
+    },
+    {
+     "name": "Meckel diverticulum",
+     "runtime": "06:09"
+    },
+    {
+     "name": "Metabolic dysfunction-associated steatotic liver disease (MASLD)",
+     "runtime": "08:44"
+    },
+    {
+     "name": "Necrotizing enterocolitis",
+     "runtime": "06:23"
+    },
+    {
+     "name": "Norovirus",
+     "runtime": "06:04"
+    },
+    {
+     "name": "Omphalocele",
+     "runtime": "05:57"
+    },
+    {
+     "name": "Pancreatic cancer",
+     "runtime": "07:32"
+    },
+    {
+     "name": "Peptic ulcer disease",
+     "runtime": "09:15"
+    },
+    {
+     "name": "Phenylketonuria",
+     "runtime": "05:57"
+    },
+    {
+     "name": "Primary biliary cholangitis",
+     "runtime": "08:49"
+    },
+    {
+     "name": "Primary sclerosing cholangitis",
+     "runtime": "07:13"
+    },
+    {
+     "name": "Pyloric stenosis",
+     "runtime": "04:50"
+    },
+    {
+     "name": "Pyogenic liver abscess",
+     "runtime": "07:36"
+    },
+    {
+     "name": "Rotavirus",
+     "runtime": "07:04"
+    },
+    {
+     "name": "Salmonella",
+     "runtime": "09:12"
+    },
+    {
+     "name": "Shigella infection (shigellosis)",
+     "runtime": "07:03"
+    },
+    {
+     "name": "Whipple disease",
+     "runtime": "06:33"
+    },
+    {
+     "name": "Wilson disease",
+     "runtime": "06:05"
+    },
+    {
+     "name": "Zenker diverticulum",
+     "runtime": "05:08"
+    }
+   ]
+  },
+  {
+   "name": "Hematology & Oncology",
+   "videos": [
+    {
+     "name": "Acute lymphoblastic leukemia and lymphoblastic lymphoma",
+     "runtime": "08:14"
+    },
+    {
+     "name": "Acute myeloid leukemia",
+     "runtime": "09:51"
+    },
+    {
+     "name": "Alpha thalassemia",
+     "runtime": "14:05"
+    },
+    {
+     "name": "Anal cancer",
+     "runtime": "04:56"
+    },
+    {
+     "name": "Anemia",
+     "runtime": "12:22"
+    },
+    {
+     "name": "Aplastic anemia",
+     "runtime": "07:36"
+    },
+    {
+     "name": "Barrett esophagus",
+     "runtime": "04:28"
+    },
+    {
+     "name": "Beta thalassemia",
+     "runtime": "13:21"
+    },
+    {
+     "name": "Bladder cancer",
+     "runtime": "07:43"
+    },
+    {
+     "name": "Blood cell types",
+     "runtime": "11:10"
+    },
+    {
+     "name": "Burkitt lymphoma",
+     "runtime": "06:33"
+    },
+    {
+     "name": "Cervical cancer",
+     "runtime": "13:10"
+    },
+    {
+     "name": "Chronic lymphocytic leukemia",
+     "runtime": "06:20"
+    },
+    {
+     "name": "Chronic myeloid leukemia",
+     "runtime": "10:18"
+    },
+    {
+     "name": "Colorectal cancer",
+     "runtime": "11:46"
+    },
+    {
+     "name": "Cutaneous T-cell lymphoma",
+     "runtime": "07:53"
+    },
+    {
+     "name": "Disseminated intravascular coagulation",
+     "runtime": "08:06"
+    },
+    {
+     "name": "Endometrial cancer",
+     "runtime": "08:53"
+    },
+    {
+     "name": "Epithelial ovarian cancer",
+     "runtime": "09:20"
+    },
+    {
+     "name": "Esophageal cancer",
+     "runtime": "05:31"
+    },
+    {
+     "name": "Factor V Leiden",
+     "runtime": "06:23"
+    },
+    {
+     "name": "Gastric cancer",
+     "runtime": "06:44"
+    },
+    {
+     "name": "Glucose-6-phosphate dehydrogenase deficiency",
+     "runtime": "09:09"
+    },
+    {
+     "name": "Hairy cell leukemia",
+     "runtime": "06:36"
+    },
+    {
+     "name": "Hemophilia",
+     "runtime": "08:12"
+    },
+    {
+     "name": "Heparin-induced thrombocytopenia",
+     "runtime": "08:49"
+    },
+    {
+     "name": "Hereditary hemochromatosis",
+     "runtime": "07:22"
+    },
+    {
+     "name": "Hereditary hemorrhagic telangiectasia",
+     "runtime": "07:23"
+    },
+    {
+     "name": "Hereditary spherocytosis",
+     "runtime": "09:20"
+    },
+    {
+     "name": "Hodgkin lymphoma",
+     "runtime": "08:30"
+    },
+    {
+     "name": "Iron deficiency anemia",
+     "runtime": "12:01"
+    },
+    {
+     "name": "Kaposi sarcoma",
+     "runtime": "08:47"
+    },
+    {
+     "name": "Lung cancer",
+     "runtime": "10:16"
+    },
+    {
+     "name": "Methemoglobinemia",
+     "runtime": "06:47"
+    },
+    {
+     "name": "Multiple myeloma",
+     "runtime": "09:09"
+    },
+    {
+     "name": "Myelodysplastic syndromes",
+     "runtime": "07:05"
+    },
+    {
+     "name": "Myelofibrosis",
+     "runtime": "07:19"
+    },
+    {
+     "name": "Neuroblastoma",
+     "runtime": "06:27"
+    },
+    {
+     "name": "Normal hemostasis",
+     "runtime": "12:22"
+    },
+    {
+     "name": "Osteosarcoma",
+     "runtime": "04:59"
+    },
+    {
+     "name": "Paroxysmal nocturnal hemoglobinuria",
+     "runtime": "09:07"
+    },
+    {
+     "name": "Parvovirus B19 infection",
+     "runtime": "09:29"
+    },
+    {
+     "name": "Pernicious anemia",
+     "runtime": "06:38"
+    },
+    {
+     "name": "Porphyria",
+     "runtime": "07:17"
+    },
+    {
+     "name": "Prostate cancer",
+     "runtime": "09:44"
+    },
+    {
+     "name": "Pulmonary embolism",
+     "runtime": "13:40"
+    },
+    {
+     "name": "Pyruvate kinase deficiency",
+     "runtime": "06:34"
+    },
+    {
+     "name": "Renal cell carcinoma",
+     "runtime": "06:27"
+    },
+    {
+     "name": "Rh alloimmunization",
+     "runtime": "09:45"
+    },
+    {
+     "name": "Selective IgA deficiency",
+     "runtime": "05:31"
+    },
+    {
+     "name": "Thrombotic thrombocytopenic purpura",
+     "runtime": "09:14"
+    },
+    {
+     "name": "Thyroid cancers",
+     "runtime": "08:40"
+    },
+    {
+     "name": "von Willebrand disease",
+     "runtime": "10:21"
+    }
+   ]
+  },
+  {
+   "name": "Infectious Diseases",
+   "videos": [
+    {
+     "name": "Acute rheumatic fever",
+     "runtime": "08:01"
+    },
+    {
+     "name": "Aspergillosis",
+     "runtime": "11:37"
+    },
+    {
+     "name": "Bacterial meningitis",
+     "runtime": "07:57"
+    },
+    {
+     "name": "Bartonella henselae infections",
+     "runtime": "08:18"
+    },
+    {
+     "name": "Bordatella pertussis",
+     "runtime": "07:06"
+    },
+    {
+     "name": "Botulism",
+     "runtime": "08:03"
+    },
+    {
+     "name": "Campylobacter",
+     "runtime": "07:14"
+    },
+    {
+     "name": "Cellulitis",
+     "runtime": "08:28"
+    },
+    {
+     "name": "Chagas disease",
+     "runtime": "09:40"
+    },
+    {
+     "name": "Chickenpox",
+     "runtime": "07:35"
+    },
+    {
+     "name": "Cholera",
+     "runtime": "08:46"
+    },
+    {
+     "name": "Chronic granulomatous disease",
+     "runtime": "06:57"
+    },
+    {
+     "name": "Clostridioides difficle infection",
+     "runtime": "09:44"
+    },
+    {
+     "name": "Conjunctivitis",
+     "runtime": "07:46"
+    },
+    {
+     "name": "Dengue virus infection",
+     "runtime": "10:56"
+    },
+    {
+     "name": "Diphtheria",
+     "runtime": "07:28"
+    },
+    {
+     "name": "Endophthalmitis",
+     "runtime": "05:58"
+    },
+    {
+     "name": "Entamoeba histolytica",
+     "runtime": "10:25"
+    },
+    {
+     "name": "Epiglottitis",
+     "runtime": "05:33"
+    },
+    {
+     "name": "Erysipelas",
+     "runtime": "04:24"
+    },
+    {
+     "name": "Escherichia coli",
+     "runtime": "11:03"
+    },
+    {
+     "name": "Giardiasis",
+     "runtime": "06:45"
+    },
+    {
+     "name": "Hepatitis C virus infection",
+     "runtime": "11:42"
+    },
+    {
+     "name": "Herpes zoster",
+     "runtime": "10:30"
+    },
+    {
+     "name": "Impetigo",
+     "runtime": "07:34"
+    },
+    {
+     "name": "Infectious mononucleosis",
+     "runtime": "07:21"
+    },
+    {
+     "name": "Infectious urethritis",
+     "runtime": "08:10"
+    },
+    {
+     "name": "Infective endocarditis",
+     "runtime": "13:25"
+    },
+    {
+     "name": "Influenza",
+     "runtime": "10:04"
+    },
+    {
+     "name": "Kaposi sarcoma",
+     "runtime": "08:47"
+    },
+    {
+     "name": "Laryngotracheobronchitis (croup)",
+     "runtime": "05:54"
+    },
+    {
+     "name": "Legionella",
+     "runtime": "06:49"
+    },
+    {
+     "name": "Leprosy (Hansen disease)",
+     "runtime": "07:28"
+    },
+    {
+     "name": "Lifecycle of human immunodeficiency virus (HIV)",
+     "runtime": "10:26"
+    },
+    {
+     "name": "Listeriosis",
+     "runtime": "10:10"
+    },
+    {
+     "name": "Ludwig angina",
+     "runtime": "05:28"
+    },
+    {
+     "name": "Malaria",
+     "runtime": "08:10"
+    },
+    {
+     "name": "Measles",
+     "runtime": "06:41"
+    },
+    {
+     "name": "Meningococcal meningitis",
+     "runtime": "08:08"
+    },
+    {
+     "name": "Mumps",
+     "runtime": "07:32"
+    },
+    {
+     "name": "Nontuberculous mycobacteria",
+     "runtime": "06:52"
+    },
+    {
+     "name": "Norovirus",
+     "runtime": "06:04"
+    },
+    {
+     "name": "Otitis externa",
+     "runtime": "06:37"
+    },
+    {
+     "name": "Parvovirus B19 infection",
+     "runtime": "09:29"
+    },
+    {
+     "name": "Pelvic inflammatory disease",
+     "runtime": "09:06"
+    },
+    {
+     "name": "Peritonsillar abscess",
+     "runtime": "04:52"
+    },
+    {
+     "name": "Pneumocystis jirovecii pneumonia",
+     "runtime": "07:23"
+    },
+    {
+     "name": "Pneumonia",
+     "runtime": "09:20"
+    },
+    {
+     "name": "Poliomyelitis",
+     "runtime": "09:30"
+    },
+    {
+     "name": "Pseudomonas aeruginosa",
+     "runtime": "09:01"
+    },
+    {
+     "name": "Pyogenic liver abscess",
+     "runtime": "07:36"
+    },
+    {
+     "name": "Respiratory syncytial virus",
+     "runtime": "07:57"
+    },
+    {
+     "name": "Rheumatic heart disease",
+     "runtime": "07:23"
+    },
+    {
+     "name": "Rocky mountain spotted fever",
+     "runtime": "05:57"
+    },
+    {
+     "name": "Roseola",
+     "runtime": "04:05"
+    },
+    {
+     "name": "Rotavirus",
+     "runtime": "07:04"
+    },
+    {
+     "name": "Rubella",
+     "runtime": "06:17"
+    },
+    {
+     "name": "Salmonella",
+     "runtime": "09:12"
+    },
+    {
+     "name": "Scabies",
+     "runtime": "06:46"
+    },
+    {
+     "name": "Shigella infection (shigellosis)",
+     "runtime": "07:03"
+    },
+    {
+     "name": "Tetanus",
+     "runtime": "07:15"
+    },
+    {
+     "name": "Toxic shock syndrome",
+     "runtime": "08:55"
+    },
+    {
+     "name": "Toxoplasmosis",
+     "runtime": "09:36"
+    },
+    {
+     "name": "Trachoma",
+     "runtime": "06:10"
+    },
+    {
+     "name": "Tuberculosis",
+     "runtime": "09:57"
+    },
+    {
+     "name": "Viral meningitis",
+     "runtime": "06:42"
+    },
+    {
+     "name": "Whipple disease",
+     "runtime": "06:33"
+    },
+    {
+     "name": "Yersinia pestis",
+     "runtime": "08:42"
+    }
+   ]
+  },
+  {
+   "name": "Male Reproductive System",
+   "videos": [
+    {
+     "name": "Acute bacterial prostatitis",
+     "runtime": "04:15"
+    },
+    {
+     "name": "Acute epididymitis",
+     "runtime": "06:05"
+    },
+    {
+     "name": "Benign prostatic hyperplasia",
+     "runtime": "08:11"
+    },
+    {
+     "name": "Cryptorchidism",
+     "runtime": "07:21"
+    },
+    {
+     "name": "Epispadias",
+     "runtime": "03:52"
+    },
+    {
+     "name": "Hypospadias",
+     "runtime": "04:28"
+    },
+    {
+     "name": "Infectious urethritis",
+     "runtime": "08:10"
+    },
+    {
+     "name": "Precocious puberty",
+     "runtime": "08:09"
+    },
+    {
+     "name": "Prostate cancer",
+     "runtime": "09:44"
+    },
+    {
+     "name": "Spermatogenesis",
+     "runtime": "05:57"
+    },
+    {
+     "name": "Testicular torsion",
+     "runtime": "05:28"
+    },
+    {
+     "name": "Urethral injuries",
+     "runtime": "06:15"
+    },
+    {
+     "name": "Varicocele",
+     "runtime": "04:07"
+    }
+   ]
+  },
+  {
+   "name": "Nervous System",
+   "videos": [
+    {
+     "name": "Alzheimer disease",
+     "runtime": "07:48"
+    },
+    {
+     "name": "Amyotrophic lateral sclerosis",
+     "runtime": "06:44"
+    },
+    {
+     "name": "Ataxia-telangiectasia",
+     "runtime": "06:54"
+    },
+    {
+     "name": "Autism spectrum disorder",
+     "runtime": "07:01"
+    },
+    {
+     "name": "Autonomic nervous system",
+     "runtime": "10:33"
+    },
+    {
+     "name": "Bacterial meningitis",
+     "runtime": "07:57"
+    },
+    {
+     "name": "Botulism",
+     "runtime": "08:03"
+    },
+    {
+     "name": "Brain herniation syndromes",
+     "runtime": "11:24"
+    },
+    {
+     "name": "Carotid artery stenosis",
+     "runtime": "06:32"
+    },
+    {
+     "name": "Charcot-Marie-Tooth disease",
+     "runtime": "05:55"
+    },
+    {
+     "name": "Chiari and Dandy-Walker malformations",
+     "runtime": "08:16"
+    },
+    {
+     "name": "Cluster headache",
+     "runtime": "02:51"
+    },
+    {
+     "name": "Creutzfeldt-Jakob disease",
+     "runtime": "06:05"
+    },
+    {
+     "name": "Dementia with Lewy bodies",
+     "runtime": "06:40"
+    },
+    {
+     "name": "Duchenne and Becker muscular dystrophy",
+     "runtime": "08:49"
+    },
+    {
+     "name": "Epidural and subdural hematoma",
+     "runtime": "10:27"
+    },
+    {
+     "name": "Febrile seizure",
+     "runtime": "05:12"
+    },
+    {
+     "name": "Fragile X syndrome",
+     "runtime": "05:00"
+    },
+    {
+     "name": "Friedreich ataxia",
+     "runtime": "04:44"
+    },
+    {
+     "name": "Frontotemporal dementia",
+     "runtime": "05:31"
+    },
+    {
+     "name": "Functional neurologic symptom disorder",
+     "runtime": "06:40"
+    },
+    {
+     "name": "Guillain-Barre syndrome",
+     "runtime": "06:14"
+    },
+    {
+     "name": "Hemorrhagic stroke",
+     "runtime": "08:47"
+    },
+    {
+     "name": "Horner syndrome",
+     "runtime": "08:31"
+    },
+    {
+     "name": "Huntington disease",
+     "runtime": "05:41"
+    },
+    {
+     "name": "Idiopathic intracranial hypertension",
+     "runtime": "07:01"
+    },
+    {
+     "name": "Intraventricular hemorrhage",
+     "runtime": "06:48"
+    },
+    {
+     "name": "Ischemic stroke",
+     "runtime": "14:47"
+    },
+    {
+     "name": "Malignant hyperthermia",
+     "runtime": "04:38"
+    },
+    {
+     "name": "Meniere disease",
+     "runtime": "05:49"
+    },
+    {
+     "name": "Meningococcal meningitis",
+     "runtime": "08:08"
+    },
+    {
+     "name": "Migraine disorder",
+     "runtime": "08:55"
+    },
+    {
+     "name": "Multiple sclerosis",
+     "runtime": "13:55"
+    },
+    {
+     "name": "Myasthenia gravis",
+     "runtime": "08:47"
+    },
+    {
+     "name": "Myotonic dystrophy",
+     "runtime": "06:07"
+    },
+    {
+     "name": "Nerve physiology",
+     "runtime": "07:58"
+    },
+    {
+     "name": "Neural tube defects",
+     "runtime": "10:58"
+    },
+    {
+     "name": "Neuroblastoma",
+     "runtime": "06:27"
+    },
+    {
+     "name": "Neurofibromatosis type 1",
+     "runtime": "06:53"
+    },
+    {
+     "name": "Neuroleptic malignant syndrome",
+     "runtime": "07:15"
+    },
+    {
+     "name": "Neurotransmitters & related medications",
+     "runtime": "17:41"
+    },
+    {
+     "name": "Normal pressure hydrocephalus",
+     "runtime": "08:00"
+    },
+    {
+     "name": "Parkinson disease",
+     "runtime": "10:42"
+    },
+    {
+     "name": "Phenylketonuria",
+     "runtime": "05:57"
+    },
+    {
+     "name": "Rett syndrome",
+     "runtime": "04:30"
+    },
+    {
+     "name": "Spinal muscular atrophy",
+     "runtime": "06:00"
+    },
+    {
+     "name": "Sturge-Weber syndrome",
+     "runtime": "06:03"
+    },
+    {
+     "name": "Subarachnoid hemorrhage",
+     "runtime": "08:58"
+    },
+    {
+     "name": "Syringomyelia",
+     "runtime": "06:42"
+    },
+    {
+     "name": "Tension headache",
+     "runtime": "04:27"
+    },
+    {
+     "name": "Tetanus",
+     "runtime": "07:15"
+    },
+    {
+     "name": "Transverse myelitis",
+     "runtime": "05:11"
+    },
+    {
+     "name": "Traumatic brain injury",
+     "runtime": "11:10"
+    },
+    {
+     "name": "Trigeminal neuralgia",
+     "runtime": "04:58"
+    },
+    {
+     "name": "Trisomy 13, 18, and 21",
+     "runtime": "07:08"
+    },
+    {
+     "name": "Trisomy 21",
+     "runtime": "06:30"
+    },
+    {
+     "name": "Tuberous sclerosis complex",
+     "runtime": "06:03"
+    },
+    {
+     "name": "Vascular dementia",
+     "runtime": "08:01"
+    },
+    {
+     "name": "Viral meningitis",
+     "runtime": "06:42"
+    },
+    {
+     "name": "Visual pathways and field defects",
+     "runtime": "10:31"
+    },
+    {
+     "name": "Wilson disease",
+     "runtime": "06:05"
+    }
+   ]
+  },
+  {
+   "name": "Ophthalmology",
+   "videos": [
+    {
+     "name": "Acute angle-closure glaucoma",
+     "runtime": "07:06"
+    },
+    {
+     "name": "Age-related macular degeneration",
+     "runtime": "06:35"
+    },
+    {
+     "name": "Amblyopia",
+     "runtime": "05:55"
+    },
+    {
+     "name": "Cataracts",
+     "runtime": "05:54"
+    },
+    {
+     "name": "Conjunctivitis",
+     "runtime": "07:46"
+    },
+    {
+     "name": "Endophthalmitis",
+     "runtime": "05:58"
+    },
+    {
+     "name": "Hypertensive retinopathy",
+     "runtime": "06:53"
+    },
+    {
+     "name": "Neonatal conjunctivitis",
+     "runtime": "07:03"
+    },
+    {
+     "name": "Orbital cellulitis",
+     "runtime": "05:38"
+    },
+    {
+     "name": "Orbital fractures",
+     "runtime": "09:59"
+    },
+    {
+     "name": "Preseptal cellulitis",
+     "runtime": "04:32"
+    },
+    {
+     "name": "Refractive errors",
+     "runtime": "09:00"
+    },
+    {
+     "name": "Retinitis pigmentosa",
+     "runtime": "06:15"
+    },
+    {
+     "name": "Retinoblastoma",
+     "runtime": "09:36"
+    },
+    {
+     "name": "Strabismus",
+     "runtime": "07:15"
+    },
+    {
+     "name": "Trachoma",
+     "runtime": "06:10"
+    },
+    {
+     "name": "Vascular retinal disorders",
+     "runtime": "08:40"
+    },
+    {
+     "name": "Visual pathways and field defects",
+     "runtime": "10:31"
+    }
+   ]
+  },
+  {
+   "name": "Poisoning & Environmental Exposure",
+   "videos": [
+    {
+     "name": "Arsenic poisoning",
+     "runtime": "07:49"
+    },
+    {
+     "name": "Carbon monoxide poisoning",
+     "runtime": "08:44"
+    },
+    {
+     "name": "Cyanide poisoning",
+     "runtime": "07:25"
+    },
+    {
+     "name": "Ethylene glycol poisoning",
+     "runtime": "09:00"
+    },
+    {
+     "name": "Lead poisoning",
+     "runtime": "08:24"
+    },
+    {
+     "name": "Methanol poisoning",
+     "runtime": "09:02"
+    },
+    {
+     "name": "Organophosphate poisoning",
+     "runtime": "07:16"
+    },
+    {
+     "name": "Reye syndrome",
+     "runtime": "05:38"
+    },
+    {
+     "name": "Salicylate toxicity",
+     "runtime": "07:15"
+    }
+   ]
+  },
+  {
+   "name": "Pregnancy, Childbirth & Puerperium",
+   "videos": [
+    {
+     "name": "Abnormal labor",
+     "runtime": "07:53"
+    },
+    {
+     "name": "Abruptio placentae (placental abruption)",
+     "runtime": "07:21"
+    },
+    {
+     "name": "Acute fatty liver of pregnancy",
+     "runtime": "09:43"
+    },
+    {
+     "name": "Amniotic fluid embolism",
+     "runtime": "08:22"
+    },
+    {
+     "name": "Ectopic pregnancy",
+     "runtime": "08:56"
+    },
+    {
+     "name": "Fetal heart rate tracings",
+     "runtime": "09:40"
+    },
+    {
+     "name": "Gestational diabetes mellitus",
+     "runtime": "08:12"
+    },
+    {
+     "name": "Hydatidiform mole",
+     "runtime": "10:58"
+    },
+    {
+     "name": "Hyperemesis gravidarum",
+     "runtime": "07:33"
+    },
+    {
+     "name": "Intraamniotic infection",
+     "runtime": "06:16"
+    },
+    {
+     "name": "Intrahepatic cholestasis of pregnancy",
+     "runtime": "10:05"
+    },
+    {
+     "name": "Neural tube defects",
+     "runtime": "10:58"
+    },
+    {
+     "name": "Normal fetal circulation",
+     "runtime": "06:34"
+    },
+    {
+     "name": "Normal labor",
+     "runtime": "08:25"
+    },
+    {
+     "name": "Placenta accreta",
+     "runtime": "07:01"
+    },
+    {
+     "name": "Placenta previa",
+     "runtime": "05:18"
+    },
+    {
+     "name": "Postpartum endometritis",
+     "runtime": "05:09"
+    },
+    {
+     "name": "Postpartum hemorrhage",
+     "runtime": "06:36"
+    },
+    {
+     "name": "Rh alloimmunization",
+     "runtime": "09:45"
+    },
+    {
+     "name": "Shoulder dystocia",
+     "runtime": "04:50"
+    },
+    {
+     "name": "Twin gestation",
+     "runtime": "07:44"
+    },
+    {
+     "name": "Uterine inversion",
+     "runtime": "06:50"
+    },
+    {
+     "name": "Uterine rupture",
+     "runtime": "05:18"
+    },
+    {
+     "name": "Vasa previa",
+     "runtime": "05:38"
+    }
+   ]
+  },
+  {
+   "name": "Psychiatric/Behavioral & Substance Use Disorder",
+   "videos": [
+    {
+     "name": "Acute stress disorder",
+     "runtime": "04:33"
+    },
+    {
+     "name": "Anorexia nervosa",
+     "runtime": "10:45"
+    },
+    {
+     "name": "Antipsychotics",
+     "runtime": "05:31"
+    },
+    {
+     "name": "Attention deficit hyperactivity disorder",
+     "runtime": "07:35"
+    },
+    {
+     "name": "Autism spectrum disorder",
+     "runtime": "07:01"
+    },
+    {
+     "name": "Bipolar I disorder",
+     "runtime": "08:54"
+    },
+    {
+     "name": "Bipolar II disorder",
+     "runtime": "08:35"
+    },
+    {
+     "name": "Body dysmorphic disorder",
+     "runtime": "05:00"
+    },
+    {
+     "name": "Borderline personality disorder",
+     "runtime": "06:25"
+    },
+    {
+     "name": "Brief psychotic disorder",
+     "runtime": "03:23"
+    },
+    {
+     "name": "Bulimia nervosa",
+     "runtime": "03:26"
+    },
+    {
+     "name": "Cyclothymic disorder",
+     "runtime": "05:30"
+    },
+    {
+     "name": "Defense mechanisms",
+     "runtime": "07:18"
+    },
+    {
+     "name": "Delivering bad news",
+     "runtime": "06:30"
+    },
+    {
+     "name": "Delusional disorder",
+     "runtime": "04:49"
+    },
+    {
+     "name": "Dissociative disorders",
+     "runtime": "05:04"
+    },
+    {
+     "name": "Extrapyramidal symptoms",
+     "runtime": "09:44"
+    },
+    {
+     "name": "Factitious disorder",
+     "runtime": "06:00"
+    },
+    {
+     "name": "Functional neurologic symptom disorder",
+     "runtime": "06:40"
+    },
+    {
+     "name": "Generalized anxiety disorder",
+     "runtime": "06:00"
+    },
+    {
+     "name": "Grief and prolonged grief disorder",
+     "runtime": "06:32"
+    },
+    {
+     "name": "Impulse control disorders",
+     "runtime": "05:08"
+    },
+    {
+     "name": "Lithium",
+     "runtime": "07:39"
+    },
+    {
+     "name": "Major depressive disorder",
+     "runtime": "08:49"
+    },
+    {
+     "name": "Monoamine oxidase inhibitors (MAOIs)",
+     "runtime": "06:32"
+    },
+    {
+     "name": "Narcolepsy",
+     "runtime": "06:56"
+    },
+    {
+     "name": "Neuroleptic malignant syndrome",
+     "runtime": "07:15"
+    },
+    {
+     "name": "Obsessive-compulsive disorder",
+     "runtime": "06:06"
+    },
+    {
+     "name": "Oppositional defiant disorder and conduct disorder",
+     "runtime": "06:13"
+    },
+    {
+     "name": "Panic disorder",
+     "runtime": "05:49"
+    },
+    {
+     "name": "Persistent depressive disorder",
+     "runtime": "04:36"
+    },
+    {
+     "name": "Personality disorders",
+     "runtime": "10:22"
+    },
+    {
+     "name": "Postpartum blues and peripartum psychiatric disorders",
+     "runtime": "09:35"
+    },
+    {
+     "name": "Posttraumatic stress disorder",
+     "runtime": "07:57"
+    },
+    {
+     "name": "Premenstrual syndrome and premenstrual dysphoric disorder",
+     "runtime": "06:42"
+    },
+    {
+     "name": "Prescription stimulants",
+     "runtime": "06:35"
+    },
+    {
+     "name": "Schizophrenia",
+     "runtime": "07:53"
+    },
+    {
+     "name": "Schizophreniform disorder",
+     "runtime": "03:18"
+    },
+    {
+     "name": "Seasonal affective disorder",
+     "runtime": "04:14"
+    },
+    {
+     "name": "Second-generation antipsychotics",
+     "runtime": "03:50"
+    },
+    {
+     "name": "Selective serotonin reuptake inhibitors (SSRIs)",
+     "runtime": "07:38"
+    },
+    {
+     "name": "Separation anxiety disorder",
+     "runtime": "05:46"
+    },
+    {
+     "name": "Serotonin toxicity",
+     "runtime": "08:34"
+    },
+    {
+     "name": "Serotonin-norepinephrine reuptake inhibitors (SNRIs)",
+     "runtime": "09:24"
+    },
+    {
+     "name": "Sleep disorders",
+     "runtime": "09:47"
+    },
+    {
+     "name": "Social anxiety disorder",
+     "runtime": "06:07"
+    },
+    {
+     "name": "Stages of behavioral change",
+     "runtime": "05:38"
+    },
+    {
+     "name": "Tourette syndrome",
+     "runtime": "06:21"
+    },
+    {
+     "name": "Tricyclic antidepressants",
+     "runtime": "06:52"
+    }
+   ]
+  },
+  {
+   "name": "Pulmonary & Critical Care",
+   "videos": [
+    {
+     "name": "Acute respiratory distress syndrome (ARDS)",
+     "runtime": "11:48"
+    },
+    {
+     "name": "Alpha-1 antitrypsin deficiency",
+     "runtime": "08:15"
+    },
+    {
+     "name": "Arterial blood gas interpretation",
+     "runtime": "16:42"
+    },
+    {
+     "name": "Asbestos related disease",
+     "runtime": "09:33"
+    },
+    {
+     "name": "Aspergillosis",
+     "runtime": "11:37"
+    },
+    {
+     "name": "Asthma",
+     "runtime": "08:09"
+    },
+    {
+     "name": "Atelectasis",
+     "runtime": "06:51"
+    },
+    {
+     "name": "Bordatella pertussis",
+     "runtime": "07:06"
+    },
+    {
+     "name": "Chronic obstructive pulmonary disease (COPD)",
+     "runtime": "18:50"
+    },
+    {
+     "name": "Congenital diaphragmatic hernia",
+     "runtime": "06:42"
+    },
+    {
+     "name": "Gas exchange",
+     "runtime": "06:03"
+    },
+    {
+     "name": "High altitude illness",
+     "runtime": "08:20"
+    },
+    {
+     "name": "Hypersensitivity pneumonitis",
+     "runtime": "08:17"
+    },
+    {
+     "name": "Idiopathic pulmonary fibrosis",
+     "runtime": "08:54"
+    },
+    {
+     "name": "Influenza",
+     "runtime": "10:04"
+    },
+    {
+     "name": "Lactic acidosis",
+     "runtime": "06:10"
+    },
+    {
+     "name": "Large airway obstructions",
+     "runtime": "08:58"
+    },
+    {
+     "name": "Laryngomalacia",
+     "runtime": "05:25"
+    },
+    {
+     "name": "Legionella",
+     "runtime": "06:49"
+    },
+    {
+     "name": "Lung cancer",
+     "runtime": "10:16"
+    },
+    {
+     "name": "Meconium aspiration syndrome",
+     "runtime": "06:26"
+    },
+    {
+     "name": "Neonatal respiratory distress syndrome",
+     "runtime": "09:24"
+    },
+    {
+     "name": "Nontuberculous mycobacteria",
+     "runtime": "06:52"
+    },
+    {
+     "name": "Oxygen-hemoglobin dissociation curve",
+     "runtime": "06:50"
+    },
+    {
+     "name": "Persistent pulmonary hypertension of the newborn",
+     "runtime": "08:53"
+    },
+    {
+     "name": "Pleural effusion",
+     "runtime": "09:36"
+    },
+    {
+     "name": "Pneumocystis jirovecii pneumonia",
+     "runtime": "07:23"
+    },
+    {
+     "name": "Pneumonia",
+     "runtime": "09:20"
+    },
+    {
+     "name": "Pneumothorax",
+     "runtime": "08:25"
+    },
+    {
+     "name": "Pulmonary embolism",
+     "runtime": "13:40"
+    },
+    {
+     "name": "Pulmonary function testing",
+     "runtime": "08:48"
+    },
+    {
+     "name": "Pulmonary hypertension",
+     "runtime": "09:44"
+    },
+    {
+     "name": "Respiratory mechanics",
+     "runtime": "09:25"
+    },
+    {
+     "name": "Respiratory syncytial virus",
+     "runtime": "07:57"
+    },
+    {
+     "name": "Sarcoidosis",
+     "runtime": "07:11"
+    },
+    {
+     "name": "Silicosis",
+     "runtime": "06:12"
+    },
+    {
+     "name": "Sleep apnea",
+     "runtime": "06:47"
+    },
+    {
+     "name": "Transient tachypnea of the newborn",
+     "runtime": "05:14"
+    },
+    {
+     "name": "Tuberculosis",
+     "runtime": "09:57"
+    }
+   ]
+  },
+  {
+   "name": "Renal, Urinary Systems & Electrolytes",
+   "videos": [
+    {
+     "name": "Acid-base physiology",
+     "runtime": "14:26"
+    },
+    {
+     "name": "Acute kidney injury",
+     "runtime": "10:14"
+    },
+    {
+     "name": "Alkaptonuria",
+     "runtime": "06:24"
+    },
+    {
+     "name": "Arterial blood gas interpretation",
+     "runtime": "16:42"
+    },
+    {
+     "name": "Benign prostatic hyperplasia",
+     "runtime": "08:11"
+    },
+    {
+     "name": "Bladder cancer",
+     "runtime": "07:43"
+    },
+    {
+     "name": "Continence and micturition",
+     "runtime": "03:08"
+    },
+    {
+     "name": "Diuretics",
+     "runtime": "13:15"
+    },
+    {
+     "name": "Focal segmental glomerulosclerosis",
+     "runtime": "06:51"
+    },
+    {
+     "name": "Macrovascular and microvascular complications of diabetes",
+     "runtime": "12:37"
+    },
+    {
+     "name": "Maple syrup urine disease",
+     "runtime": "07:06"
+    },
+    {
+     "name": "Membranoproliferative glomerulonephritis",
+     "runtime": "07:16"
+    },
+    {
+     "name": "Membranous nephropathy",
+     "runtime": "07:03"
+    },
+    {
+     "name": "Minimal change disease",
+     "runtime": "05:28"
+    },
+    {
+     "name": "Nephritic syndrome",
+     "runtime": "08:28"
+    },
+    {
+     "name": "Nephrolithiasis",
+     "runtime": "11:30"
+    },
+    {
+     "name": "Nephrotic syndrome",
+     "runtime": "08:15"
+    },
+    {
+     "name": "Polycystic kidney disease",
+     "runtime": "06:40"
+    },
+    {
+     "name": "Posterior urethral valves",
+     "runtime": "04:19"
+    },
+    {
+     "name": "Poststreptococcal glomerulonephritis",
+     "runtime": "07:06"
+    },
+    {
+     "name": "Renal cell carcinoma",
+     "runtime": "06:27"
+    },
+    {
+     "name": "Renal electrolyte handling",
+     "runtime": "12:45"
+    },
+    {
+     "name": "Renal tubular acidosis",
+     "runtime": "09:45"
+    },
+    {
+     "name": "Rhabdomylosis",
+     "runtime": "09:13"
+    },
+    {
+     "name": "Syndrome of inappropriate antidiuretic hormone (SIADH)",
+     "runtime": "09:58"
+    },
+    {
+     "name": "Urethral injuries",
+     "runtime": "06:15"
+    },
+    {
+     "name": "Vesicoureteral reflux",
+     "runtime": "04:48"
+    },
+    {
+     "name": "Wilms tumor",
+     "runtime": "04:36"
+    }
+   ]
+  },
+  {
+   "name": "Rheumatology/Orthopedics & Sports",
+   "videos": [
+    {
+     "name": "Achondroplasia",
+     "runtime": "06:30"
+    },
+    {
+     "name": "Adhesive capsulitis",
+     "runtime": "05:27"
+    },
+    {
+     "name": "Carpal tunnel syndrome",
+     "runtime": "06:57"
+    },
+    {
+     "name": "Compartment syndrome",
+     "runtime": "08:23"
+    },
+    {
+     "name": "Crystal arthropathies",
+     "runtime": "08:05"
+    },
+    {
+     "name": "Developmental dysplasia of the hip",
+     "runtime": "05:18"
+    },
+    {
+     "name": "Duchenne and Becker muscular dystrophy",
+     "runtime": "08:49"
+    },
+    {
+     "name": "Ehlers-Danlos syndrome",
+     "runtime": "07:27"
+    },
+    {
+     "name": "Elbow tendinopathy",
+     "runtime": "05:54"
+    },
+    {
+     "name": "Ewing sarcoma",
+     "runtime": "05:30"
+    },
+    {
+     "name": "Giant cell arteritis",
+     "runtime": "07:03"
+    },
+    {
+     "name": "Giant cell tumor of bone",
+     "runtime": "05:56"
+    },
+    {
+     "name": "Juvenile idiopathic arthritis",
+     "runtime": "09:07"
+    },
+    {
+     "name": "Kawasaki disease",
+     "runtime": "04:12"
+    },
+    {
+     "name": "Legg-Calve-Perthes disease",
+     "runtime": "04:38"
+    },
+    {
+     "name": "Malignant hyperthermia",
+     "runtime": "04:38"
+    },
+    {
+     "name": "Osgood-Schlatter disease",
+     "runtime": "05:12"
+    },
+    {
+     "name": "Osteoarthritis",
+     "runtime": "08:38"
+    },
+    {
+     "name": "Osteogenesis imperfecta",
+     "runtime": "06:16"
+    },
+    {
+     "name": "Osteosarcoma",
+     "runtime": "04:59"
+    },
+    {
+     "name": "Paget disease of bone",
+     "runtime": "08:53"
+    },
+    {
+     "name": "Plantar fasciitis",
+     "runtime": "04:59"
+    },
+    {
+     "name": "Polymyalgia rheumatica",
+     "runtime": "05:35"
+    },
+    {
+     "name": "Radial head subluxation",
+     "runtime": "04:07"
+    },
+    {
+     "name": "Raynaud phenomenon",
+     "runtime": "07:57"
+    },
+    {
+     "name": "Rhabdomylosis",
+     "runtime": "09:13"
+    },
+    {
+     "name": "Skeletal muscle physiology",
+     "runtime": "06:58"
+    },
+    {
+     "name": "Slipped capital femoral epiphysis",
+     "runtime": "07:05"
+    },
+    {
+     "name": "Transient synovitis",
+     "runtime": "06:22"
+    }
+   ]
+  },
+  {
+   "name": "Social Sciences",
+   "videos": [
+    {
+     "name": "Advanced care planning",
+     "runtime": "05:37"
+    },
+    {
+     "name": "Decision making capacity",
+     "runtime": "08:58"
+    },
+    {
+     "name": "Delivering bad news",
+     "runtime": "06:30"
+    },
+    {
+     "name": "Ethical principles of medicine",
+     "runtime": "06:15"
+    },
+    {
+     "name": "Informed consent",
+     "runtime": "05:59"
+    },
+    {
+     "name": "Patient confidentiality and privacy",
+     "runtime": "06:14"
+    },
+    {
+     "name": "Stages of behavioral change",
+     "runtime": "05:38"
+    }
+   ]
+  }
+ ]
+}
