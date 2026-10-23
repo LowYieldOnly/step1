@@ -20,7 +20,7 @@ as a sentence about behaviour rather than about code — so a failure reads as
 cd tools
 npm install       # first time only
 npm run check     # run everything
-node checks/C56_pharm.mjs    # or just one
+node checks/C63_uworld.mjs   # or just one
 ```
 
 Exits non-zero if anything fails, so it can gate a release.
@@ -69,21 +69,13 @@ Scripts that build the JSON data files from source material, rather than the fil
 being hand-edited. The point is that they **validate before writing** and refuse to
 emit something half-right.
 
-`mk_pharm.js` builds the pharm section of `rapidref.json`. It fails if a drug is
-referenced from a view but doesn't exist, if a drug exists but no view reaches it,
-if a drug is missing a field the detail sheet renders, or if the hazard lists and
-the per-drug tags disagree — those two are hand-kept copies of the same fact, and
-that last check is what caught propranolol being tagged a negative inotrope while
-missing from the negative-inotrope list.
+Each generator's header says where its data came from and what it refuses. They are
+idempotent: re-running with unchanged input reproduces the shipped files byte for byte,
+so it is safe to run one just to confirm the data still validates. (`mk_pharm.js`, which
+built Rapid Reference's pharm section, went with that tab in October 2026; it is in the
+git history.)
 
-```bash
-node tools/generators/mk_pharm.js     # rewrites rapidref.json in place
-```
-
-Re-running with unchanged input reproduces the shipped file byte-for-byte, so it is
-safe to run just to confirm the data still validates.
-
-The generators for the other content — the video outlines, the M3 algorithms, the
-Brody course blocks — were lost in the same wipe described above. The data they
+The generators for some older content — the M3 algorithms, the first Brody course
+blocks — were lost in the same wipe described above. The data they
 produced is committed and fine; only the scripts that built it are gone. If any of
 that content needs regenerating, the generator has to be rewritten first.

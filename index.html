@@ -489,7 +489,21 @@ b{color:var(--ink)}
 .clfrac.met{color:var(--success)}
 .clmini{width:82px;height:6px;background:var(--bg2);border-radius:999px;overflow:hidden}
 .clminifill{display:block;height:100%;background:var(--phos);border-radius:999px}
-.clsys{padding:0 16px 6px}
+.clsys{padding:0 12px 8px}
+.clcats{padding:0 0 4px 10px}
+.clfold.cls,.clfold.clc{border-top:1px solid var(--line)}
+.clfold.cls>.clsum{padding:11px 4px}
+.clfold.clc>.clsum{padding:9px 4px}
+.clsyslab{font-size:13px;font-weight:800;text-transform:uppercase;letter-spacing:.04em;color:var(--muted)}
+.clcatlab{font-size:13px;font-weight:600;color:var(--ink)}
+.clsyslab::before,.clcatlab::before{content:"▸ ";color:var(--faint);font-size:11px}
+.clfold[open]>summary .clsyslab::before,.clfold[open]>summary .clcatlab::before{content:"▾ "}
+.clfold.clc>.cllist,.clfold.clc>div>.cllist{padding:0 0 8px 12px}
+.clitem{display:flex;flex-direction:column}
+.clitem .uwrow{margin:2px 0 4px 34px}
+.clrow.ro{cursor:default}
+.clsearch{width:100%;box-sizing:border-box;background:var(--bg2);border:1px solid var(--line);border-radius:10px;padding:11px 13px;font-size:14px;color:var(--ink);font-family:var(--sans);margin-top:4px}
+.clsearch:focus{outline:none;border-color:var(--phos)}
 .clsyshd{font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.04em;color:var(--muted);margin:12px 0 6px}
 .clcat{font-size:12px;color:var(--faint);margin:9px 0 4px}
 .cllist{display:flex;flex-direction:column;gap:5px}
@@ -775,40 +789,8 @@ details.ca-lc{margin:1px 0}
 .ca-lci .ca-sc{margin-left:auto}
 @media (max-width:520px){.ca-lectgrp{grid-template-columns:1fr;gap:3px}.ca-lectgrp+.ca-lectgrp{margin-top:10px}}
 /* rapid reference — collapsible section › video › topic › points */
-.rrbar{display:flex;flex-wrap:wrap;gap:9px;align-items:center;margin:0 0 6px}
-.rrsearch{position:relative;flex:1 1 260px;min-width:200px}
-.rrsearch input{width:100%;padding:10px 34px 10px 12px;background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);color:var(--ink);font-family:var(--sans);font-size:14px}
-.rrsearch input::placeholder{color:var(--faint)}
 /* type=search keeps the phone keyboard's Search key, but its native × would sit
    next to ours — two clear buttons in one field */
-.rrsearch input::-webkit-search-cancel-button,.rrsearch input::-webkit-search-decoration{-webkit-appearance:none;appearance:none}
-.rrsearch input:focus{outline:2px solid var(--phos);outline-offset:1px;border-color:var(--phos)}
-.rrclear{position:absolute;right:5px;top:50%;transform:translateY(-50%);background:none;border:0;color:var(--faint);cursor:pointer;font-size:17px;line-height:1;padding:6px 8px;border-radius:4px}
-.rrclear:hover{color:var(--ink)}
-.rrhits{font-size:12px;color:var(--faint);margin:0 0 14px;min-height:16px}
-.rrpick{display:flex;flex-wrap:wrap;gap:7px;margin:0 0 12px}
-.rrpickn{font-size:11px;font-weight:600;opacity:.6;margin-left:3px}
-.rrsec{margin:0 0 26px}
-.rrsechd{display:flex;align-items:baseline;gap:11px;padding:0 0 8px;border-bottom:2px solid var(--phos);margin-bottom:2px}
-.rrsechd h3{margin:0;font-size:17px;font-weight:800;letter-spacing:-.01em;color:var(--phos)}
-.rrct{font-size:11px;color:var(--faint);letter-spacing:.05em;margin-left:auto}
-.rrv{border-bottom:1px solid var(--line)}
-.rrvb{width:100%;display:flex;align-items:center;gap:10px;text-align:left;background:none;border:0;color:var(--ink);cursor:pointer;padding:12px 4px;font-family:var(--sans);font-size:15px;font-weight:700}
-.rrvb:hover{color:var(--phos)}
-.rrvb:focus-visible{outline:2px solid var(--phos);outline-offset:-2px}
-.rrcar{flex:none;width:8px;height:8px;border-right:2px solid var(--phos);border-bottom:2px solid var(--phos);transform:rotate(-45deg);transition:transform .16s ease;margin-left:3px}
-.rrv.open>.rrvb .rrcar{transform:rotate(45deg)}
-.rrvn{flex:1 1 auto}
-.rrv.done .rrvn{color:var(--text-2)}
-.rrdone{flex:none;color:var(--success);font-size:12px;font-weight:800}
-.rrvmeta{flex:none;font-size:10.5px;color:var(--faint);letter-spacing:.04em;white-space:nowrap}
-.rrvbody{padding:2px 0 16px 20px}
-.rrt{border-left:1px solid var(--line);padding-left:14px;margin-bottom:2px}
-.rrtb{width:100%;display:flex;align-items:baseline;gap:8px;text-align:left;background:none;border:0;color:var(--ink);cursor:pointer;padding:7px 2px;font-family:var(--sans);font-size:13.5px;font-weight:600}
-.rrtb:hover{color:var(--phos)}
-.rrtb:focus-visible{outline:2px solid var(--phos);outline-offset:-2px}
-.rrdot{flex:none;width:6px;height:6px;border-radius:50%;background:var(--phos);position:relative;top:-1px}
-.rrt.open>.rrtb .rrdot{background:transparent;box-shadow:inset 0 0 0 2px var(--phos)}
 ul.rritems{list-style:none;margin:0;padding:1px 0 9px 14px}
 ul.rritems li{position:relative;padding:3.5px 0 3.5px 14px;color:var(--text-2);font-size:13px;line-height:1.5}
 ul.rritems li::before{content:"";position:absolute;left:0;top:10px;width:5px;height:1px;background:var(--line2)}
@@ -820,8 +802,6 @@ ul.rritems li::before{content:"";position:absolute;left:0;top:10px;width:5px;hei
    own tokens rather than borrowing UI accents, and are re-toned per theme below. */
 :root{--ph-qt:#7C5CFC;--ph-reflex:#B45309;--ph-inotrope:#992D30;--ph-combo:#D6336C;--ph-safe:#2C9A5A}
 :root[data-theme="dark"]{--ph-qt:#A99BFF;--ph-reflex:#E0A458;--ph-inotrope:#DE7A73;--ph-combo:#F07AA5;--ph-safe:#6FC08D}
-.rrgrp{display:flex;flex-wrap:wrap;align-items:center;gap:7px;margin:0 0 9px}
-.rrgrpl{font-family:var(--mono);font-size:10px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:var(--faint);margin-right:2px}
 .phlegend{display:flex;flex-wrap:wrap;gap:5px 15px;align-items:center;margin:0 0 14px;font-size:12px;color:var(--text-2)}
 .phlegend span.it{display:inline-flex;align-items:center;gap:6px}
 .phdot{width:7px;height:7px;border-radius:50%;display:inline-block;flex:none}
@@ -1005,24 +985,8 @@ button.phcard:focus-visible{outline:2px solid var(--phos);outline-offset:1px}
 .wrv-k{font-size:12.5px;font-weight:700;color:var(--faint);text-transform:uppercase;letter-spacing:.04em;font-family:var(--mono);flex:0 0 auto}
 .wrv-v{font-size:14px;color:var(--ink);text-align:right;line-height:1.4}
 /* ---- UWorld question map ---- */
-.uwsrc{background:var(--bg2);border:1px solid var(--line);border-radius:10px;padding:10px 12px;font-size:12px;color:var(--muted);line-height:1.5;margin:0 0 12px}
-.uwsrc b{color:var(--text-2)}
-.uwsearch{width:100%;box-sizing:border-box;background:var(--bg2);border:1px solid var(--line2);border-radius:11px;padding:11px 13px;font-size:14px;color:var(--ink);margin:0 0 14px}
-.uwsys{border:1px solid var(--line);border-radius:12px;margin:0 0 10px;background:var(--bg2);overflow:hidden}
-.uwsyshd{cursor:pointer;padding:12px 14px;font-weight:700;font-size:14px;color:var(--ink);list-style:none;display:flex;align-items:center;gap:8px}
-.uwsyshd::-webkit-details-marker{display:none}
-.uwsyshd::before{content:"›";display:inline-block;transition:transform .15s;color:var(--muted);font-weight:400}
 details.uwsys[open]>.uwsyshd::before{transform:rotate(90deg)}
-.uwct{margin-left:auto;font-family:var(--mono);font-size:11px;color:var(--faint)}
-.uwsec{padding:0 14px 10px}
-.uwsechd{font-size:11px;letter-spacing:.7px;text-transform:uppercase;color:var(--faint);font-weight:700;margin:10px 0 6px}
-.uwvid{padding:8px 0;border-top:1px solid var(--line)}
-.uwvtop{display:flex;align-items:center;gap:10px}
-.uwvn{flex:1;min-width:0;font-size:13.5px;color:var(--text-2)}
 .uwids{font-family:var(--mono);font-size:11px;color:var(--faint);margin-top:4px;word-break:break-word;line-height:1.6}
-.uwnone{font-size:11.5px;color:var(--faint);font-style:italic}
-.uwvid.unmapped .uwvn{opacity:.75}
-.uwflag{font-size:11px;color:var(--faint);margin-top:4px;font-style:italic}
 /* in-schedule: a per-video disclosure under a B&B row, and the day/week copy buttons */
 .uwrow{margin:2px 0 6px 34px}
 .uwrow summary{list-style:none;cursor:pointer;font-size:11.5px;color:var(--phos);font-weight:600;display:inline-flex;align-items:center;gap:5px}
@@ -1978,10 +1942,20 @@ function seqExamBind(c,pid,done){
 /* Systems a student can add: any with videos no Brody topic in their plan holds — the
    systems their unit doesn't cover, and the leftovers of ones it does (Heme/Renal leaves
    cancer pharmacology to a later unit, for instance). */
+/* Would this video be in plan c's schedule, given its topic is? The resources the student
+   uses, the content depth and the Pathoma chapters — what planVideosFor schedules.
+   Every count the plan editor shows goes through it: counting the whole catalog made a
+   system look like hundreds of videos when the student's resources hold a few dozen. */
+function planWants(c){const en=resEnabledFor(c);
+  // Pathoma: a chapter list the student chose is honoured; without one, a Brody plan takes
+  // every chapter its topics hold — including a system's, the moment it is added
+  const pathSel=Array.isArray(c&&c.pathChapters)?new Set(c.pathChapters):null;
+  return v=>!!en[v.res]&&contentIncluded(c,v)&&(v.res!=="pathoma"||!pathSel||pathSel.has(pathChapterOf(v)));}
 function seqAddable(c){
   const blk=seqBuild(seqTopics(c).filter(t=>/^u:/.test(t)&&seqParse(t)),todayISO(),todayISO(),seqUnitId(c));
   const have=new Set(seqTopics(c).filter(t=>/^s:/.test(t)).map(t=>t.slice(2)));
-  const left={};catVideos().forEach(v=>{if(blk.member[brodyKey(v)])return;if(isArticle(v))return;
+  const want=planWants(c);
+  const left={};catVideos().forEach(v=>{if(blk.member[brodyKey(v)])return;if(isArticle(v)||!want(v))return;
     (left[v.sys]=left[v.sys]||{n:0,min:0});left[v.sys].n++;left[v.sys].min+=v.min;});
   return Object.keys(left).filter(s=>!have.has(s)).sort().map(s=>({sys:s,n:left[s].n,h:Math.round(left[s].min/6)/10}));
 }
@@ -2718,13 +2692,10 @@ Cloud.signOut=function(){try{firebase.auth().signOut();}catch(e){}};
    ============================================================ */
 const app=document.getElementById("app");
 let VIEW="today";
-let RR_DATA=null,RR_LOADING=false,RR_ERR=false;   // rapidref.json — reference content, loaded on first open
 let EX_DATA=null,EX_LOADING=false,EX_ERR=false;   // extras.json — the diagnostic algorithms
 let EX_CUR=null,EX_SHOWN={};                      // which algorithm is open, and which boxes are revealed
 let M3SHELF=null,M3UNIT=null;                     // M3 drill-down: shelf → unit → resource
 let EX_ZOOM=1;                                    // wide trees are scaled to fit; phones use the outline instead
-let RR_Q="",RR_OPEN={},RR_TOPEN={};               // search text + which video / topic nodes are expanded
-let RR_CUR=null;                                  // which system's reference is open
 let QZOPEN={};   // which quiz rows have their topic picker open
 let CATOPEN={};   // which systems have their topic-order list expanded
 let ADJ_VIEW=null;   // Plan tab landing: null = 3-button menu, "edit" = editor, "old" = past plans
@@ -2927,8 +2898,8 @@ function chrome(active){
   let tabs;
   if(S.active==="m1"){tabs=[["browse","Browse"],["daily","Daily"],["grades","Grades"],["progress","Progress"]];}
   else if(S.active==="stepd"||S.active==="m3"){tabs=[];}
-  else if(S.active==="nbme"){tabs=[["today","Study"],["stats","Stats"],["grades","Grades"],["adjust","Plan"],["uworld","Questions"],["ref","Rapid Reference"],["checklist","Checklist"]];}
-  else{tabs=[["today","Study"],["stats","Stats"],["uworld","Questions"],["ref","Rapid Reference"],["adjust","Plan"]];}
+  else if(S.active==="nbme"){tabs=[["today","Study"],["stats","Stats"],["adjust","Plan"],["checklist","Resource Library / Question IDs"]];}
+  else{tabs=[["today","Study"],["stats","Stats"],["checklist","Resource Library / Question IDs"],["adjust","Plan"]];}
   const nm=(S.active==="nbme"||S.active==="m1"||S.active==="stepd"||S.active==="m3")?"Home":hubName(S.active||"step1");
   return '<div class="topbar'+(tabs.length?'':' solo')+'">'+'<button class="brandbtn" id="brandBtn" title="Switch hub">‹ <span class="brandnm">'+escHTML(nm)+'</span></button>'
    +(tabs.length?'<div class="nav">'+tabs.map(t=>'<button class="navb '+(active===t[0]?"on":"")+'" data-view="'+t[0]+'">'+t[1]+'</button>').join('')+'</div>':'')
@@ -2988,12 +2959,9 @@ function render(){
   // lazily and only then. render() runs again when it lands.
   if(!uwReady()&&!UW_ERR&&S.cfg&&hasRes("bnb"))loadUWorld();
   if(VIEW==="today")renderToday();
-  else if(VIEW==="checklist")renderChecklist();
+  else if(VIEW==="checklist"||VIEW==="uworld"||VIEW==="ref"||VIEW==="grades")renderChecklist();   // the last three were merged in or removed
   else if(VIEW==="stats")renderStats();
-  else if(VIEW==="grades")renderGrades();
   else if(VIEW==="adjust")renderAdjust();
-  else if(VIEW==="ref")renderRapidRef();
-  else if(VIEW==="uworld")renderUWorld();
   else renderToday();
   wireChrome();
 }
@@ -3518,42 +3486,89 @@ function videoCards(){
   body+='</div></div>';
   return body;
 }
-/* ---------- MASTER CHECKLIST ----------
-   Every third-party video in the plan, grouped resource → system → category,
-   with live checkboxes. Checking here shares state with the daily plan (same
-   vdone), so progress moves together. */
-const CLFOLD={};let CLVIDS=[];
+/* ---------- RESOURCE LIBRARY / QUESTION IDS ----------
+   Every third-party video, grouped resource → system → category. Every level is a
+   drop-down, closed until opened, and remembered while the app is open. The checkboxes
+   share vdone with Study, so progress moves together. A Boards & Beyond video carries its
+   UWorld question set as a drop-down of its own. One search box covers the whole library:
+   a video, a category, a system, a resource, or a UWorld question ID. Question sets the
+   B&B document lists for videos this catalog doesn't have are kept at the end, so none is
+   lost. A closed group's rows aren't rendered until it opens: the library is thousands of
+   rows. */
+const CLFOLD={};let CLVIDS=[],CL_Q="";
+function uwMatch(q,s){return String(s).toLowerCase().indexOf(q)>=0;}
+function clHit(q,qid,v){
+  if(!q)return true;
+  if(qid!=null&&v.res==="bnb"&&(uwIdsFor(v.name)||[]).indexOf(qid)>=0)return true;
+  return [vName(v),v.name,v.cat,v.sys,resLabel(v.res)].some(x=>uwMatch(q,x||""));}
+function clFrac(list){const d=list.filter(v=>isDone(v.id)).length;return {d,n:list.length,p:list.length?Math.round(d/list.length*100):0};}
+function clFold(fid,open,cls,summary,inner){
+  return '<details class="clfold '+cls+'" data-clfold="'+escAttr(fid)+'"'+(open?' open':'')+(open?'':' data-lazy="1"')+'>'
+    +'<summary class="clsum">'+summary+'</summary>'+(open?inner():'')+'</details>';}
+function clCount(f,key){return '<span class="clfrac'+(f.p>=100?' met':'')+'" data-clfrac="'+escAttr(key)+'">'+f.d+' / '+f.n+'</span>';}
 function renderChecklist(){
-  CLVIDS=checklistVideos();const vids=CLVIDS;
-  const total=vids.length, done=vids.filter(v=>isDone(v.id)).length, pct=total?Math.round(done/total*100):0;
+  if(!uwReady()&&!UW_ERR)loadUWorld();      // question sets fill in when the map arrives
+  CLVIDS=checklistVideos();const all=CLVIDS;
+  const q=CL_Q.trim().toLowerCase(),qid=/^\d+$/.test(q)?parseInt(q,10):null;
+  const vids=all.filter(v=>clHit(q,qid,v));
+  const tot=clFrac(all);
   const RES=Object.keys(CL_RESORDER).sort((a,b)=>CL_RESORDER[a]-CL_RESORDER[b]);const byRes={};
   vids.forEach(v=>{const R=byRes[v.res]=byRes[v.res]||{order:[],sys:{}};
     if(!R.sys[v.sys]){R.sys[v.sys]={order:[],cat:{}};R.order.push(v.sys);}
     const Sy=R.sys[v.sys];if(!Sy.cat[v.cat]){Sy.cat[v.cat]=[];Sy.order.push(v.cat);}Sy.cat[v.cat].push(v);});
-  let body='<div class="card clhead"><div class="cardhd">Master checklist</div>'
-    +'<div class="cltop"><div class="clbig"><span id="clDone">'+done+'</span> <span>/ '+total+' videos</span></div><div class="clpct'+(pct>=100?' met':'')+'" id="clPct">'+pct+'%</div></div>'
-    +'<div class="bartrack big"><div class="barfill" id="clBar" style="width:'+pct+'%'+(pct>=100?';background:var(--success)':'')+'"></div></div>'
-    +'<p class="muted small" style="margin-bottom:0">The whole third-party catalog — Boards &amp; Beyond, Pathoma, Sketchy, and Bootcamp across every system. Check videos off here or on <b>Study</b>; progress stays in sync.</p></div>';
+  const rows=list=>'<div class="cllist">'+list.map(v=>{const dn=isDone(v.id);
+    return '<div class="clitem"><button class="clrow'+(dn?' done':'')+'" data-clid="'+escAttr(v.id)+'"><span class="clchk'+(dn?' on':'')+'">'+(dn?'✓':'')+'</span><span class="clname">'+escHTML(vName(v))+'</span><span class="clmin">'+v.min+'m</span></button>'
+      +uwRowHTML(v)+'</div>';}).join('')+'</div>';
+  const isOpen=fid=>!!q||CLFOLD[fid]===true;
+  let body='<div class="card clhead"><div class="cardhd">Resource Library / Question IDs</div>'
+    +'<div class="cltop"><div class="clbig"><span id="clDone">'+tot.d+'</span> <span>/ '+tot.n+' videos</span></div><div class="clpct'+(tot.p>=100?' met':'')+'" id="clPct">'+tot.p+'%</div></div>'
+    +'<div class="bartrack big"><div class="barfill" id="clBar" style="width:'+tot.p+'%'+(tot.p>=100?';background:var(--success)':'')+'"></div></div>'
+    +'<p class="muted small">Every Boards &amp; Beyond, Pathoma, Sketchy and Bootcamp video, by resource, system and category. Check videos off here or on <b>Study</b>; progress stays in sync. Under a Boards &amp; Beyond video, open its <b>UWorld questions</b> to copy the IDs, then paste them into UWorld → Create Test → Custom.</p>'
+    +(uwReady()?'<p class="muted small" style="margin-top:-4px">Question IDs from <b>'+escHTML((UW_DATA.source||{}).title||"the B&B → UWorld question document")+'</b>, by '+escHTML((UW_DATA.source||{}).author||"its maintainers")+'.</p>':'')
+    +'<input class="clsearch" id="clq" type="search" placeholder="Search a video, category, system — or a UWorld question ID" value="'+escAttr(CL_Q)+'" aria-label="Search the library"></div>';
   RES.filter(r=>byRes[r]).forEach(r=>{
     const R=byRes[r];const rv=[];R.order.forEach(s=>R.sys[s].order.forEach(c=>rv.push.apply(rv,R.sys[s].cat[c])));
-    const rd=rv.filter(v=>isDone(v.id)).length, rp=rv.length?Math.round(rd/rv.length*100):0;
-    const fid='cl_'+r, open=(CLFOLD[fid]!=null)?CLFOLD[fid]:false;   // collapsed by default — the full catalog is large
-    body+='<div class="card clres"><details class="clfold" data-clfold="'+fid+'"'+(open?' open':'')+'>'
-      +'<summary class="clsum"><span class="clreslab">'+resLabel(r)+'</span><span class="clprog"><span class="clfrac'+(rp>=100?' met':'')+'" data-clfrac="'+r+'">'+rd+' / '+rv.length+'</span><span class="clmini"><span class="clminifill" data-clfill="'+r+'" style="width:'+rp+'%'+(rp>=100?';background:var(--success)':'')+'"></span></span></span></summary>';
-    R.order.forEach(s=>{const Sy=R.sys[s];
-      body+='<div class="clsys"><div class="clsyshd">'+escHTML(s)+'</div>';
-      Sy.order.forEach(c=>{
-        if(c)body+='<div class="clcat">'+escHTML(c)+'</div>';
-        body+='<div class="cllist">'+Sy.cat[c].map(v=>{const dn=isDone(v.id);
-          return '<button class="clrow'+(dn?' done':'')+'" data-clid="'+escAttr(v.id)+'"><span class="clchk'+(dn?' on':'')+'">'+(dn?'✓':'')+'</span><span class="clname">'+escHTML(vName(v))+'</span><span class="clmin">'+v.min+'m</span></button>';}).join('')+'</div>';
-      });
-      body+='</div>';});
-    body+='</details></div>';
+    const rf=clFrac(rv),fid='cl_'+r;
+    body+='<div class="card clres">'+clFold(fid,isOpen(fid),'clr',
+      '<span class="clreslab">'+resLabel(r)+'</span><span class="clprog">'+clCount(rf,r)
+        +'<span class="clmini"><span class="clminifill" data-clfill="'+escAttr(r)+'" style="width:'+rf.p+'%'+(rf.p>=100?';background:var(--success)':'')+'"></span></span></span>',
+      ()=>'<div class="clsys">'+R.order.map(sn=>{const Sy=R.sys[sn];const sv=[];Sy.order.forEach(c=>sv.push.apply(sv,Sy.cat[c]));
+        const sid=fid+'|'+sn;
+        return clFold(sid,isOpen(sid),'cls','<span class="clsyslab">'+escHTML(sn)+'</span>'+clCount(clFrac(sv),r+'|'+sn),
+          ()=>'<div class="clcats">'+Sy.order.map(c=>{const cv=Sy.cat[c];
+            if(!c)return rows(cv);                       // a resource with no categories: the videos sit under the system
+            const cid=sid+'|'+c;
+            return clFold(cid,isOpen(cid),'clc','<span class="clcatlab">'+escHTML(c)+'</span>'+clCount(clFrac(cv),r+'|'+sn+'|'+c),()=>rows(cv));
+          }).join('')+'</div>');}).join('')+'</div>')
+      +'</div>';
   });
+  // the B&B document's question sets for videos this catalog doesn't carry
+  if(uwReady()){
+    const extra=[];(UW_DATA.tree||[]).forEach(sy=>(sy.secs||[]).forEach(sec=>(sec.vids||[]).forEach(v=>{
+      if(v.to&&v.to.length)return;if(!(v.ids&&v.ids.length))return;
+      if(q&&!(uwMatch(q,v.n)||uwMatch(q,sy.sys)||uwMatch(q,sec.sec)||(qid!=null&&v.ids.indexOf(qid)>=0)))return;
+      extra.push({sys:sy.sys,sec:sec.sec,n:v.n,ids:v.ids});})));
+    if(extra.length){const fid='cl_uwextra';
+      body+='<div class="card clres">'+clFold(fid,isOpen(fid),'clr','<span class="clreslab">UWorld questions for videos outside the catalog</span><span class="clfrac">'+extra.length+'</span>',
+        ()=>'<p class="muted small" style="margin:0 16px 8px">These Boards &amp; Beyond videos are in the question document but not in the video catalog, so they never appear in a schedule. Their questions are still here to copy.</p>'
+          +'<div class="clsys">'+extra.map(x=>'<div class="clitem"><div class="clrow ro"><span class="clname">'+escHTML(x.n)+' <span class="muted small">· '+escHTML(x.sys)+'</span></span></div>'
+            +'<details class="uwrow"><summary>'+x.ids.length+' UWorld question'+(x.ids.length===1?'':'s')+'</summary><div class="uwrowbody"><div class="uwids">'+escHTML(x.ids.join(", "))+'</div>'
+            +'<button type="button" class="btn ghost sm" data-uwids="'+escAttr(x.ids.join(","))+'" data-uwlab="'+escAttr(x.n)+'">Copy</button></div></details></div>').join('')+'</div>')+'</div>';}
+  }
+  if(q&&!vids.length&&!body.includes('cl_uwextra'))body+='<p class="cfmsg">Nothing in the library matches “'+escHTML(CL_Q)+'”.</p>';
+  else if(q)body+='<p class="muted small" style="margin:6px 4px 0">'+vids.length+' video'+(vids.length===1?'':'s')+' match “'+escHTML(CL_Q)+'”'+(qid!=null?' (as a video or a UWorld question ID)':'')+'.</p>';
+  if(!uwReady())body+='<p class="muted small" style="margin:6px 4px 0">'+(UW_ERR?'Couldn’t load the UWorld question map — check your connection.':'Loading the UWorld question sets…')+'</p>';
   app.innerHTML=chrome("checklist")+'<div class="wrap"><div class="clwrap">'+body+'</div></div>';
   wireChrome();
   document.querySelectorAll("[data-clid]").forEach(b=>b.onclick=()=>clToggle(b));
-  document.querySelectorAll("[data-clfold]").forEach(d=>d.ontoggle=()=>{CLFOLD[d.dataset.clfold]=d.open;});
+  document.querySelectorAll("[data-clfold]").forEach(d=>d.ontoggle=()=>{
+    if(q)return;                                  // while searching, groups are opened for you and nothing is remembered
+    CLFOLD[d.dataset.clfold]=d.open;
+    if(d.open&&d.dataset.lazy){const y=window.scrollY;renderChecklist();window.scrollTo(0,y);}});
+  const box=document.getElementById("clq");
+  if(box)box.oninput=()=>{CL_Q=box.value;clearTimeout(renderChecklist._t);
+    renderChecklist._t=setTimeout(()=>{const at=box.selectionStart;renderChecklist();
+      const b2=document.getElementById("clq");if(b2){b2.focus();try{b2.setSelectionRange(at,at);}catch(e){}}},140);};
 }
 function clToggle(btn){
   const id=btn.dataset.clid;const nowDone=!isDone(id);
@@ -3566,14 +3581,14 @@ function clToggle(btn){
   clUpdateCounters();
 }
 function clUpdateCounters(){
-  const total=CLVIDS.length,done=CLVIDS.filter(v=>isDone(v.id)).length,pct=total?Math.round(done/total*100):0;
-  const d=document.getElementById('clDone');if(d)d.textContent=done;
-  const pc=document.getElementById('clPct');if(pc){pc.textContent=pct+'%';pc.classList.toggle('met',pct>=100);}
-  const bar=document.getElementById('clBar');if(bar){bar.style.width=pct+'%';bar.style.background=pct>=100?'var(--success)':'';}
-  Object.keys(CL_RESORDER).forEach(r=>{const rv=CLVIDS.filter(v=>v.res===r);if(!rv.length)return;
-    const rd=rv.filter(v=>isDone(v.id)).length,rp=rv.length?Math.round(rd/rv.length*100):0;
-    const f=document.querySelector('[data-clfrac="'+r+'"]');if(f){f.textContent=rd+' / '+rv.length;f.classList.toggle('met',rp>=100);}
-    const fl=document.querySelector('[data-clfill="'+r+'"]');if(fl){fl.style.width=rp+'%';fl.style.background=rp>=100?'var(--success)':'';}});
+  const tot=clFrac(CLVIDS);
+  const d=document.getElementById('clDone');if(d)d.textContent=tot.d;
+  const pc=document.getElementById('clPct');if(pc){pc.textContent=tot.p+'%';pc.classList.toggle('met',tot.p>=100);}
+  const bar=document.getElementById('clBar');if(bar){bar.style.width=tot.p+'%';bar.style.background=tot.p>=100?'var(--success)':'';}
+  document.querySelectorAll('[data-clfrac]').forEach(f=>{const k=f.dataset.clfrac.split('|');
+    const f2=clFrac(CLVIDS.filter(v=>v.res===k[0]&&(k.length<2||v.sys===k[1])&&(k.length<3||v.cat===k[2])));
+    f.textContent=f2.d+' / '+f2.n;f.classList.toggle('met',f2.p>=100);
+    if(k.length===1){const fl=document.querySelector('[data-clfill="'+k[0]+'"]');if(fl){fl.style.width=f2.p+'%';fl.style.background=f2.p>=100?'var(--success)':'';}}});
 }
 function renderStats(){
   app.innerHTML=chrome("stats")+'<div class="wrap"><div class="cols"><div>'+videoCards()+'</div><div>'+readinessCards()+'</div></div></div>';
@@ -4195,13 +4210,6 @@ function bufferHint(){
   const base='New content wraps by <b>'+fmtShort(cEnd)+'</b>';
   if(bufDays>0)return base+', leaving '+bufDays+' study day'+(bufDays===1?'':'s')+' for UWorld &amp; review before your exam ('+fmtShort(c.examISO)+').';
   return base+' — no buffer set, so content runs right up to your exam.';
-}
-/* ---------- GRADES (coming soon) ---------- */
-function renderGrades(){
-  const body='<div class="m1wrap"><div class="m1soon"><div class="m1soon-tag">Coming soon</div>'
-    +'<div class="m1soon-t">Grade calculator</div>'
-    +'<p class="m1soon-d">Track where you stand in each Brody course as scores post — quiz, block-exam, and shelf weights built in — so you always know the grade you’re carrying and exactly what you need on what’s left. Wiring it to the Brody grade breakdown now.</p></div></div>';
-  app.innerHTML=chrome("grades")+'<div class="wrap">'+body+'</div>';
 }
 
 /* ---------- PAST UNITS (archive / reopen) ---------- */
@@ -5605,12 +5613,16 @@ function seqTopicColor(t){const p=seqParse(t);if(!p)return "#999";return SYS_COL
 function seqEditorHTML(c){
   const topics=seqTopics(c),unit=seqUnitId(c);const b=seqBuild(topics.filter(t=>seqParse(t)),c.startISO||todayISO(),c.examISO||todayISO(),unit);
   const idx={};topics.filter(t=>seqParse(t)).forEach((t,i)=>idx[t]=i+1);
+  // counted in the student's own resources, not the whole catalog (planWants)
+  const want=planWants(c),cnt={},mn={},ar={};
+  catVideos().forEach(v=>{const n=b.member[brodyKey(v)];if(!n||!want(v))return;
+    if(isArticle(v))ar[n]=(ar[n]||0)+1;else{cnt[n]=(cnt[n]||0)+1;mn[n]=(mn[n]||0)+v.min;}});
   const out=seqDefaultTopics(unit).filter(t=>topics.indexOf(t)<0);
   const add=seqAddable(c);
   // when each topic starts, from the live schedule — the same projection the Study page uses
   const live=SCHED&&SCHED.brody&&SCHED.brody.seq&&S.cfg===c?SCHED.weekLoad:null;
   const startOf=n=>{const w=live&&live.find(x=>x.n===n);return w&&w.start?w.start:null;};
-  let h='<div class="sysord">'+topics.map((t,i)=>{const n=idx[t];const v=b.counts[n]||0,m=b.mins[n]||0,a=b.arts[n]||0;const st=startOf(n);
+  let h='<div class="sysord">'+topics.map((t,i)=>{const n=idx[t];const v=cnt[n]||0,m=mn[n]||0,a=ar[n]||0;const st=startOf(n);
     return '<div class="sysrow on seqrow"><span class="seqn">'+(i+1)+'</span>'
       +'<span class="sysnm" style="border-color:'+seqTopicColor(t)+'">'+escHTML(n?b.weeks[n-1].label:t)+'</span>'
       +'<span class="seqct">'+(st?'from '+fmtShort(st)+' · ':'')+v+' video'+(v===1?'':'s')+' · '+(Math.round(m/6)/10)+' h'+(a?' · '+a+' article'+(a===1?'':'s'):'')+'</span>'
@@ -5623,7 +5635,7 @@ function seqEditorHTML(c){
     +'<p class="muted small" style="margin:6px 0 0">Tap one to put it back, at the end of your order.</p>';
   if(add.length)h+='<div class="flab mt">Add a system to this unit</div><div class="togrow">'
     +add.map(a=>'<button type="button" class="tog" data-qadd="'+escAttr(a.sys)+'">+ '+escHTML(a.sys)+' <span class="tognum">'+a.n+'</span></button>').join('')+'</div>'
-    +'<p class="muted small" style="margin:6px 0 0">An added system brings every video of it that this unit doesn’t already schedule — in each resource’s own order, so you watch it the way its publisher laid it out. The number is how many videos that is.</p>';
+    +'<p class="muted small" style="margin:6px 0 0">An added system brings every video of it that this unit doesn’t already schedule — in each resource’s own order, so you watch it the way its publisher laid it out. The number is how many videos that is in the resources you use.</p>';
   return h;
 }
 /* changed(true) when the CONTENT changed (add, remove, put back, reset) — the stamped paces
@@ -5763,11 +5775,17 @@ function doResetAll(){
     S.cfgs=snap.cfgs;S.active=snap.active;S.cfg=S.active?S.cfgs[S.active]:null;_prevSig=progressSig();save();
     if(S.cfg){reflow();render();}else renderWelcome();toast("Restored ✓");});
 }
-const BUILD="2026-10-23";
+const BUILD="2026-10-23b";
 /* ---------- What's new (changelog) ----------
    Newest entry first. Bump the top entry's id whenever you add one and the
    pop-up shows once per person (tracked in synced settings.seenUpdate). */
 const CHANGELOG=[
+  {id:"2026-10-23b", date:"October 2026", title:"The Resource Library: every video and its UWorld questions in one place", items:[
+    "The Checklist and the Questions tab are now one tab, Resource Library / Question IDs. Every video is there by resource, system and category, and each of those is a drop-down. Every Boards & Beyond video has its UWorld question IDs in a drop-down of its own, ready to copy.",
+    "One search covers the whole library: a video, a category or a system. You can also paste a UWorld question ID to find the video that teaches it.",
+    "Rapid Reference and the Grades placeholder have been removed.",
+    "In a plan in your own order, video counts now include only the resources you use. Adding Infectious Disease no longer shows hundreds of videos when your resources hold a few dozen.",
+  ]},
   {id:"2026-10-23", date:"October 2026", title:"New: Sketchy Immuno, and Sketchy Micro as Sketchy lists it", items:[
     "Sketchy Immuno is here: all 23 Immunology videos (2 h 54 min). It has its own switch under Plan \u2192 Video resources, and it\u2019s off until you turn it on. On a Brody unit the switch appears when your unit, or your own order, includes Immunology.",
     "Sketchy Micro now matches Sketchy\u2019s own course list: corrected titles, sections and runtimes, three videos that were missing, and a duplicate Pseudomonas video removed.",
@@ -6109,14 +6127,6 @@ function auditBlock(blk){
   const bcOrphans=Object.keys(blk.bcWeek||{}).filter(k=>!bcKeys.has(k));
   return {blk,weeks,unmapped,orphans,bcOrphans,total:vids.length};
 }
-/* ============================================================
-   RAPID REFERENCE — a study companion, not part of the schedule. Static
-   reference content in its own file, fetched the first time the tab
-   is opened. Nothing here touches S/persistObj: the tree is read-only,
-   so it adds no weight to the synced profile. Video nodes are keyed to
-   real catalog names, which is what lets a node show its runtime and a
-   ✓ once you've watched it.
-   ============================================================ */
 /* ---------- UWorld question IDs for Boards & Beyond videos ----------
    Eli Tanenbaum's public "Boards and Beyond Videos and UWorld Question IDs"
    document, reconciled against this catalog by tools/generators/mk_uworld.js and
@@ -6135,7 +6145,7 @@ function loadUWorld(cb){
   UW_LOADING=true;UW_ERR=false;
   fetch("uworld.json").then(r=>{if(!r.ok)throw 0;return r.json();})
     .then(d=>{UW_DATA=d;UW_LOADING=false;cb&&cb();render();})
-    .catch(()=>{UW_LOADING=false;UW_ERR=true;if(VIEW==="uworld")render();});
+    .catch(()=>{UW_LOADING=false;UW_ERR=true;if(VIEW==="checklist")render();});
 }
 function uwReady(){return !!UW_DATA;}
 /* ids for one catalog B&B video, by name — B&B names are unique across the whole
@@ -6153,71 +6163,6 @@ function uwCopy(ids,what){
   if(!ids||!ids.length){toast("No question IDs for "+(what||"that"));return;}
   copyText(ids.join(", "),ids.length+" question ID"+(ids.length===1?"":"s")+" copied — paste into UWorld → Create Test → Custom");
 }
-/* ---------- QUESTIONS TAB ----------
-   A browsable copy of the source document: system → section → video, each with its
-   UWorld question IDs and a copy button. Read-only and stateless — nothing here is
-   stored, so switching tabs forgets everything except the open search box.
-   Videos the document covers but this catalog has no entry for are still listed,
-   marked, because the questions are real even when the video is not one we schedule. */
-let UW_Q="",UW_OPEN={};
-function uwMatch(q,s){return String(s).toLowerCase().indexOf(q)>=0;}
-function renderUWorld(){
-  if(!uwReady()){
-    loadUWorld();
-    const body=UW_ERR
-      ? '<div class="m1soon"><span class="m1soon-tag">Offline</span><div class="cardhd">Couldn’t load the question map</div><p class="muted small">Check your connection and try again.</p><button class="btn ghost" id="uwRetry" style="margin-top:14px">Retry</button></div>'
-      : '<div class="m1soon"><span class="m1soon-tag">Loading</span><div class="cardhd">Fetching the question map…</div><div class="authspin"></div></div>';
-    app.innerHTML=chrome("uworld")+'<div class="wrap">'+body+'</div>';
-    const r=document.getElementById("uwRetry");if(r)r.onclick=()=>{UW_ERR=false;loadUWorld();render();};
-    wireChrome();return;
-  }
-  const q=UW_Q.trim().toLowerCase();
-  const src=UW_DATA.source||{};
-  let h='<div class="wrap"><h1 class="pmhd">UWorld questions by video</h1>'
-    +'<p class="muted small" style="margin:-6px 0 14px;max-width:64ch">Every Boards &amp; Beyond video with the UWorld question IDs that test its content. Copy a set, then in UWorld go to <b>Create Test → Custom</b> and paste the numbers in. Paste the numbers only — not the video name.</p>'
-    +'<div class="uwsrc">📄 From <b>'+escHTML(src.title||"the B&B → UWorld question document")+'</b>, by '+escHTML(src.author||"its maintainers")+'. '+escHTML(src.note||"")+'</div>'
-    +'<input class="uwsearch" id="uwq" type="search" placeholder="Search a video or system…" value="'+escAttr(UW_Q)+'">';
-  let shown=0,hits=0;
-  (UW_DATA.tree||[]).forEach(sysNode=>{
-    const secs=(sysNode.secs||[]).map(sec=>{
-      const vids=(sec.vids||[]).filter(v=>!q||uwMatch(q,v.n)||uwMatch(q,sysNode.sys)||uwMatch(q,sec.sec));
-      return vids.length?{sec:sec.sec,vids}:null;
-    }).filter(Boolean);
-    if(!secs.length)return;
-    shown++;
-    const n=secs.reduce((a,x)=>a+x.vids.length,0);hits+=n;
-    const open=q?true:(UW_OPEN[sysNode.sys]!==false&&!!UW_OPEN[sysNode.sys]);
-    h+='<details class="uwsys"'+(open?" open":"")+' data-uwsys="'+escAttr(sysNode.sys)+'">'
-      +'<summary class="uwsyshd">'+escHTML(sysNode.sys)+' <span class="uwct">'+n+'</span></summary>';
-    secs.forEach(sec=>{
-      h+='<div class="uwsec"><div class="uwsechd">'+escHTML(sec.sec)+'</div>';
-      sec.vids.forEach(v=>{
-        const ids=v.ids||[];
-        const mapped=!!(v.to&&v.to.length);
-        h+='<div class="uwvid'+(mapped?"":" unmapped")+'">'
-          +'<div class="uwvtop"><span class="uwvn">'+escHTML(v.n)+'</span>'
-          +(ids.length
-            ? '<button type="button" class="btn ghost sm uwcopy" data-uwids="'+escAttr(ids.join(","))+'" data-uwlab="'+escAttr(v.n)+'">Copy '+ids.length+'</button>'
-            : '<span class="uwnone">none</span>')
-          +'</div>'
-          +(ids.length?'<div class="uwids">'+escHTML(ids.join(", "))+'</div>':'')
-          +(mapped?'':'<div class="uwflag">Not a video in your catalog — the questions are here, but it won’t appear in your schedule.</div>')
-          +'</div>';
-      });
-      h+='</div>';
-    });
-    h+='</details>';
-  });
-  if(!shown)h+='<p class="cfmsg">Nothing matches “'+escHTML(UW_Q)+'”.</p>';
-  else if(q)h+='<p class="muted small" style="margin-top:12px">'+hits+' video'+(hits===1?'':'s')+' matching “'+escHTML(UW_Q)+'”.</p>';
-  app.innerHTML=chrome("uworld")+h+'</div>';
-  const box=document.getElementById("uwq");
-  if(box){box.oninput=()=>{UW_Q=box.value;const at=box.selectionStart;renderUWorld();
-    const b2=document.getElementById("uwq");if(b2){b2.focus();try{b2.setSelectionRange(at,at);}catch(e){}}};}
-  document.querySelectorAll("[data-uwsys]").forEach(d=>d.ontoggle=()=>{UW_OPEN[d.dataset.uwsys]=d.open;});
-  bindUwCopy();
-  wireChrome();
-}
 /* One binder for every copy button in the app, wherever it is rendered. ids ride in
    a data attribute as a plain comma list — they are digits only, so there is no
    delimiter to collide with. */
@@ -6228,317 +6173,12 @@ function bindUwCopy(){
     uwCopy(ids,b.dataset.uwlab||"that");
   });
 }
-function loadRapidRef(cb){
-  if(RR_DATA){cb&&cb();return;}
-  if(RR_LOADING)return;
-  RR_LOADING=true;RR_ERR=false;
-  fetch("rapidref.json").then(r=>{if(!r.ok)throw 0;return r.json();})
-    .then(d=>{RR_DATA=d;RR_LOADING=false;cb&&cb();if(VIEW==="ref")render();})
-    .catch(()=>{RR_LOADING=false;RR_ERR=true;if(VIEW==="ref")render();});
-}
-// node keys ride as JSON, never a delimiter — video and topic names carry
-// commas, slashes and dashes, any of which would shred a joined key
-function rrKey(parts){return JSON.stringify(parts);}
-function rrHit(s,q){return String(s).toLowerCase().indexOf(q)>=0;}
-let _mmIdx=null,_mmIdxSrc=null,_mmIdxCat=null;
-function rrIndex(ref){
-  if(!catReady())return {};
-  const src=ref.res+"|"+ref.sys;
-  if(_mmIdx&&_mmIdxSrc===src&&_mmIdxCat===catVideos())return _mmIdx;
-  const idx={};
-  catVideos().forEach(v=>{if(v.res===ref.res&&v.sys===ref.sys)idx[v.name]=v;});
-  _mmIdx=idx;_mmIdxSrc=src;_mmIdxCat=catVideos();return idx;
-}
-// Narrow the tree to what matches the search. A hit on a video or a topic name
-// keeps that whole branch; otherwise only the matching points survive, so a
-// search for "aspirin" lands you on the two bullets that mention it.
-function rrFilter(ref,q){
-  q=(q||"").trim().toLowerCase();
-  if(!q)return {sections:ref.sections,hits:null};
-  let hits=0;
-  const sections=ref.sections.map(sec=>{
-    const videos=sec.videos.map(v=>{
-      if(rrHit(v.n,q)){hits+=v.topics.reduce((a,t)=>a+t.items.length,0);return v;}
-      const topics=v.topics.map(t=>{
-        if(rrHit(t.n,q)){hits+=t.items.length;return t;}
-        const items=t.items.filter(x=>rrHit(x,q));hits+=items.length;
-        return items.length?{n:t.n,items:items}:null;
-      }).filter(Boolean);
-      return topics.length?{n:v.n,topics:topics}:null;
-    }).filter(Boolean);
-    return videos.length?{n:sec.n,videos:videos}:null;
-  }).filter(Boolean);
-  return {sections:sections,hits:hits};
-}
-function rrTree(ref,sections,expandAll){
-  if(!sections.length)return '<div class="rrempty">No matches.</div>';
-  const idx=rrIndex(ref);
-  return sections.map(sec=>{
-    const nv=sec.videos.length;
-    return '<div class="rrsec"><div class="rrsechd"><h3>'+escHTML(sec.n)+'</h3>'
-      +'<span class="rrct">'+nv+' video'+(nv===1?"":"s")+'</span></div>'
-      +sec.videos.map(v=>{
-        const vk=rrKey([sec.n,v.n]);const open=expandAll||!!RR_OPEN[vk];
-        const cv=idx[v.n];const done=!!(cv&&isDone(itemId(cv)));const nt=v.topics.length;
-        return '<div class="rrv'+(open?" open":"")+(done?" done":"")+'">'
-          +'<button class="rrvb" data-rrv="'+escAttr(vk)+'" aria-expanded="'+(open?"true":"false")+'">'
-          +'<span class="rrcar"></span><span class="rrvn">'+escHTML(v.n)+'</span>'
-          +(done?'<span class="rrdone" title="You’ve watched this">✓</span>':'')
-          +'<span class="rrvmeta">'+nt+' topic'+(nt===1?"":"s")+(cv?' · '+cv.min+'m':'')+'</span></button>'
-          +(open?'<div class="rrvbody">'+v.topics.map(t=>{
-            const tk=rrKey([sec.n,v.n,t.n]);const topen=expandAll||!!RR_TOPEN[tk];
-            return '<div class="rrt'+(topen?" open":"")+'">'
-              +'<button class="rrtb" data-rrt="'+escAttr(tk)+'" aria-expanded="'+(topen?"true":"false")+'">'
-              +'<span class="rrdot"></span><span class="rrtn">'+escHTML(t.n)+'</span></button>'
-              +(topen?'<ul class="rritems">'+t.items.map(x=>'<li>'+escHTML(x)+'</li>').join('')+'</ul>':'')
-              +'</div>';}).join('')+'</div>':'')
-          +'</div>';}).join('')
-      +'</div>';}).join('');
-}
-/* Repaint only the tree. Re-rendering the whole view on each keystroke would
-   drop focus out of the search box mid-word (and blink the page on every
-   node toggle) — see renderKeepScroll for the same lesson in the plan editor. */
-function rrRefresh(){
-  const host=document.getElementById("rr_tree");if(!host)return;
-  const ref=rrCurrent();if(!ref)return;
-  const f=rrFilter(ref,RR_Q);
-  host.innerHTML=rrTree(ref,f.sections,!!RR_Q.trim());
-  const h=document.getElementById("rr_hits");
-  if(h)h.textContent=f.hits==null?"":(f.hits+(f.hits===1?" point":" points")+" matching “"+RR_Q.trim()+"”");
-  bindRapidRefNodes();
-}
-function bindRapidRefNodes(){
-  document.querySelectorAll("[data-rrv]").forEach(b=>b.onclick=()=>{
-    const k=b.dataset.rrv;if(RR_OPEN[k])delete RR_OPEN[k];else RR_OPEN[k]=true;rrRefresh();});
-  document.querySelectorAll("[data-rrt]").forEach(b=>b.onclick=()=>{
-    const k=b.dataset.rrt;if(RR_TOPEN[k])delete RR_TOPEN[k];else RR_TOPEN[k]=true;rrRefresh();});
-}
-function rrRefs(){return (RR_DATA&&RR_DATA.refs)||[];}
-function rrCurrent(){const m=rrRefs();return m.find(r=>r.id===RR_CUR)||m[0]||null;}
-function rrVideoCount(r){let n=0;(r.sections||[]).forEach(s=>{n+=(s.videos||[]).length;});return n;}
-
-/* ============================================================
-   RAPID REFERENCE — PHARM
-   The video outlines above are one shape of reference: a tree keyed to catalog
-   videos. Drug references are a different shape — the same drug set regrouped
-   several ways, because the grouping IS the content (a drug you know by class
-   is a drug you can't retrieve from a stem that gives you an indication). So
-   they live in their own area of the tab rather than being forced into the tree.
-   ============================================================ */
-let PH_MODE="ind";        // ind | haz | cls | drill
-let PH_DRUG=null;         // which drug's sheet is open
-let PH_SHOWN={};          // which drill cards are revealed, keyed by reference id
-function rrPharm(){return (RR_DATA&&RR_DATA.pharm)||[];}
-function rrPharmById(id){return rrPharm().find(p=>p.id===id)||null;}
-/* One id space across both areas, so RR_CUR alone says what's open. */
-function rrCurPharm(){return RR_CUR?rrPharmById(RR_CUR):null;}
-function phDrug(p,k){return (p.drugs||{})[k]||null;}
-function phDrugCount(p){return Object.keys(p.drugs||{}).length;}
-function phTagLabel(p,k){const t=(p.tags||[]).find(x=>x.k===k);return t?t.label:k;}
-function phDots(p,k){const d=phDrug(p,k);if(!d||!(d.t||[]).length)return "";
-  return '<span class="phdots">'+d.t.map(t=>'<span class="phdot '+escAttr(t)+'"></span>').join('')+'</span>';}
-function phChip(p,k,label){const d=phDrug(p,k);if(!d)return "";
-  return '<button type="button" class="phchip'+(PH_DRUG===k?" on":"")+'" data-phd="'+escAttr(k)+'">'
-    +escHTML(label||d.n)+phDots(p,k)+'</button>';}
-function phChips(p,list){return '<div class="phchips">'+list.map(k=>phChip(p,k)).join('')+'</div>';}
-function phLegend(p){return '<div class="phlegend">'+(p.tags||[]).map(t=>
-  '<span class="it"><span class="phdot '+escAttr(t.k)+'"></span>'+escHTML(t.label)+'</span>').join('')+'</div>';}
-
-function phIndication(p){
-  const boxes=(p.indication||[]).map(sec=>'<section class="phbox"><h3>'+escHTML(sec.h)+'</h3>'
-    +'<p class="phsub">'+escHTML(sec.s||"")+'</p>'
-    +(sec.b||[]).map(b=>'<div class="phbucket"><h4>'+escHTML(b.t)
-        +(b.n?'<span class="n">'+escHTML(b.n)+'</span>':'')+'</h4>'+phChips(p,b.d)+'</div>').join('')
-    +'</section>').join('');
-  const notes=(p.notes||[]).map(nt=>'<section class="phbox"><h3>'+escHTML(nt.h)+'</h3>'
-    +'<p class="phsub">'+escHTML(nt.s||"")+'</p>'
-    +'<div class="phscroll"><table class="phtable"><tr>'+(nt.cols||[]).map(c=>'<th>'+escHTML(c)+'</th>').join('')+'</tr>'
-    +(nt.rows||[]).map(r=>'<tr>'+r.map((c,i)=>'<td'+(i===0?' class="k"':'')+'>'+escHTML(c)+'</td>').join('')+'</tr>').join('')
-    +'</table></div></section>').join('');
-  return '<div class="phgrid two">'+boxes+notes+'</div>';
-}
-function phHazard(p){
-  const haz=(p.hazard||[]).map(h=>'<div class="phhaz '+escAttr(h.k)+'"><h4>'+escHTML(h.h)+'</h4>'
-    +'<p>'+escHTML(h.p||"")+'</p>'+phChips(p,h.d)+'</div>').join('');
-  const find=(p.findings||[]).map(f=>'<tr><td>'+escHTML(f[0])+'</td><td class="k">'+phChip(p,f[2],f[1])+'</td></tr>').join('');
-  return '<div class="phgrid two">'
-    +'<section class="phbox"><h3>Hazards that cut across classes</h3>'
-    +'<p class="phsub">These are the groupings that break easiest, because each fact was learned attached to one drug — the pattern is what gets tested.</p>'+haz+'</section>'
-    +'<section class="phbox"><h3>One finding, one drug</h3>'
-    +'<p class="phsub">Pattern recognition for stems. Cover the right column first.</p>'
-    +'<div class="phscroll"><table class="phtable">'+find+'</table></div></section></div>';
-}
-function phClasses(p){
-  const rows=(p.classes||[]).map(c=>'<tr'+(c.hl?' class="hl"':'')+'><td class="k">'+escHTML(c.cl)+'</td>'
-    +'<td>'+(c.dr||[]).map(k=>phChip(p,k)).join(' ')+'</td>'
-    +'<td>'+escHTML(c.na)+'</td><td>'+escHTML(c.ap)+'</td><td>'+escHTML(c.use)+'</td></tr>').join('');
-  const paths=(p.pathways||[]).map(w=>'<div class="phbucket"><h4>'+escHTML(w.h)
-    +'<span class="n">'+escHTML(w.s||"")+'</span></h4>'+phChips(p,w.d)+'</div>').join('');
-  return '<div class="phgrid">'
-    +'<section class="phbox"><h3>Vaughan-Williams, with the part that actually blurs highlighted</h3>'
-    +'<p class="phsub">All three class I subtypes “block sodium channels” — the difference is binding strength and what it does downstream. IB versus IC is the single most testable split here: same starting point, opposite answer depending on whether there is structural or ischemic disease.</p>'
-    +'<div class="phscroll"><table class="phtable">'
-    +'<tr><th>Class</th><th>Drugs</th><th>Na blockade</th><th>AP duration</th><th>Best-fit use</th></tr>'+rows+'</table></div></section>'
-    +'<section class="phbox"><h3>Vasodilators by second messenger</h3>'
-    +'<p class="phsub">Everything that relaxes smooth muscle here runs through one of three routes. Keeping cGMP and cAMP apart stops “which one raises cGMP” questions from blending.</p>'
-    +paths+'</section></div>';
-}
-function phDrill(p){
-  const shown=PH_SHOWN[p.id]||{};
-  const cards=(p.drill||[]).map((d,i)=>{const on=!!shown[i];
-    return '<button type="button" class="phcard" data-phf="'+i+'">'
-      +'<div class="phstem">'+escHTML(d[0])+'</div>'
-      +(on?('<div class="phans"><div class="a">'+escHTML(d[1])+'</div><div class="w">'+escHTML(d[2])+'</div></div>')
-          :'<div class="phtap">Tap to reveal</div>')+'</button>';}).join('');
-  return '<div class="phdrillbar"><button type="button" class="btn ghost sm" id="ph_all">Reveal all</button>'
-    +'<button type="button" class="btn ghost sm" id="ph_none">Hide all</button>'
-    +'<span class="ct">'+(p.drill||[]).length+' scenarios — stem first, which is the direction exams run</span></div>'
-    +'<div class="phcards">'+cards+'</div>';
-}
-/* Search across a drug reference: name, class, mechanism, use and red flag.
-   The tree search returns points; this returns drugs, which is what you want
-   when the question is "what was ranolazine again". */
-function phSearch(p,q){
-  q=(q||"").trim().toLowerCase();if(!q)return null;
-  const hits=Object.keys(p.drugs||{}).filter(k=>{const d=p.drugs[k];
-    return [d.n,d.c,d.m,d.u,d.f].some(s=>String(s||"").toLowerCase().indexOf(q)>=0);});
-  return hits;
-}
-function phSearchView(p,hits){
-  if(!hits.length)return '<div class="rrempty">No drug here matches that.</div>';
-  return '<section class="phbox"><h3>'+hits.length+' drug'+(hits.length===1?"":"s")+' matching</h3>'
-    +'<p class="phsub">Searching a drug reference matches names, classes, mechanisms, uses and red flags.</p>'
-    +phChips(p,hits)+'</section>';
-}
-function phBody(p){
-  const hits=phSearch(p,RR_Q);
-  if(hits)PH_DRUG=null;   // the result set is a new context; nothing is "open" in it
-  if(hits)return phSearchView(p,hits);
-  if(PH_MODE==="haz")return phHazard(p);
-  if(PH_MODE==="cls")return phClasses(p);
-  if(PH_MODE==="drill")return phDrill(p);
-  return phIndication(p);
-}
-const PH_MODES=[["ind","By indication"],["haz","By hazard"],["cls","By class"],["drill","Drill"]];
-function phOpenDrug(p,k){
-  const d=phDrug(p,k);if(!d)return;
-  PH_DRUG=k;
-  const ov=document.createElement("div");ov.className="overlay";ov.id="modal";
-  ov.innerHTML='<div class="sheet phsheet">'
-    +'<div class="sheethd">Drug</div>'
-    +'<div class="nm">'+escHTML(d.n)+'</div><div class="cl">'+escHTML(d.c)+'</div>'
-    +((d.t||[]).length?('<div class="tagrow">'+d.t.map(t=>'<span><span class="phdot '+escAttr(t)+'"></span> '+escHTML(phTagLabel(p,t))+'</span>').join('')+'</div>'):'')
-    +'<dl><div><dt>Mechanism</dt><dd>'+escHTML(d.m)+'</dd></div>'
-    +'<div><dt>Reach for it when</dt><dd>'+escHTML(d.u)+'</dd></div>'
-    +'<div><dt>Red flag</dt><dd class="flag">'+escHTML(d.f)+'</dd></div></dl>'
-    +'<button class="mrow close ctr" data-c="close">Close</button></div>';
-  const shut=()=>{ov.remove();PH_DRUG=null;
-    document.querySelectorAll("button.phchip").forEach(c=>c.classList.remove("on"));};
-  ov.onclick=e=>{if(e.target===ov)shut();};
-  ov.querySelector('[data-c="close"]').onclick=shut;
-  document.body.appendChild(ov);
-  document.querySelectorAll("button.phchip").forEach(c=>c.classList.toggle("on",c.dataset.phd===k));
-}
-function bindPharm(p){
-  document.querySelectorAll("[data-phd]").forEach(b=>b.onclick=()=>phOpenDrug(p,b.dataset.phd));
-  document.querySelectorAll("[data-phmode]").forEach(b=>b.onclick=()=>{
-    // clear the highlighted drug too: it marks "this is the one whose sheet is open",
-    // and leaving it lit after the sheet has gone reads as a stuck selection
-    if(PH_MODE===b.dataset.phmode)return;PH_MODE=b.dataset.phmode;PH_DRUG=null;renderRapidRef();});
-  document.querySelectorAll("[data-phf]").forEach(b=>b.onclick=()=>{
-    const i=b.dataset.phf;PH_SHOWN[p.id]=PH_SHOWN[p.id]||{};
-    if(PH_SHOWN[p.id][i])delete PH_SHOWN[p.id][i];else PH_SHOWN[p.id][i]=true;renderRapidRef();});
-  const all=document.getElementById("ph_all");
-  if(all)all.onclick=()=>{const m={};(p.drill||[]).forEach((_,i)=>m[i]=true);PH_SHOWN[p.id]=m;renderRapidRef();};
-  const none=document.getElementById("ph_none");
-  if(none)none.onclick=()=>{PH_SHOWN[p.id]={};renderRapidRef();};
-}
-function renderRapidRef(){
-  if(!RR_DATA){
-    loadRapidRef();
-    const body=RR_ERR
-      ? '<div class="m1soon"><span class="m1soon-tag">Offline</span><div class="cardhd">Couldn’t load the rapid reference</div><p class="muted small">Check your connection and try again.</p><button class="btn ghost" id="rrRetry" style="margin-top:14px">Retry</button></div>'
-      : '<div class="m1soon"><span class="m1soon-tag">Loading</span><div class="cardhd">Opening the rapid reference…</div><p class="muted small">Fetching the outlines.</p><div class="authspin"></div></div>';
-    app.innerHTML=chrome("ref")+'<div class="wrap">'+body+'</div>';wireChrome();
-    const rt=document.getElementById("rrRetry");if(rt)rt.onclick=()=>{RR_ERR=false;loadRapidRef();render();};
-    return;
-  }
-  // Two areas share the tab and the id space: video outlines, and drug references.
-  // The picker names both so the second area is discoverable rather than hidden
-  // behind a mode nobody looks for.
-  const pharm=rrCurPharm();
-  const ref=pharm?null:rrCurrent();
-  if(!ref&&!pharm){app.innerHTML=chrome("ref")+'<div class="wrap"><div class="rrempty">Nothing here yet.</div></div>';wireChrome();return;}
-  const picker=(rrRefs().length+rrPharm().length>1)
-    ? ((rrRefs().length?('<div class="rrgrp"><span class="rrgrpl">Video outlines</span>'
-        +rrRefs().map(r=>'<button type="button" class="tog '+(!pharm&&ref&&r.id===ref.id?"on":"")+'" data-rrref="'+escAttr(r.id)+'">'+escHTML(r.title)+' <span class="rrpickn">'+rrVideoCount(r)+'</span></button>').join('')+'</div>'):'')
-      +(rrPharm().length?('<div class="rrgrp"><span class="rrgrpl">Pharm</span>'
-        +rrPharm().map(r=>'<button type="button" class="tog '+(pharm&&r.id===pharm.id?"on":"")+'" data-rrref="'+escAttr(r.id)+'">'+escHTML(r.title)+' <span class="rrpickn">'+phDrugCount(r)+'</span></button>').join('')+'</div>'):''))
-    : '';
-  if(pharm){
-    const hits=phSearch(pharm,RR_Q);
-    app.innerHTML=chrome("ref")+'<div class="wrap">'
-      +'<h1 class="pmhd">Rapid reference</h1>'
-      +'<p class="muted small" style="margin:-6px 0 14px;max-width:62ch">'+escHTML(pharm.blurb||"")+' A companion to the videos, not a replacement, and separate from your schedule: nothing here gets checked off.</p>'
-      +picker
-      +'<div class="rrbar"><div class="rrsearch">'
-      +'<input id="rr_q" type="text" inputmode="search" enterkeyhint="search" placeholder="Search drugs, mechanisms and red flags…" value="'+escAttr(RR_Q)+'" autocomplete="off">'
-      +(RR_Q?'<button class="rrclear" id="rr_clear" aria-label="clear search">×</button>':'')
-      +'</div></div>'
-      +'<div class="rrhits">'+(hits?escHTML(hits.length+(hits.length===1?" drug":" drugs")+" matching “"+RR_Q.trim()+"”"):"")+'</div>'
-      +(hits?'':'<div class="phmodes">'+PH_MODES.map(m=>'<button type="button" class="tog '+(PH_MODE===m[0]?"on":"")+'" data-phmode="'+m[0]+'">'+escHTML(m[1])+'</button>').join('')+'</div>')
-      +((hits||PH_MODE==="drill")?'':phLegend(pharm))
-      +'<div id="ph_body">'+phBody(pharm)+'</div>'
-      +'</div>';
-    wireChrome();wireRrSearch();wireRrPicker();bindPharm(pharm);
-    return;
-  }
-  const f=rrFilter(ref,RR_Q);
-  app.innerHTML=chrome("ref")+'<div class="wrap">'
-    +'<h1 class="pmhd">Rapid reference</h1>'
-    +'<p class="muted small" style="margin:-6px 0 14px;max-width:62ch">An outline of each '+escHTML(ref.source||"video")+' video — open one to see its topics, open a topic to see the points. A companion to the videos, not a replacement, and separate from your schedule: nothing here gets checked off.</p>'
-    +picker
-    +'<div class="rrbar"><div class="rrsearch">'
-    // type=text, not type=search: the field carries its own × and the native
-    // search decoration would put a second one right beside it. inputmode +
-    // enterkeyhint still give phones the search keyboard.
-    +'<input id="rr_q" type="text" inputmode="search" enterkeyhint="search" placeholder="Search every topic and point…" value="'+escAttr(RR_Q)+'" autocomplete="off">'
-    +(RR_Q?'<button class="rrclear" id="rr_clear" aria-label="clear search">×</button>':'')
-    +'</div></div>'
-    +'<div class="rrhits" id="rr_hits">'+(f.hits==null?"":escHTML(f.hits+(f.hits===1?" point":" points")+" matching “"+RR_Q.trim()+"”"))+'</div>'
-    +'<div id="rr_tree">'+rrTree(ref,f.sections,!!RR_Q.trim())+'</div>'
-    +'</div>';
-  wireChrome();wireRrSearch();wireRrPicker();
-  bindRapidRefNodes();
-}
-function wireRrSearch(){
-  const q=document.getElementById("rr_q");
-  if(q){q.oninput=()=>{const had=!!RR_Q;RR_Q=q.value;
-      // the × only appears once there's text — adding/removing it is the one
-      // change that has to rebuild the bar, so restore the caret afterwards.
-      // A pharm reference swaps its whole body on any keystroke (the result is a
-      // drug list, not a filtered tree), so it always takes the full path.
-      if(had!==!!RR_Q||rrCurPharm()){const pos=q.selectionStart;renderRapidRef();
-        const q2=document.getElementById("rr_q");if(q2){q2.focus();try{q2.setSelectionRange(pos,pos);}catch(e){}}return;}
-      rrRefresh();};}
-  const cl=document.getElementById("rr_clear");
-  if(cl)cl.onclick=()=>{RR_Q="";renderRapidRef();const q2=document.getElementById("rr_q");if(q2)q2.focus();};
-}
-/* The open-node keys, the search and the drug sheet all belong to the reference
-   you were in, so switching starts clean rather than carrying stale state. */
-function wireRrPicker(){
-  document.querySelectorAll("[data-rrref]").forEach(b=>b.onclick=()=>{
-    if(RR_CUR===b.dataset.rrref)return;
-    RR_CUR=b.dataset.rrref;RR_Q="";RR_OPEN={};RR_TOPEN={};PH_DRUG=null;PH_MODE="ind";
-    renderRapidRef();window.scrollTo(0,0);});
-}
-
 /* ============================================================
    M3 RESOURCE HUB — clerkship resources, filed shelf → unit →
    resource. Currently the diagnostic algorithms: every box starts
    blank showing a short question, and tapping it flips to the
    answer. Static content in its own file, fetched on first open.
-   Like Rapid Reference it never touches S/persistObj — which box
+   Like the question map it never touches S/persistObj — which box
    you've revealed is scratch state that lives as long as the hub
    is open. Adding a shelf or a unit is a data edit, not a code one.
    ============================================================ */

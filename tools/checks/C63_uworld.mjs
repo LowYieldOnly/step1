@@ -118,54 +118,62 @@ chk('C63-12 a whole-day copy is de-duplicated',
 chk('C63-13 a whole-week copy is de-duplicated, and contains the day',
     sched.wkDupes === 0 && sched.wkCoversDay && sched.wkIds >= sched.dayIds,
     sched.wkIds + ' week ids, ' + sched.wkDupes + ' dupes, covers day ' + sched.wkCoversDay);
-chk('C63-14 the Questions tab is in the nav', sched.tab.includes('uworld'), JSON.stringify(sched.tab));
+chk('C63-14 the questions live in the Resource Library / Question IDs tab — there is no separate Questions tab',
+    sched.tab.includes('checklist') && !sched.tab.includes('uworld'), JSON.stringify(sched.tab));
 
-// ---------- 3. the tab ----------
+// ---------- 3. the library carries every question set ----------
 const tab = await p.evaluate(()=>{
-  window.__mk();VIEW='uworld';render();
+  window.__mk();VIEW='checklist';CL_Q='thalassem';render();
   const txt=document.body.innerText;
-  return {h1:(document.querySelector('.pmhd')||{}).textContent,
-    systems:document.querySelectorAll('[data-uwsys]').length,
-    copyBtns:document.querySelectorAll('.uwcopy').length,
-    credit:/Tanenbaum/.test(txt), howto:/Create Test/.test(txt),
-    unmapped:document.querySelectorAll('.uwvid.unmapped').length,
-    noneLabels:document.querySelectorAll('.uwnone').length};
+  const items=[...document.querySelectorAll('.clitem')].filter(e=>e.querySelector('[data-clid^="b:"]'));
+  const withQ=items.filter(e=>e.querySelector('details.uwrow'));
+  CL_Q='';
+  const extra=(()=>{CLFOLD['cl_uwextra']=true;render();const n=document.querySelectorAll('[data-clfold="cl_uwextra"] .clitem').length;CLFOLD['cl_uwextra']=false;return n;})();
+  // a B&B video with no question set gets no drop-down
+  const bare=catVideos().find(v=>v.res==='bnb'&&!uwIdsFor(v.name));
+  let bareHas=null;
+  if(bare){CL_Q=bare.name;render();const row=document.querySelector('[data-clid="'+itemId(bare).replace(/"/g,'\\"')+'"]');bareHas=!!(row&&row.parentNode.querySelector('details.uwrow'));CL_Q='';}
+  render();
+  return {h:(document.querySelector('.clhead .cardhd')||{}).textContent,bnbRows:items.length,withQ:withQ.length,
+    closed:withQ.every(e=>!e.querySelector('details.uwrow').open),
+    credit:/Tanenbaum/.test(txt), howto:/Create Test/.test(txt), extra, bare:!!bare, bareHas};
 });
-chk('C63-15 the tab renders the whole document, system by system',
-    /UWorld questions/.test(tab.h1||'') && tab.systems >= 15 && tab.copyBtns >= 400,
-    tab.systems + ' systems, ' + tab.copyBtns + ' copy buttons');
-chk('C63-16 …credits the source and says how to use the ids',
-    tab.credit && tab.howto, 'credit ' + tab.credit + ', how-to ' + tab.howto);
-chk('C63-17 …marks entries this catalog has no video for, rather than hiding them',
-    tab.unmapped > 0, tab.unmapped + ' flagged');
-chk('C63-18 …and shows the document’s own "none" entries as such',
-    tab.noneLabels > 0, tab.noneLabels + ' none-labels');
+chk('C63-15 every Boards & Beyond video with a question set carries it as a drop-down under the video, closed',
+    /Question IDs/.test(tab.h||'') && tab.bnbRows > 0 && tab.withQ === tab.bnbRows && tab.closed,
+    JSON.stringify(tab));
+chk('C63-16 …credits the source and says how to use the ids', tab.credit && tab.howto, 'credit ' + tab.credit + ', how-to ' + tab.howto);
+chk('C63-17 question sets for videos the catalog doesn\'t have are kept, at the end of the library', tab.extra > 0, tab.extra + ' kept');
+chk('C63-18 a video with no question set shows no drop-down', !tab.bare || tab.bareHas === false, JSON.stringify(tab));
 const search = await p.evaluate(()=>{
-  window.__mk();VIEW='uworld';UW_Q='';render();
-  const all=document.querySelectorAll('.uwvid').length;
-  UW_Q='thalassem';renderUWorld();
-  const hit=[...document.querySelectorAll('.uwvn')].map(e=>e.textContent);
-  UW_Q='zzzznotathing';renderUWorld();
-  const none=document.querySelectorAll('.uwvid').length;
-  const msg=/Nothing matches/.test(document.body.innerText);
-  UW_Q='';renderUWorld();
-  return {all,hit,none,msg};
+  window.__mk();VIEW='checklist';CL_Q='';render();
+  const all=CLVIDS.length;
+  CL_Q='thalassem';render();
+  const hit=[...document.querySelectorAll('.clname')].map(e=>e.textContent);
+  const allOpen=[...document.querySelectorAll('[data-clfold]')].every(d=>d.open);
+  // a UWorld question id finds the video that carries it
+  const v=catVideos().find(x=>x.res==='bnb'&&(uwIdsFor(x.name)||[]).length);const qid=uwIdsFor(v.name)[0];
+  CL_Q=String(qid);render();
+  const byId=[...document.querySelectorAll('.clname')].map(e=>e.textContent);
+  CL_Q='zzzznotathing';render();
+  const none=document.querySelectorAll('.clrow').length;
+  const msg=/Nothing in the library matches/.test(document.body.innerText);
+  CL_Q='';render();
+  return {all,hit,allOpen,byId,want:vName(v),qid,none,msg};
 });
-chk('C63-19 search narrows to matching videos',
-    search.hit.length>0 && search.hit.length<search.all && search.hit.every(n=>/thalassem/i.test(n)),
-    JSON.stringify(search.hit));
-chk('C63-20 …and says so when nothing matches',
-    search.none===0 && search.msg, 'rows '+search.none+', message '+search.msg);
+chk('C63-19 search narrows the library to matching videos, opening their groups',
+    search.hit.length>0 && search.hit.length<search.all && search.hit.every(n=>/thalassem/i.test(n)) && search.allOpen,
+    JSON.stringify(search.hit.slice(0,5)));
+chk('C63-19b …a UWorld question ID finds the video that carries it', search.byId.includes(search.want), search.qid+' → '+JSON.stringify(search.byId.slice(0,5)));
+chk('C63-20 …and says so when nothing matches', search.none===0 && search.msg, 'rows '+search.none+', message '+search.msg);
 
 // ---------- 4. it stores nothing ----------
 const state = await p.evaluate(async ()=>{
   await new Promise(r=>loadUWorld(r));
   window.__mk();
   const before=JSON.stringify(persistObj());
-  VIEW='uworld';render();
-  UW_Q='renal';renderUWorld();
+  VIEW='checklist';CL_Q='renal';render();
   const btn=document.querySelector('[data-uwids]');if(btn)btn.click();
-  UW_Q='';
+  CL_Q='';
   VIEW='today';render();
   const after=JSON.stringify(persistObj());
   const merged=JSON.stringify(mergeState(JSON.parse(after),JSON.parse(after)));
@@ -191,11 +199,11 @@ const noBnb = await p.evaluate(()=>{
   reflow();VIEW='today';render();
   return {rows:document.querySelectorAll('.uwrow').length,
           bar:!!document.querySelector('.uwbar'),
-          tabStillThere:[...document.querySelectorAll('.navb')].map(b=>b.dataset.view).includes('uworld')};
+          tabStillThere:[...document.querySelectorAll('.navb')].map(b=>b.dataset.view).includes('checklist')};
 });
 chk('C63-23 a plan with B&B off shows no question rows or copy bar',
     noBnb.rows===0 && noBnb.bar===false, 'rows '+noBnb.rows+', bar '+noBnb.bar);
-chk('C63-24 …but the Questions tab is still reachable for browsing',
+chk('C63-24 …but the library, with its question sets, is still reachable for browsing',
     noBnb.tabStillThere===true, 'tab missing');
 
 const m = await mobilePage();
@@ -210,14 +218,15 @@ const mob = await m.evaluate(async ()=>{
     systems:blk.systems.slice(),brodyReviewDays:3,brodyJoinWk:1,brodyJoinDate:blk.weeks[0].start};
   normalizeCfg(S.cfgs.nbme,'nbme');activate('nbme');S.active='nbme';reflow();
   const out={};
-  ['today','uworld'].forEach(v=>{VIEW=v;render();
+  ['today','checklist'].forEach(v=>{VIEW=v;CL_Q=v==='checklist'?'anemia':'';render();
     out[v]={sw:document.documentElement.scrollWidth,cw:document.documentElement.clientWidth};});
+  CL_Q='';
   return out;
 });
 chk('C63-25 the Study view does not overflow sideways on a phone',
     mob.today.sw <= mob.today.cw + 1, mob.today.sw + ' vs ' + mob.today.cw);
-chk('C63-26 the Questions tab does not overflow sideways on a phone',
-    mob.uworld.sw <= mob.uworld.cw + 1, mob.uworld.sw + ' vs ' + mob.uworld.cw);
+chk('C63-26 the library, opened on a search, does not overflow sideways on a phone',
+    mob.checklist.sw <= mob.checklist.cw + 1, mob.checklist.sw + ' vs ' + mob.checklist.cw);
 
 chk('C63-27 no page errors anywhere in this run', errors.length === 0, errors.join(' | '));
 
