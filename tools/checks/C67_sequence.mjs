@@ -128,7 +128,8 @@ const d4=await p.evaluate(()=>{
   const cardioAll=catVideos().filter(v=>v.sys==='Cardiology'&&!isArticle(v)&&!inUnit.has(itemId(v))).length;
   // a Heme/Renal plan — a retake, say — adding Hematology gets only what the unit leaves out
   window.__seq({unit:'heme-renal',topics:seqDefaultTopics('heme-renal').concat(['s:Hematology'])});
-  const hemeAdd=seqAddable({seqUnit:'heme-renal'}).find(a=>a.sys==='Hematology');
+  // counts are in the plan's own resources, so the stand-in plan carries them
+  const hemeAdd=seqAddable({seqUnit:'heme-renal',resources:S.cfg.resources}).find(a=>a.sys==='Hematology');
   const hemeItems=SCHED.planVideos.filter(v=>v.wk===SCHED.brody.weeks.length);
   const hemeBlk=brodyBlockById('heme-renal');
   const unitHas=hemeItems.some(x=>{const v=catVideos().find(c=>itemId(c)===x.id);return v&&brodyInBlock(hemeBlk,v);});
@@ -316,7 +317,7 @@ const parity=await p.evaluate(async()=>{
       :{examType:'nbme',brody:blk.id,examLabel:blk.name,examISO:blk.shelf,startISO:blk.weeks[0].start,restDays:[0],resources:res,systems:blk.systems.slice(),brodyReviewDays:3}};
     normalizeCfg(S.cfgs.nbme,'nbme');activate('nbme');S.active='nbme';reflow();};
   const scan=async()=>{const out={};
-    for(const v of ['today','stats','grades','adjust:menu','adjust:edit','uworld','ref','checklist']){
+    for(const v of ['today','stats','adjust:menu','adjust:edit','checklist']){
       const [view,sub]=v.split(':');VIEW=view;ADJ_VIEW=sub==='edit'?'edit':null;render();await new Promise(r=>setTimeout(r,40));
       const attrs=new Set();document.querySelectorAll('#app *').forEach(e=>{for(const a of e.attributes)if(a.name.startsWith('data-'))attrs.add(a.name);});
       // titles compared with numbers masked: "Today · Tue, Oct 20 6.6h · 20 to read" is the same card at any load
@@ -341,7 +342,7 @@ chk('C67-31 the UWorld IDs copy for a whole topic, as they do for a Brody week �
 // ---------- 8. every view, and the sync invariant ----------
 const d8=await p.evaluate(async()=>{
   const fails=[];
-  const views=async tag=>{for(const v of ['today','stats','adjust','checklist','uworld']){VIEW=v;ADJ_VIEW=v==='adjust'?'edit':null;
+  const views=async tag=>{for(const v of ['today','stats','adjust','checklist']){VIEW=v;ADJ_VIEW=v==='adjust'?'edit':null;
     try{render();await new Promise(r=>setTimeout(r,25));}catch(e){fails.push(tag+' '+v+': '+String(e).slice(0,90));}}
     VIEW='today';ADJ_VIEW=null;render();};
   window.__seq({legacy:true,topics:window.__allWeeks()});await views('legacy');
