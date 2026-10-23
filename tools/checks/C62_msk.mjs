@@ -27,7 +27,7 @@ await p.evaluate(()=>{window.__mk=(opts)=>{
   PRACTICE_KEYS.forEach(k=>{S[k]={total:null,blocks:{}};});
   Object.assign(S,{vdone:{},vdoneDate:{},vdoneAt:{},vundone:{},vskip:{},vshaky:{},akdone:{},
     notes:{},streak:{days:{}},assessments:{},_resetAt:0});
-  S.cfgs.nbme={examType:'nbme',brody:blk.id,examLabel:blk.name,examISO:blk.shelf,
+  S.cfgs.nbme={examType:'nbme',catEd:CAT_CURRENT_ED,brody:blk.id,examLabel:blk.name,examISO:blk.shelf,
     startISO:blk.weeks[0].start,restDays:[0],
     resources:opts.res||{bnb:true,pathoma:true,sketchy:true,bootcamp:true,uwlib:false},
     systems:blk.systems.slice(),brodyReviewDays:3,
@@ -262,7 +262,7 @@ const mob=await m.evaluate(()=>{
   const blk=brodyBlockById('msk-skin');
   AUTHED=true;todayISO=()=>blk.weeks[0].start;S.settings={seenBrodyHelp:true,seenUpdate:LATEST_UPDATE};
   PRACTICE_KEYS.forEach(k=>{S[k]={total:null,blocks:{}};});
-  S.cfgs.nbme={examType:'nbme',brody:blk.id,examLabel:blk.name,examISO:blk.shelf,
+  S.cfgs.nbme={examType:'nbme',catEd:CAT_CURRENT_ED,brody:blk.id,examLabel:blk.name,examISO:blk.shelf,
     startISO:blk.weeks[0].start,restDays:[0],
     resources:{bnb:true,pathoma:true,sketchy:true,bootcamp:true},
     systems:blk.systems.slice(),brodyReviewDays:3,brodyJoinWk:1,brodyJoinDate:blk.weeks[0].start};
