@@ -30,28 +30,28 @@ export const HOMES = [
   /* ================= Hematology & Renal ================= */
   { unit:'heme-renal', week:1, lecture:'RBC: Anemia – Destruction / Production deficits; WBC: Reactive proliferation', items:[
     'bnb:Malaria',
-    'skmicro:Plasmodium: Infection & Lifecycle', 'skmicro:Plasmodium: Treatment & Prophylaxis', 'skmicro:Babesia',
+    'skmicro:Plasmodium: Infection & Lifecycle', 'skmicro:Plasmodium: Treatment & PPX', 'skmicro:Babesia spp.',
     'skmicro:Parvovirus B19 (Parvoviridae)', 'skmicro:Epstein-Barr Virus (Herpesviridae)',
   ] },
   { unit:'heme-renal', week:4, lecture:'Urinary tract: Ureter, bladder, urethra; Cysts & neoplasms; Transplant disease', items:[
     // Sketchy's E. coli video is ETEC & EHEC — the diarrhoeal strains — so it waits for GI
-    'skmicro:Proteus mirabilis', 'skmicro:Enterococus faecium & faecalis',
-    'skmicro:Staphylococcus epidermidis, saprophyticus', 'skmicro:JC Polyomavirus & BK Polyomavirus (Polyomaviridae)',
+    'skmicro:Proteus mirabilis', 'skmicro:Enterococcus faecium & faecalis',
+    'skmicro:Staphylococcus epidermidis & saprophyticus', 'skmicro:JC Polyomavirus & BK Polyomavirus (Polyomaviridae)',
     'skmicro:Trematodes',
   ] },
 
   /* ================= Cardiopulmonary ================= */
   { unit:'cardiopulm', week:1, lecture:'Myocarditis; Cardiomyopathies · Valvular Heart Disease (endocarditis, rheumatic fever)', items:[
-    'skmicro:Coxsackievirus A & B (Picornaviridae)', 'skmicro:Streptococcus gallolyticus (Group D strep)', 'skmicro:Trypanosoma cruzi',
+    'skmicro:Coxsackievirus A & B (Picornaviridae)', 'skmicro:Streptococcus gallolyticus (Group D Strep)', 'skmicro:Trypanosoma cruzi',
   ] },
   { unit:'cardiopulm', week:4, lecture:'Infectious: Upper Respiratory Tract · Infectious: Lower Respiratory Tract', items:[
     'bnb:Streptococci', 'bnb:Other Gram Negatives', 'bnb:RNA Viruses',
-    'skmicro:Streptococcus pneumoniae, viridans', 'skmicro:Streptococcus pyogenes (Group A Strep)',
+    'skmicro:Streptococcus pneumoniae & viridans', 'skmicro:Streptococcus pyogenes (Group A Strep)',
     'skmicro:Corynebacterium diphtheriae', 'skmicro:Moraxella catarrhalis', 'skmicro:Klebsiella pneumoniae, Enterobacter spp., Serratia marcescens',
     'skmicro:Bordetella pertussis', 'skmicro:Haemophilus influenzae', 'skmicro:Legionella pneumophila',
     'skmicro:Pseudomonas aeruginosa', 'skmicro:Burkholderia pseudomallei & cepacia complex', 'skmicro:Mycoplasma pneumoniae',
-    'skmicro:Picornavirus Family Overview', 'skmicro:Rhinovirus (Picornaviridae)', 'skmicro:Coronavirus (Coronaviridae)',
-    'skmicro:Influenzavirus (Orthomyxovirus)', 'skmicro:Measles, Mumps, Parainfluenza Viruses (Paramyxovirus)',
+    'skmicro:Picornaviridae Overview', 'skmicro:Rhinovirus (Picornaviridae)', 'skmicro:Coronavirus (Coronaviridae)',
+    'skmicro:Influenzavirus (Orthomyxoviridae)', 'skmicro:Measles, Mumps, Parainfluenza Viruses (Paramyxoviridae)',
     'skmicro:Respiratory Syncytial Virus & Human Metapneumovirus (Pneumoviridae)', 'skmicro:Adenovirus (Adenoviridae)',
   ] },
 
@@ -62,25 +62,25 @@ export const HOMES = [
   { unit:'neuro-sensory', week:2, lecture:'Central Nervous System Infections', items:[
     'bnb:Other Gram Positives',
     'skmicro:Neisseria Overview', 'skmicro:Neisseria meningitidis', 'skmicro:Listeria monocytogenes',
-    'skmicro:Streptococcus agalactiae (Group B Strep)', 'skmicro:Poliovirus (Picornaviridae)', 'skmicro:Flavivirus Overview',
-    'skmicro:Equine Encephalitis Viruses & Chikungunya Virus (Togaviridae)', 'skmicro:Rabies Virus (Rhabdovirus)',
-    'skmicro:Hentavirus, California Encephalitis, Rift Valley Fever Viruses (Bunyaviridae)',
-    'skmicro:Lymphocytic Choriomengingitis Virus (Arenaviridae)', 'skmicro:Herpes Simplex Virus Types 1 & 2 (Herpesviridae)',
-    'skmicro:JC Polyomavirus & BK Polyomavirus (Polyomaviridae)', 'skmicro:Toxoplasmosis', 'skmicro:Trypanosoma brucei',
+    'skmicro:Streptococcus agalactiae (Group B Strep)', 'skmicro:Poliovirus (Picornaviridae)', 'skmicro:Flaviviridae Overview',
+    'skmicro:Equine Encephalitis Viruses & Chikungunya Virus (Togaviridae)', 'skmicro:Rabies Virus (Rhabdoviridae)',
+    'skmicro:Hantavirus, California Encephalitis, Rift Valley Fever Viruses (Bunyaviridae)',
+    'skmicro:Lymphocytic Choriomeningitis Virus (Arenaviridae)', 'skmicro:Herpes Simplex Virus Types 1 & 2 (Herpesviridae)',
+    'skmicro:JC Polyomavirus & BK Polyomavirus (Polyomaviridae)', 'skmicro:Toxoplasma gondii', 'skmicro:Trypanosoma brucei',
     'skmicro:Naegleria fowleri', 'skmicro:Cestodes',
   ] },
 
   /* ================= Musculoskeletal & Skin ================= */
   { unit:'msk-skin', week:1, lecture:'Clin App · Skin Infections', items:[
     'bnb:Staphylococci', 'bnb:Streptococci', 'bnb:Fungal Skin Infections', 'bnb:Herpes Viruses', 'bnb:DNA Viruses',
-    'skmicro:Staphylococcus aureus', 'skmicro:Staphylococcus epidermidis, saprophyticus', 'skmicro:Streptococcus pyogenes (Group A Strep)',
+    'skmicro:Staphylococcus aureus', 'skmicro:Staphylococcus epidermidis & saprophyticus', 'skmicro:Streptococcus pyogenes (Group A Strep)',
     'skmicro:Clostridium perfringens', 'skmicro:Pseudomonas aeruginosa',   // also Cardiopulm wk4: burns, hot-tub folliculitis
-    'skmicro:Herpes Simplex Virus Types 1 & 2 (Herpesviridae)', 'skmicro:Varicella Zoster Virus (Herpesviridae)',
-    'skmicro:HHV6 & Roseola (Herpesviridae)', 'skmicro:Human Papillomavirus (HPV) (Papillomaviridae)',
+    'skmicro:Herpes Simplex Virus Types 1 & 2 (Herpesviridae)', 'skmicro:Varicella-Zoster Virus (Herpesviridae)',
+    'skmicro:HHV-6 & Roseola (Herpesviridae)', 'skmicro:Human Papillomavirus (Papillomaviridae)',
     'skmicro:Smallpox Virus, Cowpox Virus, and Molluscum Contagiosum Virus (Poxviridae)', 'skmicro:Parvovirus B19 (Parvoviridae)',
-    'skmicro:Measles, Mumps, Parainfluenza Viruses (Paramyxovirus)', 'skmicro:Rubella VIrus (Matonaviridae)',
-    'skmicro:Malassezia furfur, Pityriasis versicolor', 'skmicro:Dermatophytes (Epidermophyton spp., Trichophyton spp., Microsporum spp.)',
-    'skmicro:Sporothrix schenckii', 'skmicro:Leishmania species', 'skmicro:Scabies, Lice, Crabs',
+    'skmicro:Measles, Mumps, Parainfluenza Viruses (Paramyxoviridae)', 'skmicro:Rubella Virus (Matonaviridae)',
+    'skmicro:Malassezia furfur', 'skmicro:Epidermophyton spp., Trichophyton spp., Microsporum spp. (Dermatophytes)',
+    'skmicro:Sporothrix schenckii', 'skmicro:Leishmania braziliensis & donovani', 'skmicro:Scabies, Lice, Crabs',
     'skpharm:Acyclovir, Valacyclovir, Famciclovir',
   ] },
   { unit:'msk-skin', week:2, lecture:'PHARM · Anti-gout Drugs and Dermatologic Drugs (terbinafine, griseofulvin)', items:[
@@ -98,21 +98,21 @@ export const HOMES = [
     'skmicro:Anaplasma phagocytophilum & Ehrlichia chaffeensis', 'skmicro:Borrelia burgdorferi', 'skmicro:Borrelia recurrentis',
     'skmicro:Leptospira interrogans', 'skmicro:Coxiella burnetii', 'skmicro:Rickettsia Overview',
     'skmicro:Rickettsia prowazekii', 'skmicro:Rickettsia rickettsii', 'skmicro:Yersinia enterocolitica & pestis',
-    'skmicro:Bacillus anthracis & cereus', 'skmicro:Rabies Virus (Rhabdovirus)', 'skmicro:Ebolavirus & Marburgvirus (Filoviridae)',
-    'skmicro:Tissue Nematodes',
+    'skmicro:Bacillus anthracis & cereus', 'skmicro:Rabies Virus (Rhabdoviridae)', 'skmicro:Ebolavirus & Marburgvirus (Filoviridae)',
+    'skmicro:Tissue Nematodes: Dracunculus medinensis, Wuchereria bancrofti, Onchocerca volvulus, Toxocara canis, and Loa loa',
     // granulomatous diseases
     'bnb:Mycobacteria', 'bnb:Fungal Pneumonias',
     'skmicro:Mycobacterium tuberculosis', 'skmicro:Mycobacterium leprae', 'skmicro:Mycobacterium avium intracellulare, Mycobacterium scrofulaceum, Mycobacterium marinum',
-    'skmicro:Histoplasma capsulatum', 'skmicro:Blastomycosis dermatitidis', 'skmicro:Coccidiomycosis immitis',
-    'skmicro:Paracoccidioidomycosis brasiliensis', 'skmicro:Actinomyces israelii',
+    'skmicro:Histoplasma capsulatum', 'skmicro:Blastomyces dermatitidis', 'skmicro:Coccidioides immitis',
+    'skmicro:Paracoccidioides brasiliensis', 'skmicro:Actinomyces israelii',
     'skpharm:Tuberculosis Drugs', 'skpharm:Leprosy Drugs',
     // the immunocompromised host
     'bnb:Opportunistic Fungal Infections', 'bnb:HIV', 'bnb:HIV CNS Infections', 'bnb:HIV Drugs', 'bnb:Protozoa',
     'bnb:Antifungal Drugs', 'bnb:Antiviral Drugs',
-    'skmicro:Candida albicans', 'skmicro:Aspergillus fumigatus', 'skmicro:Crytococcus neoformans',
-    'skmicro:Mucormycosis (Mucor spp. & Rhizopus spp.)', 'skmicro:Pneumocystis jirovecii', 'skmicro:Nocardia asteroides',
+    'skmicro:Candida albicans', 'skmicro:Aspergillus fumigatus', 'skmicro:Cryptococcus neoformans',
+    'skmicro:Mucor spp. & Rhizopus spp. (Mucormycetes)', 'skmicro:Pneumocystis jirovecii', 'skmicro:Nocardia asteroides',
     'skmicro:HIV Overview (Retroviridae)', 'skmicro:HIV Life Cycle (Retroviridae)', 'skmicro:Cytomegalovirus (Herpesviridae)',
-    "skmicro:HHV8 & Kaposi's sarcoma (Herpesviridae)", 'skmicro:Toxoplasmosis',
+    "skmicro:HHV-8 & Kaposi's Sarcoma (Herpesviridae)", 'skmicro:Toxoplasma gondii',
     'skpharm:NRTIs', 'skpharm:NNRTIs', 'skpharm:Protease Inhibitors', 'skpharm:Maraviroc, Fusion Inhibitors, Integrase Inhibitors',
     'skpharm:Amphotericin & Flucytosine', 'skpharm:Azoles', 'skpharm:Ganciclovir, Valganciclovir, Foscarnet, Cidofovir',
     // fever of unknown origin: the travel and tropical fevers
@@ -135,15 +135,16 @@ export const WAITING = [
     'skmicro:Clostridioides difficile', 'skmicro:Salmonella: Intro to Salmonella & NTS', 'skmicro:Salmonella: Typhoidal Salmonella',
     'skmicro:Shigella spp.', 'skmicro:Escherichia coli (ETEC & EHEC)', 'skmicro:Campylobacter jejuni',
     'skmicro:Vibrio spp.', 'skmicro:Helicobacter pylori', 'skmicro:Bacteroides fragilis',
-    'skmicro:Hepatits A (Picornaviridae)', 'skmicro:Norovirus & Norwalk Virus (Caliciviridae)', 'skmicro:Hepatitis C (Flaviviridae)',
-    'skmicro:Rotavirus & Colorado Tick Fever Virus (Reoviridae)', 'skmicro:Hepatitis B Viral Life Cycle (Hepadnaviridae)',
-    'skmicro:Giardia', 'skmicro:Entamoeba histolytica', 'skmicro:Cryptosporidium', 'skmicro:Intestinal Nematodes',
+    'skmicro:Hepatitis A Virus (Picornaviridae)', 'skmicro:Norovirus & Norwalk Virus (Caliciviridae)', 'skmicro:Hepatitis C Virus (Flaviviridae)',
+    'skmicro:Rotavirus & Colorado Tick Fever Virus (Reoviridae)', 'skmicro:Hepatitis B Viral Basics & Infectious Diseases (Hepadnaviridae)',
+    'skmicro:Hepatitis B Viral Life Cycle (Hepadnaviridae) [Old Version]',
+    'skmicro:Giardia lamblia', 'skmicro:Entamoeba histolytica', 'skmicro:Cryptosporidium spp.', 'skmicro:Intestinal Nematodes: Enterobius, Ancylostoma, Necator, Ascaris, Strongyloides, and Trichinella',
     'skpharm:Hepatitis C: Direct-Acting Antivirals (DAAs)',
   ] },
   { unit:'Term 4 reproductive unit', from:null,
     note:'the sexually transmitted organisms — taught with the reproductive tract; the Term 4 calendar has not been supplied', items:[
     'skmicro:Neisseria gonorrhoeae', 'skmicro:Treponema pallidum', 'skmicro:Chlamydia trachomatis, Chlamydophila pneumoniae, Chlamydophila psittaci', 'skmicro:Gardnerella vaginalis',
-    'skmicro:Trichomoniasis vaginalis',
+    'skmicro:Trichomonas vaginalis',
   ] },
 ];
 
