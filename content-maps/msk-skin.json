@@ -1,6 +1,6 @@
 {
  "unit": "msk-skin",
- "signature": "b74f57d15cfd7ebf",
+ "signature": "52beacec405d97c7",
  "build": "2026-10-20c",
  "note": "Written by mk_mapping_pdf.mjs. C66 fails if the mapping changes and this PDF is not regenerated."
 }

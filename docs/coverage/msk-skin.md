@@ -77,7 +77,7 @@ does not exist, and a resource scheduled after its lecture's quiz.
 
 - **B&B** (6): Staphylococci · Streptococci · Fungal Skin Infections · Herpes Viruses · DNA Viruses · Skin Infections
 - **Pathoma** (1): 19.5 Infectious Disorders
-- **Sketchy Micro** (18): Staphylococcus aureus · Staphylococcus epidermidis, saprophyticus · Streptococcus pyogenes (Group A Strep) · Clostridium perfringens · Pseudomonas aeruginosa · Herpes Simplex Virus Types 1 & 2 (Herpesviridae) · Varicella Zoster Virus (Herpesviridae) · HHV6 & Roseola (Herpesviridae) · Human Papillomavirus (HPV) (Papillomaviridae) · Smallpox Virus, Cowpox Virus, and Molluscum Contagiosum Virus (Poxviridae) · Parvovirus B19 (Parvoviridae) · Measles, Mumps, Parainfluenza Viruses (Paramyxovirus) · Rubella VIrus (Matonaviridae) · Malassezia furfur, Pityriasis versicolor · Dermatophytes (Epidermophyton spp., Trichophyton spp., Microsporum spp.) · Sporothrix schenckii · Leishmania species · Scabies, Lice, Crabs
+- **Sketchy Micro** (18): Staphylococcus aureus · Staphylococcus epidermidis & saprophyticus · Streptococcus pyogenes (Group A Strep) · Clostridium perfringens · Pseudomonas aeruginosa · Herpes Simplex Virus Types 1 & 2 (Herpesviridae) · Varicella-Zoster Virus (Herpesviridae) · HHV-6 & Roseola (Herpesviridae) · Human Papillomavirus (Papillomaviridae) · Smallpox Virus, Cowpox Virus, and Molluscum Contagiosum Virus (Poxviridae) · Parvovirus B19 (Parvoviridae) · Measles, Mumps, Parainfluenza Viruses (Paramyxoviridae) · Rubella Virus (Matonaviridae) · Malassezia furfur · Epidermophyton spp., Trichophyton spp., Microsporum spp. (Dermatophytes) · Sporothrix schenckii · Leishmania braziliensis & donovani · Scabies, Lice, Crabs
 - **Sketchy Pharm** (1): Acyclovir, Valacyclovir, Famciclovir
 - **Bootcamp** (5): Bacterial Infectious Diseases · Herpes Simplex and Varicella Infections · Viral Infectious Conditions · Candida · Fungal Infectious Conditions
 - **UWorld article** (15): Cellulitis and skin abscess (skin and soft tissue infections) · Impetigo · Erysipelas · Dermatophyte (tinea) infections · Tinea versicolor · Cutaneous warts · Molluscum contagiosum · Scabies · Lice · Herpes simplex virus (HSV) · Herpes zoster (shingles) · Staphylococcus · Pediatric viral exanthems · Scarlet fever · Sporotrichosis
@@ -233,20 +233,20 @@ _Not board material — problem-based learning and advising._
 ### Immunocompromised Host · Path · ID
 
 - **B&B** (7): Protozoa · Antifungal Drugs · Antiviral Drugs · HIV · HIV CNS Infections · HIV Drugs · Opportunistic Fungal Infections
-- **Sketchy Micro** (11): Nocardia asteroides · HIV Overview (Retroviridae) · HIV Life Cycle (Retroviridae) · Cytomegalovirus (Herpesviridae) · HHV8 & Kaposi's sarcoma (Herpesviridae) · Toxoplasmosis · Candida albicans · Aspergillus fumigatus · Crytococcus neoformans · Mucormycosis (Mucor spp. & Rhizopus spp.) · Pneumocystis jirovecii
+- **Sketchy Micro** (11): Nocardia asteroides · HIV Overview (Retroviridae) · HIV Life Cycle (Retroviridae) · Cytomegalovirus (Herpesviridae) · HHV-8 & Kaposi's Sarcoma (Herpesviridae) · Toxoplasma gondii · Candida albicans · Aspergillus fumigatus · Cryptococcus neoformans · Mucor spp. & Rhizopus spp. (Mucormycetes) · Pneumocystis jirovecii
 - **Sketchy Pharm** (7): NRTIs · NNRTIs · Protease Inhibitors · Maraviroc, Fusion Inhibitors, Integrase Inhibitors · Amphotericin & Flucytosine · Azoles · Ganciclovir, Valganciclovir, Foscarnet, Cidofovir
 - **UWorld article** (13): Acute HIV infection · HIV lifecycle · HIV antiretroviral therapy (ART) and the immune reconstitution inflammatory syndrome (IRIS) · Pneumocystis jirovecii pneumonia · Candida infections · Aspergillosis · Cryptococcal meningoencephalitis · Cytomegalovirus (CMV) · Toxoplasmosis · Acute invasive fungal rhinosinusitis · Neutropenic fever · Solid organ transplant: Complications · Kaposi sarcoma
 
 ### Zoonotic Infections · Path · ID
 
 - **B&B** (2): Spirochetes · Zoonotic Infections
-- **Sketchy Micro** (17): Borrelia burgdorferi · Borrelia recurrentis · Leptospira interrogans · Coxiella burnetii · Rickettsia Overview · Rickettsia prowazekii · Rickettsia rickettsii · Yersinia enterocolitica & pestis · Bacillus anthracis & cereus · Rabies Virus (Rhabdovirus) · Ebolavirus & Marburgvirus (Filoviridae) · Tissue Nematodes · Bartonella henselae · Brucella spp. · Francisella tularensis · Pasteurella multocida · Anaplasma phagocytophilum & Ehrlichia chaffeensis
+- **Sketchy Micro** (17): Borrelia burgdorferi · Borrelia recurrentis · Leptospira interrogans · Coxiella burnetii · Rickettsia Overview · Rickettsia prowazekii · Rickettsia rickettsii · Yersinia enterocolitica & pestis · Bacillus anthracis & cereus · Rabies Virus (Rhabdoviridae) · Ebolavirus & Marburgvirus (Filoviridae) · Tissue Nematodes: Dracunculus medinensis, Wuchereria bancrofti, Onchocerca volvulus, Toxocara canis, and Loa loa · Bartonella henselae · Brucella spp. · Francisella tularensis · Pasteurella multocida · Anaplasma phagocytophilum & Ehrlichia chaffeensis
 - **UWorld article** (12): Bartonella henselae infections · Brucellosis · Ehrlichia and Anaplasma · Q fever (Coxiella burnetii infection) · Leptospirosis · Lyme disease · Rocky Mountain Spotted Fever · Yersinia pestis · Anthrax · Rabies · Animal and human bites · Cutaneous larva migrans
 
 ### Granulomatous Diseases · Path · ID
 
 - **B&B** (3): Mycobacteria · Fungal Pneumonias · Granulomatous Inflammation
-- **Sketchy Micro** (8): Actinomyces israelii · Mycobacterium tuberculosis · Mycobacterium leprae · Mycobacterium avium intracellulare, Mycobacterium scrofulaceum, Mycobacterium marinum · Histoplasma capsulatum · Blastomycosis dermatitidis · Coccidiomycosis immitis · Paracoccidioidomycosis brasiliensis
+- **Sketchy Micro** (8): Actinomyces israelii · Mycobacterium tuberculosis · Mycobacterium leprae · Mycobacterium avium intracellulare, Mycobacterium scrofulaceum, Mycobacterium marinum · Histoplasma capsulatum · Blastomyces dermatitidis · Coccidioides immitis · Paracoccidioides brasiliensis
 - **Sketchy Pharm** (2): Tuberculosis Drugs · Leprosy Drugs
 - **UWorld article** (9): Tuberculosis · Nontuberculous mycobacteria (NTM) · Leprosy (Hansen disease): Mycobacterium leprae infection · Histoplasmosis · Blastomycosis · Coccidioidomycosis · Paracoccidioidomycosis · Sarcoidosis · Chronic granulomatous disease
 

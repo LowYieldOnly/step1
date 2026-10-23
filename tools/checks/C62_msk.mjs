@@ -110,7 +110,7 @@ const id=await p.evaluate(homes=>{
   const idVids=catVideos().filter(v=>v.sys==='Infectious Disease'&&!isArticle(v));
   const scheduled=idVids.filter(v=>inPlan[itemId(v)]!=null);
   const want=['Zoonotic Infections','Opportunistic Fungal Infections','Bacterial Culture','Staphylococcus aureus',
-              'Dermatophytes (Epidermophyton spp., Trichophyton spp., Microsporum spp.)','Mycobacterium tuberculosis',
+              'Epidermophyton spp., Trichophyton spp., Microsporum spp. (Dermatophytes)','Mycobacterium tuberculosis',
               'Histoplasma capsulatum','Pneumocystis jirovecii','Brucella spp.','Scabies, Lice, Crabs','HIV'];
   return {catalogTotal:idVids.length,scheduled:scheduled.length,
     hours:Math.round(scheduled.reduce((a,v)=>a+v.min,0)/6)/10,
