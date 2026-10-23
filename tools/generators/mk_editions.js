@@ -16,8 +16,9 @@
  * predate them — so they are never added to a plan unasked, but anyone can switch them on.
  *
  * Unit blocks key videos by section and title (brodyKey), so a block must resolve under every
- * edition a plan can be on: for each key that names a row as an older edition had it, the
- * same row's current key is added beside it, with the same week.
+ * edition a plan can be on: a key that names a row as an older edition had it gets the row's
+ * current key beside it, and a current key gets the older keys of the same row — same week.
+ * Run this after any generator that writes unit blocks (they write current keys only).
  *
  * The frozen source of each older edition is data/catalog-<ed>.json — the catalog exactly as
  * it was live. Reconstructing it from the view must give it back byte for byte, or nothing
@@ -87,19 +88,20 @@ if (after !== before) fs.writeFileSync(CAT, after);
 let app = fs.readFileSync(APP, 'utf8');
 const order = app.match(/const BRODY_BLOCKS=\[([^\]]*)\];/)[1].split(',').map(s => s.trim());
 const current = new Set(cat.videos.map(K));
+const revMap = {};                     // a current key → the keys older editions knew the same row by
+Object.entries(keyMap).forEach(([o, c]) => { (revMap[c] = revMap[c] || []).push(o); });
 const dual = [];
 order.forEach(name => {
   const m = app.match(new RegExp('\\nconst ' + name + '=(.*?);\\n'));
   const blk = JSON.parse(m[1]);
   let added = 0;
-  ['include', 'exclude'].forEach(f => (blk[f] || []).slice().forEach(k => {
-    const to = keyMap[k];
-    if (to && !blk[f].includes(to)) { blk[f].push(to); added++; }
-  }));
-  ['videoWeek', 'artWeek'].forEach(f => Object.entries(blk[f] || {}).forEach(([k, w]) => {
-    const to = keyMap[k];
-    if (to && blk[f][to] == null) { blk[f][to] = w; added++; }
-  }));
+  const twins = k => (keyMap[k] ? [keyMap[k]] : []).concat(revMap[k] || []);
+  ['include', 'exclude'].forEach(f => (blk[f] || []).slice().forEach(k => twins(k).forEach(t => {
+    if (!blk[f].includes(t)) { blk[f].push(t); added++; }
+  })));
+  ['videoWeek', 'artWeek'].forEach(f => Object.entries(blk[f] || {}).forEach(([k, w]) => twins(k).forEach(t => {
+    if (blk[f][t] == null) { blk[f][t] = w; added++; }
+  })));
   // every key a block names must be a row in SOME edition, or the block points at nothing
   const anyEd = new Set([...current, ...Object.keys(keyMap)]);
   Object.keys(EDITIONS).forEach(ed => JSON.parse(fs.readFileSync(path.join(REPO, 'tools/generators/data/catalog-' + ed + '.json'), 'utf8')).videos.forEach(v => anyEd.add(K(v))));
@@ -117,4 +119,4 @@ Object.entries(editions).forEach(([ed, E]) => {
   const same = E.filter(x => typeof x === 'number').length - (added[ed] || 0), then = E.filter(Array.isArray).length, gone = E.filter(x => typeof x === 'object' && !Array.isArray(x)).length;
   console.log('  ' + ed + ': ' + same + ' rows unchanged, ' + then + ' as they were then, ' + gone + ' since removed; + ' + (added[ed] || 0) + ' of resources new since (own toggle, off) · ' + EDITIONS[ed]);
 });
-if (dual.length) console.log('  unit blocks given the current key beside each renamed one: ' + dual.join(', '));
+if (dual.length) console.log('  unit blocks given every edition\'s key for each renamed video: ' + dual.join(', '));

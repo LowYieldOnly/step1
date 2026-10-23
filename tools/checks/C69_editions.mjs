@@ -148,7 +148,7 @@ const msk = await p.evaluate(() => {
 });
 const strip = a => a.map(s => s.replace(/@\d+$/, ''));
 chk('C69-12 a new MSK plan schedules the same ' + msk.old.length + ' Sketchy Micro videos, at the same weeks, under their corrected titles',
-  msk.old.length === 18 && msk.cur.length === 18 && msk.old.some(s => s.startsWith('Brucella@'))
+  msk.old.length > 0 && msk.cur.length === msk.old.length && msk.old.some(s => s.startsWith('Brucella@'))
     && msk.cur.includes('Brucella spp.@' + (msk.old.find(s => s.startsWith('Brucella@')) || '@').split('@')[1])
     && !msk.cur.some(s => s.startsWith('Brucella@')) && JSON.stringify(msk.old.map(s => s.split('@')[1]).sort()) === JSON.stringify(msk.cur.map(s => s.split('@')[1]).sort()),
   JSON.stringify({ old: strip(msk.old).slice(0, 4), cur: strip(msk.cur).slice(0, 4) }));

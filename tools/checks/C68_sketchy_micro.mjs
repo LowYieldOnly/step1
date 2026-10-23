@@ -11,12 +11,15 @@
  *       a removed copy; nothing over a current title that already has state; no streak
  *       credit; once only; and the result is still a fixed point of mergeState.
  *       (A plan on an older catalog edition is never touched: C69.)
+ *   (d) The ID homes follow the new titles: the enteric videos wait for GI, Pseudomonas
+ *       aeruginosa is held by both lectures that teach it.
  */
 import { openApp, checker, REPO } from '../harness.mjs';
 import { spawnSync } from 'child_process';
 import fs from 'fs';
 import path from 'path';
 import { itemId, aliasProblems } from '../generators/lib/aliases.js';
+import { resolveIdHomes } from '../generators/lib/idhomes.js';
 
 const { page: p, errors, close } = await openApp();
 const { chk, report } = checker('Sketchy Micro — Sketchy\'s titles, and ticks that follow a rename');
@@ -103,6 +106,18 @@ chk('C68-10 old keys stay (inert), so a device on the previous build can\'t ping
 chk('C68-11 runs once — a second pass carries nothing — and credits no streak', m.n1 > 0 && m.n2 === 0 && m.sigOk, 'first ' + m.n1 + ', second ' + m.n2 + ', sig ' + m.sigOk);
 chk('C68-12 the migrated state is a fixed point of mergeState, and merging an old-build copy keeps every carried tick',
     m.fixed && m.survives, JSON.stringify(m));
+
+// ---------- (d) the ID homes follow the titles ----------
+const homes = resolveIdHomes(cat.videos);
+const K = n => 'skmicro|Infectious Disease|' + cat.videos.find(v => v.res === 'skmicro' && v.name === n).cat + '|' + n;
+const gi = [...homes.waiting.entries()].filter(([, w]) => /SYST 9500/.test(w.unit)).map(([k]) => k);
+const giWant = ['Escherichia coli (ETEC & EHEC)', 'Salmonella: Intro to Salmonella & NTS', 'Salmonella: Typhoidal Salmonella', 'Bacteroides fragilis'];
+chk('C68-13 the enteric bacteria — E. coli (ETEC & EHEC), both Salmonella videos, Bacteroides — wait for GI',
+    homes.problems.length === 0 && giWant.every(n => gi.includes(K(n))), homes.problems.slice(0, 2).join(' | ') + ' missing: ' + giWant.filter(n => !gi.includes(K(n))).join(', '));
+const pa = K('Pseudomonas aeruginosa');
+chk('C68-14 Pseudomonas aeruginosa is held by both lectures that teach it (Cardiopulm wk4, MSK wk1)',
+    (homes.homes['cardiopulm'] || {})[pa] === 4 && (homes.homes['msk-skin'] || {})[pa] === 1,
+    JSON.stringify({ cardiopulm: (homes.homes['cardiopulm'] || {})[pa], msk: (homes.homes['msk-skin'] || {})[pa] }));
 
 chk('C68-15 no uncaught page errors', errors.length === 0, errors.slice(0, 3).join(' | '));
 await close();

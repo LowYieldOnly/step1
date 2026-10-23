@@ -25,7 +25,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '22'
       - run: node tools/law.mjs
 
   checks:
@@ -35,8 +35,9 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: '20'
-      - run: npm ci
+          node-version: '22'
+      # tools/package-lock.json is gitignored (tools/.gitignore), so a clean install, not npm ci
+      - run: npm install --no-audit --no-fund
         working-directory: tools
       - run: npx playwright install --with-deps chromium
         working-directory: tools

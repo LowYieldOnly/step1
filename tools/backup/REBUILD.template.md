@@ -59,7 +59,7 @@ The Firebase settings are `FB_CONFIG` in `index.html`. Who may sign in is `ACCES
 
 ```bash
 cd tools
-npm ci
+npm install
 npx playwright install chromium
 node run-checks.mjs          # every check file should pass
 ```
