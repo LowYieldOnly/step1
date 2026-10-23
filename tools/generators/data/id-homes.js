@@ -34,7 +34,8 @@ export const HOMES = [
     'skmicro:Parvovirus B19 (Parvoviridae)', 'skmicro:Epstein-Barr Virus (Herpesviridae)',
   ] },
   { unit:'heme-renal', week:4, lecture:'Urinary tract: Ureter, bladder, urethra; Cysts & neoplasms; Transplant disease', items:[
-    'skmicro:Escherichia coli', 'skmicro:Proteus mirabilis', 'skmicro:Enterococus faecium & faecalis',
+    // Sketchy's E. coli video is ETEC & EHEC — the diarrhoeal strains — so it waits for GI
+    'skmicro:Proteus mirabilis', 'skmicro:Enterococus faecium & faecalis',
     'skmicro:Staphylococcus epidermidis, saprophyticus', 'skmicro:JC Polyomavirus & BK Polyomavirus (Polyomaviridae)',
     'skmicro:Trematodes',
   ] },
@@ -46,9 +47,9 @@ export const HOMES = [
   { unit:'cardiopulm', week:4, lecture:'Infectious: Upper Respiratory Tract · Infectious: Lower Respiratory Tract', items:[
     'bnb:Streptococci', 'bnb:Other Gram Negatives', 'bnb:RNA Viruses',
     'skmicro:Streptococcus pneumoniae, viridans', 'skmicro:Streptococcus pyogenes (Group A Strep)',
-    'skmicro:Corynebacterium diphtheriae', 'skmicro:Moraxella catarrhalis', 'skmicro:Klebsiella, Enterobacter, Serratia',
-    'skmicro:Bordatella pertussis', 'skmicro:Haemophilis influenzae', 'skmicro:Legionella pneumophila',
-    'skmicro:Pseudomonas aeruginosa', 'skmicro:Burkholderia pseudomallei & cepacia complex', 'skmicro:Mycoplasma pneumonia',
+    'skmicro:Corynebacterium diphtheriae', 'skmicro:Moraxella catarrhalis', 'skmicro:Klebsiella pneumoniae, Enterobacter spp., Serratia marcescens',
+    'skmicro:Bordetella pertussis', 'skmicro:Haemophilus influenzae', 'skmicro:Legionella pneumophila',
+    'skmicro:Pseudomonas aeruginosa', 'skmicro:Burkholderia pseudomallei & cepacia complex', 'skmicro:Mycoplasma pneumoniae',
     'skmicro:Picornavirus Family Overview', 'skmicro:Rhinovirus (Picornaviridae)', 'skmicro:Coronavirus (Coronaviridae)',
     'skmicro:Influenzavirus (Orthomyxovirus)', 'skmicro:Measles, Mumps, Parainfluenza Viruses (Paramyxovirus)',
     'skmicro:Respiratory Syncytial Virus & Human Metapneumovirus (Pneumoviridae)', 'skmicro:Adenovirus (Adenoviridae)',
@@ -73,7 +74,7 @@ export const HOMES = [
   { unit:'msk-skin', week:1, lecture:'Clin App · Skin Infections', items:[
     'bnb:Staphylococci', 'bnb:Streptococci', 'bnb:Fungal Skin Infections', 'bnb:Herpes Viruses', 'bnb:DNA Viruses',
     'skmicro:Staphylococcus aureus', 'skmicro:Staphylococcus epidermidis, saprophyticus', 'skmicro:Streptococcus pyogenes (Group A Strep)',
-    'skmicro:Clostridium perfringens', 'skmicro:Pseudomonas',
+    'skmicro:Clostridium perfringens', 'skmicro:Pseudomonas aeruginosa',   // also Cardiopulm wk4: burns, hot-tub folliculitis
     'skmicro:Herpes Simplex Virus Types 1 & 2 (Herpesviridae)', 'skmicro:Varicella Zoster Virus (Herpesviridae)',
     'skmicro:HHV6 & Roseola (Herpesviridae)', 'skmicro:Human Papillomavirus (HPV) (Papillomaviridae)',
     'skmicro:Smallpox Virus, Cowpox Virus, and Molluscum Contagiosum Virus (Poxviridae)', 'skmicro:Parvovirus B19 (Parvoviridae)',
@@ -93,15 +94,15 @@ export const HOMES = [
     'bnb:Growth and Genetics', 'bnb:Bacterial Identification', 'bnb:Virus Structures',
     // zoonotic infections
     'bnb:Zoonotic Infections', 'bnb:Spirochetes',
-    'skmicro:Bartonella henselae', 'skmicro:Brucella', 'skmicro:Francisella tularensis', 'skmicro:Pasturella multocida',
+    'skmicro:Bartonella henselae', 'skmicro:Brucella spp.', 'skmicro:Francisella tularensis', 'skmicro:Pasteurella multocida',
     'skmicro:Anaplasma phagocytophilum & Ehrlichia chaffeensis', 'skmicro:Borrelia burgdorferi', 'skmicro:Borrelia recurrentis',
-    'skmicro:Leptospirosis interrogans', 'skmicro:Coxiella burnetii', 'skmicro:Rickettsia Species Overview',
-    'skmicro:Rickettsia prowazekii', 'skmicro:Rickettsia rickettsii', 'skmicro:Yersinia enterocolitica, pestis',
-    'skmicro:Bacillus anthracis, cereus', 'skmicro:Rabies Virus (Rhabdovirus)', 'skmicro:Ebolavirus & Marburgvirus (Filoviridae)',
+    'skmicro:Leptospira interrogans', 'skmicro:Coxiella burnetii', 'skmicro:Rickettsia Overview',
+    'skmicro:Rickettsia prowazekii', 'skmicro:Rickettsia rickettsii', 'skmicro:Yersinia enterocolitica & pestis',
+    'skmicro:Bacillus anthracis & cereus', 'skmicro:Rabies Virus (Rhabdovirus)', 'skmicro:Ebolavirus & Marburgvirus (Filoviridae)',
     'skmicro:Tissue Nematodes',
     // granulomatous diseases
     'bnb:Mycobacteria', 'bnb:Fungal Pneumonias',
-    'skmicro:Mycobacterium tuberculosis', 'skmicro:Mycobacterium leprae', 'skmicro:Mycobacterium avium intracellulare, scrofulaceum, marinum',
+    'skmicro:Mycobacterium tuberculosis', 'skmicro:Mycobacterium leprae', 'skmicro:Mycobacterium avium intracellulare, Mycobacterium scrofulaceum, Mycobacterium marinum',
     'skmicro:Histoplasma capsulatum', 'skmicro:Blastomycosis dermatitidis', 'skmicro:Coccidiomycosis immitis',
     'skmicro:Paracoccidioidomycosis brasiliensis', 'skmicro:Actinomyces israelii',
     'skpharm:Tuberculosis Drugs', 'skpharm:Leprosy Drugs',
@@ -109,7 +110,7 @@ export const HOMES = [
     'bnb:Opportunistic Fungal Infections', 'bnb:HIV', 'bnb:HIV CNS Infections', 'bnb:HIV Drugs', 'bnb:Protozoa',
     'bnb:Antifungal Drugs', 'bnb:Antiviral Drugs',
     'skmicro:Candida albicans', 'skmicro:Aspergillus fumigatus', 'skmicro:Crytococcus neoformans',
-    'skmicro:Mucormycosis (Mucor spp. & Rhizopus spp.)', 'skmicro:Pneumocystis jirovecii', 'skmicro:Nocardia',
+    'skmicro:Mucormycosis (Mucor spp. & Rhizopus spp.)', 'skmicro:Pneumocystis jirovecii', 'skmicro:Nocardia asteroides',
     'skmicro:HIV Overview (Retroviridae)', 'skmicro:HIV Life Cycle (Retroviridae)', 'skmicro:Cytomegalovirus (Herpesviridae)',
     "skmicro:HHV8 & Kaposi's sarcoma (Herpesviridae)", 'skmicro:Toxoplasmosis',
     'skpharm:NRTIs', 'skpharm:NNRTIs', 'skpharm:Protease Inhibitors', 'skpharm:Maraviroc, Fusion Inhibitors, Integrase Inhibitors',
@@ -131,8 +132,9 @@ export const WAITING = [
   { unit:'GI, Nutrition & Multisystem (SYST 9500)', from:'2026-11-09',
     note:'the enteric organisms, hepatitis viruses and intestinal parasites — taught with the GI tract', items:[
     'bnb:Gram Negative Rods', 'bnb:Viral Hepatitis', 'bnb:Helminths',
-    'skmicro:Clostridium difficile', 'skmicro:Salmonella', 'skmicro:Shigella', 'skmicro:Campylobacter jejuni',
-    'skmicro:Vibrio cholerae, parahaemolyticus, vulnificus', 'skmicro:Helicobacter pylori',
+    'skmicro:Clostridioides difficile', 'skmicro:Salmonella: Intro to Salmonella & NTS', 'skmicro:Salmonella: Typhoidal Salmonella',
+    'skmicro:Shigella spp.', 'skmicro:Escherichia coli (ETEC & EHEC)', 'skmicro:Campylobacter jejuni',
+    'skmicro:Vibrio spp.', 'skmicro:Helicobacter pylori', 'skmicro:Bacteroides fragilis',
     'skmicro:Hepatits A (Picornaviridae)', 'skmicro:Norovirus & Norwalk Virus (Caliciviridae)', 'skmicro:Hepatitis C (Flaviviridae)',
     'skmicro:Rotavirus & Colorado Tick Fever Virus (Reoviridae)', 'skmicro:Hepatitis B Viral Life Cycle (Hepadnaviridae)',
     'skmicro:Giardia', 'skmicro:Entamoeba histolytica', 'skmicro:Cryptosporidium', 'skmicro:Intestinal Nematodes',
@@ -140,7 +142,7 @@ export const WAITING = [
   ] },
   { unit:'Term 4 reproductive unit', from:null,
     note:'the sexually transmitted organisms — taught with the reproductive tract; the Term 4 calendar has not been supplied', items:[
-    'skmicro:Neisseria gonorrheae', 'skmicro:Treponema pallidum', 'skmicro:Chlamydia', 'skmicro:Gardnerella vaginalis',
+    'skmicro:Neisseria gonorrhoeae', 'skmicro:Treponema pallidum', 'skmicro:Chlamydia trachomatis, Chlamydophila pneumoniae, Chlamydophila psittaci', 'skmicro:Gardnerella vaginalis',
     'skmicro:Trichomoniasis vaginalis',
   ] },
 ];

@@ -111,7 +111,7 @@ const id=await p.evaluate(homes=>{
   const scheduled=idVids.filter(v=>inPlan[itemId(v)]!=null);
   const want=['Zoonotic Infections','Opportunistic Fungal Infections','Bacterial Culture','Staphylococcus aureus',
               'Dermatophytes (Epidermophyton spp., Trichophyton spp., Microsporum spp.)','Mycobacterium tuberculosis',
-              'Histoplasma capsulatum','Pneumocystis jirovecii','Brucella','Scabies, Lice, Crabs','HIV'];
+              'Histoplasma capsulatum','Pneumocystis jirovecii','Brucella spp.','Scabies, Lice, Crabs','HIV'];
   return {catalogTotal:idVids.length,scheduled:scheduled.length,
     hours:Math.round(scheduled.reduce((a,v)=>a+v.min,0)/6)/10,
     got:want.filter(n=>scheduled.some(v=>v.name===n)).length,wantN:want.length,
