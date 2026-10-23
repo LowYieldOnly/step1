@@ -148,11 +148,6 @@ b{color:var(--ink)}
 .hero .sub{color:var(--muted);font-size:13.5px;margin-top:10px}
 
 /* daily encouragement / wellness nudge (top of Today) */
-.cheer{display:flex;align-items:flex-start;gap:11px;background:var(--panel);border:1px solid var(--line);border-left:3px solid var(--accent);border-radius:var(--r);padding:12px 14px;margin:12px 0}
-.cheer-ic{font-size:19px;line-height:1.45;flex:0 0 auto}
-.cheer-tx{font-size:14px;color:var(--ink);line-height:1.5;min-width:0}
-.cheer-tx b{color:var(--ink);font-weight:700}
-.cheer-by{color:var(--text-2);font-style:italic;white-space:nowrap}
 .focusbar{display:flex;align-items:center;justify-content:space-between;gap:12px;background:var(--accent-bg);border:1px solid var(--border);border-radius:var(--r);padding:10px 14px;margin-bottom:16px;font-size:13.5px;color:var(--text-2)}
 .focusbar b{color:var(--ink)}
 .focusbar .link{white-space:nowrap}
@@ -989,6 +984,31 @@ details.uwsys[open]>.uwsyshd::before{transform:rotate(90deg)}
 .uwids{font-family:var(--mono);font-size:11px;color:var(--faint);margin-top:4px;word-break:break-word;line-height:1.6}
 /* in-schedule: a per-video disclosure under a B&B row, and the day/week copy buttons */
 .uwrow{margin:2px 0 6px 34px}
+.uwused{color:var(--faint)}
+.pomo .pomomodes{display:flex;gap:6px;flex-wrap:wrap;margin:2px 0 6px}
+.pomoclock{font-family:var(--mono);font-size:44px;font-weight:800;color:var(--phos);text-align:center;letter-spacing:.02em;margin:6px 0 8px}
+.pomoclock.brk{color:var(--success)}
+.pomobtns{display:flex;gap:8px;justify-content:center;flex-wrap:wrap}
+.pomotoday{font-size:12.5px;color:var(--muted);text-align:center;margin:10px 0 2px}
+.pomotoday b{color:var(--ink)}
+.pomoset{margin-top:8px}
+.pomoset>summary{cursor:pointer;font-size:12px;color:var(--phos);font-weight:600}
+.pomosetrow{display:flex;flex-wrap:wrap;gap:8px 14px;margin-top:8px;font-size:12.5px;color:var(--muted)}
+.pomosetrow input{width:54px;padding:4px 6px;border-radius:7px;border:1px solid var(--line);background:var(--bg);color:var(--ink);font-family:var(--mono)}
+.uwt{margin:12px 0 4px;padding:12px 14px;border:1px solid var(--line);border-radius:12px;background:var(--bg2)}
+.uwthd{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
+.uwtt{font-weight:800;font-size:13.5px;color:var(--ink)}
+.uwtseg{display:flex;gap:6px;flex-wrap:wrap}
+.uwtmeta{font-size:12.5px;color:var(--muted);margin:7px 0}
+.uwtmeta b{color:var(--ink)}
+.uwtsize{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin:6px 0 9px}
+.uwtn{width:64px;box-sizing:border-box;padding:6px 8px;border-radius:8px;border:1px solid var(--line);background:var(--bg);color:var(--ink);font-family:var(--mono);font-size:13px}
+.uwtgo{width:100%}
+.uwtsw{display:flex;align-items:center;gap:7px;font-size:12.5px;color:var(--muted);margin:9px 0 2px;cursor:pointer}
+.uwtmade{margin-top:8px}
+.uwtmade>summary{cursor:pointer;font-size:12.5px;color:var(--phos);font-weight:600}
+.uwtrow{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin:6px 0;font-size:12.5px;color:var(--muted)}
+.uwtrow>span{flex:1 1 140px}
 .uwrow summary{list-style:none;cursor:pointer;font-size:11.5px;color:var(--phos);font-weight:600;display:inline-flex;align-items:center;gap:5px}
 .uwrow summary::-webkit-details-marker{display:none}
 .uwrow summary::before{content:"›";display:inline-block;transition:transform .15s}
@@ -1309,8 +1329,8 @@ const PRACTICE_SOURCES=[
   {key:"bnbq",     label:"Boards & Beyond", bank:""},
 ];
 const PRACTICE_KEYS=PRACTICE_SOURCES.map(o=>o.key);
-let S={active:null,cfgs:{step1:null,nbme:null},vdone:{},vskip:{},vdoneDate:{},vdoneAt:{},vundone:{},akdone:{},notes:{},streak:{days:{}},settings:{},_updatedAt:0,cfg:null};
-function emptyState(){return {active:null,cfgs:{step1:null,nbme:null},vdone:{},vskip:{},vdoneDate:{},vdoneAt:{},vundone:{},akdone:{},notes:{},streak:{days:{}},assessments:{},uworld:{total:null,blocks:{}},amboss:{total:null,blocks:{}},scholarrx:{total:null,blocks:{}},bnbq:{total:null,blocks:{}},vshaky:{},settings:{},_updatedAt:0,_resetAt:0,cfg:null};}
+let S={active:null,cfgs:{step1:null,nbme:null},vdone:{},vskip:{},vdoneDate:{},vdoneAt:{},vundone:{},akdone:{},notes:{},streak:{days:{}},uwq:{},uwt:{},pomo:{},settings:{},_updatedAt:0,cfg:null};
+function emptyState(){return {active:null,cfgs:{step1:null,nbme:null},vdone:{},vskip:{},vdoneDate:{},vdoneAt:{},vundone:{},akdone:{},notes:{},streak:{days:{}},assessments:{},uworld:{total:null,blocks:{}},amboss:{total:null,blocks:{}},scholarrx:{total:null,blocks:{}},bnbq:{total:null,blocks:{}},vshaky:{},uwq:{},uwt:{},pomo:{},settings:{},_updatedAt:0,_resetAt:0,cfg:null};}
 function resetStateToEmpty(){Object.assign(S,emptyState());S.cfgs={step1:null,nbme:null};S.streak={days:{}};}
 /* load a specific account's cached state (empty if none yet) */
 function loadState(key){
@@ -1319,6 +1339,7 @@ function loadState(key){
   S.vdone=raw.vdone||{};S.vskip=raw.vskip||{};S.vdoneDate=raw.vdoneDate||{};S.vdoneAt=raw.vdoneAt||{};S.vundone=raw.vundone||{};S.akdone=raw.akdone||{};
   S.notes=raw.notes||{};S.streak=raw.streak||{days:{}};S.streak.days=S.streak.days||{};
   S.assessments=raw.assessments||{};PRACTICE_KEYS.forEach(k=>{S[k]=raw[k]||{total:null,blocks:{}};S[k].blocks=S[k].blocks||{};});S.vshaky=raw.vshaky||{};
+  S.uwq=raw.uwq||{};S.uwt=raw.uwt||{};S.pomo=raw.pomo||{};
   S.settings=raw.settings||{};S._updatedAt=raw._updatedAt||0;S._resetAt=raw._resetAt||0;
   if(raw.cfgs){S.cfgs={step1:raw.cfgs.step1||null,nbme:raw.cfgs.nbme||null};S.active=raw.active||null;}
   else if(raw.cfg){ // migrate the old single-plan shape into the matching hub
@@ -1428,7 +1449,7 @@ function persistObj(){const o={active:S.active,
   cfgs:{step1:(S.cfgs&&S.cfgs.step1)||null,nbme:(S.cfgs&&S.cfgs.nbme)||null},
   vdone:S.vdone,vskip:S.vskip,vdoneDate:S.vdoneDate,vdoneAt:S.vdoneAt,vundone:S.vundone,akdone:S.akdone,notes:S.notes,streak:S.streak,assessments:S.assessments};
   PRACTICE_KEYS.forEach(k=>{o[k]=S[k];});
-  o.vshaky=S.vshaky;o.settings=S.settings;o._updatedAt=S._updatedAt;o._resetAt=S._resetAt||0;
+  o.vshaky=S.vshaky;o.uwq=S.uwq||{};o.uwt=S.uwt||{};o.pomo=S.pomo||{};o.settings=S.settings;o._updatedAt=S._updatedAt;o._resetAt=S._resetAt||0;
   return o;}
 function save(){if(DEMO)return;S._updatedAt=Date.now();markStreakIfProgress();store.set(SKEY,JSON.stringify(persistObj()));Cloud.schedulePush();}
 
@@ -2548,12 +2569,35 @@ const FB_CONFIG={apiKey:"AIzaSyCzdsBV5UUnngsqXni9IdSD6tIMTKzNPGE",authDomain:"st
 function unionTrue(x,y){const o={};x=x||{};y=y||{};for(const k in x)if(x[k])o[k]=true;for(const k in y)if(y[k])o[k]=true;return o;}
 function maxMerge(x,y){const o={};x=x||{};y=y||{};for(const k in x)o[k]=x[k];for(const k in y)if(!(o[k]>=y[k]))o[k]=y[k];return o;}   // latest stamp per id
 function mergeNotes(older,newer){const o=Object.assign({},older||{});const n=newer||{};for(const k in n){if(n[k]&&n[k].length)o[k]=n[k];else if(o[k]==null)o[k]=n[k];}return o;}
+/* UWorld questions put in a test: id → [usedAt, putBackAt]. A question is used while usedAt
+   is the later stamp — the same last-writer-wins as a video's tick and untick, so a test put
+   back on one device is put back on every device. Ids are digits, so the object keeps one
+   canonical key order whatever order the copies arrive in. */
+function uwqMerge(a,b){a=a||{};b=b||{};const out={};
+  for(const k in a)out[k]=a[k];
+  for(const k in b){const x=out[k],y=b[k];out[k]=x?[Math.max(x[0]||0,y[0]||0),Math.max(x[1]||0,y[1]||0)]:y;}
+  return out;}
+/* The tests made: id → {at, pool, label, ids, gone?}. A test only ever changes by being put
+   back (gone), so the copy with the later gone stamp is the current one. */
+function uwtMerge(a,b){a=a||{};b=b||{};const out={};
+  for(const k in a)out[k]=a[k];
+  for(const k in b){const x=out[k],y=b[k];out[k]=(!x||(y.gone||0)>(x.gone||0))?y:x;}
+  return out;}
+/* Focus-timer log: day → device → {f: focus seconds, b: break seconds, n: focus sessions}.
+   Each device only ever adds to its own counters, so the larger copy of a counter is the
+   newer one, and two devices timing on the same day never overwrite each other — a day's
+   totals are the sum over devices. Fields are always written f, b, n, so a log merges with
+   itself unchanged. */
+function pomoMerge(a,b){a=a||{};b=b||{};const out={};
+  const cnt=(x,y)=>({f:Math.max((x&&x.f)||0,(y&&y.f)||0),b:Math.max((x&&x.b)||0,(y&&y.b)||0),n:Math.max((x&&x.n)||0,(y&&y.n)||0)});
+  [a,b].forEach(src=>{for(const d in src){const o=out[d]=out[d]||{};for(const dev in src[d])o[dev]=cnt(o[dev],src[d][dev]);}});
+  return out;}
 function mergeState(a,b){a=a||{};b=b||{};
   // a reset is a tombstone: any copy last saved BEFORE the reset predates it,
   // so its progress maps must not be union-merged back in (they'd resurrect
   // everything the user just cleared).
   const resetAt=Math.max(a._resetAt||0,b._resetAt||0);
-  const strip=s=>((s._updatedAt||0)>=resetAt)?s:Object.assign({},s,{vdone:{},vskip:{},vdoneDate:{},vdoneAt:{},vundone:{},akdone:{},notes:{},streak:{days:{}},assessments:{},uworld:{total:null,blocks:{}},amboss:{total:null,blocks:{}},scholarrx:{total:null,blocks:{}},bnbq:{total:null,blocks:{}},vshaky:{}});
+  const strip=s=>((s._updatedAt||0)>=resetAt)?s:Object.assign({},s,{vdone:{},vskip:{},vdoneDate:{},vdoneAt:{},vundone:{},akdone:{},notes:{},streak:{days:{}},assessments:{},uworld:{total:null,blocks:{}},amboss:{total:null,blocks:{}},scholarrx:{total:null,blocks:{}},bnbq:{total:null,blocks:{}},vshaky:{},uwq:{},uwt:{},pomo:{}});
   if(resetAt){a=strip(a);b=strip(b);}
   const aT=a._updatedAt||0,bT=b._updatedAt||0;const newer=bT>=aT?b:a,older=bT>=aT?a:b;
   const out={};
@@ -2595,6 +2639,7 @@ function mergeState(a,b){a=a||{};b=b||{};
     out[k]={total:(nt!=null?nt:(ot!=null?ot:null)),
       blocks:Object.assign({},(a[k]||{}).blocks||{},(b[k]||{}).blocks||{})};});
   out.vshaky=unionTrue(a.vshaky,b.vshaky);
+  out.uwq=uwqMerge(a.uwq,b.uwq);out.uwt=uwtMerge(a.uwt,b.uwt);out.pomo=pomoMerge(a.pomo,b.pomo);
   out.settings=Object.assign({},older.settings||{},newer.settings||{});
   out._updatedAt=Math.max(aT,bT);
   // keep key order identical to persistObj() — the sync layer compares
@@ -2663,7 +2708,7 @@ Cloud.adopt=function(m){Cloud.applying=true;
   S.active=m.active||null;S.cfgs=m.cfgs||{step1:null,nbme:null};
   S.vdone=m.vdone||{};S.vskip=m.vskip||{};S.vdoneDate=m.vdoneDate||{};S.vdoneAt=m.vdoneAt||{};S.vundone=m.vundone||{};S.akdone=m.akdone||{};
   S.notes=m.notes||{};S.streak=m.streak||{days:{}};S.settings=m.settings||{};S._updatedAt=m._updatedAt||0;S._resetAt=m._resetAt||0;
-  S.assessments=m.assessments||{};PRACTICE_KEYS.forEach(k=>{S[k]=m[k]||{total:null,blocks:{}};S[k].blocks=S[k].blocks||{};});S.vshaky=m.vshaky||{};
+  S.assessments=m.assessments||{};PRACTICE_KEYS.forEach(k=>{S[k]=m[k]||{total:null,blocks:{}};S[k].blocks=S[k].blocks||{};});S.vshaky=m.vshaky||{};S.uwq=m.uwq||{};S.uwt=m.uwt||{};S.pomo=m.pomo||{};
   ["step1","nbme"].forEach(k=>{if(S.cfgs[k])normalizeCfg(S.cfgs[k],k);});
   S.cfg=S.active?S.cfgs[S.active]:null;scrubBcFragments();migrateAliases();_prevSig=progressSig();
   try{store.set(SKEY,JSON.stringify(persistObj()));}catch(e){}
@@ -2774,34 +2819,108 @@ function itemRows(items,opts){opts=opts||{};if(!items.length)return '<div class=
 function uwRowHTML(it){
   if(!uwReady()||it.res!=="bnb")return '';
   const ids=uwIdsFor(it.name);if(!ids||!ids.length)return '';
-  return '<details class="uwrow"><summary>'+ids.length+' UWorld question'+(ids.length===1?'':'s')+'</summary>'
-    +'<div class="uwrowbody"><div class="uwids">'+escHTML(ids.join(", "))+'</div>'
-    +'<button type="button" class="btn ghost sm" data-uwids="'+escAttr(ids.join(","))+'" data-uwlab="'+escAttr(it.name)+'">Copy</button></div></details>';
+  const left=ids.filter(id=>!uwUsed(id)),used=ids.length-left.length;
+  return '<details class="uwrow"><summary>'+ids.length+' UWorld question'+(ids.length===1?'':'s')+(used?' · '+used+' in a test':'')+'</summary>'
+    +'<div class="uwrowbody"><div class="uwids">'+ids.map(id=>uwUsed(id)?'<s class="uwused" title="in a test you made">'+id+'</s>':String(id)).join(", ")+'</div>'
+    +(left.length
+      ? '<button type="button" class="btn ghost sm" data-uwvid="'+escAttr(it.name)+'">Copy '+(used?left.length+' unused':left.length)+'</button>'
+      : '<button type="button" class="btn ghost sm" data-uwids="'+escAttr(ids.join(","))+'" data-uwlab="'+escAttr(it.name)+'" title="Copies them again without changing anything">Copy again</button>')
+    +'</div></details>';
 }
-/* The copy bar for a whole day, and for the Brody week that day sits in. Only shown
-   when there is something to copy; the week button only on a Brody plan. */
+/* ---------- UWorld tests: up to 40 questions each, never the same question twice ----------
+   UWorld builds a custom test from at most 40 question IDs. A day often has more and a
+   Brody week always does, so the day and its week each get a test builder: choose how many,
+   copy, paste into UWorld → Create Test → Custom. A question copied into a test is marked
+   used (S.uwq, synced like a tick) and never offered again — not by the day, the week or a
+   single video, because the same question can sit under two videos and a day sits inside
+   its week. A copy that fails marks nothing. Each test is drawn across all the pool's videos
+   in turn, so Test 1 of a week covers the whole week, not just its first day. A test can be
+   copied again (a paste that went wrong) or put back (a test never made); Start over puts a
+   day's or a week's questions back for a second pass. */
+const UW_MAX=40;let UWT_KIND={};   // which pool each day's builder shows: "day" or "week"
+function uwUsed(id){const u=S.uwq&&S.uwq[id];return !!u&&(u[0]||0)>(u[1]||0);}
+function uwMark(ids,used){const t=Date.now();S.uwq=S.uwq||{};
+  ids.forEach(id=>{const u=S.uwq[id]||[0,0];S.uwq[id]=used?[t,u[1]||0]:[u[0]||0,t];});}
+/* a pool: per-video lists of question ids, each id under the first video that has it */
+function uwPool(items){const seen=new Set(),lists=[];
+  (items||[]).forEach(it=>{const ids=uwHas(it)?uwIdsFor(it.name):null;if(!ids)return;const l=[];
+    ids.forEach(id=>{if(!seen.has(id)){seen.add(id);l.push(id);}});if(l.length)lists.push(l);});
+  const all=[].concat(...lists);return {lists,all,left:all.filter(id=>!uwUsed(id))};}
+/* n unused ids, one from each video in turn */
+function uwDraw(lists,n){const q=lists.map(l=>l.filter(id=>!uwUsed(id)));const out=[];
+  for(let i=0;out.length<n;i++){let took=false;q.forEach(l=>{if(out.length<n&&i<l.length){out.push(l[i]);took=true;}});if(!took)break;}
+  return out;}
+function uwWeekOf(row){if(!(SCHED&&SCHED.brody&&row&&row.brodyWeek))return null;const wk=row.brodyWeek;
+  // In your own order the block is named by the Brody week it is (or the system you added),
+  // not by its place in your order: "topic 2" meant nothing on the screen.
+  let lab="Brody week "+wk,tip="";
+  if(SCHED.brody.seq){const w=SCHED.brody.weeks.find(x=>x.n===wk),p=w&&seqParse(w.topic);
+    lab=!p?"this topic":p.kind==="u"?((SCHED.brody.one?"Brody":p.blk.name)+" week "+p.wk.n):p.sys;tip=w?w.label:"";}
+  return {wk,lab,tip,key:"w:"+(SCHED.brody.id||"")+":"+(SCHED.brody.unit||"")+":"+wk};}
+function uwPoolOf(iso,kind){const row=SCHED&&SCHED.dayMap&&SCHED.dayMap[iso];if(!row)return null;
+  const W=uwWeekOf(row);let items=row.items,key="d:"+iso,lab="this day";
+  if(kind==="week"&&W){items=[];SCHED.days.forEach(d=>{if(d.brodyWeek===W.wk)items.push.apply(items,d.items);});key=W.key;lab=W.lab;}
+  const watched=!!(S.settings&&S.settings.uwWatched);
+  if(watched)items=items.filter(it=>isDone(it.id));
+  return Object.assign({key,lab,watched},uwPool(items));}
+function uwTestsOf(key){return Object.keys(S.uwt||{}).map(k=>Object.assign({id:k},S.uwt[k])).filter(t=>t.pool===key&&!t.gone).sort((a,b)=>a.at-b.at);}
+function uwSize(){const n=parseInt((S.settings||{}).uwSize,10);return n>=1&&n<=UW_MAX?n:UW_MAX;}
 function uwDayBarHTML(iso){
   if(!uwReady())return '';
   const row=SCHED&&SCHED.dayMap&&SCHED.dayMap[iso];if(!row)return '';
-  const dayIds=uwIdsForItems(row.items);
-  if(!dayIds.length)return '';
-  let weekIds=[],wk=null,wkLab="",wkTip="";
-  if(SCHED.brody&&row.brodyWeek){
-    wk=row.brodyWeek;
-    const items=[];SCHED.days.forEach(d=>{if(d.brodyWeek===wk)items.push.apply(items,d.items);});
-    weekIds=uwIdsForItems(items);
-    // In your own order the block is named by the Brody week it is (or the system you
-    // added), not by its place in your order: "topic 2" meant nothing on the screen.
-    if(SCHED.brody.seq){const w=SCHED.brody.weeks.find(x=>x.n===wk),p=w&&seqParse(w.topic);
-      wkLab=!p?"this topic":p.kind==="u"?((SCHED.brody.one?"Brody":p.blk.name)+" week "+p.wk.n):p.sys;wkTip=w?w.label:"";}
-    else wkLab="Brody week "+wk;
-  }
-  return '<div class="uwbar">'
-    +'<button type="button" class="btn ghost sm" data-uwids="'+escAttr(dayIds.join(","))+'" data-uwlab="this day">Copy '+dayIds.length+' UWorld IDs for this day</button>'
-    +((weekIds.length>dayIds.length)
-      ? '<button type="button" class="btn ghost sm" data-uwids="'+escAttr(weekIds.join(","))+'" data-uwlab="'+escAttr(wkLab)+'"'+(wkTip?' title="'+escAttr(wkTip)+'"':'')+'>Copy all '+weekIds.length+' for '+escHTML(wkLab)+'</button>'
-      : '')
-    +'</div>';
+  const W=uwWeekOf(row);
+  if(!uwPool(row.items).all.length&&!(W&&uwPoolOf(iso,"week").all.length))return '';
+  const kind=(W&&UWT_KIND[iso]==="week")?"week":"day";
+  const P=uwPoolOf(iso,kind),tests=uwTestsOf(P.key),n=Math.min(uwSize(),P.left.length);
+  const seg=(k,lab,tip)=>'<button type="button" class="tog'+(kind===k?' on':'')+'" data-uwkind="'+escAttr(iso+'|'+k)+'"'+(tip?' title="'+escAttr(tip)+'"':'')+'>'+escHTML(lab)+'</button>';
+  let h='<div class="uwt"><div class="uwthd"><span class="uwtt">UWorld test</span>'
+    +(W?'<span class="uwtseg">'+seg("day","This day")+seg("week",W.lab,W.tip)+'</span>':'')+'</div>'
+    +'<div class="uwtmeta">'+P.all.length+' question'+(P.all.length===1?'':'s')+(P.watched?' from videos you’ve checked off':'')
+      +(P.all.length?' · '+(P.all.length-P.left.length)+' in tests · <b>'+P.left.length+' left</b>':'')+'</div>';
+  if(P.left.length){
+    h+='<div class="uwtsize"><span class="muted small">Questions</span>'
+      +[10,20,30,40].map(k=>'<button type="button" class="tog sm'+(uwSize()===k?' on':'')+'" data-uwsize="'+k+'">'+k+'</button>').join('')
+      +'<input type="number" class="uwtn" min="1" max="'+UW_MAX+'" value="'+uwSize()+'" aria-label="Questions per test (UWorld allows 40)" data-uwsizein="1"></div>'
+      +'<button type="button" class="btn sm uwtgo" data-uwmake="'+escAttr(iso+'|'+kind)+'">Copy a '+n+'-question test</button>';
+  }else if(P.all.length)h+='<p class="muted small" style="margin:6px 0">Every question here is in a test you’ve made.</p>';
+  else h+='<p class="muted small" style="margin:6px 0">'+(P.watched?'Check off a video to test it.':'No UWorld questions here.')+'</p>';
+  h+='<label class="uwtsw"><input type="checkbox" data-uwwatched="1"'+(P.watched?' checked':'')+'> Only videos I’ve checked off</label>';
+  if(tests.length)h+='<details class="uwtmade"><summary>'+tests.length+' test'+(tests.length===1?'':'s')+' made from '+escHTML(P.lab)+'</summary>'
+    +tests.map((t,i)=>'<div class="uwtrow"><span>Test '+(i+1)+' · '+t.ids.length+' · '+fmtShort(isoFromDate(new Date(t.at)))+'</span>'
+      +'<button type="button" class="btn ghost sm" data-uwagain="'+escAttr(t.id)+'">Copy again</button>'
+      +'<button type="button" class="btn ghost sm" data-uwback="'+escAttr(t.id)+'" title="Puts its questions back, for a test you didn’t make">Put back</button></div>').join('')
+    +'<button type="button" class="link small" data-uwreset="'+escAttr(iso+'|'+kind)+'">Start over: put all of '+escHTML(P.lab)+'’s questions back</button></details>';
+  return h+'</div>';
+}
+/* Copy, and only on success run then() — a copy that failed must not mark anything used. */
+function uwClip(t,then){
+  const fb=()=>{let ok=false;try{const ta=document.createElement("textarea");ta.value=t;ta.style.position="fixed";ta.style.opacity="0";
+    document.body.appendChild(ta);ta.focus();ta.select();ok=document.execCommand("copy");document.body.removeChild(ta);}catch(e){}
+    if(ok)then();else toast("Couldn’t copy — nothing was marked used. Try again.");};
+  if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(t).then(then,fb);else fb();}
+function uwMakeTest(pool,ids,label){
+  uwClip(ids.join(", "),()=>{
+    const id="t"+Date.now().toString(36)+Math.random().toString(36).slice(2,6);
+    S.uwt=S.uwt||{};S.uwt[id]={at:Date.now(),pool:pool,label:label,ids:ids.slice()};uwMark(ids,true);save();render();
+    toastUndo(ids.length+" question"+(ids.length===1?"":"s")+" copied — paste into UWorld → Create Test → Custom.",()=>{
+      uwMark(ids,false);const t=S.uwt[id];if(t)t.gone=Date.now();save();render();});});}
+function bindUwTests(){
+  document.querySelectorAll("[data-uwkind]").forEach(b=>b.onclick=()=>{const [iso,k]=b.dataset.uwkind.split("|");UWT_KIND[iso]=k;render();});
+  const setSize=n=>{n=Math.max(1,Math.min(UW_MAX,parseInt(n,10)||UW_MAX));S.settings=S.settings||{};S.settings.uwSize=n;save();render();};
+  document.querySelectorAll("[data-uwsize]").forEach(b=>b.onclick=()=>setSize(b.dataset.uwsize));
+  document.querySelectorAll("[data-uwsizein]").forEach(i=>i.onchange=()=>setSize(i.value));
+  document.querySelectorAll("[data-uwwatched]").forEach(c=>c.onchange=()=>{S.settings=S.settings||{};S.settings.uwWatched=!!c.checked;save();render();});
+  document.querySelectorAll("[data-uwmake]").forEach(b=>b.onclick=()=>{const [iso,k]=b.dataset.uwmake.split("|");const P=uwPoolOf(iso,k);if(!P)return;
+    const ids=uwDraw(P.lists,Math.min(uwSize(),P.left.length));if(!ids.length)return;uwMakeTest(P.key,ids,P.lab);});
+  document.querySelectorAll("[data-uwvid]").forEach(b=>b.onclick=e=>{e.preventDefault();e.stopPropagation();
+    const ids=(uwIdsFor(b.dataset.uwvid)||[]).filter(id=>!uwUsed(id)).slice(0,UW_MAX);if(ids.length)uwMakeTest("v:"+b.dataset.uwvid,ids,b.dataset.uwvid);});
+  document.querySelectorAll("[data-uwagain]").forEach(b=>b.onclick=()=>{const t=(S.uwt||{})[b.dataset.uwagain];if(t)copyText(t.ids.join(", "),t.ids.length+" question IDs copied again — nothing changed");});
+  document.querySelectorAll("[data-uwback]").forEach(b=>b.onclick=()=>{const t=(S.uwt||{})[b.dataset.uwback];if(!t)return;
+    uwMark(t.ids,false);t.gone=Date.now();save();render();
+    toastUndo("Put back — those "+t.ids.length+" questions can go in a new test.",()=>{uwMark(t.ids,true);delete t.gone;save();render();});});
+  document.querySelectorAll("[data-uwreset]").forEach(b=>b.onclick=()=>{const [iso,k]=b.dataset.uwreset.split("|");const P=uwPoolOf(iso,k);if(!P)return;
+    const back=P.all.filter(uwUsed);const gone=uwTestsOf(P.key);uwMark(back,false);const t=Date.now();gone.forEach(x=>{S.uwt[x.id].gone=t;});save();render();
+    toastUndo("All of "+P.lab+"’s questions are back.",()=>{uwMark(back,true);gone.forEach(x=>{delete S.uwt[x.id].gone;});save();render();});});
 }
 
 /* ---------- copy helpers + per-day Anki block ---------- */
@@ -2913,7 +3032,7 @@ function chrome(active){
    +'</div>';}
 
 function wireChrome(){
-  bindUwCopy();   // every view can carry copy buttons, so bind them once, here
+  bindUwCopy();bindUwTests();bindPomo();   // every view can carry copy buttons, test builders and the timer, so bind them once, here
   document.querySelectorAll(".navb").forEach(b=>b.onclick=()=>{if(S.active==="m1"){M1VIEW=b.dataset.view;}else{VIEW=b.dataset.view;if(b.dataset.view==="adjust")ADJ_VIEW=null;}render();});
   const mb=document.getElementById("menuBtn");if(mb)mb.onclick=openMenu;
   const sc=document.getElementById("syncChip");if(sc)sc.onclick=openBackups;
@@ -3597,7 +3716,7 @@ function clUpdateCounters(){
     if(k.length===1){const fl=document.querySelector('[data-clfill="'+k[0]+'"]');if(fl){fl.style.width=f2.p+'%';fl.style.background=f2.p>=100?'var(--success)':'';}}});
 }
 function renderStats(){
-  app.innerHTML=chrome("stats")+'<div class="wrap"><div class="cols"><div>'+videoCards()+'</div><div>'+readinessCards()+'</div></div></div>';
+  app.innerHTML=chrome("stats")+'<div class="wrap"><div class="cols"><div>'+videoCards()+pomoStatsCard()+'</div><div>'+readinessCards()+'</div></div></div>';
   bindReady();bindVlist();
 }
 function bindReady(){
@@ -3786,136 +3905,93 @@ function clearAmboss(){const snap=JSON.parse(JSON.stringify(S.amboss||{total:nul
    A warm one-liner: celebrates finishing the day, honors a streak, nudges
    wellness on rest days, and otherwise rotates daily through a mixed pool so
    it stays fresh. Seeded by the date so it's stable across re-renders. */
-const QUOTES=[
-  {t:"If you get tired, learn to rest, not to quit.",a:"Banksy",th:"rest"},
-  {t:"Sometimes the most productive thing you can do is rest.",a:"Mark Black",th:"rest"},
-  {t:"Almost everything will work again if you unplug it for a few minutes — including you.",a:"Anne Lamott",th:"rest"},
-  {t:"Nature does not hurry, yet everything is accomplished.",a:"Lao Tzu",th:"rest"},
-  {t:"Exhaustion is not a status symbol.",a:"Brené Brown",th:"rest"},
-  {t:"You do not have to set yourself on fire to keep others warm.",a:"Anonymous",th:"rest"},
-  {t:"Beware the barrenness of a busy life.",a:"Socrates",th:"rest"},
-  {t:"Take rest; a field that has rested gives a bountiful crop.",a:"Ovid",th:"rest"},
-  {t:"Just because you take breaks doesn't mean you're broken.",a:"Curtis Tyrone Jones",th:"rest"},
-  {t:"Rest is not idleness.",a:"John Lubbock",th:"rest"},
-  {t:"Burn bright, not out.",a:"Hamza Khan",th:"rest"},
-  {t:"Eat when you're hungry, sleep when you're tired.",a:"Zen proverb",th:"rest"},
-  {t:"Sleep is the best meditation.",a:"Dalai Lama",th:"rest"},
-  {t:"Take care of your body. It's the only place you have to live.",a:"Jim Rohn",th:"rest"},
-  {t:"Silence is a source of great strength.",a:"Lao Tzu",th:"rest"},
-  {t:"The time to relax is when you don't have time for it.",a:"Sydney J. Harris",th:"rest"},
-  {t:"Tension is who you think you should be. Relaxation is who you are.",a:"Chinese proverb",th:"rest"},
-  {t:"A good laugh and a long sleep are the best cures in the doctor's book.",a:"Irish proverb",th:"rest"},
-  {t:"There is virtue in work and there is virtue in rest. Use both and overlook neither.",a:"Alan Cohen",th:"rest"},
-  {t:"You are a human being, not a human doing.",a:"Anonymous",th:"rest"},
-  {t:"It does not matter how slowly you go as long as you do not stop.",a:"Confucius",th:"perseverance"},
-  {t:"The best way out is always through.",a:"Robert Frost",th:"perseverance"},
-  {t:"Success is not final, failure is not fatal: it is the courage to continue that counts.",a:"Winston Churchill",th:"perseverance"},
-  {t:"It always seems impossible until it's done.",a:"Nelson Mandela",th:"perseverance"},
-  {t:"Fall seven times, stand up eight.",a:"Japanese proverb",th:"perseverance"},
-  {t:"Perseverance is not a long race; it is many short races one after another.",a:"Walter Elliot",th:"perseverance"},
-  {t:"A river cuts through rock not because of its power, but its persistence.",a:"Jim Watkins",th:"perseverance"},
-  {t:"When you feel like quitting, think about why you started.",a:"Anonymous",th:"perseverance"},
-  {t:"If you can't fly, run; if you can't run, walk; if you can't walk, crawl — but keep moving.",a:"Martin Luther King Jr.",th:"perseverance"},
-  {t:"Perseverance is failing nineteen times and succeeding the twentieth.",a:"Julie Andrews",th:"perseverance"},
-  {t:"Our greatest glory is not in never falling, but in rising every time we fall.",a:"Confucius",th:"perseverance"},
-  {t:"I shall either find a way or make one.",a:"Hannibal",th:"perseverance"},
-  {t:"Many of life's failures are people who didn't realize how close they were to success when they gave up.",a:"Thomas Edison",th:"perseverance"},
-  {t:"Never confuse a single defeat with a final defeat.",a:"F. Scott Fitzgerald",th:"perseverance"},
-  {t:"It's not that I'm so smart, it's just that I stay with problems longer.",a:"Albert Einstein",th:"perseverance"},
-  {t:"Energy and persistence conquer all things.",a:"Benjamin Franklin",th:"perseverance"},
-  {t:"Character consists of what you do on the third and fourth tries.",a:"James Michener",th:"perseverance"},
-  {t:"When everything seems against you, remember the airplane takes off against the wind.",a:"Henry Ford",th:"perseverance"},
-  {t:"You just can't beat the person who never gives up.",a:"Babe Ruth",th:"perseverance"},
-  {t:"Start where you are. Use what you have. Do what you can.",a:"Arthur Ashe",th:"perseverance"},
-  {t:"Don't watch the clock; do what it does. Keep going.",a:"Sam Levenson",th:"perseverance"},
-  {t:"Sometimes courage is the quiet voice saying, 'I will try again tomorrow.'",a:"Mary Anne Radmacher",th:"perseverance"},
-  {t:"The harder the conflict, the greater the triumph.",a:"George Washington",th:"perseverance"},
-  {t:"Grit is living life like it's a marathon, not a sprint.",a:"Angela Duckworth",th:"perseverance"},
-  {t:"The journey of a thousand miles begins with a single step.",a:"Lao Tzu",th:"progress"},
-  {t:"Great things are done by a series of small things brought together.",a:"Vincent van Gogh",th:"progress"},
-  {t:"Little by little, a little becomes a lot.",a:"Proverb",th:"progress"},
-  {t:"Progress, not perfection.",a:"Anonymous",th:"progress"},
-  {t:"Small progress is still progress.",a:"Anonymous",th:"progress"},
-  {t:"The secret of getting ahead is getting started.",a:"Mark Twain",th:"progress"},
-  {t:"Success is the sum of small efforts repeated day in and day out.",a:"Robert Collier",th:"progress"},
-  {t:"Slow, steady progress beats daily excuses.",a:"Robin Sharma",th:"progress"},
-  {t:"Little by little does the trick.",a:"Aesop",th:"progress"},
-  {t:"Most growth happens through many small steps — the key is to keep taking them.",a:"Dan Sullivan",th:"progress"},
-  {t:"Chew off a little every day; it's hard to swallow a whole pie at once.",a:"Richelle E. Goodrich",th:"progress"},
-  {t:"Don't compare your progress to others; we each need our own time to travel our own distance.",a:"Anonymous",th:"progress"},
-  {t:"Set earnestly at the little task at your elbow, letting that be sufficient for the day.",a:"William Osler",th:"progress"},
-  {t:"The way to get started is to quit talking and begin doing.",a:"Walt Disney",th:"progress"},
-  {t:"Well done is better than well said.",a:"Benjamin Franklin",th:"progress"},
-  {t:"A year from now you may wish you had started today.",a:"Karen Lamb",th:"progress"},
-  {t:"Little strokes fell great oaks.",a:"Benjamin Franklin",th:"progress"},
-  {t:"The expert in anything was once a beginner.",a:"Helen Hayes",th:"progress"},
-  {t:"Don't let perfect be the enemy of good.",a:"Voltaire",th:"progress"},
-  {t:"You are allowed to be both a masterpiece and a work in progress.",a:"Sophia Bush",th:"progress"},
-  {t:"Just begin, and the mind grows heated; continue, and the task will be completed.",a:"Johann Wolfgang von Goethe",th:"progress"},
-  {t:"Get a little bit better every single day.",a:"Anonymous",th:"progress"},
-  {t:"You may encounter many defeats, but you must not be defeated.",a:"Maya Angelou",th:"resilience"},
-  {t:"What defines us is how well we rise after falling.",a:"Anonymous",th:"resilience"},
-  {t:"Failure is simply the opportunity to begin again, this time more intelligently.",a:"Henry Ford",th:"resilience"},
-  {t:"Tough times never last. Tough people do.",a:"Robert Schuller",th:"resilience"},
-  {t:"The brick walls are there to show us how badly we want something.",a:"Randy Pausch",th:"resilience"},
-  {t:"We must accept finite disappointment, but never lose infinite hope.",a:"Martin Luther King Jr.",th:"resilience"},
-  {t:"Every stumble is a step forward.",a:"Anonymous",th:"resilience"},
-  {t:"Turn your wounds into wisdom.",a:"Oprah Winfrey",th:"resilience"},
-  {t:"Smooth seas do not make skillful sailors.",a:"African proverb",th:"resilience"},
-  {t:"You never know how strong you are until being strong is your only choice.",a:"Bob Marley",th:"resilience"},
-  {t:"That which does not kill us makes us stronger.",a:"Friedrich Nietzsche",th:"resilience"},
-  {t:"The gem cannot be polished without friction.",a:"Chinese proverb",th:"resilience"},
-  {t:"Stars can't shine without darkness.",a:"Anonymous",th:"resilience"},
-  {t:"The comeback is always stronger than the setback.",a:"Anonymous",th:"resilience"},
-  {t:"Difficult roads often lead to beautiful destinations.",a:"Anonymous",th:"resilience"},
-  {t:"The chapter you're learning today could save a life tomorrow. Pay attention.",a:"Anonymous",th:"medicine"},
-  {t:"The life so short, the craft so long to learn.",a:"Hippocrates",th:"medicine"},
-  {t:"Not all heroes wear capes; some wear stethoscopes.",a:"Anonymous",th:"medicine"},
-  {t:"The good physician treats the disease; the great physician treats the patient.",a:"William Osler",th:"medicine"},
-  {t:"The day you stop learning is the day you stop healing.",a:"Anonymous",th:"medicine"},
-  {t:"To cure sometimes, to relieve often, to comfort always.",a:"Traditional medical maxim",th:"medicine"},
-  {t:"Wherever the art of medicine is loved, there is also a love of humanity.",a:"Hippocrates",th:"medicine"},
-  {t:"The most essential factor is persistence.",a:"William Osler",th:"medicine"},
-  {t:"You can't save everyone at once — but you can help the person in front of you.",a:"Anonymous",th:"medicine"},
-  {t:"Medicine is a science of uncertainty and an art of probability.",a:"William Osler",th:"medicine"},
-  {t:"The value of experience is not in seeing much, but in seeing wisely.",a:"William Osler",th:"medicine"},
-  {t:"We are here to add what we can to life, not to get what we can from it.",a:"William Osler",th:"medicine"},
-  {t:"Listen to your patient; he is telling you the diagnosis.",a:"William Osler",th:"medicine"},
-  {t:"Observe, record, tabulate, communicate.",a:"William Osler",th:"medicine"},
-  {t:"The secret of the care of the patient is in caring for the patient.",a:"Francis Peabody",th:"medicine"},
-  {t:"First, do no harm.",a:"Traditional medical maxim",th:"medicine"},
-  {t:"The greatest wealth is health.",a:"Virgil",th:"medicine"},
-  {t:"Medicine is not only a science; it is also an art.",a:"Paracelsus",th:"medicine"},
-  {t:"The greatest medicine of all is teaching people how not to need it.",a:"Hippocrates",th:"medicine"},
-  {t:"Discipline is the bridge between goals and accomplishment.",a:"Jim Rohn",th:"discipline"},
-  {t:"We must all suffer one of two things: the pain of discipline or the pain of regret.",a:"Jim Rohn",th:"discipline"},
-  {t:"Don't wish it were easier. Wish you were better.",a:"Jim Rohn",th:"discipline"},
-  {t:"Success isn't always about greatness. It's about consistency.",a:"Dwayne Johnson",th:"discipline"},
-  {t:"Small disciplines repeated with consistency every day lead to great achievements.",a:"John C. Maxwell",th:"discipline"},
-  {t:"Do not count on motivation. Count on discipline.",a:"Jocko Willink",th:"discipline"},
-  {t:"Discipline is choosing between what you want now and what you want most.",a:"Abraham Lincoln",th:"discipline"},
-  {t:"Consistency is the DNA of mastery.",a:"Robin Sharma",th:"discipline"},
-  {t:"Hard work beats talent when talent doesn't work hard.",a:"Tim Notke",th:"discipline"},
-  {t:"Success doesn't come from what you do occasionally, but from what you do consistently.",a:"Marie Forleo",th:"discipline"},
-  {t:"To learn hard things quickly, you must focus intensely without distraction.",a:"Cal Newport",th:"discipline"},
-  {t:"The roots of education are bitter, but the fruit is sweet.",a:"Aristotle",th:"discipline"}
-];
-function daySeed(){const s=todayISO();let h=0;for(let i=0;i<s.length;i++)h=(h*31+s.charCodeAt(i))|0;return Math.abs(h);}
-function greeting(){const h=new Date().getHours();return h<12?"Good morning":(h<18?"Good afternoon":"Good evening");}
-function cheerHTML(text,author){
-  const body=author
-    ?'“'+escHTML(text)+'” <span class="cheer-by">— '+escHTML(author)+'</span>'
-    :escHTML(text);
-  return '<div class="cheer"><div class="cheer-tx"><b>'+greeting()+'.</b> '+body+'</div></div>';
+/* ---------- FOCUS TIMER (Pomodoro) ----------
+   Focus, short break, long break — 25 / 5 / 15 minutes by default, a long break after
+   every fourth focus session, all adjustable (S.settings.pomo, synced). The running timer
+   is this device's own (localStorage), so a reload or a tab switch doesn't lose it, and
+   the time it runs is logged by day in S.pomo — focus seconds, break seconds, finished
+   focus sessions — per device, so two devices never overwrite each other (pomoMerge).
+   Time is credited as it is actually run: on pause, reset, skip, and when an interval
+   ends, including one that ended while the app was closed. */
+const POMO_KEY="cc_pomo",POMO_DEV_KEY="cc_dev",DOC_TITLE=document.title;   // the tab shows the clock while it runs
+const POMO_MODES={focus:"Focus",short:"Short break",long:"Long break"};
+function pomoCfg(){const p=(S.settings&&S.settings.pomo)||{};const n=(v,d,lo,hi)=>{v=parseInt(v,10);return v>=lo&&v<=hi?v:d;};
+  return {focus:n(p.focus,25,1,180),short:n(p.short,5,1,60),long:n(p.long,15,1,90),every:n(p.every,4,1,12)};}
+function pomoDev(){let d=null;try{d=store.get(POMO_DEV_KEY);}catch(e){}
+  if(!d){d="d"+Date.now().toString(36)+Math.random().toString(36).slice(2,7);try{store.set(POMO_DEV_KEY,d);}catch(e){}}return d;}
+function pomoLen(mode){const c=pomoCfg();return (mode==="focus"?c.focus:mode==="short"?c.short:c.long)*60;}
+function pomoGet(){let r=null;try{r=JSON.parse(store.get(POMO_KEY)||"null");}catch(e){}
+  if(!r||!POMO_MODES[r.mode])r={mode:"focus",running:false,left:pomoLen("focus"),cycle:0};return r;}
+function pomoPut(r){try{store.set(POMO_KEY,JSON.stringify(r));}catch(e){}}
+function pomoLeft(r){return r.running?Math.max(0,Math.round((r.endsAt-Date.now())/1000)):r.left;}
+function pomoCredit(mode,sec,session){sec=Math.max(0,Math.round(sec));if(!sec&&!session)return;
+  const d=todayISO(),dev=pomoDev();S.pomo=S.pomo||{};const day=S.pomo[d]=S.pomo[d]||{};const c=day[dev]||{f:0,b:0,n:0};
+  day[dev]={f:(c.f||0)+(mode==="focus"?sec:0),b:(c.b||0)+(mode==="focus"?0:sec),n:(c.n||0)+(session?1:0)};save();}
+function pomoDay(iso){const day=(S.pomo||{})[iso]||{};const t={f:0,b:0,n:0};
+  for(const dev in day){t.f+=day[dev].f||0;t.b+=day[dev].b||0;t.n+=day[dev].n||0;}return t;}
+/* credit what has run since the last start, and stop the clock */
+function pomoStop(r){if(r.running){const ran=(Date.now()-r.startedAt)/1000;const cap=r.len||pomoLen(r.mode);
+  pomoCredit(r.mode,Math.min(ran,cap),false);r.left=pomoLeft(r);r.running=false;delete r.endsAt;delete r.startedAt;}return r;}
+/* the interval ended: log it, then line up the next one, paused */
+function pomoFinish(r,quiet){const len=r.len||pomoLen(r.mode);
+  pomoCredit(r.mode,Math.min(len,(r.endsAt-r.startedAt)/1000),r.mode==="focus");
+  let next="focus";if(r.mode==="focus"){r.cycle=(r.cycle||0)+1;next=(r.cycle%pomoCfg().every===0)?"long":"short";}
+  r={mode:next,running:false,left:pomoLen(next),cycle:r.cycle||0};pomoPut(r);
+  if(!quiet){pomoChime();toast(next==="focus"?"Break’s over — ready to focus.":"Focus session done — take a "+(next==="long"?"long":"short")+" break.");}
+  return r;}
+function pomoChime(){try{if(navigator.vibrate)navigator.vibrate([180,90,180]);}catch(e){}
+  try{const A=window.AudioContext||window.webkitAudioContext;if(!A)return;const ac=new A();
+    [0,0.28].forEach(t=>{const o=ac.createOscillator(),g=ac.createGain();o.frequency.value=880;o.connect(g);g.connect(ac.destination);
+      g.gain.setValueAtTime(0.0001,ac.currentTime+t);g.gain.exponentialRampToValueAtTime(0.25,ac.currentTime+t+0.02);
+      g.gain.exponentialRampToValueAtTime(0.0001,ac.currentTime+t+0.22);o.start(ac.currentTime+t);o.stop(ac.currentTime+t+0.25);});}catch(e){}}
+/* catch up on an interval that ended while the app was closed */
+function pomoCatchUp(){const r=pomoGet();if(r.running&&Date.now()>=r.endsAt){pomoFinish(r,true);return true;}return false;}
+function fmtClock(sec){sec=Math.max(0,sec);return Math.floor(sec/60)+":"+String(sec%60).padStart(2,"0");}
+function fmtDur(sec){const m=Math.round(sec/60);return m<60?m+" min":Math.floor(m/60)+" h "+(m%60?(m%60)+" min":"").trim();}
+function pomoCardHTML(){
+  pomoCatchUp();
+  const r=pomoGet(),c=pomoCfg(),t=pomoDay(todayISO());
+  const chip=m=>'<button type="button" class="tog sm'+(r.mode===m?' on':'')+'" data-pomomode="'+m+'">'+POMO_MODES[m]+'</button>';
+  return '<div class="card pomo" id="pomoCard"><div class="cardhd">Focus timer</div>'
+    +'<div class="pomomodes">'+chip("focus")+chip("short")+chip("long")+'</div>'
+    +'<div class="pomoclock'+(r.mode==="focus"?'':' brk')+'" id="pomoClock" aria-live="off">'+fmtClock(pomoLeft(r))+'</div>'
+    +'<div class="pomobtns"><button type="button" class="btn" data-pomo="'+(r.running?'pause':'start')+'">'+(r.running?'Pause':(pomoLeft(r)<(r.len||pomoLen(r.mode))?'Resume':'Start'))+'</button>'
+      +'<button type="button" class="btn ghost" data-pomo="reset">Reset</button><button type="button" class="btn ghost" data-pomo="skip" title="End this one now and move on">Skip ›</button></div>'
+    +'<div class="pomotoday">Today: <b>'+fmtDur(t.f)+'</b> focused · '+t.n+' session'+(t.n===1?'':'s')+' · '+fmtDur(t.b)+' of breaks</div>'
+    +'<details class="pomoset"><summary>Timer lengths</summary><div class="pomosetrow">'
+      +[["focus","Focus",c.focus],["short","Short break",c.short],["long","Long break",c.long]].map(([k,l,v])=>'<label>'+l+' <input type="number" min="1" max="180" value="'+v+'" data-pomoset="'+k+'"> min</label>').join('')
+      +'<label>Long break every <input type="number" min="1" max="12" value="'+c.every+'" data-pomoset="every"> sessions</label></div></details></div>';
 }
-function encouragement(todayRow,isOff,streak){
-  const allDone=todayRow&&!isOff&&todayRow.items.length&&todayRow.items.every(it=>isDone(it.id));
-  if(allDone)return cheerHTML("Today's plan is complete. Rest easy tonight.",null);
-  if(isOff){const rest=QUOTES.filter(q=>q.th==="rest");const q=rest[daySeed()%rest.length];return cheerHTML(q.t,q.a);}
-  if(streak>=3&&daySeed()%4===0)return cheerHTML(streak+" days running. Consistency is the whole of it — keep the thread going.",null);
-  const q=QUOTES[daySeed()%QUOTES.length];
-  return cheerHTML(q.t,q.a);
+let POMO_T=null;
+function pomoTick(){const el=document.getElementById("pomoClock");const r=pomoGet();
+  if(r.running&&Date.now()>=r.endsAt){pomoFinish(r,false);document.title=DOC_TITLE;render();return;}
+  if(el)el.textContent=fmtClock(pomoLeft(r));
+  document.title=r.running?fmtClock(pomoLeft(r))+" · "+POMO_MODES[r.mode]:DOC_TITLE;
+  if(!r.running){clearInterval(POMO_T);POMO_T=null;}}
+function pomoRun(){if(!POMO_T&&pomoGet().running)POMO_T=setInterval(pomoTick,1000);}
+function bindPomo(){
+  document.querySelectorAll("[data-pomo]").forEach(b=>b.onclick=()=>{let r=pomoGet();const a=b.dataset.pomo;
+    if(a==="start"){const left=pomoLeft(r);r.running=true;r.len=left;r.startedAt=Date.now();r.endsAt=Date.now()+left*1000;delete r.left;}
+    else if(a==="pause")r=pomoStop(r);
+    else if(a==="reset"){r=pomoStop(r);r.left=pomoLen(r.mode);delete r.len;}
+    else if(a==="skip"){const wasFocus=r.mode==="focus";r=pomoStop(r);
+      let next="focus";if(wasFocus){r.cycle=(r.cycle||0)+1;next=(r.cycle%pomoCfg().every===0)?"long":"short";}
+      r={mode:next,running:false,left:pomoLen(next),cycle:r.cycle||0};}
+    pomoPut(r);render();});
+  document.querySelectorAll("[data-pomomode]").forEach(b=>b.onclick=()=>{let r=pomoStop(pomoGet());const m=b.dataset.pomomode;
+    r={mode:m,running:false,left:pomoLen(m),cycle:r.cycle||0};pomoPut(r);render();});
+  document.querySelectorAll("[data-pomoset]").forEach(i=>i.onchange=()=>{S.settings=S.settings||{};const p=S.settings.pomo=Object.assign({},S.settings.pomo||{});
+    const v=parseInt(i.value,10);if(v>0)p[i.dataset.pomoset]=v;save();
+    const r=pomoGet();if(!r.running&&!(r.left<(r.len||pomoLen(r.mode))))pomoPut(Object.assign(r,{left:pomoLen(r.mode)}));render();});
+  pomoRun();
 }
+/* Stats: the last seven days of focus */
+function pomoStatsCard(){let tf=0,tb=0,tn=0;const rows=[];
+  for(let i=6;i>=0;i--){const iso=isoFromDate(addDays(isoToDate(todayISO()),-i));const t=pomoDay(iso);tf+=t.f;tb+=t.b;tn+=t.n;rows.push([iso,t]);}
+  const mx=Math.max(1,...rows.map(x=>x[1].f));
+  return '<div class="card"><div class="cardhd">Focus time</div>'
+    +'<p class="muted small" style="margin-top:0">From the focus timer on Study. Last 7 days: <b>'+fmtDur(tf)+'</b> focused over '+tn+' session'+(tn===1?'':'s')+', '+fmtDur(tb)+' of breaks.</p>'
+    +'<div class="bars">'+rows.map(([iso,t])=>'<div class="bar"><div class="barlab">'+escHTML(fmtShort(iso))+'</div><div class="bartrack"><div class="barfill" style="width:'+Math.round(t.f/mx*100)+'%"></div></div><div class="barpct">'+fmtDur(t.f)+'</div></div>').join('')+'</div></div>';}
 /* desktop rail widgets (hidden on mobile via .deskonly) */
 let TODAY_SEL=null;  // focus day for the Today panel (set by the rail mini-calendar; null = today)
 function streakHeatmap(){
@@ -3973,14 +4049,14 @@ function renderToday(){
   const focusISO=(CAL_SEL&&SCHED.dayMap[CAL_SEL])?CAL_SEL:(SCHED.dayMap[todayISO()]?todayISO():((SCHED.days[0]&&SCHED.days[0].iso)||todayISO()));
   const isFocusToday=(focusISO===todayISO());
   let colA='',colB='';
-  // UPPER-LEFT — three stacked blocks: countdown, log practice questions, quote
+  // UPPER-LEFT — stacked blocks: countdown, the focus timer, the week
   colA+='<div class="hero">'
     +'<div class="big">'+examLeft+' <span>days to '+escHTML(S.cfg.examLabel||(S.cfg.examType==="step1"?"Step 1":"your exam"))+'</span></div>'
     +'<div class="sub">'+progLabel(overall())+(cs>0?' · '+cs+'-day streak':' · '+overall().pct+'% complete')+'</div>'
     +paceHero()+'</div>';
   colA+=loadCaveat();
   colA+=brodyChip(focusISO);
-  colA+=encouragement(todayRow,isOffToday,cs);
+  colA+=pomoCardHTML();
   colA+=weeklyGoalChip();
   colA+=ankiCardBlock(focusISO);
   // UPPER-RIGHT — the checklist for the selected day
@@ -4815,7 +4891,6 @@ function m1Daily(){
       +'<span class="m1dow">'+M1DOW[d.d]+'</span><span class="m1dnum">'+(+d.iso.slice(8))+'</span>'
       +(d.items.length?'<span class="m1ddot"></span>':"")+'</button>';});
   h+='</div>';
-  const qq=QUOTES[daySeed()%QUOTES.length];h+=cheerHTML(qq.t,qq.a);
   h+='<div class="cardhd" style="margin-top:4px">'+fmtLong(M1DAY)+(M1DAY===todayISO()?' · Today':"")+'</div>';
   if(!day.items.length){h+='<div class="card soft"><p class="muted" style="margin:0">No scheduled sessions — a good day to catch up on this week’s topics, run your Anki, or rest.</p></div>';}
   else{
@@ -4829,7 +4904,6 @@ function m1Progress(){
   const o=m1Overall();const cs=currentStreak();
   let h='<div class="hero"><div class="big">'+o.pct+'<span>% of M1 topics studied</span></div>'
     +'<div class="sub">'+o.done+' / '+o.total+' topics'+(cs>0?" · "+cs+"-day streak":"")+'</div>'+m1TargetLine(o)+'</div>';
-  const qq=QUOTES[daySeed()%QUOTES.length];h+=cheerHTML(qq.t,qq.a);
   h+='<div class="card"><div class="cardhd">By course</div><div class="bars">';
   M1DATA.courses.forEach(c=>{const st=m1CourseStat(c);const pct=st.total?Math.round(st.done/st.total*100):0;
     h+='<div class="bar"><div class="barlab">'+escHTML(c.name)+'</div><div class="bartrack"><div class="barfill" style="width:'+pct+'%"></div></div><div class="barpct">'+pct+'%</div></div>';});
@@ -5772,20 +5846,26 @@ function doResetAll(){
   // nuclear: wipe progress AND the saved plans, drop the user back to the
   // setup screen to craft a fresh plan. Tombstoned so sync can't resurrect it.
   Cloud.backupNow("before-reset");   // keep a recoverable snapshot beyond the in-session undo
-  const snap={vdone:S.vdone,vskip:S.vskip,vdoneDate:S.vdoneDate,vdoneAt:S.vdoneAt,vundone:S.vundone,akdone:S.akdone,notes:S.notes,assessments:S.assessments,uworld:S.uworld,amboss:S.amboss,scholarrx:S.scholarrx,bnbq:S.bnbq,vshaky:S.vshaky,streak:S.streak,cfgs:S.cfgs,active:S.active};
-  S.vdone={};S.vskip={};S.vdoneDate={};S.vdoneAt={};S.vundone={};S.akdone={};S.notes={};S.assessments={};PRACTICE_KEYS.forEach(k=>{S[k]={total:null,blocks:{}};});S.vshaky={};S.streak={days:{}};
+  const snap={vdone:S.vdone,vskip:S.vskip,vdoneDate:S.vdoneDate,vdoneAt:S.vdoneAt,vundone:S.vundone,akdone:S.akdone,notes:S.notes,assessments:S.assessments,uworld:S.uworld,amboss:S.amboss,scholarrx:S.scholarrx,bnbq:S.bnbq,vshaky:S.vshaky,uwq:S.uwq,uwt:S.uwt,pomo:S.pomo,streak:S.streak,cfgs:S.cfgs,active:S.active};
+  S.vdone={};S.vskip={};S.vdoneDate={};S.vdoneAt={};S.vundone={};S.akdone={};S.notes={};S.assessments={};PRACTICE_KEYS.forEach(k=>{S[k]={total:null,blocks:{}};});S.vshaky={};S.uwq={};S.uwt={};S.pomo={};S.streak={days:{}};
   S.cfgs={step1:null,nbme:null};S.active=null;S.cfg=null;_prevSig=0;S._resetAt=Date.now();save();
   renderWelcome();
   toastUndo("Everything cleared — build a new plan, or tap Undo to restore.",()=>{
-    S.vdone=snap.vdone;S.vskip=snap.vskip;S.vdoneDate=snap.vdoneDate;S.vdoneAt=snap.vdoneAt;S.vundone=snap.vundone;S.akdone=snap.akdone;S.notes=snap.notes;S.assessments=snap.assessments;PRACTICE_KEYS.forEach(k=>{S[k]=snap[k];});S.vshaky=snap.vshaky;S.streak=snap.streak;
+    S.vdone=snap.vdone;S.vskip=snap.vskip;S.vdoneDate=snap.vdoneDate;S.vdoneAt=snap.vdoneAt;S.vundone=snap.vundone;S.akdone=snap.akdone;S.notes=snap.notes;S.assessments=snap.assessments;PRACTICE_KEYS.forEach(k=>{S[k]=snap[k];});S.vshaky=snap.vshaky;S.uwq=snap.uwq;S.uwt=snap.uwt;S.pomo=snap.pomo;S.streak=snap.streak;
     S.cfgs=snap.cfgs;S.active=snap.active;S.cfg=S.active?S.cfgs[S.active]:null;_prevSig=progressSig();save();
     if(S.cfg){reflow();render();}else renderWelcome();toast("Restored ✓");});
 }
-const BUILD="2026-10-23c";
+const BUILD="2026-10-23d";
 /* ---------- What's new (changelog) ----------
    Newest entry first. Bump the top entry's id whenever you add one and the
    pop-up shows once per person (tracked in synced settings.seenUpdate). */
 const CHANGELOG=[
+  {id:"2026-10-23d", date:"October 2026", title:"UWorld tests that never repeat a question, and a focus timer", items:[
+    "On each study day, a UWorld test builder makes tests from that day, or from the whole Brody week. Choose how many questions (UWorld allows up to 40), copy them, then paste into UWorld \u2192 Create Test \u2192 Custom.",
+    "Every question you copy is tracked, so no later test repeats it, whether you build it from a day, a week or a single video. Each test is spread across all the videos. You can copy a test again, put it back, or start a day or week over for a second pass.",
+    "Turn on \u201cOnly videos I\u2019ve checked off\u201d to build a test from just what you\u2019ve watched.",
+    "The daily quote is gone. In its place on Study is a focus timer: 25-minute focus sessions, 5-minute breaks, and a 15-minute break every fourth session, all adjustable. It counts your focused time, sessions and breaks for the day, and Stats shows your week.",
+  ]},
   {id:"2026-10-23c", date:"October 2026", title:"Sketchy Pharm, Sketchy Micro and Sketchy Immunology are separate resources", items:[
     "Each Sketchy course now has its own switch under Plan \u2192 Video resources, so you can use Sketchy Micro without Sketchy Pharm, or the other way round.",
     "Your plan doesn\u2019t change. If Sketchy was on, Sketchy Pharm and Sketchy Micro stay on, and Sketchy Immunology stays off until you turn it on.",
