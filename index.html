@@ -1009,6 +1009,10 @@ details.uwsys[open]>.uwsyshd::before{transform:rotate(90deg)}
 .uwtmade>summary{cursor:pointer;font-size:12.5px;color:var(--phos);font-weight:600}
 .uwtrow{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin:6px 0;font-size:12.5px;color:var(--muted)}
 .uwtrow>span{flex:1 1 140px}
+.uwtsc{color:var(--ink);font-family:var(--mono)}
+.uwtscore{display:inline-flex;align-items:center;gap:5px;white-space:nowrap}
+.uwtscore input{width:84px;box-sizing:border-box;padding:5px 7px;border-radius:8px;border:1px solid var(--line);background:var(--bg);color:var(--ink);font-family:var(--mono);font-size:13px}
+.uwtlog .wqlog .wqsel,.uwtlog .wqlog .wqnum{background:var(--bg)}
 .uwrow summary{list-style:none;cursor:pointer;font-size:11.5px;color:var(--phos);font-weight:600;display:inline-flex;align-items:center;gap:5px}
 .uwrow summary::-webkit-details-marker{display:none}
 .uwrow summary::before{content:"›";display:inline-block;transition:transform .15s}
@@ -2592,6 +2596,8 @@ function pomoMerge(a,b){a=a||{};b=b||{};const out={};
   const cnt=(x,y)=>({f:Math.max((x&&x.f)||0,(y&&y.f)||0),b:Math.max((x&&x.b)||0,(y&&y.b)||0),n:Math.max((x&&x.n)||0,(y&&y.n)||0)});
   [a,b].forEach(src=>{for(const d in src){const o=out[d]=out[d]||{};for(const dev in src[d])o[dev]=cnt(o[dev],src[d][dev]);}});
   return out;}
+function blocksMerge(a,b){a=a||{};b=b||{};const o=Object.assign({},a,b);
+  for(const k in a)if(b[k]&&(a[k]._t||0)>(b[k]._t||0))o[k]=a[k];return o;}   // key order stays a's then b's new ones
 function mergeState(a,b){a=a||{};b=b||{};
   // a reset is a tombstone: any copy last saved BEFORE the reset predates it,
   // so its progress maps must not be union-merged back in (they'd resurrect
@@ -2630,14 +2636,15 @@ function mergeState(a,b){a=a||{};b=b||{};
   out.notes=mergeNotes(older.notes,newer.notes);
   out.streak={days:unionTrue((a.streak||{}).days,(b.streak||{}).days)};
   out.assessments=Object.assign({},a.assessments||{},b.assessments||{});
-  // block logs are append-only, so a plain union is right; the bank size is a
-  // single value, so the newer copy wins. Same loop/order as persistObj().
+  // block logs are a union by key; the one block that can change, a UWorld test's score
+  // (uwSetScore), goes to the newer edit. The bank size is a single value, so the newer
+  // copy wins. Same loop/order as persistObj().
   PRACTICE_KEYS.forEach(k=>{const nt=(newer[k]||{}).total,ot=(older[k]||{}).total;
     // normalise to null, never undefined: a source absent from BOTH copies (an
     // older profile saved before it existed) would otherwise emit {blocks:{}}
     // with the total silently dropped by JSON.stringify
     out[k]={total:(nt!=null?nt:(ot!=null?ot:null)),
-      blocks:Object.assign({},(a[k]||{}).blocks||{},(b[k]||{}).blocks||{})};});
+      blocks:blocksMerge((a[k]||{}).blocks,(b[k]||{}).blocks)};});
   out.vshaky=unionTrue(a.vshaky,b.vshaky);
   out.uwq=uwqMerge(a.uwq,b.uwq);out.uwt=uwtMerge(a.uwt,b.uwt);out.pomo=pomoMerge(a.pomo,b.pomo);
   out.settings=Object.assign({},older.settings||{},newer.settings||{});
@@ -2864,8 +2871,28 @@ function uwPoolOf(iso,kind){const row=SCHED&&SCHED.dayMap&&SCHED.dayMap[iso];if(
   if(watched)items=items.filter(it=>isDone(it.id));
   return Object.assign({key,lab,watched},uwPool(items));}
 function uwTestsOf(key){return Object.keys(S.uwt||{}).map(k=>Object.assign({id:k},S.uwt[k])).filter(t=>t.pool===key&&!t.gone).sort((a,b)=>a.at-b.at);}
+/* A test's score is one number, how many you got right, logged as a UWorld block tied to the
+   test ("t_"+test id), so it counts toward the totals and the weekly goal like any block.
+   UWorld tags each question by its own subject and system, and those don't follow the B&B
+   video a question came from — one test spans ten of each — so a score is kept by what you
+   studied (the day or week the test was built from) and never spread across subjects.
+   UWorld's own Performance page has that breakdown, question by question. */
+function uwScoreOf(tid){const b=(practiceLog("uworld").blocks||{})["t_"+tid];return b&&b.test===tid?b:null;}
+function uwPoolName(t){const k=t.pool||"";if(k.indexOf("d:")===0)return fmtShort(k.slice(2));if(k.indexOf("v:")===0)return k.slice(2);return t.label||"UWorld test";}
+function uwSetScore(tid,correct){const t=(S.uwt||{})[tid];if(!t)return;const was=uwScoreOf(tid);   // an edit keeps the day it was first logged
+  practiceLog("uworld").blocks["t_"+tid]={hub:was?was.hub:S.active,dateISO:was?was.dateISO:todayISO(),sys:"",q:t.ids.length,correct:correct,mode:"test",test:tid,pool:t.pool,label:uwPoolName(t),_t:Date.now()};save();}
+let UW_EDIT={};   // tests whose score is open for editing
 function uwSize(){const n=parseInt((S.settings||{}).uwSize,10);return n>=1&&n<=UW_MAX?n:UW_MAX;}
-function uwDayBarHTML(iso){
+function uwTestRowHTML(t,name){const sc=uwScoreOf(t.id),n=t.ids.length,edit=!sc||UW_EDIT[t.id];
+  return '<div class="uwtrow"><span>'+escHTML(name)+' · '+n+' · '+fmtShort(isoFromDate(new Date(t.at)))
+    +(sc&&!UW_EDIT[t.id]?' · <b class="uwtsc">'+sc.correct+'/'+n+' · '+Math.round(sc.correct/n*100)+'%</b>':'')+'</span>'
+    +(edit
+      ? '<span class="uwtscore"><input type="number" min="0" max="'+n+'" inputmode="numeric" placeholder="# right" value="'+(sc?sc.correct:'')+'" aria-label="Questions right, of '+n+'" data-uwscorein="'+escAttr(t.id)+'"> <span class="muted small">of '+n+'</span>'
+        +'<button type="button" class="btn sm" data-uwscore="'+escAttr(t.id)+'">'+(sc?'Save':'Log score')+'</button></span>'
+      : '<button type="button" class="btn ghost sm" data-uwscoreedit="'+escAttr(t.id)+'">Edit score</button>')
+    +'<button type="button" class="btn ghost sm" data-uwagain="'+escAttr(t.id)+'">Copy again</button>'
+    +(sc?'':'<button type="button" class="btn ghost sm" data-uwback="'+escAttr(t.id)+'" title="Puts its questions back, for a test you didn’t make">Put back</button>')+'</div>';}
+function uwDayBarHTML(iso,withLogger){
   if(!uwReady())return '';
   const row=SCHED&&SCHED.dayMap&&SCHED.dayMap[iso];if(!row)return '';
   const W=uwWeekOf(row);
@@ -2885,13 +2912,25 @@ function uwDayBarHTML(iso){
   }else if(P.all.length)h+='<p class="muted small" style="margin:6px 0">Every question here is in a test you’ve made.</p>';
   else h+='<p class="muted small" style="margin:6px 0">'+(P.watched?'Check off a video to test it.':'No UWorld questions here.')+'</p>';
   h+='<label class="uwtsw"><input type="checkbox" data-uwwatched="1"'+(P.watched?' checked':'')+'> Only videos I’ve checked off</label>';
-  if(tests.length)h+='<details class="uwtmade"><summary>'+tests.length+' test'+(tests.length===1?'':'s')+' made from '+escHTML(P.lab)+'</summary>'
-    +tests.map((t,i)=>'<div class="uwtrow"><span>Test '+(i+1)+' · '+t.ids.length+' · '+fmtShort(isoFromDate(new Date(t.at)))+'</span>'
-      +'<button type="button" class="btn ghost sm" data-uwagain="'+escAttr(t.id)+'">Copy again</button>'
-      +'<button type="button" class="btn ghost sm" data-uwback="'+escAttr(t.id)+'" title="Puts its questions back, for a test you didn’t make">Put back</button></div>').join('')
+  const scored=tests.map(t=>uwScoreOf(t.id)).filter(Boolean);
+  if(scored.length){const q=scored.reduce((a,b)=>a+b.q,0),c=scored.reduce((a,b)=>a+b.correct,0);
+    h=h.replace('</div><div class="uwtmeta">','</div><div class="uwtmeta">'+'Your score on '+escHTML(P.lab)+': <b>'+Math.round(c/q*100)+'%</b> over '+scored.length+' test'+(scored.length===1?'':'s')+' · ');}
+  const unscored=tests.some(t=>!uwScoreOf(t.id));
+  if(tests.length)h+='<details class="uwtmade"'+(unscored?' open':'')+'><summary>'+tests.length+' test'+(tests.length===1?'':'s')+' made from '+escHTML(P.lab)+'</summary>'
+    +tests.map((t,i)=>uwTestRowHTML(t,'Test '+(i+1))).join('')
     +'<button type="button" class="link small" data-uwreset="'+escAttr(iso+'|'+kind)+'">Start over: put all of '+escHTML(P.lab)+'’s questions back</button></details>';
+  // a test from another day, the week, or one video, made in the last 7 days and still unscored
+  const wait=Object.keys(S.uwt||{}).map(k=>Object.assign({id:k},S.uwt[k]))
+    .filter(t=>!t.gone&&t.pool!==P.key&&!uwScoreOf(t.id)&&Date.now()-t.at<7*864e5).sort((a,b)=>a.at-b.at);
+  if(wait.length)h+='<details class="uwtmade uwtwait"><summary>'+wait.length+' other test'+(wait.length===1?'':'s')+' to score</summary>'
+    +wait.map(t=>uwTestRowHTML(t,'From '+uwPoolName(t))).join('')+'</details>';
+  // all question logging in one place on Study: blocks done outside these tests (random UWorld, AMBOSS…)
+  if(withLogger){h+='<details class="uwtmade uwtlog"><summary>Log questions done elsewhere</summary>'+weeklyQuickLogHTML()+'</details>';UW_LOGGER_SHOWN=true;}
   return h+'</div>';
 }
+/* Study shows the question logger inside the test panel when the focus day has one; the
+   weekly-goal card keeps it only when it doesn't (a rest day, a plan without B&B). */
+let UW_LOGGER_SHOWN=false;
 /* Copy, and only on success run then() — a copy that failed must not mark anything used. */
 function uwClip(t,then){
   const fb=()=>{let ok=false;try{const ta=document.createElement("textarea");ta.value=t;ta.style.position="fixed";ta.style.opacity="0";
@@ -2914,6 +2953,11 @@ function bindUwTests(){
     const ids=uwDraw(P.lists,Math.min(uwSize(),P.left.length));if(!ids.length)return;uwMakeTest(P.key,ids,P.lab);});
   document.querySelectorAll("[data-uwvid]").forEach(b=>b.onclick=e=>{e.preventDefault();e.stopPropagation();
     const ids=(uwIdsFor(b.dataset.uwvid)||[]).filter(id=>!uwUsed(id)).slice(0,UW_MAX);if(ids.length)uwMakeTest("v:"+b.dataset.uwvid,ids,b.dataset.uwvid);});
+  document.querySelectorAll("[data-uwscoreedit]").forEach(b=>b.onclick=()=>{UW_EDIT[b.dataset.uwscoreedit]=true;render();});
+  document.querySelectorAll("[data-uwscore]").forEach(b=>b.onclick=()=>{const tid=b.dataset.uwscore,t=(S.uwt||{})[tid];if(!t)return;
+    const inp=document.querySelector('[data-uwscorein="'+tid.replace(/"/g,'\\"')+'"]');const c=parseInt(inp&&inp.value,10),n=t.ids.length;
+    if(isNaN(c)||c<0||c>n){toast("Enter how many you got right, 0 to "+n);return;}
+    uwSetScore(tid,c);delete UW_EDIT[tid];render();toast("Score logged · "+c+"/"+n+" ("+Math.round(c/n*100)+"%)");});
   document.querySelectorAll("[data-uwagain]").forEach(b=>b.onclick=()=>{const t=(S.uwt||{})[b.dataset.uwagain];if(t)copyText(t.ids.join(", "),t.ids.length+" question IDs copied again — nothing changed");});
   document.querySelectorAll("[data-uwback]").forEach(b=>b.onclick=()=>{const t=(S.uwt||{})[b.dataset.uwback];if(!t)return;
     uwMark(t.ids,false);t.gone=Date.now();save();render();
@@ -3346,6 +3390,7 @@ function practiceRollupOf(src,scope){scope=scope||S.active;
   const mine=Object.keys(blocks).map(k=>blocks[k]).filter(b=>b&&b.hub===scope);
   let done=0,correct=0;const bySys={};
   mine.forEach(b=>{const q=+b.q||0,c=+b.correct||0;done+=q;correct+=c;
+    if(b.test)return;   // a UWorld test's score counts in the totals, never in a subject (uwSetScore)
     const key=b.sys||"Unspecified";const e=bySys[key]=bySys[key]||{done:0,correct:0};e.done+=q;e.correct+=c;});   // untagged blocks still get a bar
   Object.keys(bySys).forEach(s=>{const e=bySys[s];e.pct=e.done?Math.round(e.correct/e.done*100):null;});
   return {total:u.total,done,correct,pct:done?Math.round(correct/done*100):null,bySys};
@@ -3396,7 +3441,7 @@ function weeklyGoalChip(){if(S.active!=="nbme")return '';const goal=qGoal();if(!
   return '<div class="card wgcard"><div class="wgrow"><span class="wglab">Practice questions · '+qPerWord(c)+'</span><span class="wgn'+(met?' met':'')+'">'+done+' / '+goal+(met?' ✓':'')+'</span></div>'
     +'<div class="bartrack"><div class="barfill'+(over>0?' over':'')+'" style="width:'+pct+'%'+(met?';background:var(--success)':'')+'"></div></div>'
     +'<div class="wgstatus'+(met?' met':'')+'">'+status+'</div>'
-    +weeklyQuickLogHTML()+'</div>';}
+    +'<!--WQLOG-->'+'</div>';}   // the logger lands here only if Study's test panel didn't take it
 /* inline quick-logger (Today). Feeds addUworldBlock / addAmbossBlock, so it
    flows into the weekly tally AND the Stats subject-confidence ratings. */
 function weeklyQuickLogHTML(){
@@ -3716,7 +3761,7 @@ function clUpdateCounters(){
     if(k.length===1){const fl=document.querySelector('[data-clfill="'+k[0]+'"]');if(fl){fl.style.width=f2.p+'%';fl.style.background=f2.p>=100?'var(--success)':'';}}});
 }
 function renderStats(){
-  app.innerHTML=chrome("stats")+'<div class="wrap"><div class="cols"><div>'+videoCards()+pomoStatsCard()+'</div><div>'+readinessCards()+'</div></div></div>';
+  app.innerHTML=chrome("stats")+'<div class="wrap"><div class="cols"><div>'+videoCards()+pomoStatsCard()+'</div><div>'+uwTestStatsCard()+readinessCards()+'</div></div></div>';
   bindReady();bindVlist();
 }
 function bindReady(){
@@ -3985,6 +4030,19 @@ function bindPomo(){
     const r=pomoGet();if(!r.running&&!(r.left<(r.len||pomoLen(r.mode))))pomoPut(Object.assign(r,{left:pomoLen(r.mode)}));render();});
   pomoRun();
 }
+/* Stats: UWorld test scores, one row per day or week the tests were built from (uwSetScore).
+   Kept by what you studied, never by subject — see uwScoreOf. Only shown once a test is scored. */
+function uwTestStatsCard(){const bl=practiceLog("uworld").blocks||{},by={},order=[];
+  Object.keys(bl).forEach(k=>{const b=bl[k];if(!b||!b.test||b.hub!==S.active)return;const key=b.pool||b.test;
+    const e=by[key]||(by[key]={lab:b.label||"UWorld test",n:0,q:0,c:0,last:""});if(!e.n)order.push(key);
+    e.n++;e.q+=+b.q||0;e.c+=+b.correct||0;if((b.dateISO||"")>e.last)e.last=b.dateISO||"";});
+  if(!order.length)return '';
+  const rows=order.map(k=>by[k]).sort((a,b)=>a.last<b.last?1:a.last>b.last?-1:0);
+  const N=rows.reduce((a,r)=>a+r.n,0),Q=rows.reduce((a,r)=>a+r.q,0),C=rows.reduce((a,r)=>a+r.c,0),pc=(c,q)=>q?Math.round(c/q*100):0;
+  return '<div class="card uwtstats"><div class="cardhd">UWorld tests</div>'
+    +'<div class="uwtop"><div class="uwbig">'+pc(C,Q)+'% <span>correct</span></div><div class="uwsub">'+N+' test'+(N===1?'':'s')+' · '+Q+' Qs</div></div>'
+    +'<div class="bars">'+rows.map(r=>'<div class="bar"><div class="barlab" title="'+escAttr(r.n+' test'+(r.n===1?'':'s')+' · '+r.c+'/'+r.q)+'">'+escHTML(r.lab)+'</div><div class="bartrack"><div class="barfill" style="width:'+pc(r.c,r.q)+'%"></div></div><div class="barpct">'+pc(r.c,r.q)+'%</div></div>').join('')+'</div>'
+    +'<p class="muted small">By the day or week each test was built from. Log a score under the test on Study. UWorld’s Performance page breaks a test down by subject and system.</p></div>';}
 /* Stats: the last seven days of focus */
 function pomoStatsCard(){let tf=0,tb=0,tn=0;const rows=[];
   for(let i=6;i>=0;i--){const iso=isoFromDate(addDays(isoToDate(todayISO()),-i));const t=pomoDay(iso);tf+=t.f;tb+=t.b;tn+=t.n;rows.push([iso,t]);}
@@ -4033,7 +4091,7 @@ function studyCalendar(){
   return h;
 }
 function renderToday(){
-  const st=SCHED.stats; const cs=currentStreak();
+  const st=SCHED.stats; const cs=currentStreak();UW_LOGGER_SHOWN=false;
   if(!CAL_SEL)CAL_SEL=todayISO();
   // today's assignment = the content day whose iso === today (or the first upcoming content day)
   let row=SCHED.dayMap[todayISO()];
@@ -4062,7 +4120,7 @@ function renderToday(){
   // UPPER-RIGHT — the checklist for the selected day
   if(!isFocusToday){
     colB+='<div class="focusbar"><span>Studying ahead — <b>'+escHTML(fmtLong(focusISO))+'</b></span><button class="link" id="backToday">‹ Back to today</button></div>';
-    colB+=dayDetail(focusISO);
+    colB+=dayDetail(focusISO,true);
   } else {
     if(isOffToday){
       colB+='<div class="card"><div class="cardhd">'+(todayRow.off?'Day off':'Rest day')+' · '+fmtLong(todayISO())+'</div><p class="muted">No videos scheduled today.'
@@ -4074,7 +4132,7 @@ function renderToday(){
       const anyDone=row.items.some(it=>isDone(it.id));
       colB+='<div class="card"><div class="cardhd">'+escHTML(heading)+' <span class="pill">'+dayTimeLabel(row)+'</span>'+(anyDone?'<button class="hdreset" data-dayreset="'+row.iso+'" title="Uncheck everything on this day">Uncheck all</button>':'')+'</div>'
         +dayVlist(row)
-        +uwDayBarHTML(row.iso)
+        +uwDayBarHTML(row.iso,true)
         +'<div class="rowtools">'+(todayRow&&!isOffToday?'<button class="btn ghost" id="offToday">Take today off</button>':'')+'</div></div>';
     } else if(!isOffToday&&!(todayRow&&todayRow.review)){
       colB+='<div class="card"><div class="cardhd">Nothing scheduled today</div><p class="muted">Tap a day on the calendar to study ahead, or enjoy the breather.</p></div>';
@@ -4082,6 +4140,7 @@ function renderToday(){
   }
   // "Log practice questions" sits directly beneath the day box
   colB+='<div class="hchips">'+uworldChip()+'</div>';
+  colA=colA.replace('<!--WQLOG-->',UW_LOGGER_SHOWN?'':weeklyQuickLogHTML());   // exactly one logger on the page
   app.innerHTML=chrome("today")+'<div class="wrap"><div class="studygrid"><div class="studyblocks">'+colA+'</div><div class="studywork">'+colB+'</div><div class="studycalz">'+studyCalendar()+'</div></div></div>';
   bindVlist();bindExtras();bindWeeklyQuickLog();
   const o1=document.getElementById("offToday");if(o1)o1.onclick=()=>dayOffToggle(todayISO(),true);
@@ -4169,7 +4228,7 @@ function calCell(iso){
   if(iso===CAL_SEL)cls+=" sel";
   return '<button class="'+cls+'" data-cal="'+iso+'"><span class="cd">'+day+'</span>'+ind+'</button>';
 }
-function dayDetail(iso){
+function dayDetail(iso,onStudy){
   const row=SCHED.dayMap[iso];const past=!!(row&&row.past);
   const head=fmtLong(iso)+(iso===todayISO()?" · today":(past?" · past":""));
   let h='<div class="card daydetail"><div class="cardhd">'+escHTML(head);
@@ -4190,7 +4249,7 @@ function dayDetail(iso){
     const studyingRest=dayIsStudyingRest(S.cfg,iso);
     const tools='<div class="rowtools"><button class="btn ghost" id="'+(studyingRest?'d_unstudy':'d_off')+'">'
       +(studyingRest?'Back to rest day':'Take this day off')+'</button></div>';
-    if(row.items.length)h+=dayVlist(row)+uwDayBarHTML(row.iso)+tools;
+    if(row.items.length)h+=dayVlist(row)+uwDayBarHTML(row.iso,!!onStudy)+tools;
     else h+='<p class="muted small">Nothing scheduled this day'+(studyingRest?' — your work already fits before it.':'.')+'</p>'+(studyingRest?tools:'');
   }
   return h+'</div>';
@@ -5855,11 +5914,18 @@ function doResetAll(){
     S.cfgs=snap.cfgs;S.active=snap.active;S.cfg=S.active?S.cfgs[S.active]:null;_prevSig=progressSig();save();
     if(S.cfg){reflow();render();}else renderWelcome();toast("Restored ✓");});
 }
-const BUILD="2026-10-23d";
+const BUILD="2026-10-23e";
 /* ---------- What's new (changelog) ----------
    Newest entry first. Bump the top entry's id whenever you add one and the
    pop-up shows once per person (tracked in synced settings.seenUpdate). */
 const CHANGELOG=[
+  {id:"2026-10-23e", date:"October 2026", title:"Log your score on each UWorld test", items:[
+    "Under each UWorld test you make, enter how many you got right. The test shows your score and percentage, and the test panel totals the day or the week.",
+    "A score counts toward your practice totals and your question goal. It doesn\u2019t go into Accuracy by subject: one UWorld test covers many subjects and systems, and UWorld\u2019s Performance page already breaks a test down by both.",
+    "Stats has a new UWorld tests card with your score for each day or week you built tests from.",
+    "Logging questions you did elsewhere (a random UWorld block, AMBOSS and others) is now in the test panel, under \u201cLog questions done elsewhere\u201d.",
+    "A test built from another day or from one video, made in the last week, shows under \u201cother tests to score\u201d until you log its score.",
+  ]},
   {id:"2026-10-23d", date:"October 2026", title:"UWorld tests that never repeat a question, and a focus timer", items:[
     "On each study day, a UWorld test builder makes tests from that day, or from the whole Brody week. Choose how many questions (UWorld allows up to 40), copy them, then paste into UWorld \u2192 Create Test \u2192 Custom.",
     "Every question you copy is tracked, so no later test repeats it, whether you build it from a day, a week or a single video. Each test is spread across all the videos. You can copy a test again, put it back, or start a day or week over for a second pass.",
