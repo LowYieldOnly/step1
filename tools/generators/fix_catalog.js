@@ -9,15 +9,17 @@
  * already exists is skipped.
  *
  * A NOTE ON PROGRESS. Videos are identified by name (see itemId in index.html), so
- * renaming or merging one changes its id and a student who had checked it off sees
- * it unchecked. That is the cost of the catalog being correct; it is small and
- * one-off, but it is real, so corrections should be batched rather than trickled.
+ * renaming one changes its id. Each rename leaves an alias in catalog.json, and each
+ * removed copy a duplicate entry (lib/aliases.js), so the app carries a student's ticks
+ * over to the current title. A merge does not: one of its halves being ticked does not
+ * mean the whole video was watched.
  *
  *   node tools/generators/fix_catalog.js
  */
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import { itemId, recordAliases, aliasProblems } from './lib/aliases.js';
 
 const REPO = path.join(path.dirname(fileURLToPath(import.meta.url)), '..', '..');
 const FILE = path.join(REPO, 'catalog.json');
@@ -41,6 +43,17 @@ const RENAMES = [
     from:'Nonbenzodiazepine Hypnotics, Melatonin, Ramelteon, Suvorexant',
     to:'Nonbenzodiazepine Hypnotics, Melatonin, Ramelteon',
     note:'The title was reconstructed by hand; Sketchy\'s own video list (2026-10-20) has no "Suvorexant". Same 13-minute video.' },
+];
+
+/* Rows that are a copy of another video filed under the wrong resource. Removed only while
+   the correctly filed original (`copyOf`) exists — a removal can never delete the only copy. */
+const REMOVALS = [
+  { res:'skmicro', sys:'Infectious Disease', cat:'Ectoparasites', name:'Antihistamines',
+    copyOf:{ res:'skpharm', sys:'Pulmonary', cat:'Allergy & Pulmonary', name:'Antihistamines' },
+    note:'a Sketchy Pharm video (16 min) misfiled under Sketchy Micro; the Pharm copy is the real one and Cardiopulm schedules it' },
+  { res:'skmicro', sys:'Infectious Disease', cat:'Ectoparasites', name:'Asthma Therapy',
+    copyOf:{ res:'skpharm', sys:'Pulmonary', cat:'Allergy & Pulmonary', name:'Asthma Therapy' },
+    note:'a Sketchy Pharm video (22 min) misfiled under Sketchy Micro; the Pharm copy is the real one and Cardiopulm schedules it' },
 ];
 
 const cat = JSON.parse(fs.readFileSync(FILE, 'utf8'));
@@ -85,16 +98,31 @@ RENAMES.forEach(r => {
   done.push('renamed "' + r.from + '" → "' + r.to + '" — ' + r.note);
 });
 
+REMOVALS.forEach(r => {
+  const i = find(r.res, r.sys, r.cat, r.name);
+  if (i < 0) { skipped.push('remove ' + r.res + ' "' + r.name + '" (already applied)'); return; }
+  const o = r.copyOf;
+  if (find(o.res, o.sys, o.cat, o.name) < 0) { problems.push('remove ' + r.res + ' "' + r.name + '": its original (' + o.res + ' · ' + o.sys + ') is not in the catalog — refusing'); return; }
+  cat.videos.splice(i, 1);
+  changed++;
+  done.push('removed ' + r.res + ' "' + r.name + '" — ' + r.note);
+});
+
 const keys = cat.videos.map(K);
 if (keys.length !== new Set(keys).size) problems.push('the correction left duplicate catalog keys');
 
+// recorded every run, applied or skipped, so an alias is never missing for a rename already made
+const aliased = recordAliases(cat, 'aliases', RENAMES.map(r => [itemId({ res:r.res, sys:r.sys, name:r.from }), itemId({ res:r.res, sys:r.sys, name:r.to })]))
+  + recordAliases(cat, 'duplicates', REMOVALS.map(r => [itemId(r), itemId(r.copyOf)]));
+problems.push(...aliasProblems(cat));
+
 if (problems.length) { console.error('PROBLEMS:'); problems.forEach(p => console.error('  ' + p)); process.exit(1); }
-if (changed) {
+if (changed || aliased) {
   fs.writeFileSync(FILE, JSON.stringify(cat));
-  console.log('applied ' + changed + ' correction' + (changed === 1 ? '' : 's') + '; catalog now ' + cat.videos.length + ' videos');
+  if (changed) console.log('applied ' + changed + ' correction' + (changed === 1 ? '' : 's') + '; catalog now ' + cat.videos.length + ' videos');
   done.forEach(d => console.log('   · ' + d));
-  console.log('\n  Renaming changes a video\'s id, so anyone who had checked these off sees them unchecked.');
+  if (aliased) console.log('   ' + aliased + ' alias' + (aliased === 1 ? '' : 'es') + ' recorded — a student\'s ticks follow the renamed videos');
 } else {
-  console.log('no corrections to apply — catalog already matches all ' + (MERGES.length + RENAMES.length) + ' declared entries');
+  console.log('no corrections to apply — catalog already matches all ' + (MERGES.length + RENAMES.length + REMOVALS.length) + ' declared entries');
 }
 skipped.forEach(s => console.log('   (skipped) ' + s));
