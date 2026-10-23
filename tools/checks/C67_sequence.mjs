@@ -321,7 +321,7 @@ const parity=await p.evaluate(async()=>{
       const attrs=new Set();document.querySelectorAll('#app *').forEach(e=>{for(const a of e.attributes)if(a.name.startsWith('data-'))attrs.add(a.name);});
       // titles compared with numbers masked: "Today · Tue, Oct 20 6.6h · 20 to read" is the same card at any load
       out[v]={cards:[...new Set([...document.querySelectorAll('#app .cardhd')].map(e=>e.textContent.replace(/\s+/g,' ').trim().replace(/\d+(\.\d+)?/g,'#')))],attrs:[...attrs],
-        weekCopy:[...document.querySelectorAll('#app [data-uwlab]')].map(b=>b.textContent).filter(t=>/^All /.test(t))};}
+        weekCopy:[...document.querySelectorAll('#app [data-uwlab]')].map(b=>b.textContent).filter(t=>/^Copy all /.test(t))};}
     VIEW='today';ADJ_VIEW=null;render();return out;};
   mk('std');const std=await scan();mk('seq');const seq=await scan();
   return {std,seq};
@@ -333,8 +333,9 @@ Object.keys(parity.std).forEach(v=>{
 });
 chk('C67-30 every tab offers a plan in your own order every card and control a standard Brody plan has (bar the quiz toggle and the weekly table it replaces)',
     gaps.length===0, JSON.stringify(gaps.slice(0,8)));
-chk('C67-31 the UWorld IDs copy for a whole topic, as they do for a Brody week',
-    parity.std.today.weekCopy.some(t=>/Brody week/.test(t))&&parity.seq.today.weekCopy.some(t=>/for topic \d+/.test(t)),
+chk('C67-31 the UWorld IDs copy for a whole topic, as they do for a Brody week — named by its Brody week, not its place in your order',
+    parity.std.today.weekCopy.some(t=>/for Brody week \d+$/.test(t))&&parity.seq.today.weekCopy.some(t=>/for Brody week \d+$/.test(t))
+      &&!parity.seq.today.weekCopy.some(t=>/topic/.test(t)),
     JSON.stringify({std:parity.std.today.weekCopy,seq:parity.seq.today.weekCopy}));
 
 // ---------- 8. every view, and the sync invariant ----------

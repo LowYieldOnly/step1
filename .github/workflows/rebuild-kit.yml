@@ -1,0 +1,46 @@
+# Every Monday: one zip with everything needed to rebuild BRODY MODE exactly as it is — the
+# whole repository (every branch, full history), the live site as served, and the rebuild
+# steps (tools/backup/make-kit.sh). It is attached to a GitHub Release named
+# "Rebuild kit · <date>", so it stays downloadable from the repository's Releases page.
+# The last 12 kits are kept. Run it any time from the Actions tab (Run workflow).
+name: Weekly rebuild kit
+
+on:
+  schedule:
+    - cron: '23 14 * * 1'   # Mondays, 14:23 UTC
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: rebuild-kit
+  cancel-in-progress: false
+
+jobs:
+  kit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0          # every branch, full history
+
+      - name: Build the kit
+        id: kit
+        run: echo "zip=$(bash tools/backup/make-kit.sh "$RUNNER_TEMP")" >> "$GITHUB_OUTPUT"
+
+      - name: Publish it as a release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          ZIP: ${{ steps.kit.outputs.zip }}
+        run: |
+          d=$(date -u +%F)
+          if gh release view "kit-$d" >/dev/null 2>&1; then
+            gh release upload "kit-$d" "$ZIP" --clobber
+          else
+            gh release create "kit-$d" "$ZIP" --target main --title "Rebuild kit · $d" \
+              --notes "Everything needed to rebuild BRODY MODE as it was on $d: the whole repository (every branch, full history), the live site, and REBUILD.md with the steps. Download the zip and keep a copy somewhere other than GitHub."
+          fi
+          # keep the 12 most recent kits
+          gh release list --limit 200 --json tagName --jq '.[].tagName' | grep '^kit-' | sort -r | tail -n +13 \
+            | xargs -r -n1 gh release delete --yes --cleanup-tag

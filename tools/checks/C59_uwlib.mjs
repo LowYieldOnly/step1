@@ -87,7 +87,7 @@ chk('C59-2 every article carries min:0 — no invented reading times',
 chk('C59-3 article ids are unique, and recognised as real (so progress is never pruned)',
     cat.dupIds===0&&cat.inRealIds===true, 'dupes '+cat.dupIds+', all real '+cat.inRealIds);
 chk('C59-4 the resource is registered, and sorts after every video resource',
-    cat.order===5&&cat.lastInOrder&&cat.badge==='UW'&&/UWorld/.test(cat.label),
+    cat.lastInOrder&&cat.badge==='UW'&&/UWorld/.test(cat.label),
     'order '+cat.order+' badge '+cat.badge+' label '+cat.label);
 
 // ---------- 2. no leakage in either direction ----------

@@ -232,20 +232,20 @@ _Not board material — problem-based learning and advising._
 ### Immunocompromised Host · Path · ID
 
 - **B&B** (4): HIV · HIV CNS Infections · HIV Drugs · Opportunistic Fungal Infections
-- **Sketchy Micro** (5): Candida albicans · Aspergillus fumigatus · Crytococcus neoformans · Mucormycosis (Mucor spp. & Rhizopus spp.) · Pneumocystis jirovecii
+- **Sketchy Micro** (5): Candida albicans · Aspergillus fumigatus · Cryptococcus neoformans · Mucor spp. & Rhizopus spp. (Mucormycetes) · Pneumocystis jirovecii
 - **Sketchy Pharm** (7): NRTIs · NNRTIs · Protease Inhibitors · Maraviroc, Fusion Inhibitors, Integrase Inhibitors · Amphotericin & Flucytosine · Azoles · Ganciclovir, Valganciclovir, Foscarnet, Cidofovir
 - **UWorld article** (13): Acute HIV infection · HIV lifecycle · HIV antiretroviral therapy (ART) and the immune reconstitution inflammatory syndrome (IRIS) · Pneumocystis jirovecii pneumonia · Candida infections · Aspergillosis · Cryptococcal meningoencephalitis · Cytomegalovirus (CMV) · Toxoplasmosis · Acute invasive fungal rhinosinusitis · Neutropenic fever · Solid organ transplant: Complications · Kaposi sarcoma
 
 ### Zoonotic Infections · Path · ID
 
 - **B&B** (1): Zoonotic Infections
-- **Sketchy Micro** (5): Bartonella henselae · Brucella · Francisella tularensis · Pasturella multocida · Anaplasma phagocytophilum & Ehrlichia chaffeensis
+- **Sketchy Micro** (5): Bartonella henselae · Brucella spp. · Francisella tularensis · Pasteurella multocida · Anaplasma phagocytophilum & Ehrlichia chaffeensis
 - **UWorld article** (12): Bartonella henselae infections · Brucellosis · Ehrlichia and Anaplasma · Q fever (Coxiella burnetii infection) · Leptospirosis · Lyme disease · Rocky Mountain Spotted Fever · Yersinia pestis · Anthrax · Rabies · Animal and human bites · Cutaneous larva migrans
 
 ### Granulomatous Diseases · Path · ID
 
 - **B&B** (1): Granulomatous Inflammation
-- **Sketchy Micro** (7): Mycobacterium tuberculosis · Mycobacterium leprae · Mycobacterium avium intracellulare, scrofulaceum, marinum · Histoplasma capsulatum · Blastomycosis dermatitidis · Coccidiomycosis immitis · Paracoccidioidomycosis brasiliensis
+- **Sketchy Micro** (7): Mycobacterium tuberculosis · Mycobacterium leprae · Mycobacterium avium intracellulare, Mycobacterium scrofulaceum, Mycobacterium marinum · Histoplasma capsulatum · Blastomyces dermatitidis · Coccidioides immitis · Paracoccidioides brasiliensis
 - **Sketchy Pharm** (2): Tuberculosis Drugs · Leprosy Drugs
 - **UWorld article** (9): Tuberculosis · Nontuberculous mycobacteria (NTM) · Leprosy (Hansen disease): Mycobacterium leprae infection · Histoplasmosis · Blastomycosis · Coccidioidomycosis · Paracoccidioidomycosis · Sarcoidosis · Chronic granulomatous disease
 

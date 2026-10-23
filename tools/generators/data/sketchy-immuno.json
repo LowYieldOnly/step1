@@ -1,0 +1,29 @@
+{
+  "source": "Sketchy_Micro_Immuno_List.docx, supplied by Dylan 2026-10-23: the Immunology course, titles and runtimes verbatim, in Sketchy's order. Its unit and section totals all add up.",
+  "course": "Immunology",
+  "videos": [
+    { "unit": "Components of the Immune System", "section": "Cells of the Immune System", "name": "Cells of the Immune System", "min": 15 },
+    { "unit": "Components of the Immune System", "section": "Branches of the Immune System", "name": "Overview of the Innate vs. Adaptive Immune System", "min": 9 },
+    { "unit": "Components of the Immune System", "section": "Organs of the Immune System", "name": "Secondary Lymphoid Organs", "min": 11 },
+    { "unit": "The Innate Immune System", "section": "Complement", "name": "The Complement Cascade & Other Functions of Complement", "min": 7 },
+    { "unit": "The Innate Immune System", "section": "Complement", "name": "Complement Activation Pathways", "min": 5 },
+    { "unit": "The Innate Immune System", "section": "Recognizing Invaders", "name": "Recognizing Invaders", "min": 5 },
+    { "unit": "The Innate Immune System", "section": "Phagocytes", "name": "Macrophages", "min": 7 },
+    { "unit": "The Innate Immune System", "section": "Phagocytes", "name": "Neutrophils", "min": 10 },
+    { "unit": "The Innate Immune System", "section": "Response to Viruses", "name": "The Innate Immune System's Response to Viruses", "min": 9 },
+    { "unit": "The Adaptive Immune System", "section": "Antibodies & Receptors", "name": "Antibody Structure", "min": 7 },
+    { "unit": "The Adaptive Immune System", "section": "Antibodies & Receptors", "name": "Antibody Classes & Functions", "min": 9 },
+    { "unit": "The Adaptive Immune System", "section": "Cell Mediated Immunity (T-Cells)", "name": "MHC Molecules", "min": 6 },
+    { "unit": "The Adaptive Immune System", "section": "Cell Mediated Immunity (T-Cells)", "name": "Antigen Processing & Presentation to T-Cells", "min": 7 },
+    { "unit": "The Adaptive Immune System", "section": "Cell Mediated Immunity (T-Cells)", "name": "T-Lymphocyte Maturation and Selection", "min": 7 },
+    { "unit": "The Adaptive Immune System", "section": "Cell Mediated Immunity (T-Cells)", "name": "Helper T-cells", "min": 7 },
+    { "unit": "The Adaptive Immune System", "section": "Cell Mediated Immunity (T-Cells)", "name": "Cytotoxic T-cells", "min": 7 },
+    { "unit": "The Adaptive Immune System", "section": "Cell Mediated Immunity (T-Cells)", "name": "Regulatory T-Cells", "min": 6 },
+    { "unit": "The Adaptive Immune System", "section": "Humoral Immunity (B-Cells)", "name": "B-Cell Maturation", "min": 11 },
+    { "unit": "The Adaptive Immune System", "section": "Humoral Immunity (B-Cells)", "name": "Somatic Hypermutation and Affinity Maturation", "min": 6 },
+    { "unit": "The Adaptive Immune System", "section": "Humoral Immunity (B-Cells)", "name": "B-Cell Activation", "min": 7 },
+    { "unit": "Autoimmune Diseases", "section": "Hypersensitivity Reactions", "name": "Type I Hypersensitivity Reaction", "min": 5 },
+    { "unit": "Autoimmune Diseases", "section": "Hypersensitivity Reactions", "name": "Type II/III Hypersensitivity Reactions", "min": 6 },
+    { "unit": "Autoimmune Diseases", "section": "Hypersensitivity Reactions", "name": "Type IV Hypersensitivity Reaction", "min": 5 }
+  ]
+}
