@@ -116,6 +116,8 @@ const plan=await p.evaluate(()=>{
   const dayOf={};SCHED.days.forEach(d=>d.items.forEach(i=>dayOf[i.id]=d.iso));
   const items=SCHED.planItems||[];
   return {n:items.length,h:Math.round(SCHED.stats.totalMin/6)/10,
+    // the unit's videos in the resources this plan has on (UWorld Videos is its own switch, off here)
+    expect:catVideos().filter(v=>!isArticle(v)&&brodyInBlock(b,v)&&resEnabledFor(c)[v.res]).length,
     placed:items.filter(i=>dayOf[i.id]).length,
     onOrAfterShelf:items.filter(i=>dayOf[i.id]&&dayOf[i.id]>=b.shelf).length,
     inBuffer:items.filter(i=>dayOf[i.id]&&dayOf[i.id]>=SCHED.reviewCutoff).length,
@@ -124,8 +126,8 @@ const plan=await p.evaluate(()=>{
     weekLoad:SCHED.weekLoad.map(w=>({n:w.n,needH:Math.round(w.needH*10)/10,heavy:w.heavy})),
     feasible:SCHED.stats.feasible,pace:SCHED.brodyPace,hero:__hero()};
 });
-chk('C57-12 all '+ns.expectVid+' videos ('+plan.h+' h) get a day',
-    plan.n===ns.expectVid&&plan.placed===plan.n, JSON.stringify({n:plan.n,placed:plan.placed}));
+chk('C57-12 all '+plan.expect+' videos of the plan\'s resources ('+plan.h+' h) get a day',
+    plan.n===plan.expect&&plan.placed===plan.n, JSON.stringify({n:plan.n,expect:plan.expect,placed:plan.placed}));
 chk('C57-13 nothing is scheduled on or after the Thursday exam',
     plan.onOrAfterShelf===0, 'late='+plan.onOrAfterShelf);
 chk('C57-14 the review buffer before the exam stays video-free, and Sundays stay empty',
@@ -195,9 +197,9 @@ const done=await p.evaluate(()=>{
   (SCHED.planItems||[]).forEach(it=>markDone(it.id,'2026-09-21'));reflow();
   const byV=(setProgBy('videos'),overall()),byT=(setProgBy('time'),overall());
   setProgBy('videos');
-  // what the block touches: its own systems, plus the systems of the videos it pulls in
-  const blk=brodyBlockById('neuro-sensory');
-  const touches=[...new Set(blk.systems.concat((blk.include||[]).map(k=>k.split('|')[1])))].sort();
+  // what the block touches: its own systems, plus the systems of the videos it pulls in, in the plan's resources
+  const blk=brodyBlockById('neuro-sensory'),en=resEnabledFor(S.cfg);
+  const touches=[...new Set(blk.systems.concat((blk.include||[]).filter(k=>en[k.split('|')[0]]).map(k=>k.split('|')[1])))].sort();
   return {v:byV.pct,t:byT.pct,dm:byT.doneMin,tm:byT.totalMin,sys:Object.keys(sysProgress()).sort(),touches};
 });
 chk('C57-19 completing everything reads 100% by count and by time',

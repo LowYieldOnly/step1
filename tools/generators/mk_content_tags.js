@@ -226,6 +226,32 @@ const ITEMS = [
   ['uwlib','Endocrinology','','Formation and remodeling of bone','physio'],
   ['uwlib','Neurology','','Peripheral nerve structure and function','physio'],
   // 'Basic dermatology vocabulary' stays, as Bootcamp's 'Skin Lesions' does.
+
+  // ---- UWorld Videos · the normal-structure-and-function videos ----
+  // UWorld's videos are almost all disease. These are the few on normal anatomy, histology,
+  // embryology and physiology. Kept (untagged): Neurotransmitters & related medications (the
+  // drugs are in it), ABG interpretation, PFTs, Visual pathways and field defects and the
+  // hearing-loss work-up (clinical reasoning), Normal labor and fetal heart rate tracings
+  // (clinical obstetrics), and the biochemistry and basic-immunology videos, which are none
+  // of the four types.
+  ['uwvid','Cardiology','Anatomy and Physiology','Cardiomyocyte structure & function','physio'],
+  ['uwvid','Cardiology','The Developing Heart','Normal fetal circulation','embryo'],
+  ['uwvid','Pulmonary','Embryology, Anatomy and Physiology','Respiratory mechanics','physio'],
+  ['uwvid','Pulmonary','Embryology, Anatomy and Physiology','Gas exchange','physio'],
+  ['uwvid','Pulmonary','Embryology, Anatomy and Physiology','Oxygen-hemoglobin dissociation curve','physio'],
+  ['uwvid','Hematology','Red Blood Cells','Blood cell types','hist'],
+  ['uwvid','Hematology','Hemostasis','Normal hemostasis','physio'],
+  ['uwvid','Immunology','Basic Immunology','Lymph node structure & function','hist'],
+  ['uwvid','Renal','Embryology, Anatomy and Physiology','Renal electrolyte handling','physio'],
+  ['uwvid','Renal','Embryology, Anatomy and Physiology','Continence and micturition','physio'],
+  ['uwvid','Renal','Acid-Base','Acid-base physiology','physio'],
+  ['uwvid','Neurology','Introduction to Neurology','Nerve physiology','physio'],
+  ['uwvid','Neurology','Autonomic Nervous System','Autonomic nervous system','physio'],
+  ['uwvid','Musculoskeletal','Cell Biology','Skeletal muscle physiology','physio'],
+  ['uwvid','Endocrinology','Thyroid','Thyroid physiology','physio'],
+  ['uwvid','Endocrinology','Reproductive','The menstrual cycle','physio'],
+  ['uwvid','Reproductive','Pregnancy','Oogenesis','embryo'],
+  ['uwvid','Reproductive','Pregnancy','Spermatogenesis','embryo'],
 ];
 
 /* ---------------- validate against the real catalog ---------------- */

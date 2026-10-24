@@ -33,7 +33,7 @@ await p.evaluate(()=>{
       notes:{},streak:{days:{}},assessments:{},_resetAt:0});
     S.cfgs={step1:null,nbme:{examType:'nbme',brody:SEQ_ID,examLabel:'your exam',
       startISO:o.start||'2026-10-20',examISO:o.end||'2027-03-01',restDays:[0],brodyReviewDays:3,
-      resources:{bnb:true,pathoma:true,sketchy:true,bootcamp:true,uwlib:!!o.arts}}};
+      resources:{bnb:true,pathoma:true,sketchy:true,bootcamp:true,uwvid:true,uwlib:!!o.arts}}};
     if(!o.legacy)S.cfgs.nbme.seqUnit=o.unit||'msk-skin';
     if(o.topics)S.cfgs.nbme.seqTopics=o.topics;
     normalizeCfg(S.cfgs.nbme,'nbme');activate('nbme');S.active='nbme';VIEW='today';reflow();
