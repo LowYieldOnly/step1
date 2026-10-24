@@ -50,7 +50,7 @@ const reg = await p.evaluate(() => {
 });
 chk('C80-1 the block is registered, named, and last in shelf order',
   reg.found && reg.name === 'GI, Nutrition & Multisystem' && reg.last === 'gi-multisystem' && reg.sorted && !reg.dupes, J(reg.ids));
-chk('C80-2 one system, Gastroenterology, and no Bootcamp', J(reg.systems) === '["Gastroenterology"]' && J(reg.noRes) === '["bootcamp"]', J([reg.systems, reg.noRes]));
+chk('C80-2 one system, Gastroenterology, and no Bootcamp (nor UWorld Videos, until they are mapped)', J(reg.systems) === '["Gastroenterology"]' && J(reg.noRes) === '["bootcamp","uwvid"]', J([reg.systems, reg.noRes]));
 chk('C80-3 five weeks, each starting on a Monday, numbered 1-5',
   J(reg.starts) === '["2026-11-09","2026-11-16","2026-11-23","2026-11-30","2026-12-07"]' && reg.allMon && J(reg.ns) === '[1,2,3,4,5]', J(reg.starts));
 chk('C80-4 the exam is Friday 2026-12-11 (Exam 5)', reg.shelf === '2026-12-11' && reg.shelfDow === 5, reg.shelf);

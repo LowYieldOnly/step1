@@ -44,7 +44,9 @@ const cat = JSON.parse(fs.readFileSync(path.join(REPO, 'catalog.json'), 'utf8'))
 const K = v => v.res + '|' + v.sys + '|' + (v.cat || '') + '|' + v.name;
 
 const SYS = ["Gastroenterology"];
-const NO_RES = ["bootcamp"];
+// UWorld Videos too, until its GI-coded videos are mapped to these weeks (they are "GI" in
+// data/uworld-videos-map.txt, held for a built unit): left in, they would all fall to week 5.
+const NO_RES = ["bootcamp", "uwvid"];
 
 /* ---- weeks, straight off the printed calendar (Term 3, SYST 9500) ----
    Exams, quizzes, make-ups, sim labs and feedback sessions are left out, as in the other
