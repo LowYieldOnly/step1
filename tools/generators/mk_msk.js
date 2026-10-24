@@ -10,8 +10,8 @@
  *
  * 1. Week 3 is Brody's Infectious Disease week (clinical diagnosis, zoonotics,
  *    granulomatous disease, the immunocompromised host, fever of unknown origin), and
- *    week 1 teaches skin infections. Brody has no ID unit, so the #1 law puts every ID
- *    video somewhere: the ones these lectures teach, plus the microbiology basics and
+ *    week 1 teaches skin infections. Brody has no ID unit, so every ID video is given a
+ *    home: the ones these lectures teach, plus the microbiology basics and
  *    antimicrobial drugs no lecture on any calendar names, are homed here. The homes
  *    are declared in data/id-homes.js (shared with mk_id.js) and merged below.
  *    Anaesthesia, the psychiatry thread and the two general pathology lectures are
