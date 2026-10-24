@@ -12,10 +12,10 @@
  * and it is checked against every video already in the catalog — a rule that would
  * move an existing video is an error, because the system is part of its identity.
  *
- * THE LAW this enforces: every Sketchy video in a system is scheduled in that system's
+ * THE RULE it follows: every Sketchy video in a system is scheduled in that system's
  * unit — even a topic Brody doesn't lecture — unless the unit excludes it with a stated
  * reason. A video whose system no unit owns is either homed lecture by lecture (Infectious
- * Disease, data/id-homes.js) or declared waiting for a named unit in tools/law-homes.js.
+ * Disease, data/id-homes.js) or recorded as waiting for a named unit in tools/system-homes.js.
  *
  * UNIT PLACEMENT. Neuro and MSK map their own Sketchy videos (mk_neuro.js, mk_msk.js).
  * Heme/Renal and Cardiopulm have no generator any more, so their Sketchy weeks are
@@ -158,7 +158,7 @@ Object.entries(NAMES).forEach(([id, cname]) => {
 if (problems.length) { console.error('PROBLEMS:'); problems.forEach(p => console.error('  ' + p)); process.exit(1); }
 fs.writeFileSync(APP, app);
 
-/* ---------------- the law: where does every Sketchy video get watched? ---------------- */
+/* ---------------- where does every Sketchy video get watched? ---------------- */
 const order = app.match(/const BRODY_BLOCKS=\[([^\]]*)\];/)[1].split(',').map(s => s.trim());
 const units = order.map(n => JSON.parse(app.match(new RegExp('\\nconst ' + n + '=(.*?);\\n'))[1]));
 const inUnit = (u, v) => (u.systems.includes(v.sys) || (u.include || []).includes(K(v))) && !(u.exclude || []).includes(K(v));
@@ -182,4 +182,4 @@ units.forEach(u => {
 });
 if (excluded.length) console.log('  excluded from Heme/Renal: ' + excluded.length + ' antineoplastics — ' + UNIT_EXCLUDE['heme-renal'].reason);
 if (distributed.length) console.log('  homed lecture by lecture in the units that teach them: ' + distributed.length + ' (' + h(distributed) + ') — see data/id-homes.js');
-Object.entries(waiting).forEach(([s, a]) => console.log('  not in any unit yet (' + s + '): ' + a.length + ' (' + h(a) + ') — tools/law-homes.js names where they go'));
+Object.entries(waiting).forEach(([s, a]) => console.log('  not in any unit yet (' + s + '): ' + a.length + ' (' + h(a) + ') — tools/system-homes.js names where they go'));

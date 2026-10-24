@@ -4,7 +4,7 @@
  * their own unit's homes), so every writer produces the same blocks.
  */
 import { HOMES, WAITING, matchRef } from '../data/id-homes.js';
-import { RETIRED } from '../../law-homes.js';
+import { RETIRED } from '../../system-homes.js';
 
 export const ID = 'Infectious Disease';
 export const K = v => v.res + '|' + v.sys + '|' + (v.cat || '') + '|' + v.name;

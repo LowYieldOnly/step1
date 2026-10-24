@@ -99,7 +99,7 @@ chk('C62-11 adding a fourth block left the first three audit-clean',
     other.every(o=>o.bad===0), JSON.stringify(other));
 
 // ---------- 3. THE decision: ID is distributed by lecture, as data/id-homes.js declares ----------
-/* Brody has no Infectious Disease unit, so the #1 law homes every ID video at the lecture
+/* Brody has no Infectious Disease unit, so every ID video is homed at the lecture
    that teaches it. This unit holds exactly what the declarations give it — skin infections
    in week 1, the terbinafine drugs in week 2, Brody's ID week in week 3 — and nothing homed
    elsewhere (the respiratory organisms belong to Cardiopulm, the enteric ones to GI). */
@@ -172,7 +172,7 @@ chk('C62-20 no video lands on a rest day', sch.sundays===0, sch.sundays+' Sunday
 chk('C62-21 week deadlines resolve to the two quizzes then the Monday exam',
     JSON.stringify(sch.deadlines)==='["2026-10-23","2026-10-30","2026-11-09"]',
     JSON.stringify(sch.deadlines));
-/* With every resource on, the law's Infectious Disease homes make this unit as dense as Neuro:
+/* With every resource on, the Infectious Disease homes make this unit as dense as Neuro:
    the plan must say so plainly. Bootcamp, the bulk of it, leaves the repertoire after this
    unit; without it the unit fits comfortably — so the warning is about the resource load. */
 const lite=await p.evaluate(()=>{

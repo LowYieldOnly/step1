@@ -74,14 +74,10 @@ These are the files that hold everything someone (or Claude) needs to pick the w
   came from and the rules it enforces. Re-running one is safe.
 - `docs/`: plans and write-ups. On the working branches, `docs/UNIFIED-HUB-PLAN.md` holds the
   M1 plan.
-- `tools/law-homes.js` and `tools/law.mjs` (on the working branch until they go live):
-  the #1-law audit.
+- `tools/system-homes.js` (on the working branch until it goes live): where each system
+  no built unit owns is expected to be scheduled.
 
 ### The standing rules
-
-> **The #1 law:** "Always remember that our #1 law is to make sure every brody lecture is
-> mapped to third party, and that the sum total videos within a resource are watched in
-> that specific system even if brody does not cover that topic."
 
 > **The deploy rule:** "don't deploy a new plan/plan update without my approval". Nothing
 > merges to `main` (which is what goes live) without Dylan's explicit approval of that

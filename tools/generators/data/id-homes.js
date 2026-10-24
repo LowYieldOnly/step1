@@ -3,9 +3,8 @@
  * Brody has no Infectious Disease unit. It teaches infections inside the organ-system units:
  * the respiratory infections in Cardiopulm, CNS infections in Neuro, skin infections and the
  * whole ID week (diagnosis, zoonoses, granulomatous disease, the immunocompromised host,
- * fever of unknown origin) in Musculoskeletal & Skin. The #1 law still holds — "the sum
- * total videos within a resource are watched in that specific system even if brody does
- * not cover that topic" — so every ID video of every resource is placed here:
+ * fever of unknown origin) in Musculoskeletal & Skin. Every ID video of every resource is
+ * placed here, the same way each unit schedules its own systems:
  *
  *   HOMES    at the unit and week whose lecture teaches it. A video two lectures teach is
  *            listed under both (it is watched once and shows done in both). A video no
@@ -13,7 +12,7 @@
  *            microbiology basics and antimicrobial drugs to MSK week 3, Brody's ID week.
  *   WAITING  only for a NAMED Brody unit: the GI unit (from Nov 9) for the enteric
  *            organisms and hepatitis, and the Term 4 reproductive unit for the sexually
- *            transmitted ones. tools/law.mjs fails a wait once its unit's date passes.
+ *            transmitted ones.
  *
  * tools/generators/mk_id.js resolves every reference against the catalog, refuses an
  * unknown or ambiguous one, refuses any ID video that is in neither list, and splices the
@@ -116,8 +115,8 @@ export const HOMES = [
     'skpharm:NRTIs', 'skpharm:NNRTIs', 'skpharm:Protease Inhibitors', 'skpharm:Maraviroc, Fusion Inhibitors, Integrase Inhibitors',
     'skpharm:Amphotericin & Flucytosine', 'skpharm:Azoles', 'skpharm:Ganciclovir, Valganciclovir, Foscarnet, Cidofovir',
     // fever of unknown origin: the travel and tropical fevers
-    // antimicrobial drugs: no Brody lecture on any calendar we have teaches them, so — by the
-    // law's "even if brody does not cover that topic" — they are watched in the ID week.
+    // antimicrobial drugs: no Brody lecture on any calendar we have teaches them, so they are
+    // watched in the ID week.
     // Move them if the GI or Term 4 calendar turns out to teach antimicrobial pharmacology.
     'bnb:Penicillins', 'bnb:Beta Lactams', 'bnb:Sulfonamides', 'bnb:Protein Synthesis Inhibitors', 'bnb:Other Antibiotics',
     'skpharm:Penicillin', 'skpharm:Nafcillin, Oxacillin, Methicillin, Dicloxacillin', 'skpharm:Ampicillin, Amoxicillin, Piperacillin, Ticarcillin',
@@ -127,7 +126,7 @@ export const HOMES = [
   ] },
 ];
 
-/* Only for a named Brody unit. Each fails the law audit once its `from` date passes. */
+/* Only for a named Brody unit. */
 export const WAITING = [
   { unit:'GI, Nutrition & Multisystem (SYST 9500)', from:'2026-11-09',
     note:'the enteric organisms, hepatitis viruses and intestinal parasites — taught with the GI tract', items:[
@@ -148,7 +147,7 @@ export const WAITING = [
   ] },
 ];
 
-/* Does a reference name this catalog video? Shared by mk_id.js and tools/law.mjs. */
+/* Does a reference name this catalog video? Shared by mk_id.js and tools/system-homes.js. */
 export function matchRef(ref, v) {
   if (v.sys !== 'Infectious Disease') return false;
   const i = ref.indexOf(':'), kind = ref.slice(0, i), body = ref.slice(i + 1);

@@ -6,21 +6,8 @@
         "hooks": [
           {
             "type": "command",
-            "command": "node \"$CLAUDE_PROJECT_DIR/tools/hooks/law-hook.mjs\" session",
-            "timeout": 30,
-            "statusMessage": "Checking the #1 law"
-          }
-        ]
-      }
-    ],
-    "PostToolUse": [
-      {
-        "matcher": "Edit|Write|MultiEdit|Bash",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "node \"$CLAUDE_PROJECT_DIR/tools/hooks/law-hook.mjs\" post",
-            "timeout": 30
+            "command": "node \"$CLAUDE_PROJECT_DIR/tools/hooks/session-rules.mjs\"",
+            "timeout": 10
           }
         ]
       }
