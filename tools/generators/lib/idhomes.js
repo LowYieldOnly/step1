@@ -9,9 +9,11 @@ import { RETIRED } from '../../system-homes.js';
 export const ID = 'Infectious Disease';
 export const K = v => v.res + '|' + v.sys + '|' + (v.cat || '') + '|' + v.name;
 export const isIdKey = k => k.split('|')[1] === ID;
+// UWorld Videos place their own ID videos (mk_uwvid.js, from data/uworld-videos-map.txt): not declared here, and never stripped
+const OWN = k => k.startsWith('uwvid|');
 
 export function resolveIdHomes(catalogVideos) {
-  const vids = catalogVideos.filter(v => v.sys === ID && v.res !== 'uwlib');
+  const vids = catalogVideos.filter(v => v.sys === ID && v.res !== 'uwlib' && v.res !== 'uwvid');
   const problems = [];
   const resolve = ref => {
     const hits = vids.filter(v => matchRef(ref, v));
@@ -39,10 +41,11 @@ export function resolveIdHomes(catalogVideos) {
 /* Merge one unit's ID homes into a block's include list and videoWeek, replacing whatever ID
    videos it held before — so the declarations, not the block, are the record. */
 export function applyIdHomes(blk, unitHomes, order) {
-  const keep = (blk.include || []).filter(k => !isIdKey(k));
-  Object.keys(blk.videoWeek || {}).forEach(k => { if (isIdKey(k) && !blk.systems.includes(ID)) delete blk.videoWeek[k]; });
+  const keep = (blk.include || []).filter(k => !isIdKey(k) && !OWN(k)), own = (blk.include || []).filter(OWN);
+  Object.keys(blk.videoWeek || {}).forEach(k => { if (isIdKey(k) && !OWN(k) && !blk.systems.includes(ID)) delete blk.videoWeek[k]; });
   const add = Object.keys(unitHomes || {}).sort((a, b) => order.indexOf(a) - order.indexOf(b));
-  blk.include = keep.concat(add);
+  blk.include = keep.concat(add, own);   // UWorld Videos' entries stay last, where mk_uwvid.js puts them
   add.forEach(k => { blk.videoWeek[k] = unitHomes[k]; });
+  Object.keys(blk.videoWeek).filter(OWN).forEach(k => { const w = blk.videoWeek[k]; delete blk.videoWeek[k]; blk.videoWeek[k] = w; });
   return blk;
 }

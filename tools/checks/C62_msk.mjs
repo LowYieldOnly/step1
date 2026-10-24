@@ -151,7 +151,8 @@ const sch=await p.evaluate(()=>{
   const dayOf={};SCHED.days.forEach(d=>d.items.forEach(i=>dayOf[i.id]=d.iso));
   const b=brodyBlockById('msk-skin');
   return {n:SCHED.stats.totalItems,h:Math.round(SCHED.stats.totalMin/6)/10,
-    expect:catVideos().filter(v=>!isArticle(v)&&brodyInBlock(b,v)).length,
+    // the unit's videos in the resources this plan has on (UWorld Videos is its own switch, off here)
+    expect:catVideos().filter(v=>!isArticle(v)&&brodyInBlock(b,v)&&resEnabledFor(S.cfg)[v.res]).length,
     placed:SCHED.planItems.filter(i=>dayOf[i.id]).length,
     pace:SCHED.brodyPace,feasible:SCHED.stats.feasible,
     heavy:SCHED.weekLoad.filter(w=>w.heavy).map(w=>w.n),
@@ -162,7 +163,7 @@ const sch=await p.evaluate(()=>{
     hero:__hero()};
 });
 chk('C62-18 all '+sch.n+' videos ('+sch.h+' h) get a day',
-    sch.placed===sch.n&&sch.n===sch.expect, sch.placed+' placed of '+sch.n+' planned; the unit has '+sch.expect);
+    sch.placed===sch.n&&sch.n===sch.expect, sch.placed+' placed of '+sch.n+' planned; the unit has '+sch.expect+' in these resources');
 chk('C62-19 nothing is scheduled on or after the shelf, or into the review buffer',
     sch.onOrAfterShelf===0&&sch.inBuffer===0,
     'at/after shelf '+sch.onOrAfterShelf+', in buffer '+sch.inBuffer);

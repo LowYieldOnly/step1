@@ -78,8 +78,11 @@ const v = await p.evaluate(() => {
   const view = catView('2026.1');
   return { view: JSON.stringify(view), cur: CAT_CURRENT_ED, first: CAT_FIRST_ED };
 });
-const want = JSON.stringify(OLD.videos.concat(cat.videos.filter(x => x.res === 'skimmuno')));
-chk('C69-2 the 2026.1 view is the old catalog exactly, then Sketchy Immuno', v.view === want, v.view.length + ' vs ' + want.length + ' chars');
+// then every row of a resource 2026.1 didn't have at all (Sketchy Immuno, UWorld Videos): each has its own switch, off
+const oldRes = new Set(OLD.videos.map(x => x.res));
+const want = JSON.stringify(OLD.videos.concat(cat.videos.filter(x => !oldRes.has(x.res))));
+chk('C69-2 the 2026.1 view is the old catalog exactly, then every resource it didn\'t have (' + [...new Set(cat.videos.filter(x => !oldRes.has(x.res)).map(x => x.res))].join(', ') + ')',
+  v.view === want, v.view.length + ' vs ' + want.length + ' chars');
 chk('C69-3 the app\'s current edition is catalog.json\'s, and plans with no stamp are on 2026.1',
   v.cur === cat.version && v.first === '2026.1' && !!(cat.editions && cat.editions['2026.1']), JSON.stringify({ app: v.cur, catalog: cat.version }));
 const before = fs.readFileSync(CAT, 'utf8');

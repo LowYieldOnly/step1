@@ -1,4 +1,4 @@
-# DRAFT for review (not yet in the app) — UWorld Medical Videos → B&B system › chapter, and the Brody week that teaches each.
+# UWorld Medical Videos → B&B system › chapter, and the Brody week that teaches each. Reviewed by Dylan (2026-10-24); mk_uwvid.js builds the catalog rows and unit weeks from this file.
 # Home codes: HR1-4 Heme & Renal, CP1-4 Cardiopulm, NS1-3 Nervous & Sensory, MSK1-3 MSK & Skin;
 # GI = SYST 9500 (from Nov 9, calendar pending); T4E/T4R = Term 4 endocrine/reproductive (calendar pending);
 # M1 = M1 section (planned); IMM = Immunology (no Brody unit — decision pending).
