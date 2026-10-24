@@ -1,0 +1,25 @@
+# The Playwright checks (tools/checks), on every push and on pull requests to main.
+name: checks
+
+on:
+  push:
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  checks:
+    name: Playwright checks
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      # tools/package-lock.json is gitignored (tools/.gitignore), so a clean install, not npm ci
+      - run: npm install --no-audit --no-fund
+        working-directory: tools
+      - run: npx playwright install --with-deps chromium
+        working-directory: tools
+      - run: node run-checks.mjs
+        working-directory: tools

@@ -4,7 +4,7 @@
  * system is distributed rather than owned. This script:
  *   - resolves every reference against the catalog, refusing one that matches nothing or
  *     (for a single-title reference) more than one video
- *   - refuses any ID video that is neither homed nor waiting for a named unit — the #1 law
+ *   - refuses any ID video that is neither homed nor waiting for a named unit
  *   - refuses a home in a week the unit doesn't have
  *   - splices each unit's ID videos into its include list and videoWeek, replacing what it
  *     held before, so a re-run is byte-identical
