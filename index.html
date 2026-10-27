@@ -472,6 +472,9 @@ b{color:var(--ink)}
 .clpct{font-family:var(--mono);font-size:15px;font-weight:800;color:var(--phos)}
 .clpct.met{color:var(--success)}
 .clres{padding:0;overflow:hidden}
+.rndsys{display:flex;flex-wrap:wrap;gap:6px;margin:4px 0 2px}
+.rndsys .tog{padding:6px 10px;font-size:12.5px}
+.rndsys .tognum{margin-left:6px}
 .clfold>summary{list-style:none;cursor:pointer}
 .clfold>summary::-webkit-details-marker{display:none}
 .clsum{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:14px 16px}
@@ -2975,7 +2978,58 @@ function bindUwTests(){
   document.querySelectorAll("[data-uwreset]").forEach(b=>b.onclick=()=>{const [iso,k]=b.dataset.uwreset.split("|");const P=uwPoolOf(iso,k);if(!P)return;
     const back=P.all.filter(uwUsed);const gone=uwTestsOf(P.key);uwMark(back,false);const t=Date.now();gone.forEach(x=>{S.uwt[x.id].gone=t;});save();render();
     toastUndo("All of "+P.lab+"’s questions are back.",()=>{uwMark(back,true);gone.forEach(x=>{delete S.uwt[x.id].gone;});save();render();});});
+  document.querySelectorAll("[data-rndsys]").forEach(b=>b.onclick=()=>{const s=b.dataset.rndsys;
+    if(!s)RND_SYS=null;else{const on=new Set(rndPool().on||[]);if(on.has(s))on.delete(s);else on.add(s);RND_SYS=on.size?on:null;}
+    rndRefresh();});
+  document.querySelectorAll("[data-rndmake]").forEach(b=>b.onclick=()=>{const P=rndPool();
+    const ids=rndDraw(P.left,Math.min(uwSize(),P.left.length));if(!ids.length)return;
+    uwMakeTest("r:"+(P.on?P.on.join("|"):"all"),ids,"Random · "+(P.on?P.on.join(", "):"All systems"));});
 }
+/* ---------- a random UWorld test from everything you've watched ----------
+   The Resource Library draws a test at random from the UWorld questions of every Boards &
+   Beyond video checked off anywhere in the catalog, in the plan or not, so one test mixes
+   systems the way the exam does. Systems narrow it (all of them by default). A question
+   already in a test is left out, as on Study, and the test is scored the same way. */
+let RND_SYS=null;   // the systems a random test draws from; null is all of them
+function rndPool(){const by={},vids={},order=[];
+  catVideos().forEach(v=>{if(v.res!=="bnb"||!isDone(itemId(v)))return;const ids=uwIdsFor(v.name);if(!ids||!ids.length)return;
+    if(!by[v.sys]){by[v.sys]=new Set();vids[v.sys]=0;order.push(v.sys);}vids[v.sys]++;ids.forEach(id=>by[v.sys].add(id));});
+  const sysIdx=s=>{const i=SYS_ORDER_DEFAULT.indexOf(s);return i<0?99:i;};
+  const systems=order.sort((a,b)=>sysIdx(a)-sysIdx(b)).map(s=>{const all=[...by[s]];return {sys:s,vids:vids[s],all,left:all.filter(id=>!uwUsed(id)).length};});
+  const pick=RND_SYS?systems.filter(x=>RND_SYS.has(x.sys)):[],from=pick.length?pick:systems;
+  const seen=new Set();from.forEach(x=>x.all.forEach(id=>seen.add(id)));const all=[...seen];
+  return {systems,on:pick.length?pick.map(x=>x.sys):null,vids:from.reduce((a,x)=>a+x.vids,0),all,left:all.filter(id=>!uwUsed(id))};}
+/* n of them, every one equally likely (Fisher–Yates) */
+function rndDraw(ids,n){const a=ids.slice();
+  for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));const x=a[i];a[i]=a[j];a[j]=x;}
+  return a.slice(0,n);}
+function rndCardHTML(){
+  let h='<div class="card clrnd" id="rndCard"><div class="cardhd">Random UWorld test</div>';
+  if(!uwReady())return h+'<p class="muted small">Loading the UWorld question sets…</p></div>';
+  const P=rndPool();
+  if(!P.systems.length)return h+'<p class="muted small">Questions drawn at random from every Boards &amp; Beyond video you’ve checked off, in your plan or not. Check off a video, here or on Study, and its UWorld questions join the draw.</p></div>';
+  h+='<p class="muted small">Questions drawn at random from every Boards &amp; Beyond video you’ve checked off, in your plan or not. A question already in one of your tests is left out.</p>'
+    +'<div class="rndsys" role="group" aria-label="Systems to draw from">'
+    +'<button type="button" class="tog sm'+(P.on?'':' on')+'" data-rndsys="">All systems</button>'
+    +P.systems.map(x=>'<button type="button" class="tog sm'+(P.on&&P.on.includes(x.sys)?' on':'')+'" data-rndsys="'+escAttr(x.sys)+'" title="'+x.vids+' video'+(x.vids===1?'':'s')+' checked off · '+x.left+' question'+(x.left===1?'':'s')+' left">'
+      +escHTML(x.sys)+'<span class="tognum">'+x.left+'</span></button>').join('')+'</div>'
+    +'<div class="uwtmeta">'+P.all.length+' question'+(P.all.length===1?'':'s')+' from '+P.vids+' video'+(P.vids===1?'':'s')
+      +' · '+(P.all.length-P.left.length)+' in tests · <b>'+P.left.length+' left</b></div>';
+  const n=Math.min(uwSize(),P.left.length);
+  if(n)h+='<div class="uwtsize"><span class="muted small">Questions</span>'
+      +[10,20,30,40].map(k=>'<button type="button" class="tog sm'+(uwSize()===k?' on':'')+'" data-uwsize="'+k+'">'+k+'</button>').join('')
+      +'<input type="number" class="uwtn" min="1" max="'+UW_MAX+'" value="'+uwSize()+'" aria-label="Questions per test (UWorld allows 40)" data-uwsizein="1"></div>'
+      +'<button type="button" class="btn sm uwtgo" data-rndmake="1">Copy a random '+n+'-question test</button>';
+  else h+='<p class="muted small" style="margin:6px 0">Every question from '+(P.on?'these systems':'your checked-off videos')+' is in a test you’ve made.</p>';
+  const tests=Object.keys(S.uwt||{}).map(k=>Object.assign({id:k},S.uwt[k])).filter(t=>!t.gone&&(t.pool||"").indexOf("r:")===0).sort((a,b)=>b.at-a.at);
+  const scored=tests.map(t=>uwScoreOf(t.id)).filter(Boolean);
+  if(scored.length){const q=scored.reduce((a,b)=>a+b.q,0),c=scored.reduce((a,b)=>a+b.correct,0);
+    h+='<div class="uwtmeta">Your score on random tests: <b>'+Math.round(c/q*100)+'%</b> over '+scored.length+' test'+(scored.length===1?'':'s')+'</div>';}
+  if(tests.length)h+='<details class="uwtmade"'+(tests.some(t=>!uwScoreOf(t.id))?' open':'')+'><summary>'+tests.length+' random test'+(tests.length===1?'':'s')+'</summary>'
+    +tests.map(t=>uwTestRowHTML(t,(t.label||"").replace(/^Random · /,""))).join('')+'</details>';
+  return h+'</div>';}
+/* checking a video off on this page doesn't re-render it, so the card is redrawn on its own */
+function rndRefresh(){const el=document.getElementById("rndCard");if(!el)return;el.outerHTML=rndCardHTML();bindUwTests();}
 
 /* ---------- copy helpers + per-day Anki block ---------- */
 function fallbackCopy(t,msg){try{const ta=document.createElement("textarea");ta.value=t;ta.style.position="fixed";ta.style.opacity="0";document.body.appendChild(ta);ta.focus();ta.select();document.execCommand("copy");document.body.removeChild(ta);toast(msg||"Copied");}catch(e){toast("Copy failed — long-press to copy");}}
@@ -3699,6 +3753,7 @@ function renderChecklist(){
     +'<p class="muted small">Every Boards &amp; Beyond, Pathoma, Sketchy and Bootcamp video, by resource, system and category. Check videos off here or on <b>Study</b>; progress stays in sync. Under a Boards &amp; Beyond video, open its <b>UWorld questions</b> to copy the IDs, then paste them into UWorld → Create Test → Custom.</p>'
     +(uwReady()?'<p class="muted small" style="margin-top:-4px">Question IDs from <b>'+escHTML((UW_DATA.source||{}).title||"the B&B → UWorld question document")+'</b>, by '+escHTML((UW_DATA.source||{}).author||"its maintainers")+'.</p>':'')
     +'<input class="clsearch" id="clq" type="search" placeholder="Search a video, category, system — or a UWorld question ID" value="'+escAttr(CL_Q)+'" aria-label="Search the library"></div>';
+  if(!q)body+=rndCardHTML();                     // while searching, the results come first
   RES.filter(r=>byRes[r]).forEach(r=>{
     const R=byRes[r];const rv=[];R.order.forEach(s=>R.sys[s].order.forEach(c=>rv.push.apply(rv,R.sys[s].cat[c])));
     const rf=clFrac(rv),fid='cl_'+r;
@@ -3752,6 +3807,7 @@ function clToggle(btn){
   btn.classList.toggle('done',nowDone);
   const chk=btn.querySelector('.clchk');if(chk){chk.classList.toggle('on',nowDone);chk.textContent=nowDone?'✓':'';}
   clUpdateCounters();
+  rndRefresh();
 }
 function clUpdateCounters(){
   const tot=clFrac(CLVIDS);
@@ -4069,7 +4125,7 @@ function bindPomo(){
     document.querySelectorAll(".pomosndopt").forEach(o=>o.classList.toggle("on",!!o.querySelector('[data-pomosound="'+i.dataset.pomosound+'"]')));});
   pomoRun();
 }
-/* Stats: UWorld test scores, one row per day or week the tests were built from (uwSetScore).
+/* Stats: UWorld test scores, one row per day or week the tests were built from, or per random draw's systems (uwSetScore).
    Kept by what you studied, never by subject — see uwScoreOf. Only shown once a test is scored. */
 function uwTestStatsCard(){const bl=practiceLog("uworld").blocks||{},by={},order=[];
   Object.keys(bl).forEach(k=>{const b=bl[k];if(!b||!b.test||b.hub!==S.active)return;const key=b.pool||b.test;
@@ -4081,7 +4137,7 @@ function uwTestStatsCard(){const bl=practiceLog("uworld").blocks||{},by={},order
   return '<div class="card uwtstats"><div class="cardhd">UWorld tests</div>'
     +'<div class="uwtop"><div class="uwbig">'+pc(C,Q)+'% <span>correct</span></div><div class="uwsub">'+N+' test'+(N===1?'':'s')+' · '+Q+' Qs</div></div>'
     +'<div class="bars">'+rows.map(r=>'<div class="bar"><div class="barlab" title="'+escAttr(r.n+' test'+(r.n===1?'':'s')+' · '+r.c+'/'+r.q)+'">'+escHTML(r.lab)+'</div><div class="bartrack"><div class="barfill" style="width:'+pc(r.c,r.q)+'%"></div></div><div class="barpct">'+pc(r.c,r.q)+'%</div></div>').join('')+'</div>'
-    +'<p class="muted small">By the day or week each test was built from. Log a score under the test on Study. UWorld’s Performance page breaks a test down by subject and system.</p></div>';}
+    +'<p class="muted small">By the day or week each test was built from, and random tests by their systems. Log a score under the test on Study, or a random test’s in the Resource Library. UWorld’s Performance page breaks a test down by subject and system.</p></div>';}
 /* Stats: the last seven days of focus */
 function pomoStatsCard(){let tf=0,tb=0,tn=0;const rows=[];
   for(let i=6;i>=0;i--){const iso=isoFromDate(addDays(isoToDate(todayISO()),-i));const t=pomoDay(iso);tf+=t.f;tb+=t.b;tn+=t.n;rows.push([iso,t]);}
@@ -5961,11 +6017,17 @@ function doResetAll(){
     S.cfgs=snap.cfgs;S.active=snap.active;S.cfg=S.active?S.cfgs[S.active]:null;_prevSig=progressSig();save();
     if(S.cfg){reflow();render();}else renderWelcome();toast("Restored ✓");});
 }
-const BUILD="2026-10-27b";
+const BUILD="2026-10-27c";
 /* ---------- What's new (changelog) ----------
    Newest entry first. Bump the top entry's id whenever you add one and the
    pop-up shows once per person (tracked in synced settings.seenUpdate). */
 const CHANGELOG=[
+  {id:"2026-10-27c", date:"October 2026", title:"A random UWorld test from everything you\u2019ve watched", items:[
+    "The Resource Library has a Random UWorld test card. It draws questions at random from every Boards & Beyond video you\u2019ve checked off, anywhere in the catalog, whether or not it\u2019s in your plan.",
+    "It uses all systems unless you tap some to narrow it down. Each system shows how many questions it has left.",
+    "Choose 10, 20, 30 or 40 questions (UWorld\u2019s limit is 40), then tap Copy and paste the IDs into UWorld \u2192 Create Test \u2192 Custom. A question already in one of your tests is never drawn again, the same as on Study.",
+    "Log your score right in the card. Your random tests also show up on Study under \u201cother tests to score\u201d, and on Stats.",
+  ]},
   {id:"2026-10-27b", date:"October 2026", title:"A calendar that keeps up with you", items:[
     "The calendar on Study now starts with the current week and shows four weeks. When a week ends it drops off the top, so this week is always first and you no longer scroll through the whole month.",
     "The arrows move four weeks back or ahead, and Today brings you back to this week.",
