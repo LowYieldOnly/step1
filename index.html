@@ -995,6 +995,17 @@ details.uwsys[open]>.uwsyshd::before{transform:rotate(90deg)}
 .pomoset>summary{cursor:pointer;font-size:12px;color:var(--phos);font-weight:600}
 .pomosetrow{display:flex;flex-wrap:wrap;gap:8px 14px;margin-top:8px;font-size:12.5px;color:var(--muted)}
 .pomosetrow input{width:54px;padding:4px 6px;border-radius:7px;border:1px solid var(--line);background:var(--bg);color:var(--ink);font-family:var(--mono)}
+.pomosnd{margin-top:12px}
+.pomosndhd{font-size:12px;font-weight:600;color:var(--muted);margin-bottom:6px}
+.pomosndgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(148px,1fr));gap:6px}
+.pomosndopt{display:flex;align-items:center;justify-content:space-between;gap:6px;min-width:0;padding:4px 5px 4px 9px;border:1px solid var(--line);border-radius:9px;font-size:12.5px;color:var(--ink)}
+.pomosndopt.on{border-color:var(--phos);box-shadow:inset 0 0 0 1px var(--phos)}
+.pomosndopt label{display:flex;align-items:center;gap:6px;min-width:0;cursor:pointer;flex:1 1 auto}
+.pomosndopt label span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pomosndopt input{accent-color:var(--phos);margin:0;flex:0 0 auto}
+.pomoplay{flex:0 0 auto;width:28px;height:28px;border-radius:50%;border:1px solid var(--line);background:var(--bg);color:var(--phos);display:inline-flex;align-items:center;justify-content:center;cursor:pointer;padding:0}
+.pomoplay:hover{border-color:var(--phos)}
+.pomoplay svg{width:11px;height:11px;margin-left:2px;fill:currentColor}
 .uwt{margin:12px 0 4px;padding:12px 14px;border:1px solid var(--line);border-radius:12px;background:var(--bg2)}
 .uwthd{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
 .uwtt{font-weight:800;font-size:13.5px;color:var(--ink)}
@@ -3961,7 +3972,8 @@ function clearAmboss(){const snap=JSON.parse(JSON.stringify(S.amboss||{total:nul
 const POMO_KEY="cc_pomo",POMO_DEV_KEY="cc_dev",DOC_TITLE=document.title;   // the tab shows the clock while it runs
 const POMO_MODES={focus:"Focus",short:"Short break",long:"Long break"};
 function pomoCfg(){const p=(S.settings&&S.settings.pomo)||{};const n=(v,d,lo,hi)=>{v=parseInt(v,10);return v>=lo&&v<=hi?v:d;};
-  return {focus:n(p.focus,25,1,180),short:n(p.short,5,1,60),long:n(p.long,15,1,90),every:n(p.every,4,1,12)};}
+  return {focus:n(p.focus,25,1,180),short:n(p.short,5,1,60),long:n(p.long,15,1,90),every:n(p.every,4,1,12),
+    sound:POMO_SOUNDS.some(x=>x.k===p.sound)?p.sound:"classic"};}   // the two beeps it always had, until you pick another
 function pomoDev(){let d=null;try{d=store.get(POMO_DEV_KEY);}catch(e){}
   if(!d){d="d"+Date.now().toString(36)+Math.random().toString(36).slice(2,7);try{store.set(POMO_DEV_KEY,d);}catch(e){}}return d;}
 function pomoLen(mode){const c=pomoCfg();return (mode==="focus"?c.focus:mode==="short"?c.short:c.long)*60;}
@@ -3984,11 +3996,36 @@ function pomoFinish(r,quiet){const len=r.len||pomoLen(r.mode);
   r={mode:next,running:false,left:pomoLen(next),cycle:r.cycle||0};pomoPut(r);
   if(!quiet){pomoChime();toast(next==="focus"?"Break’s over — ready to focus.":"Focus session done — take a "+(next==="long"?"long":"short")+" break.");}
   return r;}
-function pomoChime(){try{if(navigator.vibrate)navigator.vibrate([180,90,180]);}catch(e){}
-  try{const A=window.AudioContext||window.webkitAudioContext;if(!A)return;const ac=new A();
-    [0,0.28].forEach(t=>{const o=ac.createOscillator(),g=ac.createGain();o.frequency.value=880;o.connect(g);g.connect(ac.destination);
-      g.gain.setValueAtTime(0.0001,ac.currentTime+t);g.gain.exponentialRampToValueAtTime(0.25,ac.currentTime+t+0.02);
-      g.gain.exponentialRampToValueAtTime(0.0001,ac.currentTime+t+0.22);o.start(ac.currentTime+t);o.stop(ac.currentTime+t+0.25);});}catch(e){}}
+function pomoChime(){try{if(navigator.vibrate)navigator.vibrate([180,90,180]);}catch(e){}pomoPlay(pomoCfg().sound);}
+/* The timer's sounds, synthesised in the browser: nothing to download, they work offline,
+   and a sound is a few lines. Each one takes an audio context, where to send it and when to
+   start, so the same code plays through the speakers or renders offline (C76 measures them).
+   "classic" is the two beeps the timer always had, and stays the default. */
+const POMO_SOUNDS=[{k:"classic",label:"Classic beep"},{k:"chime",label:"Soft chime"},{k:"bell",label:"Bell"},{k:"bowl",label:"Singing bowl"},
+  {k:"marimba",label:"Marimba"},{k:"rise",label:"Rising notes"},{k:"doorbell",label:"Doorbell"},{k:"digital",label:"Digital alarm"},
+  {k:"birds",label:"Birdsong"},{k:"wood",label:"Wood block"},{k:"none",label:"No sound"}];
+function pomoTone(ac,dest,t,f,dur,o){o=o||{};const osc=ac.createOscillator(),g=ac.createGain();
+  osc.type=o.type||"sine";osc.frequency.setValueAtTime(f,t);if(o.to)osc.frequency.exponentialRampToValueAtTime(o.to,t+(o.glide||dur));
+  g.gain.setValueAtTime(0.0001,t);g.gain.exponentialRampToValueAtTime(o.gain||0.2,t+(o.attack||0.01));g.gain.exponentialRampToValueAtTime(0.0001,t+dur);
+  osc.connect(g);g.connect(dest);osc.start(t);osc.stop(t+dur+0.05);}
+const POMO_SYNTH={
+  classic:(ac,d,t)=>[0,0.28].forEach(x=>pomoTone(ac,d,t+x,880,0.22,{gain:0.25,attack:0.02})),
+  chime:(ac,d,t)=>[[1046.5,0],[1318.5,0.22]].forEach(([f,x])=>{pomoTone(ac,d,t+x,f,1.6,{gain:0.16});pomoTone(ac,d,t+x,f*2.76,0.6,{gain:0.04});}),
+  bell:(ac,d,t)=>[[1,0.2,2.6],[2,0.08,1.6],[2.76,0.07,1.2],[5.4,0.03,0.6]].forEach(([m,g,dur])=>pomoTone(ac,d,t,620*m,dur,{gain:g,attack:0.004})),
+  bowl:(ac,d,t)=>{pomoTone(ac,d,t,432,3.2,{gain:0.14,attack:0.08});pomoTone(ac,d,t,434.6,3.2,{gain:0.12,attack:0.08});pomoTone(ac,d,t,1296,1.6,{gain:0.03,attack:0.08});},
+  marimba:(ac,d,t)=>[784,1046.5,1318.5].forEach((f,i)=>{pomoTone(ac,d,t+i*0.16,f,0.45,{gain:0.22,attack:0.003});pomoTone(ac,d,t+i*0.16,f*4,0.08,{gain:0.04,attack:0.002});}),
+  rise:(ac,d,t)=>[523.25,659.25,783.99,1046.5].forEach((f,i)=>pomoTone(ac,d,t+i*0.13,f,0.5,{gain:0.16,type:"triangle"})),
+  doorbell:(ac,d,t)=>{pomoTone(ac,d,t,659.25,1.0,{gain:0.2});pomoTone(ac,d,t+0.45,523.25,1.3,{gain:0.2});},
+  digital:(ac,d,t)=>[0,0.12,0.24,0.6,0.72,0.84].forEach(x=>pomoTone(ac,d,t+x,2093,0.07,{gain:0.1,type:"square",attack:0.003})),
+  birds:(ac,d,t)=>[0,0.22,0.5].forEach((x,i)=>pomoTone(ac,d,t+x,2400+i*300,0.14,{gain:0.15,to:3800+i*200,glide:0.1,attack:0.005})),
+  wood:(ac,d,t)=>[0,0.18].forEach(x=>{pomoTone(ac,d,t+x,1250,0.09,{gain:0.3,attack:0.001,to:900,glide:0.08});pomoTone(ac,d,t+x,2600,0.04,{gain:0.08,attack:0.001});}),
+};
+/* One audio context for the page. Phones only let a page make sound once you've tapped
+   something, so Start and the ▶ buttons open it; the end-of-timer sound then plays on it. */
+let POMO_AC=null;
+function pomoAudio(){try{const A=window.AudioContext||window.webkitAudioContext;if(!A)return null;
+  if(!POMO_AC)POMO_AC=new A();if(POMO_AC.state==="suspended")POMO_AC.resume();return POMO_AC;}catch(e){return null;}}
+function pomoPlay(k){const f=POMO_SYNTH[k];if(!f)return;const ac=pomoAudio();if(!ac)return;try{f(ac,ac.destination,ac.currentTime+0.03);}catch(e){}}
 /* catch up on an interval that ended while the app was closed */
 function pomoCatchUp(){const r=pomoGet();if(r.running&&Date.now()>=r.endsAt){pomoFinish(r,true);return true;}return false;}
 function fmtClock(sec){sec=Math.max(0,sec);return Math.floor(sec/60)+":"+String(sec%60).padStart(2,"0");}
@@ -4003,10 +4040,15 @@ function pomoCardHTML(){
     +'<div class="pomobtns"><button type="button" class="btn" data-pomo="'+(r.running?'pause':'start')+'">'+(r.running?'Pause':(pomoLeft(r)<(r.len||pomoLen(r.mode))?'Resume':'Start'))+'</button>'
       +'<button type="button" class="btn ghost" data-pomo="reset">Reset</button><button type="button" class="btn ghost" data-pomo="skip" title="End this one now and move on">Skip ›</button></div>'
     +'<div class="pomotoday">Today: <b>'+fmtDur(t.f)+'</b> focused · '+t.n+' session'+(t.n===1?'':'s')+' · '+fmtDur(t.b)+' of breaks</div>'
-    +'<details class="pomoset"><summary>Timer lengths</summary><div class="pomosetrow">'
+    +'<details class="pomoset" id="pomoSet"'+(POMO_SET_OPEN?' open':'')+'><summary>Timer Customization</summary><div class="pomosetrow">'
       +[["focus","Focus",c.focus],["short","Short break",c.short],["long","Long break",c.long]].map(([k,l,v])=>'<label>'+l+' <input type="number" min="1" max="180" value="'+v+'" data-pomoset="'+k+'"> min</label>').join('')
-      +'<label>Long break every <input type="number" min="1" max="12" value="'+c.every+'" data-pomoset="every"> sessions</label></div></details></div>';
+      +'<label>Long break every <input type="number" min="1" max="12" value="'+c.every+'" data-pomoset="every"> sessions</label></div>'
+    +'<div class="pomosnd"><div class="pomosndhd" id="pomoSndHd">Sound when a timer ends</div><div class="pomosndgrid" role="radiogroup" aria-labelledby="pomoSndHd">'
+      +POMO_SOUNDS.map(x=>'<div class="pomosndopt'+(c.sound===x.k?' on':'')+'"><label><input type="radio" name="pomosound" value="'+x.k+'" data-pomosound="'+x.k+'"'+(c.sound===x.k?' checked':'')+'><span>'+escHTML(x.label)+'</span></label>'
+        +(x.k==="none"?'':'<button type="button" class="pomoplay" data-pomoplay="'+x.k+'" aria-label="Play '+escAttr(x.label)+'" title="Play"><svg viewBox="0 0 10 10" aria-hidden="true"><path d="M1 0.5v9l8-4.5z"/></svg></button>')+'</div>').join('')
+    +'</div></div></details></div>';
 }
+let POMO_SET_OPEN=false;   // Timer Customization stays open across the re-render a change causes
 let POMO_T=null;
 function pomoTick(){const el=document.getElementById("pomoClock");const r=pomoGet();
   if(r.running&&Date.now()>=r.endsAt){pomoFinish(r,false);document.title=DOC_TITLE;render();return;}
@@ -4016,7 +4058,7 @@ function pomoTick(){const el=document.getElementById("pomoClock");const r=pomoGe
 function pomoRun(){if(!POMO_T&&pomoGet().running)POMO_T=setInterval(pomoTick,1000);}
 function bindPomo(){
   document.querySelectorAll("[data-pomo]").forEach(b=>b.onclick=()=>{let r=pomoGet();const a=b.dataset.pomo;
-    if(a==="start"){const left=pomoLeft(r);r.running=true;r.len=left;r.startedAt=Date.now();r.endsAt=Date.now()+left*1000;delete r.left;}
+    if(a==="start"){pomoAudio();const left=pomoLeft(r);r.running=true;r.len=left;r.startedAt=Date.now();r.endsAt=Date.now()+left*1000;delete r.left;}
     else if(a==="pause")r=pomoStop(r);
     else if(a==="reset"){r=pomoStop(r);r.left=pomoLen(r.mode);delete r.len;}
     else if(a==="skip"){const wasFocus=r.mode==="focus";r=pomoStop(r);
@@ -4028,6 +4070,11 @@ function bindPomo(){
   document.querySelectorAll("[data-pomoset]").forEach(i=>i.onchange=()=>{S.settings=S.settings||{};const p=S.settings.pomo=Object.assign({},S.settings.pomo||{});
     const v=parseInt(i.value,10);if(v>0)p[i.dataset.pomoset]=v;save();
     const r=pomoGet();if(!r.running&&!(r.left<(r.len||pomoLen(r.mode))))pomoPut(Object.assign(r,{left:pomoLen(r.mode)}));render();});
+  const ps=document.getElementById("pomoSet");if(ps)ps.ontoggle=()=>{POMO_SET_OPEN=ps.open;};
+  document.querySelectorAll("[data-pomoplay]").forEach(b=>b.onclick=e=>{e.preventDefault();pomoPlay(b.dataset.pomoplay);});
+  document.querySelectorAll("[data-pomosound]").forEach(i=>i.onchange=()=>{if(!i.checked)return;
+    S.settings=S.settings||{};S.settings.pomo=Object.assign({},S.settings.pomo||{},{sound:i.dataset.pomosound});save();
+    document.querySelectorAll(".pomosndopt").forEach(o=>o.classList.toggle("on",!!o.querySelector('[data-pomosound="'+i.dataset.pomosound+'"]')));});
   pomoRun();
 }
 /* Stats: UWorld test scores, one row per day or week the tests were built from (uwSetScore).
@@ -5914,11 +5961,16 @@ function doResetAll(){
     S.cfgs=snap.cfgs;S.active=snap.active;S.cfg=S.active?S.cfgs[S.active]:null;_prevSig=progressSig();save();
     if(S.cfg){reflow();render();}else renderWelcome();toast("Restored ✓");});
 }
-const BUILD="2026-10-23e";
+const BUILD="2026-10-27";
 /* ---------- What's new (changelog) ----------
    Newest entry first. Bump the top entry's id whenever you add one and the
    pop-up shows once per person (tracked in synced settings.seenUpdate). */
 const CHANGELOG=[
+  {id:"2026-10-27", date:"October 2026", title:"Focus timer: pick its sound", items:[
+    "The focus timer\u2019s settings are now called Timer Customization.",
+    "Choose the sound that plays when a timer ends: Classic beep, Soft chime, Bell, Singing bowl, Marimba, Rising notes, Doorbell, Digital alarm, Birdsong or Wood block, or No sound. Tap \u25b6 next to any of them to hear it first.",
+    "Classic beep is the sound the timer has always made, so nothing changes until you pick another. Your choice is saved to your account, so it follows you to your other devices.",
+  ]},
   {id:"2026-10-23e", date:"October 2026", title:"Log your score on each UWorld test", items:[
     "Under each UWorld test you make, enter how many you got right. The test shows your score and percentage, and the test panel totals the day or the week.",
     "A score counts toward your practice totals and your question goal. It doesn\u2019t go into Accuracy by subject: one UWorld test covers many subjects and systems, and UWorld\u2019s Performance page already breaks a test down by both.",
