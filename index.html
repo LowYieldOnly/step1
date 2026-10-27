@@ -296,7 +296,6 @@ b{color:var(--ink)}
 /* readiness layer UI */
 .status.bad{background:var(--danger-bg);border:1px solid color-mix(in srgb,var(--danger) 32%,transparent);color:var(--danger)}
 .status.bad::before{background:var(--danger)}
-.hchips{margin:10px 0 0}
 .hcav{margin:6px 0 0}
 .rchip{display:inline-flex;align-items:center;gap:9px;width:100%;text-align:left;border-radius:12px;padding:10px 13px;border:1px solid var(--line2);background:var(--bg2);color:var(--ink);font-family:inherit;font-size:12.5px;cursor:pointer;transition:border-color .15s}
 .rchip:hover{border-color:var(--phos-dim)}
@@ -3093,7 +3092,6 @@ function wireChrome(){
   const sc=document.getElementById("syncChip");if(sc)sc.onclick=openBackups;
   const bb=document.getElementById("brandBtn");if(bb)bb.onclick=renderWelcome;
   document.querySelectorAll("[data-goready]").forEach(b=>b.onclick=()=>{VIEW="stats";render();});
-  document.querySelectorAll("[data-gouworld]").forEach(b=>b.onclick=()=>{VIEW="stats";render();});
   document.querySelectorAll("[data-gostep]").forEach(b=>b.onclick=()=>{VIEW="step";render();});
   scrollNavToActive();
   bindFolds();
@@ -3516,12 +3514,6 @@ function readinessChip(){
   if(!la)return '<button class="rchip rchip-info" data-goready="1">Log your first self-assessment →</button>';
   const v=readinessVerdict(la.pct);
   return '<button class="rchip rchip-'+v.cls+'" data-goready="1"><span class="rchip-n">'+la.pct+'%</span><span class="rchip-t">'+escHTML(la.form)+' · '+v.text+'</span></button>';
-}
-/* Today chip — block-phase UWorld progress (Brody is school-block focused) */
-function uworldChip(){
-  const r=practiceRollup();   // every practice source combined
-  if(!r.done)return '<button class="rchip rchip-info" data-gouworld="1">Log practice questions →</button>';
-  return '<button class="rchip rchip-info" data-gouworld="1"><span class="rchip-n">'+r.pct+'%</span><span class="rchip-t">Practice · '+r.done+' Qs correct</span></button>';
 }
 function loadCaveat(){const a=(S.cfg&&S.cfg.ankiMinPerDay)||0,u=(S.cfg&&S.cfg.uworldMinPerDay)||0;if(!a&&!u)return '';const parts=[];if(a)parts.push('~'+(Math.round(a/60*10)/10)+' h Anki');if(u)parts.push('~'+(Math.round(u/60*10)/10)+' h UWorld');return '<p class="muted small hcav">Video time only — your day also reserves '+parts.join(' + ')+'.</p>';}
 /* ---- Ready view ---- */
@@ -4123,17 +4115,27 @@ function miniCalendar(){
   return '<div class="card deskonly"><div class="cardhd">'+CAL_MONTHS[+ym.slice(5)-1]+'</div>'+g
     +'<div class="mcleg"><span><i class="mcd load"></i>study</span><span><i class="mcd review"></i>review</span><span><i class="mcd rest"></i>rest</span></div></div>';
 }
+/* Study's calendar rolls: it opens on the current week and shows four, so this week is always
+   on top and a finished week drops off as the next begins. The arrows page four weeks back or
+   ahead; Today returns. CAL_WKOFF counts weeks from the current one, not dates, so the window
+   moves with the calendar on its own. */
+const CAL_WEEKS=4;
+let CAL_WKOFF=0;
+function calWindow(off){const t=isoToDate(todayISO());const s=addDays(t,-t.getDay()+7*off);
+  const cells=[];for(let i=0;i<CAL_WEEKS*7;i++)cells.push(isoFromDate(addDays(s,i)));return cells;}
+function calRange(a,b){const A=isoToDate(a),B=isoToDate(b);
+  return MON[A.getMonth()]+' '+A.getDate()+' – '+(A.getMonth()===B.getMonth()?'':MON[B.getMonth()]+' ')+B.getDate()
+    +(A.getFullYear()!==B.getFullYear()||A.getFullYear()!==isoToDate(todayISO()).getFullYear()?', '+B.getFullYear():'');}
 function studyCalendar(){
-  if(!CAL_YM||!/^\d{4}-\d{2}$/.test(CAL_YM))CAL_YM=todayISO().slice(0,7);
-  const p=CAL_YM.split("-").map(Number);
-  let h='<div class="card studycal"><div class="calbar"><button class="calnav" id="calPrev" aria-label="previous month">‹</button>'
-    +'<div class="calmon">'+CAL_MONTHS[p[1]-1]+' '+p[0]+'</div>'
-    +'<button class="calnav" id="calNext" aria-label="next month">›</button>'
+  const cells=calWindow(CAL_WKOFF);
+  let h='<div class="card studycal"><div class="calbar"><button class="calnav" id="calPrev" aria-label="previous '+CAL_WEEKS+' weeks">‹</button>'
+    +'<div class="calmon">'+calRange(cells[0],cells[cells.length-1])+'</div>'
+    +'<button class="calnav" id="calNext" aria-label="next '+CAL_WEEKS+' weeks">›</button>'
     +'<button class="caltoday" id="calToday">Today</button>'
     +((S.cfg&&S.cfg.brody)?'<button class="calhelp" id="brodyHelpBtn" title="How the Brody calendar works" aria-label="How the Brody calendar works">?</button>':'')
     +'</div>';
   h+='<div class="calwk">'+["Su","Mo","Tu","We","Th","Fr","Sa"].map(d=>'<div>'+d+'</div>').join('')+'</div>';
-  h+='<div class="calgrid">'+monthMatrix(CAL_YM).map(calCell).join('')+'</div>';
+  h+='<div class="calgrid">'+cells.map((iso,i)=>calCell(iso,{mon:i===0||iso.slice(8)==="01"})).join('')+'</div>';   // a month's name where it starts
   h+='<div class="callegend"><span><i class="lg load"></i>study</span><span><i class="lg alldone"></i>done</span><span><i class="lg rest"></i>rest</span><span><i class="lg review"></i>review</span><span><i class="lg off"></i>off</span></div></div>';
   return h;
 }
@@ -4185,8 +4187,6 @@ function renderToday(){
       colB+='<div class="card"><div class="cardhd">Nothing scheduled today</div><p class="muted">Tap a day on the calendar to study ahead, or enjoy the breather.</p></div>';
     }
   }
-  // "Log practice questions" sits directly beneath the day box
-  colB+='<div class="hchips">'+uworldChip()+'</div>';
   colA=colA.replace('<!--WQLOG-->',UW_LOGGER_SHOWN?'':weeklyQuickLogHTML());   // exactly one logger on the page
   app.innerHTML=chrome("today")+'<div class="wrap"><div class="studygrid"><div class="studyblocks">'+colA+'</div><div class="studywork">'+colB+'</div><div class="studycalz">'+studyCalendar()+'</div></div></div>';
   bindVlist();bindExtras();bindWeeklyQuickLog();
@@ -4199,9 +4199,9 @@ function renderToday(){
   const sn=document.getElementById("d_unstudy");if(sn)sn.onclick=()=>dayStudyToggle(focusISO,false);
   const s1=document.getElementById("studyToday");if(s1)s1.onclick=()=>dayStudyToggle(todayISO(),true);
   const hrf=document.getElementById("heroRefit");if(hrf)hrf.onclick=()=>{(S.cfg&&S.cfg.brody)?brodyRefit():customRefit();};
-  const pv=document.getElementById("calPrev");if(pv)pv.onclick=()=>{CAL_YM=ymShift(CAL_YM,-1);render();};
-  const nx=document.getElementById("calNext");if(nx)nx.onclick=()=>{CAL_YM=ymShift(CAL_YM,1);render();};
-  const ct=document.getElementById("calToday");if(ct)ct.onclick=()=>{CAL_YM=todayISO().slice(0,7);CAL_SEL=todayISO();render();};
+  const pv=document.getElementById("calPrev");if(pv)pv.onclick=()=>{CAL_WKOFF-=CAL_WEEKS;render();};
+  const nx=document.getElementById("calNext");if(nx)nx.onclick=()=>{CAL_WKOFF+=CAL_WEEKS;render();};
+  const ct=document.getElementById("calToday");if(ct)ct.onclick=()=>{CAL_WKOFF=0;CAL_SEL=todayISO();render();};
   const bhb=document.getElementById("brodyHelpBtn");if(bhb)bhb.onclick=()=>showBrodyHelp(false);
   document.querySelectorAll("[data-cal]").forEach(b=>b.onclick=()=>{CAL_SEL=b.dataset.cal;render();});
 }
@@ -4259,9 +4259,9 @@ function calVlist(row){
   if(items.length>CAP)h+='<span class="cvmore">+'+(items.length-CAP)+' more</span>';
   return h+'</div>';
 }
-function calCell(iso){
+function calCell(iso,o){
   if(!iso)return '<div class="calcell empty"></div>';
-  const day=+iso.slice(8);const row=SCHED.dayMap[iso];
+  const day=(o&&o.mon)?MON[isoToDate(iso).getMonth()]+' '+(+iso.slice(8)):+iso.slice(8);const row=SCHED.dayMap[iso];
   let cls="calcell",ind="";
   if(row){
     if(row.off){cls+=" off";ind='<span class="ci">off</span>';}
@@ -5961,11 +5961,16 @@ function doResetAll(){
     S.cfgs=snap.cfgs;S.active=snap.active;S.cfg=S.active?S.cfgs[S.active]:null;_prevSig=progressSig();save();
     if(S.cfg){reflow();render();}else renderWelcome();toast("Restored ✓");});
 }
-const BUILD="2026-10-27";
+const BUILD="2026-10-27b";
 /* ---------- What's new (changelog) ----------
    Newest entry first. Bump the top entry's id whenever you add one and the
    pop-up shows once per person (tracked in synced settings.seenUpdate). */
 const CHANGELOG=[
+  {id:"2026-10-27b", date:"October 2026", title:"A calendar that keeps up with you", items:[
+    "The calendar on Study now starts with the current week and shows four weeks. When a week ends it drops off the top, so this week is always first and you no longer scroll through the whole month.",
+    "The arrows move four weeks back or ahead, and Today brings you back to this week.",
+    "The practice-question shortcut under today\u2019s videos is gone. Your practice stats are on Stats, and you log questions in the UWorld test panel.",
+  ]},
   {id:"2026-10-27", date:"October 2026", title:"Focus timer: pick its sound", items:[
     "The focus timer\u2019s settings are now called Timer Customization.",
     "Choose the sound that plays when a timer ends: Classic beep, Soft chime, Bell, Singing bowl, Marimba, Rising notes, Doorbell, Digital alarm, Birdsong or Wood block, or No sound. Tap \u25b6 next to any of them to hear it first.",
