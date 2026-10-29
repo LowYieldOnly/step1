@@ -4171,14 +4171,16 @@ function miniCalendar(){
   return '<div class="card deskonly"><div class="cardhd">'+CAL_MONTHS[+ym.slice(5)-1]+'</div>'+g
     +'<div class="mcleg"><span><i class="mcd load"></i>study</span><span><i class="mcd review"></i>review</span><span><i class="mcd rest"></i>rest</span></div></div>';
 }
-/* Study's calendar rolls: it opens on the current week and shows four, so this week is always
-   on top and a finished week drops off as the next begins. The arrows page four weeks back or
-   ahead; Today returns. CAL_WKOFF counts weeks from the current one, not dates, so the window
-   moves with the calendar on its own. */
-const CAL_WEEKS=4;
+/* Study's calendar rolls: last week on top, then the current week and the three after it, so
+   a week drops off only once the week after it has ended too. Keeping last week matters because
+   its weekend straddles the Sunday that starts a row: drop it as soon as the week turns and the
+   Saturday you studied yesterday is gone (Dylan, 2026-10-29). The arrows page four weeks back or
+   ahead, one week overlapping; Today returns. CAL_WKOFF counts weeks from the current one, not
+   dates, so the window moves with the calendar on its own. */
+const CAL_WEEKS=4,CAL_BACK=1;   // weeks ahead, counting this one; weeks kept behind it
 let CAL_WKOFF=0;
-function calWindow(off){const t=isoToDate(todayISO());const s=addDays(t,-t.getDay()+7*off);
-  const cells=[];for(let i=0;i<CAL_WEEKS*7;i++)cells.push(isoFromDate(addDays(s,i)));return cells;}
+function calWindow(off){const t=isoToDate(todayISO());const s=addDays(t,-t.getDay()+7*(off-CAL_BACK));
+  const cells=[];for(let i=0;i<(CAL_BACK+CAL_WEEKS)*7;i++)cells.push(isoFromDate(addDays(s,i)));return cells;}
 function calRange(a,b){const A=isoToDate(a),B=isoToDate(b);
   return MON[A.getMonth()]+' '+A.getDate()+' – '+(A.getMonth()===B.getMonth()?'':MON[B.getMonth()]+' ')+B.getDate()
     +(A.getFullYear()!==B.getFullYear()||A.getFullYear()!==isoToDate(todayISO()).getFullYear()?', '+B.getFullYear():'');}
@@ -6017,11 +6019,15 @@ function doResetAll(){
     S.cfgs=snap.cfgs;S.active=snap.active;S.cfg=S.active?S.cfgs[S.active]:null;_prevSig=progressSig();save();
     if(S.cfg){reflow();render();}else renderWelcome();toast("Restored ✓");});
 }
-const BUILD="2026-10-27c";
+const BUILD="2026-10-29";
 /* ---------- What's new (changelog) ----------
    Newest entry first. Bump the top entry's id whenever you add one and the
    pop-up shows once per person (tracked in synced settings.seenUpdate). */
 const CHANGELOG=[
+  {id:"2026-10-29", date:"October 2026", title:"Last week stays on the calendar", items:[
+    "The calendar on Study now keeps last week on top, above this week and the three after it. The weekend you just studied no longer drops off the moment a new week starts.",
+    "Nothing you checked off was lost: those videos were always saved and counted, and now you can see them again on the days you did them.",
+  ]},
   {id:"2026-10-27c", date:"October 2026", title:"A random UWorld test from everything you\u2019ve watched", items:[
     "The Resource Library has a Random UWorld test card. It draws questions at random from every Boards & Beyond video you\u2019ve checked off, anywhere in the catalog, whether or not it\u2019s in your plan.",
     "It uses all systems unless you tap some to narrow it down. Each system shows how many questions it has left.",
