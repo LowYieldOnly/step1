@@ -25,14 +25,14 @@ await p.evaluate(async () => {
   window.__clip = null;
   Object.defineProperty(navigator, 'clipboard', { configurable: true,
     value: { writeText: t => (window.__clip = t, Promise.resolve()) } });
-  window.__mk = (goal) => {
+  window.__mk = (goal, res) => {
     const b = brodyBlockById('cardiopulm');
     AUTHED = true; window.__d0 = b.weeks[0].start; todayISO = () => window.__d0; CAL_SEL = null;
     S.settings = { seenBrodyHelp: true, seenUpdate: LATEST_UPDATE, uwSize: 10 };
     PRACTICE_KEYS.forEach(k => { S[k] = { total: null, blocks: {} }; });
     Object.assign(S, { vdone: {}, vdoneDate: {}, vdoneAt: {}, vundone: {}, vskip: {}, vshaky: {}, akdone: {}, notes: {}, streak: { days: {} }, assessments: {}, uwq: {}, uwt: {}, pomo: {}, _resetAt: 0 });
     S.cfgs = { step1: null, nbme: { examType: 'nbme', brody: b.id, examLabel: b.name, examISO: b.shelf, startISO: b.weeks[0].start, restDays: [0],
-      resources: { bnb: true }, systems: b.systems.slice(), brodyReviewDays: 3, brodyJoinWk: 1, brodyJoinDate: b.weeks[0].start, weeklyQGoal: goal || 0 } };
+      resources: res || { bnb: true }, systems: b.systems.slice(), brodyReviewDays: 3, brodyJoinWk: 1, brodyJoinDate: b.weeks[0].start, weeklyQGoal: goal || 0 } };
     normalizeCfg(S.cfgs.nbme, 'nbme'); activate('nbme'); S.active = 'nbme'; VIEW = 'today'; UW_EDIT = {}; reflow(); render();
   };
   window.__wait = () => new Promise(r => setTimeout(r, 30));
@@ -131,10 +131,13 @@ const L = await p.evaluate(async () => { const out = {}; try {
   const d = isoToDate(todayISO()); const sun = isoFromDate(addDays(d, (7 - d.getDay()) % 7 || 7));
   todayISO = () => sun; CAL_SEL = null; render();
   out.rest = count(); out.restPanel = !!document.querySelector('.uwt #wq_save') && !document.querySelector('.wgcard #wq_save');
-  // the last review day before the shelf has no videos and no next day, so no test panel:
-  // the weekly-goal card keeps the logger
+  // the last review day before the shelf has no videos, but it has the test panel for its week
+  // (C79): the logger goes with it
   __mk(100); const last = SCHED.days[SCHED.days.length - 1]; out.lastReview = !!last.review && !last.items.length;
   todayISO = () => last.iso; CAL_SEL = null; render();
+  out.review = count(); out.reviewPanel = !!document.querySelector('.uwt #wq_save') && !document.querySelector('.wgcard #wq_save');
+  // a plan with no UWorld questions has no test panel: the weekly-goal card keeps the logger
+  __mk(100, { bnb: false, pathoma: true });
   out.noBnb = count(); out.inGoal = !!document.querySelector('.wgcard #wq_save'); out.noPanel = !document.querySelector('.uwt');
   // studying ahead: the day you picked has the test panel, and the one logger is in it
   __mk(100); CAL_SEL = isoFromDate(addDays(isoToDate(todayISO()), 1)); render();
@@ -142,8 +145,8 @@ const L = await p.evaluate(async () => { const out = {}; try {
 } catch (e) { out.err = String(e && e.stack || e); } return out; });
 chk('C74-13 on a study day the one logger is in the test panel, not the weekly-goal card', L.day === '1/1' && L.inPanel && L.notGoal, JSON.stringify(L));
 chk('C74-14 the moved logger logs a block', L.logged, JSON.stringify(L));
-chk('C74-15 on a rest day the logger goes with the next day\'s test panel; with no panel (the last review day) the weekly-goal card keeps it',
-  L.rest === '1/1' && L.restPanel && L.lastReview && L.noBnb === '1/1' && L.inGoal && L.noPanel, JSON.stringify(L));
+chk('C74-15 on a rest day the logger goes with the next day\'s test panel, on a review day with that day\'s; with no panel (no UWorld questions in the plan) the weekly-goal card keeps it',
+  L.rest === '1/1' && L.restPanel && L.lastReview && L.review === '1/1' && L.reviewPanel && L.noBnb === '1/1' && L.inGoal && L.noPanel, JSON.stringify(L));
 chk('C74-16 studying ahead, the one logger is in that day\'s test panel', L.ahead === '1/1' && L.aheadPanel, JSON.stringify(L));
 
 chk('C74-17 no uncaught page errors', errors.length === 0 && !s.err && !L.err, (s.err || L.err || '') + errors.slice(0, 3).join(' | '));

@@ -335,7 +335,7 @@ Object.keys(parity.std).forEach(v=>{
 chk('C67-30 every tab offers a plan in your own order every card and control a standard Brody plan has (bar the quiz toggle and the weekly table it replaces)',
     gaps.length===0, JSON.stringify(gaps.slice(0,8)));
 chk('C67-31 a UWorld test can be built from a whole topic, as from a Brody week — named by its Brody week, not its place in your order',
-    parity.std.today.weekCopy.some(t=>/^Brody week \d+$/.test(t))&&parity.seq.today.weekCopy.some(t=>/^Brody week \d+$/.test(t))
+    parity.std.today.weekCopy.some(t=>/^Week \d+$/.test(t))&&parity.seq.today.weekCopy.some(t=>/^Brody week \d+$/.test(t))
       &&!parity.seq.today.weekCopy.some(t=>/topic/.test(t)),
     JSON.stringify({std:parity.std.today.weekCopy,seq:parity.seq.today.weekCopy}));
 
