@@ -2857,7 +2857,7 @@ function uwRowHTML(it){
    in turn, so Test 1 of a week covers the whole week, not just its first day. A test can be
    copied again (a paste that went wrong) or put back (a test never made); Start over puts a
    day's or a week's questions back for a second pass. */
-const UW_MAX=40;let UWT_KIND={};   // which pool each day's builder shows: "day" or "week"
+const UW_MAX=40;let UWT_KIND={};   // which pool each day's builder shows: "day", "week" (the day's own) or "w2" (any other)
 function uwUsed(id){const u=S.uwq&&S.uwq[id];return !!u&&(u[0]||0)>(u[1]||0);}
 function uwMark(ids,used){const t=Date.now();S.uwq=S.uwq||{};
   ids.forEach(id=>{const u=S.uwq[id]||[0,0];S.uwq[id]=used?[t,u[1]||0]:[u[0]||0,t];});}
@@ -2870,16 +2870,31 @@ function uwPool(items){const seen=new Set(),lists=[];
 function uwDraw(lists,n){const q=lists.map(l=>l.filter(id=>!uwUsed(id)));const out=[];
   for(let i=0;out.length<n;i++){let took=false;q.forEach(l=>{if(out.length<n&&i<l.length){out.push(l[i]);took=true;}});if(!took)break;}
   return out;}
-function uwWeekOf(row){if(!(SCHED&&SCHED.brody&&row&&row.brodyWeek))return null;const wk=row.brodyWeek;
+/* A Brody week as a test pool: its name, its button, and the key its tests are kept under. */
+function uwWeekInfo(wk){if(!(SCHED&&SCHED.brody&&wk))return null;
+  const w=SCHED.brody.weeks.find(x=>x.n===wk);
   // In your own order the block is named by the Brody week it is (or the system you added),
   // not by its place in your order: "topic 2" meant nothing on the screen.
-  let lab="Brody week "+wk,tip="";
-  if(SCHED.brody.seq){const w=SCHED.brody.weeks.find(x=>x.n===wk),p=w&&seqParse(w.topic);
-    lab=!p?"this topic":p.kind==="u"?((SCHED.brody.one?"Brody":p.blk.name)+" week "+p.wk.n):p.sys;tip=w?w.label:"";}
-  return {wk,lab,tip,key:"w:"+(SCHED.brody.id||"")+":"+(SCHED.brody.unit||"")+":"+wk};}
+  let lab="Brody week "+wk,chip="Week "+wk,tip=w?w.label||"":"";
+  if(SCHED.brody.seq){const p=w&&seqParse(w.topic);
+    lab=!p?"this topic":p.kind==="u"?((SCHED.brody.one?"Brody":p.blk.name)+" week "+p.wk.n):p.sys;chip=lab;}
+  return {wk,lab,chip,tip,key:"w:"+(SCHED.brody.id||"")+":"+(SCHED.brody.unit||"")+":"+wk};}
+function uwWeekOf(row){return row&&row.brodyWeek?uwWeekInfo(row.brodyWeek):null;}
+/* A week's pool is what the unit teaches that week, not what the calendar put on its dates:
+   a video you're behind on stays in its own week's pool after it rolls forward, and a week
+   you joined after still has its videos (they sit on past days, marked earlier). */
+function uwWeekItems(wk){const seen=new Set(),out=[];
+  const add=it=>{if(it.wk===wk&&!seen.has(it.id)){seen.add(it.id);out.push(it);}};
+  (SCHED.planVideos||[]).forEach(add);SCHED.days.forEach(d=>d.items.forEach(add));return out;}
+/* The weeks a day's builder offers: every week of the unit that has UWorld questions. The
+   day's own week keeps the kind "week"; any other is "w"+its number. */
+function uwWeekChoices(row){if(!(SCHED&&SCHED.brody&&row))return [];
+  return SCHED.brody.weeks.map(w=>uwWeekInfo(w.n)).filter(W=>W&&uwPool(uwWeekItems(W.wk)).all.length)
+    .map(W=>Object.assign({k:W.wk===row.brodyWeek?"week":"w"+W.wk},W));}
 function uwPoolOf(iso,kind){const row=SCHED&&SCHED.dayMap&&SCHED.dayMap[iso];if(!row)return null;
-  const W=uwWeekOf(row);let items=row.items,key="d:"+iso,lab="this day";
-  if(kind==="week"&&W){items=[];SCHED.days.forEach(d=>{if(d.brodyWeek===W.wk)items.push.apply(items,d.items);});key=W.key;lab=W.lab;}
+  let items=row.items,key="d:"+iso,lab="this day";
+  const W=kind==="week"?uwWeekOf(row):/^w\d+$/.test(kind||"")?uwWeekInfo(+kind.slice(1)):null;
+  if(W){items=uwWeekItems(W.wk);key=W.key;lab=W.lab;}
   const watched=!!(S.settings&&S.settings.uwWatched);
   if(watched)items=items.filter(it=>isDone(it.id));
   return Object.assign({key,lab,watched},uwPool(items));}
@@ -2908,13 +2923,15 @@ function uwTestRowHTML(t,name){const sc=uwScoreOf(t.id),n=t.ids.length,edit=!sc|
 function uwDayBarHTML(iso,withLogger){
   if(!uwReady())return '';
   const row=SCHED&&SCHED.dayMap&&SCHED.dayMap[iso];if(!row)return '';
-  const W=uwWeekOf(row);
-  if(!uwPool(row.items).all.length&&!(W&&uwPoolOf(iso,"week").all.length))return '';
-  const kind=(W&&UWT_KIND[iso]==="week")?"week":"day";
+  const WKS=uwWeekChoices(row),dayQ=uwPool(row.items).all.length>0;
+  if(!dayQ&&!WKS.length)return '';
+  // a day with no questions of its own (a review day) opens on its week
+  let kind=UWT_KIND[iso]||(dayQ?"day":((WKS.find(x=>x.k==="week")||WKS[0]).k));
+  if(!(kind==="day"&&dayQ)&&!WKS.some(x=>x.k===kind))kind=dayQ?"day":WKS[0].k;
   const P=uwPoolOf(iso,kind),tests=uwTestsOf(P.key),n=Math.min(uwSize(),P.left.length);
   const seg=(k,lab,tip)=>'<button type="button" class="tog'+(kind===k?' on':'')+'" data-uwkind="'+escAttr(iso+'|'+k)+'"'+(tip?' title="'+escAttr(tip)+'"':'')+'>'+escHTML(lab)+'</button>';
   let h='<div class="uwt"><div class="uwthd"><span class="uwtt">UWorld test</span>'
-    +(W?'<span class="uwtseg">'+seg("day","This day")+seg("week",W.lab,W.tip)+'</span>':'')+'</div>'
+    +(WKS.length?'<span class="uwtseg">'+(dayQ?seg("day","This day"):'')+WKS.map(x=>seg(x.k,x.chip,x.tip)).join('')+'</span>':'')+'</div>'
     +'<div class="uwtmeta">'+P.all.length+' question'+(P.all.length===1?'':'s')+(P.watched?' from videos you’ve checked off':'')
       +(P.all.length?' · '+(P.all.length-P.left.length)+' in tests · <b>'+P.left.length+' left</b>':'')+'</div>';
   if(P.left.length){
@@ -4233,7 +4250,8 @@ function renderToday(){
       colB+='<div class="card"><div class="cardhd">'+(todayRow.off?'Day off':'Rest day')+' · '+fmtLong(todayISO())+'</div><p class="muted">No videos scheduled today.'
         +(todayRow.off?' <button class="link" id="unoff">Cancel day off</button>':' <button class="link" id="studyToday">Study today anyway</button>')+'</p></div>';
     } else if(todayRow&&todayRow.review&&!(row&&row.items.length)){
-      colB+='<div class="card"><div class="cardhd">Review day · '+fmtLong(todayISO())+'</div><p class="muted">Video-free by design — this day is reserved for practice questions, Anki, and your weak spots before the exam.</p></div>';
+      colB+='<div class="card"><div class="cardhd">Review day · '+fmtLong(todayISO())+'</div><p class="muted">Video-free by design — this day is reserved for practice questions, Anki, and your weak spots before the exam.</p>'
+        +uwDayBarHTML(todayRow.iso,true)+'</div>';   // a test from any week of the unit
     }
     if(row && row.items.length){
       const anyDone=row.items.some(it=>isDone(it.id));
@@ -4344,7 +4362,7 @@ function dayDetail(iso,onStudy){
   else if(row.off)h+='<p class="muted">Day off — no videos scheduled. <button class="link" id="d_unoff">Cancel day off</button></p>';
   else if(row.rest)h+='<p class="muted small">Weekly rest day. Enjoy the breather.</p>'
     +(past?'':'<div class="rowtools"><button class="btn ghost" id="d_studyday">Study this day</button></div>');
-  else if(row.review)h+='<p class="muted small">Review window — timed UWorld blocks + Anki. No new videos.</p>';
+  else if(row.review)h+='<p class="muted small">Review window — timed UWorld blocks + Anki. No new videos.</p>'+uwDayBarHTML(row.iso,!!onStudy);
   else if(row.earlier)h+='<p class="muted small">From <b>before you joined</b> — not part of your plan and not counted against your pace. Optional, but if you want to go back for any of it, check it off here.</p>'+dayVlist(row);
   else if(past&&row.items.length)h+='<p class="muted small">What you checked off this day. Anything left unfinished re-flowed forward.</p>'+dayVlist(row);
   else if(past)h+='<p class="muted small">Nothing was checked off this day — that work re-flowed forward.</p>';
@@ -6019,11 +6037,17 @@ function doResetAll(){
     S.cfgs=snap.cfgs;S.active=snap.active;S.cfg=S.active?S.cfgs[S.active]:null;_prevSig=progressSig();save();
     if(S.cfg){reflow();render();}else renderWelcome();toast("Restored ✓");});
 }
-const BUILD="2026-10-29";
+const BUILD="2026-11-02";
 /* ---------- What's new (changelog) ----------
    Newest entry first. Bump the top entry's id whenever you add one and the
    pop-up shows once per person (tracked in synced settings.seenUpdate). */
 const CHANGELOG=[
+  {id:"2026-11-02", date:"November 2026", title:"Build a UWorld test from any Brody week", items:[
+    "The UWorld test panel on Study now lists every week of your unit next to This day. On a week-3 day you can pick Week 1 and build a test from week 1\u2019s videos, which is handy for reviewing before the exam.",
+    "A week means the videos your unit teaches that week, including any you\u2019re still catching up on that the calendar has moved to a later day.",
+    "Review days now have the test panel too, opened on that week.",
+    "Tests are still kept by the week you built them from, and a question already in one of your tests is never used again.",
+  ]},
   {id:"2026-10-29", date:"October 2026", title:"Last week stays on the calendar", items:[
     "The calendar on Study now keeps last week on top, above this week and the three after it. The weekend you just studied no longer drops off the moment a new week starts.",
     "Nothing you checked off was lost: those videos were always saved and counted, and now you can see them again on the days you did them.",
