@@ -12,7 +12,7 @@
  * and it is checked against every video already in the catalog — a rule that would
  * move an existing video is an error, because the system is part of its identity.
  *
- * THE LAW this enforces: every Sketchy video in a system is scheduled in that system's
+ * THE RULE it follows: every Sketchy video in a system is scheduled in that system's
  * unit — even a topic Brody doesn't lecture — unless the unit excludes it with a stated
  * reason. A video whose system has no unit yet is reported as waiting for one.
  *
@@ -157,7 +157,7 @@ Object.entries(NAMES).forEach(([id, cname]) => {
 if (problems.length) { console.error('PROBLEMS:'); problems.forEach(p => console.error('  ' + p)); process.exit(1); }
 fs.writeFileSync(APP, app);
 
-/* ---------------- the law: where does every Sketchy video get watched? ---------------- */
+/* ---------------- where does every Sketchy video get watched? ---------------- */
 const order = app.match(/const BRODY_BLOCKS=\[([^\]]*)\];/)[1].split(',').map(s => s.trim());
 const units = order.map(n => JSON.parse(app.match(new RegExp('\\nconst ' + n + '=(.*?);\\n'))[1]));
 const inUnit = (u, v) => (u.systems.includes(v.sys) || (u.include || []).includes(K(v))) && !(u.exclude || []).includes(K(v));
