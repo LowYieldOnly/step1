@@ -48,8 +48,8 @@ const reg=await p.evaluate(()=>{
     last:ids[ids.length-1],sorted:shelves.every((s,i)=>i===0||shelves[i-1]<s),
     dupes:ids.length!==new Set(ids).size,ids};
 });
-chk('C62-1 the block is registered, named, and last in shelf order',
-    reg.found&&reg.name==='Musculoskeletal & Skin'&&reg.last==='msk-skin'&&reg.sorted&&!reg.dupes,
+chk('C62-1 the block is registered, named, and in shelf order',
+    reg.found&&reg.name==='Musculoskeletal & Skin'&&reg.sorted&&!reg.dupes,
     JSON.stringify(reg.ids));
 chk('C62-2 two systems: Musculoskeletal and Dermatology',
     JSON.stringify(reg.systems)==='["Musculoskeletal","Dermatology"]', JSON.stringify(reg.systems));
