@@ -2067,12 +2067,14 @@ function setBrodyFree(c,free){
   const wasFree=brodyFree(c);if(wasFree===!!free)return;
   const prevPace=c.brodyPace;
   if(free)c.brodyFree=true;else delete c.brodyFree;
+  const prevVid=c.vidPerDay;
   c.brodyPace=brodyRecPace(c,brodyBlock(c)||BRODY_BLOCKS[0]);
+  if(paceVids(c))c.vidPerDay=brodyRecVids(c,brodyBlock(c)||BRODY_BLOCKS[0]);
   save();reflow();
   toastUndo(free
-    ? ('Even pace — '+c.brodyPace+' h/day across every open day; quizzes no longer set deadlines.')
-    : ('Brody quiz weeks — '+c.brodyPace+' h/day to stay ahead of every quiz.'),
-    ()=>{if(wasFree)c.brodyFree=true;else delete c.brodyFree;c.brodyPace=prevPace;save();reflow();render();});
+    ? ('Even pace — '+paceTxt(paceOf(c),c)+' across every open day; quizzes no longer set deadlines.')
+    : ('Brody quiz weeks — '+paceTxt(paceOf(c),c)+' to stay ahead of every quiz.'),
+    ()=>{if(wasFree)c.brodyFree=true;else delete c.brodyFree;c.brodyPace=prevPace;if(prevVid==null)delete c.vidPerDay;else c.vidPerDay=prevVid;save();reflow();render();});
 }
 function brodyStudyDays(c,blk,cursorISO){const seq=[];let dd=isoToDate(cursorISO),g=0;
   while(isoFromDate(dd)<blk.shelf&&g++<400){const iso=isoFromDate(dd);if(dayIsOpen(c,iso,dd.getDay()))seq.push(iso);dd=addDays(dd,1);}return seq;}
@@ -2255,6 +2257,28 @@ function brodyRecommendedPace(loads){
    free-paced plan (or the reverse). */
 function brodyRecPace(c,blk,live){return brodyRecommendedPace(brodyWeekLoads(c,blk||brodyBlock(c)||BRODY_BLOCKS[0],live));}
 function brodyPace(c){if(c&&c.brodyPace)return c.brodyPace;return brodyRecPace(c,brodyBlock(c)||BRODY_BLOCKS[0]);}
+/* Pace by videos (Dylan, 2026-11-08): a flat number of videos a day instead of hours of
+   video, for a Brody plan that chooses it (c.paceBy "videos"). The recommended count comes
+   from the same rule as the hours: quiz-ready or exam-ready, whichever is higher, over the
+   videos each week still owes. Like the hours, it is stamped on the plan (c.vidPerDay), so a
+   check-off never shrinks the day it was on. Every video counts as one, however long. */
+const BRODY_VID_MAX=24;   // videos/day above which "ready for this week's quiz" isn't real (about BRODY_QUIZ_MAX at ~15 min a video)
+function paceVids(c){c=c||S.cfg;return !!(c&&c.brody&&c.paceBy==="videos");}
+function brodyRecommendedVids(loads){
+  let cum=0,cumDays=0,quizN=0;
+  loads.forEach(w=>{cum+=w.count;cumDays+=w.days;
+    if(w.odbd>0){const need=cum/w.odbd;if(need<=BRODY_VID_MAX)quizN=Math.max(quizN,need);}});
+  const even=cumDays>0?cum/cumDays:0;
+  return Math.max(1,Math.ceil(Math.max(even,quizN)));
+}
+function brodyRecVids(c,blk,live){return brodyRecommendedVids(brodyWeekLoads(c,blk||brodyBlock(c)||BRODY_BLOCKS[0],live));}
+function brodyVidPace(c){if(c&&c.vidPerDay)return c.vidPerDay;return brodyRecVids(c,brodyBlock(c)||BRODY_BLOCKS[0]);}
+/* the plan's pace and its recommendation, each in the plan's own unit, and how to say one */
+function paceOf(c){return paceVids(c)?brodyVidPace(c):brodyPace(c);}
+function brodyRecOf(c,blk,live){return paceVids(c)?brodyRecVids(c,blk,live):brodyRecPace(c,blk,live);}
+function paceTxt(n,c,ofVideo){return paceVids(c)?(n+' video'+(n===1?'':'s')+'/day'):(n+' h/day'+(ofVideo?' of video':''));}
+/* switch a plan (or a plan being set up) between hours and videos; the count starts at the recommendation */
+function setPaceBy(c,by){if(by==="videos"){c.paceBy="videos";c.vidPerDay=brodyRecVids(c,brodyBlock(c)||BRODY_BLOCKS[0]);}else{delete c.paceBy;delete c.vidPerDay;}}
 function reflowBrody(c,blk){
   // The pace belongs to the PLAN, not to your progress. Stamp it once so it stops
   // being re-derived from remaining work on every check-off: that made completing a
@@ -2264,6 +2288,7 @@ function reflowBrody(c,blk){
   // Locked, a check-off only ever empties a slot. The Plan banner still shows the
   // live recommendation and offers one tap to adopt it, so adapting stays your call.
   if(c.brody&&!c.brodyPace&&catReady())c.brodyPace=brodyRecPace(c,blk);
+  if(paceVids(c)&&!c.vidPerDay&&catReady())c.vidPerDay=brodyRecVids(c,blk);   // and the count, paced by videos
   // The article count is stamped for the same reason, on its own key.
   const artsOn=artEnabled(c)&&brodyHasArts(blk);
   if(artsOn&&!c.artPerDay&&catReady())c.artPerDay=brodyRecArts(c,blk);
@@ -2338,6 +2363,12 @@ function reflowBrody(c,blk){
   const reserved=(c.ankiMinPerDay||0)+(c.uworldMinPerDay||0);
   const paceMin=Math.max(15,Math.round(brodyPace(c)*60)-reserved);   // recommended (or user-set) h/day
   const dayUsed=iso=>((dayItems[iso]||[]).reduce((a,x)=>a+x.min,0))+(doneMinByDay[iso]||0);
+  // Paced by videos, a day holds up to N videos however long; videos done on a day count
+  // against it the same way their minutes do by hours.
+  const byCount=paceVids(c),perDay=byCount?Math.max(1,Math.round(brodyVidPace(c))):0;
+  const doneCntByDay={};
+  if(byCount)for(const id in vdd){if(earlierSet.has(id))continue;const it=byId[id];if(it&&!it.art)doneCntByDay[vdd[id]]=(doneCntByDay[vdd[id]]||0)+1;}
+  const dayCnt=iso=>((dayItems[iso]||[]).length)+(doneCntByDay[iso]||0);
   // Pour the remaining videos (ordered by Brody week → resource → native order) onto
   // the open days in sequence, filling each day up to the pace before moving on.
   // A day's budget already counts what you've completed there, so finishing a day's
@@ -2360,7 +2391,8 @@ function reflowBrody(c,blk){
        return;
      }
      // skip past days already full (from completed work or earlier packing)
-     while(di<openDays.length-1&&dayUsed(openDays[di])>0&&dayUsed(openDays[di])+it.min>paceMin+10)di++;
+     if(byCount)while(di<openDays.length-1&&dayCnt(openDays[di])>=perDay)di++;
+     else while(di<openDays.length-1&&dayUsed(openDays[di])>0&&dayUsed(openDays[di])+it.min>paceMin+10)di++;
      const iso=openDays[di];
      (dayItems[iso]=dayItems[iso]||[]).push(it);lastFillIdx=Math.max(lastFillIdx,di);
    });}
@@ -2456,7 +2488,7 @@ function reflowBrody(c,blk){
   // They are NOT in the minute figures — there are no minutes to add — which is why
   // progress-by-time falls back to counting when a plan is reading-only (see overall()).
   const planAll=vids.concat(arts);
-  SCHED={days,dayMap,atRisk:[],byId,planItems:planAll,planVideos:vids,planArts:arts,reviewDates:days.filter(d=>d.review).map(d=>d.iso),contentDates:days.filter(d=>!d.rest&&!d.off&&!d.review).map(d=>d.iso),brody:blk,weekLoad,brodyPace:brodyPace(c),brodyFree:brodyFree(c),artsOn:artsOn,artPace:artsOn?Math.max(1,Math.round(brodyArtPace(c))):0,currentWeek:currentWk,skippedWeeks:skippedWeeks,reviewBuf:brodyReviewBuf(c),reviewCutoff:reviewCutoff,
+  SCHED={days,dayMap,atRisk:[],byId,planItems:planAll,planVideos:vids,planArts:arts,reviewDates:days.filter(d=>d.review).map(d=>d.iso),contentDates:days.filter(d=>!d.rest&&!d.off&&!d.review).map(d=>d.iso),brody:blk,weekLoad,brodyPace:brodyPace(c),paceVids:paceVids(c),pace:paceOf(c),brodyFree:brodyFree(c),artsOn:artsOn,artPace:artsOn?Math.max(1,Math.round(brodyArtPace(c))):0,currentWeek:currentWk,skippedWeeks:skippedWeeks,reviewBuf:brodyReviewBuf(c),reviewCutoff:reviewCutoff,
     stats:{remMin,availMin:0,examDaysLeft:Math.max(0,daysBetween(todayISO(),shelf)),reqPerDay:0,feasible:!weekLoad.some(w=>w.heavy),
       contentDaysLeft:days.filter(d=>!d.rest&&!d.off&&!d.review).length,reviewDaysLeft:days.filter(d=>d.review).length,
       totalItems:planAll.length,doneItems:planAll.filter(v=>isDone(v.id)).length,remItems:remaining.length+artsRem.length,
@@ -3222,7 +3254,7 @@ function render(){
    owed over the days that are actually left. Falling behind pushes it up; the pace
    stamped on the plan doesn't move on its own. */
 function brodyRefitPace(c){c=c||S.cfg;if(!c||!c.brody)return 0;
-  return brodyRecPace(c,brodyBlock(c)||BRODY_BLOCKS[0],true);}
+  return brodyRecOf(c,brodyBlock(c)||BRODY_BLOCKS[0],true);}
 /* Whether re-fitting would actually move the pace, and which way. Behind, it goes up
    to protect the quiz deadlines. Ahead \u2014 you've banked work by studying ahead \u2014 it
    goes DOWN, spreading what's left over every remaining day for lighter days. Neither
@@ -3230,10 +3262,11 @@ function brodyRefitPace(c){c=c||S.cfg;if(!c||!c.brody)return 0;
    so the drop is offered, never applied. The pace snaps to half-hours, so anything
    under that isn't a real difference worth putting a button on. */
 function brodyRefitDelta(c){
-  const cur=(SCHED&&SCHED.brodyPace)||brodyPace(c||S.cfg);
+  const v=paceVids(c||S.cfg);   // paced by videos, the pace moves in whole videos
+  const cur=v?brodyVidPace(c||S.cfg):((SCHED&&SCHED.brodyPace)||brodyPace(c||S.cfg));
   const rec=brodyRefitPace(c);
-  if(!(rec>0)||Math.abs(rec-cur)<0.25)return null;
-  return {rec,cur,easier:rec<cur,over:rec>BRODY_QUIZ_MAX};
+  if(!(rec>0)||Math.abs(rec-cur)<(v?1:0.25))return null;
+  return {rec,cur,easier:rec<cur,over:rec>(v?BRODY_VID_MAX:BRODY_QUIZ_MAX)};
 }
 function brodyBehindPace(c){const d=brodyRefitDelta(c);return (d&&!d.easier)?d.rec:0;}
 /* Adopt it. The pace is normally locked to the plan (re-deriving it on every check-off
@@ -3277,7 +3310,7 @@ function brodyRefit(){
   const c=S.cfg;if(!c||!c.brody)return;
   const before=schedShape();
   const d=brodyRefitDelta(c);
-  const prevPace=c.brodyPace;
+  const prevPace=c.brodyPace,prevVid=c.vidPerDay;
   // Reading re-fits on the same tap, in its own currency. Without this, a
   // reading-only plan had a button that could never do anything.
   const artsOn=!!(SCHED&&SCHED.artsOn);
@@ -3286,17 +3319,17 @@ function brodyRefit(){
   const dA=(artsOn&&recA>0&&recA!==Math.max(1,Math.round(brodyArtPace(c))))?recA:0;
   const moved=refitPullForward();
   if(!d&&!dA&&!Object.keys(moved).length){toast('Nothing to re-fit \u2014 your plan is already tight.');return;}
-  if(d)c.brodyPace=d.rec;
+  if(d){if(paceVids(c))c.vidPerDay=d.rec;else c.brodyPace=d.rec;}
   if(dA)c.artPerDay=dA;
   save();reflow();render();
   const fr=brodyFree(c);
-  let paceTxt=d?(d.over ? ('Re-fit to '+d.rec+' h/day \u2014 more than fits in a day, so trim a resource too.')
-    : d.easier ? ('Re-fit to '+d.rec+' h/day \u2014 lighter days, still '+(fr?'finishing before the exam.':'ahead of every quiz.'))
-    : ('Re-fit to '+d.rec+' h/day \u2014 '+(fr?'back on track to finish.':'back ahead of every quiz.'))):'';
-  if(dA)paceTxt=(paceTxt?paceTxt.replace(/\.$/,'')+' \u00b7 reading now '+dA+'/day.'
+  let msg=d?(d.over ? ('Re-fit to '+paceTxt(d.rec,c)+' \u2014 more than fits in a day, so trim a resource too.')
+    : d.easier ? ('Re-fit to '+paceTxt(d.rec,c)+' \u2014 lighter days, still '+(fr?'finishing before the exam.':'ahead of every quiz.'))
+    : ('Re-fit to '+paceTxt(d.rec,c)+' \u2014 '+(fr?'back on track to finish.':'back ahead of every quiz.'))):'';
+  if(dA)msg=(msg?msg.replace(/\.$/,'')+' \u00b7 reading now '+dA+'/day.'
                         :('Re-fit to '+dA+' article'+(dA===1?'':'s')+'/day.'));
-  toastUndo(refitToast(before,schedShape(),paceTxt,Object.keys(moved).length),
-    ()=>{c.brodyPace=prevPace;if(prevArts==null)delete c.artPerDay;else c.artPerDay=prevArts;
+  toastUndo(refitToast(before,schedShape(),msg,Object.keys(moved).length),
+    ()=>{c.brodyPace=prevPace;if(prevVid==null)delete c.vidPerDay;else c.vidPerDay=prevVid;if(prevArts==null)delete c.artPerDay;else c.artPerDay=prevArts;
          refitPutBack(moved);save();reflow();render();});
 }
 /* The custom planner's twin of brodyRefit. Brody derives a pace, so re-fitting there
@@ -3370,10 +3403,10 @@ function paceHero(){const st=SCHED.stats;
     // Behind leads. A week only became "more than fits" BECAUSE you fell behind, and
     // telling someone to trim content when the real answer is "re-fit your days" sent
     // them to cut material they still need.
-    if(d&&!d.easier)return '<div class="herostat warn"><span class="hsdot"></span><span>Behind at '+SCHED.brodyPace+' h/day \u2014 '
+    if(d&&!d.easier)return '<div class="herostat warn"><span class="hsdot"></span><span>Behind at '+paceTxt(SCHED.pace,S.cfg)+' \u2014 '
       +(d.over
-        ? ('it would now take ~'+d.rec+' h/day to '+(free?'finish this unit':'stay ahead of every quiz')+', which is more than fits in a day. Re-fit anyway, then trim a resource in Plan.')
-        : ('~'+d.rec+' h/day '+(free?'still clears everything before the exam.':'gets you back ahead of every quiz.')))
+        ? ('it would now take ~'+paceTxt(d.rec,S.cfg)+' to '+(free?'finish this unit':'stay ahead of every quiz')+', which is more than fits in a day. Re-fit anyway, then trim a resource in Plan.')
+        : ('~'+paceTxt(d.rec,S.cfg)+' '+(free?'still clears everything before the exam.':'gets you back ahead of every quiz.')))
       +'</span>'+btn+'</div>';
     // Ahead: the pace is held, so banked work shortens the content tail and the spare
     // days turn into review. It rides along with the firehose warning rather than
@@ -3384,18 +3417,18 @@ function paceHero(){const st=SCHED.stats;
     // Working ahead is the moment the button matters most, so it's offered here too \u2014
     // but the cost is named first. Re-fitting now spreads what's left over every
     // remaining day, which is lighter days bought with the days you just banked.
-    const ease=d?(' \u00b7 re-fit to ~'+d.rec+' h/day for lighter days'+(banked>0?' (spends the banked days)':'')):'';
+    const ease=d?(' \u00b7 re-fit to ~'+paceTxt(d.rec,S.cfg)+' for lighter days'+(banked>0?' (spends the banked days)':'')):'';
     if(tight.length){
       // Free-paced there are no per-week deadlines, so a flagged week can only mean
       // the unit as a whole overflows the exam — one message, not a list of weeks.
-      if(free)return '<div class="herostat warn"><span class="hsdot"></span><span>~'+SCHED.brodyPace+' h/day of video · more than fits before the exam — trim a resource'+bank+ease+'</span>'+btn+'</div>';
+      if(free)return '<div class="herostat warn"><span class="hsdot"></span><span>~'+paceTxt(SCHED.pace,S.cfg,true)+' · more than fits before the exam — trim a resource'+bank+ease+'</span>'+btn+'</div>';
       // Reads naturally whether one week is heavy or all of them are — Nervous &
       // Sensory is the first block dense enough to flag every week at once.
       const ns=tight.map(w=>w.n);
       const wks=(ns.length===1)?('week '+ns[0]+' is')
         :('weeks '+ns.slice(0,-1).join(', ')+' and '+ns[ns.length-1]+' are');
-      return '<div class="herostat warn"><span class="hsdot"></span><span>~'+SCHED.brodyPace+' h/day of video \u00b7 '+wks+' more than fits before '+(ns.length===1?'its':'their')+' quiz \u2014 trim a resource'+bank+ease+'</span>'+btn+'</div>';}
-    return '<div class="herostat ok"><span class="hsdot"></span><span>On pace at ~'+SCHED.brodyPace+' h/day of video \u00b7 '+(free?'even pace to the exam':'ahead of every quiz')+skTxt+bank+ease+'</span>'+btn+'</div>';}
+      return '<div class="herostat warn"><span class="hsdot"></span><span>~'+paceTxt(SCHED.pace,S.cfg,true)+' \u00b7 '+wks+' more than fits before '+(ns.length===1?'its':'their')+' quiz \u2014 trim a resource'+bank+ease+'</span>'+btn+'</div>';}
+    return '<div class="herostat ok"><span class="hsdot"></span><span>On pace at ~'+paceTxt(SCHED.pace,S.cfg,true)+' \u00b7 '+(free?'even pace to the exam':'ahead of every quiz')+skTxt+bank+ease+'</span>'+btn+'</div>';}
   const hpd=Math.round(st.reqPerDay/60*10)/10;let cls,txt;
   // Same offer on the custom planner, moving the hours the student set instead of a
   // derived pace: up when the work no longer fits, down once they've worked ahead.
@@ -4313,6 +4346,12 @@ function fmtH(min){if(min<60)return min+"m";return (Math.round(min/60*10)/10)+"h
    rather than the empty string a minutes-only label returned for it. */
 function dayTimeLabel(row){
   const total=row.min||0,left=(row.todo!=null?row.todo:total);
+  if(SCHED&&SCHED.paceVids){   // paced by videos, a day reads in videos
+    const vids=row.items.filter(x=>!x.art),n=vids.length,nl=vids.filter(x=>!(isDone(x.id)||isSkip(x.id))).length;
+    const nA=row.arts||0,aLeft=(row.artsTodo!=null?row.artsTodo:nA),art=nA>0?(aLeft>0?(aLeft+" to read"):("✓ "+nA+" read")):"";
+    if(!n)return art;
+    const vid=(nl<=0)?("✓ "+n+" video"+(n===1?"":"s")):(nl<n?(nl+" of "+n+" left"):(n+" video"+(n===1?"":"s")));
+    return art?(vid+" · "+art):vid;}
   const nA=row.arts||0,aLeft=(row.artsTodo!=null?row.artsTodo:nA);
   const art=nA>0?(aLeft>0?(aLeft+" to read"):("✓ "+nA+" read")):"";
   if(total<=0)return art;
@@ -4537,6 +4576,7 @@ function renderAdjustBrody(c){
   const dows=DOW.map((d,i)=>'<button type="button" class="tog '+((c.restDays||[]).includes(i)?"on":"")+'" data-dow="'+i+'">'+d+'</button>').join('');
   const resBtn=(k,lab)=>'<button type="button" class="tog '+(hasRes(k)?"on":"")+'" data-res="'+k+'">'+lab+'</button>';
   const pace=brodyPace(c);const heavy=(SCHED.weekLoad||[]).filter(w=>w.heavy);
+  const byV=paceVids(c),vp=byV?brodyVidPace(c):0;
   const free=brodyFree(c);
   const artsOn=!!SCHED.artsOn,artPace=SCHED.artPace||0;
   const anyVid=(st.totalMin||0)>0;   // a reading-only plan has no hours to show
@@ -4567,7 +4607,7 @@ function renderAdjustBrody(c){
       ?'<div><div class="kv">'+st.remArts+'</div><div class="kvl">articles left</div></div>'
        +'<div><div class="kv">'+artPace+'</div><div class="kvl">articles / day</div></div>'
       :'<div><div class="kv">'+Math.round(st.remMin/60)+'h</div><div class="kvl">video time left</div></div>'
-       +'<div><div class="kv">'+pace+'h'+(artsOn?' + '+artPace:'')+'</div><div class="kvl">'+(artsOn?'video / day + reads':'video / day')+'</div></div>')
+       +'<div><div class="kv">'+(byV?vp:(pace+'h'))+(artsOn?' + '+artPace:'')+'</div><div class="kvl">'+(byV?(artsOn?'videos / day + reads':'videos / day'):(artsOn?'video / day + reads':'video / day'))+'</div></div>')
     +(free
       ?'<div><div class="kv">'+(heavy.length?'⚠':'✓')+'</div><div class="kvl">'+(heavy.length?'over the exam':'fits by exam')+'</div></div>'
       :'<div><div class="kv">'+heavy.length+'</div><div class="kvl">firehose week'+(heavy.length===1?'':'s')+'</div></div>')
@@ -4587,10 +4627,15 @@ function renderAdjustBrody(c){
       :'<b>Quiz weeks.</b> Each Brody week’s videos are finished before that week’s quiz, so you’re never behind the material you’re about to be tested on. Heavy weeks stay heavy.')+'</p>'))
     +'<div class="flab mt">No-video / rest days</div><div class="togrow">'+dows+'</div>'
     +(anyVid?'<div class="flab mt">Daily pace</div>'
-    +'<div class="pacerow"><button type="button" class="pacebtn" data-fpace="dec" aria-label="less">−</button>'
-    +'<div class="paceval"><b>'+pace+' h</b><span>of video · per day</span></div>'
+    +'<div class="togrow"><button type="button" class="tog '+(byV?'':'on')+'" data-paceby="hours">Hours of video</button>'
+    +'<button type="button" class="tog '+(byV?'on':'')+'" data-paceby="videos">Number of videos</button></div>'
+    +'<div class="pacerow" style="margin-top:9px"><button type="button" class="pacebtn" data-fpace="dec" aria-label="less">−</button>'
+    +(byV?'<div class="paceval"><b>'+vp+'</b><span>video'+(vp===1?'':'s')+' · per day</span></div>'
+         :'<div class="paceval"><b>'+pace+' h</b><span>of video · per day</span></div>')
     +'<button type="button" class="pacebtn" data-fpace="inc" aria-label="more">+</button></div>'
-    +'<p class="muted small" style="margin:9px 0 0">Hours of <b>video</b> per study day — not your total study time. Nudge to fine-tune; the banner above updates as you go.</p>':'')
+    +'<p class="muted small" style="margin:9px 0 0">'+(byV
+      ?'A flat number of <b>videos</b> per study day, however long each one runs, so some days are longer than others. Nudge to fine-tune; the banner above updates as you go.'
+      :'Hours of <b>video</b> per study day — not your total study time. Nudge to fine-tune; the banner above updates as you go.')+'</p>':'')
     // Articles have no clock, so they get their own plate: a count, not a duration.
     +(artsOn?'<div class="flab mt">Articles per day</div>'
     +'<div class="pacerow"><button type="button" class="pacebtn" data-apace="dec" aria-label="fewer">−</button>'
@@ -4642,26 +4687,28 @@ function renderAdjustBrody(c){
   bindWeeklyGoal(c,apply);
   document.querySelectorAll("[data-dow]").forEach(b=>b.onclick=()=>{const i=+b.dataset.dow;c.restDays=c.restDays||[];const k=c.restDays.indexOf(i);if(k>=0)c.restDays.splice(k,1);else c.restDays.push(i);apply();});
   document.querySelectorAll("[data-res]").forEach(b=>b.onclick=()=>{c.resources=c.resources||{};c.resources[b.dataset.res]=!hasRes(b.dataset.res);apply();});
-  document.querySelectorAll("[data-fpace]").forEach(b=>b.onclick=()=>{const cur=brodyPace(c);c.brodyPace=Math.max(0.5,cur+(b.dataset.fpace==="inc"?0.5:-0.5));apply();});
+  document.querySelectorAll("[data-fpace]").forEach(b=>b.onclick=()=>{const up=b.dataset.fpace==="inc";
+    if(paceVids(c))c.vidPerDay=Math.max(1,brodyVidPace(c)+(up?1:-1));else c.brodyPace=Math.max(0.5,brodyPace(c)+(up?0.5:-0.5));apply();});
+  document.querySelectorAll("[data-paceby]").forEach(b=>b.onclick=()=>{if((b.dataset.paceby==="videos")===paceVids(c))return;setPaceBy(c,b.dataset.paceby);apply();});
   document.querySelectorAll("[data-bfree]").forEach(b=>b.onclick=()=>{setBrodyFree(c,b.dataset.bfree==="1");apply();});
   if(seq){
     // content changes re-derive the stamped paces, like a resource switch; a reorder doesn't
-    seqEditorBind(c,content=>{if(content){delete c.brodyPace;delete c.artPerDay;}apply();});
+    seqEditorBind(c,content=>{if(content){delete c.brodyPace;delete c.vidPerDay;delete c.artPerDay;}apply();});
     const ds=document.getElementById("seq_start");if(ds)ds.onclick=()=>openDatePicker({value:c.startISO,title:"Start date",onPick:iso=>{
-      if(c.examISO&&iso>=c.examISO){toast("Start has to be before your exam");return;}c.startISO=iso;delete c.brodyPace;delete c.artPerDay;apply();}});
-    seqExamBind(c,"seq_end",()=>{delete c.brodyPace;delete c.artPerDay;apply();});
+      if(c.examISO&&iso>=c.examISO){toast("Start has to be before your exam");return;}c.startISO=iso;delete c.brodyPace;delete c.vidPerDay;delete c.artPerDay;apply();}});
+    seqExamBind(c,"seq_end",()=>{delete c.brodyPace;delete c.vidPerDay;delete c.artPerDay;apply();});
   }
   document.querySelectorAll("[data-apace]").forEach(b=>b.onclick=()=>{const cur=Math.max(1,Math.round(brodyArtPace(c)));c.artPerDay=Math.max(1,cur+(b.dataset.apace==="inc"?1:-1));apply();});
   /* Changing what's in the plan changes how much work is left, so the stamped paces
      are re-derived — exactly as switching quiz/even pace does. Leaving a pace set for
      a plan 33 hours bigger would silently keep the days heavy. */
-  const reprice=()=>{delete c.brodyPace;delete c.artPerDay;apply();};
+  const reprice=()=>{delete c.brodyPace;delete c.vidPerDay;delete c.artPerDay;apply();};
   document.querySelectorAll("[data-ctype]").forEach(b=>b.onclick=()=>{
     const k=b.dataset.ctype;setContentOff(c,k,!contentOff(c)[k]);reprice();});
   document.querySelectorAll("[data-cpreset]").forEach(b=>b.onclick=()=>{
     setContentPreset(c,b.dataset.cpreset==="min");reprice();});
   const bua=document.getElementById("brodyUseArts");if(bua)bua.onclick=()=>{c.artPerDay=brodyRecArts(c,brodyBlock(c)||BRODY_BLOCKS[0]);apply();};
-  const bup=document.getElementById("brodyUsePace");if(bup)bup.onclick=()=>{c.brodyPace=brodyRecPace(c,brodyBlock(c)||BRODY_BLOCKS[0]);apply();};
+  const bup=document.getElementById("brodyUsePace");if(bup)bup.onclick=()=>{if(paceVids(c))c.vidPerDay=brodyRecVids(c,brodyBlock(c)||BRODY_BLOCKS[0]);else c.brodyPace=brodyRecPace(c,brodyBlock(c)||BRODY_BLOCKS[0]);apply();};
   document.querySelectorAll("[data-fbuf]").forEach(b=>b.onclick=()=>{const cur=brodyReviewBuf(c);c.brodyReviewDays=Math.max(0,Math.min(14,cur+(b.dataset.fbuf==="inc"?1:-1)));apply();});
   const nu=document.getElementById("newUnit");if(nu)nu.onclick=()=>{startOnboard("nbme",true);};
   const ab=document.getElementById("adjBack");if(ab)ab.onclick=()=>{ADJ_VIEW=null;render();};
@@ -4715,6 +4762,26 @@ function brodyPaceBanner(c){
         :('Reading runs right up to '+endTxt(blk.shelf)+' — no review buffer reserved.'))+'</div>'
       +'<div class="pbnote">📖 Articles have <b>no runtime</b>, so this plan is paced by count rather than hours. Your Brody lectures, Anki, UWorld and review are <b>on top of this</b>.</div>'
       +(diffA?'<button type="button" class="btn ghost pbbtn" id="brodyUseArts">Set my reading to '+recA+'/day</button>':'')
+      +'</div>';
+  }
+  if(paceVids(c)){
+    const recV=brodyRecVids(c,blk),curV=brodyVidPace(c),heavyV=(SCHED.weekLoad||[]).filter(w=>w.heavy),bufV=brodyReviewBuf(c);
+    const okV=curV>=recV&&!heavyV.length,vs=n=>n+' video'+(n===1?'':'s');
+    const statV=(heavyV.length&&!free)
+      ? '<span class="pbwarn">Firehose</span> Week '+heavyV.map(w=>w.n).join(', ')+' packs more third-party than fits before its quiz, even at a high pace — trim a resource there.'
+      : curV<recV
+        ? ('<span class="pbwarn">'+(free?'Won’t finish':'Behind a quiz')+'</span> you’re set to '+vs(curV)+' a day — about <b>'+vs(recV)+' a day</b> '+(free?'clears every video before your buffer.':'keeps you ahead of every weekly quiz.'))
+        : ('<span class="pbok">On track</span> you’re set to '+vs(curV)+' a day — '+(free?'every video is done before your buffer.':'every week finishes before its quiz.')+' Change anything below and this updates instantly.');
+    return '<div class="pacebanner '+(okV?'ok':'warn')+'">'
+      +'<div class="pbtop"><div class="pbnum">'+recV+'<i>/day</i></div>'
+      +'<div class="pblab"><b>Recommended pace</b><span><b>videos to watch</b> per day to '
+      +(free?('clear every video in '+(blk.seq?'your plan':'this unit')+' at an even pace, finishing before your buffer'):'stay ahead of every quiz and finish before your buffer')+'</span></div></div>'
+      +'<div class="pbstat">'+statV+'</div>'
+      +'<div class="pbbuf">📅 '+(bufV>0
+        ? 'All videos finish by <b>'+fmtShort(SCHED.reviewCutoff)+'</b>, leaving <b>'+bufV+' video-free day'+(bufV===1?'':'s')+'</b> before '+endTxt(blk.shelf)+' for UWorld &amp; review.'
+        : 'Videos run right up to '+endTxt(blk.shelf)+' — no review buffer reserved.')+'</div>'
+      +'<div class="pbnote">🎬 Paced by <b>number of videos</b>: each counts as one, however long it runs, so some days are longer than others. Your Brody lectures, Anki, UWorld and review are <b>on top of this</b>.</div>'
+      +(curV!==recV?'<button type="button" class="btn ghost pbbtn" id="brodyUsePace">Set my pace to '+vs(recV)+'/day</button>':'')
       +'</div>';
   }
   const rec=brodyRecPace(c,blk);
@@ -5418,7 +5485,7 @@ function enterHub(key){if(!S.cfgs[key]){startOnboard(key);return;}activate(key);
 let _ob=null;
 function defaultsForHub(key,fresh){const ex=fresh?null:S.cfgs[key];
   let o;
-  if(ex)o={hub:key,fresh:false,brody:ex.brody||null,seqUnit:(ex.seqUnit||undefined),seqTopics:(Array.isArray(ex.seqTopics)?ex.seqTopics.slice():undefined),brodyPace:ex.brodyPace||null,brodyFree:(ex.brodyFree?true:undefined),artPerDay:(ex.artPerDay||undefined),contentOff:(ex.contentOff?JSON.parse(JSON.stringify(ex.contentOff)):undefined),brodyJoinWk:(ex.brodyJoinWk!=null?ex.brodyJoinWk:undefined),brodyJoinDate:(ex.brodyJoinDate||undefined),brodyReviewDays:(ex.brodyReviewDays!=null?ex.brodyReviewDays:undefined),examLabel:ex.examLabel||"",examISO:ex.examISO||"",startISO:ex.startISO||todayISO(),wkdayHrs:ex.wkdayHrs,wkendHrs:ex.wkendHrs,restDays:(ex.restDays||[0]).slice(),reviewDays:ex.reviewDays,resources:Object.assign({bnb:true,pathoma:true,sketchy:true,fa:true,anking:true,uworld:true},ex.resources||{}),systems:(ex.systems||SYS).slice(),sysOrder:(ex.sysOrder&&ex.sysOrder.length===SYS.length?ex.sysOrder:SYS_ORDER_DEFAULT).slice(),pathChapters:(Array.isArray(ex.pathChapters)?ex.pathChapters.slice():undefined),threadTopics:(Array.isArray(ex.threadTopics)?ex.threadTopics.slice():undefined),weeklyQGoal:(ex.weeklyQGoal||0),qGoalPer:(ex.qGoalPer||"week"),catOrder:(ex.catOrder?JSON.parse(JSON.stringify(ex.catOrder)):undefined),quizzes:(Array.isArray(ex.quizzes)?JSON.parse(JSON.stringify(ex.quizzes)):[]),skip:Object.assign({},ex.skip||{}),step:0};
+  if(ex)o={hub:key,fresh:false,brody:ex.brody||null,seqUnit:(ex.seqUnit||undefined),seqTopics:(Array.isArray(ex.seqTopics)?ex.seqTopics.slice():undefined),brodyPace:ex.brodyPace||null,paceBy:(ex.paceBy||undefined),vidPerDay:(ex.vidPerDay||undefined),brodyFree:(ex.brodyFree?true:undefined),artPerDay:(ex.artPerDay||undefined),contentOff:(ex.contentOff?JSON.parse(JSON.stringify(ex.contentOff)):undefined),brodyJoinWk:(ex.brodyJoinWk!=null?ex.brodyJoinWk:undefined),brodyJoinDate:(ex.brodyJoinDate||undefined),brodyReviewDays:(ex.brodyReviewDays!=null?ex.brodyReviewDays:undefined),examLabel:ex.examLabel||"",examISO:ex.examISO||"",startISO:ex.startISO||todayISO(),wkdayHrs:ex.wkdayHrs,wkendHrs:ex.wkendHrs,restDays:(ex.restDays||[0]).slice(),reviewDays:ex.reviewDays,resources:Object.assign({bnb:true,pathoma:true,sketchy:true,fa:true,anking:true,uworld:true},ex.resources||{}),systems:(ex.systems||SYS).slice(),sysOrder:(ex.sysOrder&&ex.sysOrder.length===SYS.length?ex.sysOrder:SYS_ORDER_DEFAULT).slice(),pathChapters:(Array.isArray(ex.pathChapters)?ex.pathChapters.slice():undefined),threadTopics:(Array.isArray(ex.threadTopics)?ex.threadTopics.slice():undefined),weeklyQGoal:(ex.weeklyQGoal||0),qGoalPer:(ex.qGoalPer||"week"),catOrder:(ex.catOrder?JSON.parse(JSON.stringify(ex.catOrder)):undefined),quizzes:(Array.isArray(ex.quizzes)?JSON.parse(JSON.stringify(ex.quizzes)):[]),skip:Object.assign({},ex.skip||{}),step:0};
   // a brand-new plan starts with every resource unchecked — the student picks
   else o={hub:key,fresh:!!fresh,examLabel:key==="step1"?"Step 1":"",examISO:"",startISO:todayISO(),wkdayHrs:6,wkendHrs:4,restDays:[0],reviewDays:14,resources:{bnb:false,pathoma:false,sketchy:false,fa:false,anking:false,uworld:false},systems:(key==="nbme"?[]:SYS.slice()),sysOrder:SYS_ORDER_DEFAULT.slice(),threadTopics:[],weeklyQGoal:0,qGoalPer:"week",catOrder:undefined,quizzes:[],skip:{},step:0};
   // NBME hub now selects individual systems (like Step 1); migrate any legacy block selection
@@ -5598,7 +5665,7 @@ function obOwnOrder(ob,unitId){const u=brodyBlockById(unitId)||brodyBlockById(br
   ob.brody=SEQ_ID;ob.seqUnit=u.id;ob.seqTopics=seqDefaultTopics(u.id);ob.brodyJoinWk=null;
   const t=todayISO();ob.startISO=u.weeks[0].start>t?u.weeks[0].start:t;
   const ex=seqDefaultExam(ob);ob.examISO=(ex&&ex.iso>ob.startISO)?ex.iso:null;ob.examLabel=ob.examISO?ex.label:"your exam";
-  delete ob.brodyPace;delete ob.artPerDay;}
+  delete ob.brodyPace;delete ob.vidPerDay;delete ob.artPerDay;}
 const OB_STEP_META={
   plan:["Choose your plan","How do you want this schedule built?"],
   block:["Pick your unit","Which Brody unit are you in?"],
@@ -5642,7 +5709,7 @@ function obReviewHTML(ob){
   else{rows.push(["Exam",(ob.examLabel||"Shelf exam")+" · "+(ob.examISO?fmtShort(ob.examISO):"—")]);rows.push(["Start",fmtShort(ob.startISO)]);}
   rows.push(["Resources",res.join(", ")||"—"]);
   if(!brody)rows.push(["Systems",ob.systems.length+" selected"]);
-  if(brody)rows.push(["Daily pace",brodyPace(ob)+" h/day"]);
+  if(brody)rows.push(["Daily pace",paceTxt(paceOf(ob),ob)]);
   else rows.push(["Study hours",ob.wkdayHrs+" h weekday / "+ob.wkendHrs+" h weekend"]);
   rows.push(["Rest days",ob.restDays.length?ob.restDays.map(i=>DOW[i]).join(", "):"none"]);
   rows.push(["Review buffer",(brody?brodyReviewBuf(ob):ob.reviewDays)+" day"+(((brody?brodyReviewBuf(ob):ob.reviewDays))===1?"":"s")]);
@@ -5744,11 +5811,15 @@ function renderOnboard(){
           :'<b>Quiz weeks.</b> Each Brody week’s videos finish before that week’s quiz, so you’re never behind the material you’re about to be tested on.')+'</p>'))
         +'<div class="flab mt">No-video / rest days</div><div class="togrow">'+dows+'</div>'
         +'<div class="flab mt">Daily pace</div>'
-        +'<div class="pacerow"><button type="button" class="pacebtn" data-opace="dec" aria-label="less">−</button>'
-        +'<div class="paceval"><b id="ob_paceval">'+brodyPace(ob)+' h</b><span>of video · per day</span></div>'
+        +'<div class="togrow"><button type="button" class="tog '+(paceVids(ob)?'':'on')+'" data-obpaceby="hours">Hours of video</button>'
+        +'<button type="button" class="tog '+(paceVids(ob)?'on':'')+'" data-obpaceby="videos">Number of videos</button></div>'
+        +'<div class="pacerow" style="margin-top:9px"><button type="button" class="pacebtn" data-opace="dec" aria-label="less">−</button>'
+        +'<div class="paceval"><b id="ob_paceval">'+obPaceVal(ob)+'</b><span id="ob_paceunit">'+obPaceUnit(ob)+'</span></div>'
         +'<button type="button" class="pacebtn" data-opace="inc" aria-label="more">+</button></div>'
         +'<p class="muted small" id="ob_pacehelp" style="margin:9px 0 0">'+obPaceHelp(ob)+'</p>'
-        +'<p class="muted small" style="margin:5px 0 0">This is hours of <b>video</b> per study day — not your total study time. Anki, UWorld, and review sit on top.</p>'
+        +'<p class="muted small" style="margin:5px 0 0">'+(paceVids(ob)
+          ?'This is a flat number of <b>videos</b> per study day, however long each runs. Anki, UWorld, and review sit on top.'
+          :'This is hours of <b>video</b> per study day — not your total study time. Anki, UWorld, and review sit on top.')+'</p>'
         +'<div class="flab mt">Review buffer before '+(oSeq?'the exam':'the block exam')+'</div>'
         +'<div class="pacerow"><button type="button" class="pacebtn" data-obuf="dec" aria-label="fewer">−</button>'
         +'<div class="paceval"><b>'+brodyReviewBuf(ob)+' day'+(brodyReviewBuf(ob)===1?'':'s')+'</b><span>video-free for UWorld / review</span></div>'
@@ -5782,7 +5853,7 @@ function renderOnboard(){
   body+='</div>';
   app.innerHTML='<div class="wrap onb">'+body+'</div>';
   const ol=document.getElementById("o_label");if(ol)ol.onchange=()=>{ob.examLabel=ol.value||"Shelf exam";};
-  if(ob.brody===SEQ_ID)seqExamBind(ob,"o_exam",()=>{delete ob.brodyPace;delete ob.artPerDay;renderOnboard();});
+  if(ob.brody===SEQ_ID)seqExamBind(ob,"o_exam",()=>{delete ob.brodyPace;delete ob.vidPerDay;delete ob.artPerDay;renderOnboard();});
   else{const oe=document.getElementById("o_exam");if(oe)oe.onclick=()=>openDatePicker({value:ob.examISO,min:todayISO(),title:"Exam date",onPick:(iso)=>{ob.examISO=iso;renderOnboard();}});}
   const os=document.getElementById("o_start");if(os)os.onclick=()=>openDatePicker({value:ob.startISO,title:"Start date",onPick:(iso)=>{ob.startISO=iso;renderOnboard();}});
   const bindN=(id,k)=>{const e=document.getElementById(id);if(e)e.onchange=()=>{let v=parseFloat(e.value);if(isNaN(v)||v<0)v=0;ob[k]=v;obLive();};};
@@ -5800,23 +5871,26 @@ function renderOnboard(){
     if(own&&ob.brody!==SEQ_ID)obOwnOrder(ob,ob.brody);
     else if(!own&&ob.brody===SEQ_ID){const bl=brodyBlockById(seqUnitId(ob));
       ob.brody=bl.id;ob.brodyJoinWk=null;ob.systems=bl.systems.slice();ob.examLabel=bl.name;
-      delete ob.seqUnit;delete ob.seqTopics;delete ob.brodyPace;delete ob.artPerDay;}
+      delete ob.seqUnit;delete ob.seqTopics;delete ob.brodyPace;delete ob.vidPerDay;delete ob.artPerDay;}
     renderOnboard();});
-  if(_ob&&_ob.brody===SEQ_ID)seqEditorBind(ob,content=>{if(content){delete ob.brodyPace;delete ob.artPerDay;}renderOnboard();});
-  document.querySelectorAll("[data-opace]").forEach(b=>b.onclick=()=>{const cur=brodyPace(ob);ob.brodyPace=Math.max(0.5,cur+(b.dataset.opace==="inc"?0.5:-0.5));renderOnboard();});
+  if(_ob&&_ob.brody===SEQ_ID)seqEditorBind(ob,content=>{if(content){delete ob.brodyPace;delete ob.vidPerDay;delete ob.artPerDay;}renderOnboard();});
+  document.querySelectorAll("[data-opace]").forEach(b=>b.onclick=()=>{const up=b.dataset.opace==="inc";
+    if(paceVids(ob))ob.vidPerDay=Math.max(1,brodyVidPace(ob)+(up?1:-1));else ob.brodyPace=Math.max(0.5,brodyPace(ob)+(up?0.5:-0.5));renderOnboard();});
+  document.querySelectorAll("[data-obpaceby]").forEach(b=>b.onclick=()=>{if((b.dataset.obpaceby==="videos")===paceVids(ob))return;
+    if(b.dataset.obpaceby==="videos"){ob.paceBy="videos";delete ob.vidPerDay;}else{delete ob.paceBy;delete ob.vidPerDay;}renderOnboard();});
   document.querySelectorAll("[data-obuf]").forEach(b=>b.onclick=()=>{const cur=brodyReviewBuf(ob);ob.brodyReviewDays=Math.max(0,Math.min(14,cur+(b.dataset.obuf==="inc"?1:-1)));renderOnboard();});
   /* Changing the pace mode or what's in the plan drops the stamped pace so the next
      render re-derives it — the same reason the Plan editor does. Otherwise the
      recommendation shown on this very screen would be the one from before the change. */
   document.querySelectorAll("[data-obfree]").forEach(b=>b.onclick=()=>{
     if(b.dataset.obfree==="1")ob.brodyFree=true;else delete ob.brodyFree;
-    delete ob.brodyPace;renderOnboard();});
+    delete ob.brodyPace;delete ob.vidPerDay;renderOnboard();});
   document.querySelectorAll("[data-octype]").forEach(b=>b.onclick=()=>{
     const k=b.dataset.octype;setContentOff(ob,k,!contentOff(ob)[k]);
-    delete ob.brodyPace;delete ob.artPerDay;renderOnboard();});
+    delete ob.brodyPace;delete ob.vidPerDay;delete ob.artPerDay;renderOnboard();});
   document.querySelectorAll("[data-ocpreset]").forEach(b=>b.onclick=()=>{
     setContentPreset(ob,b.dataset.ocpreset==="min");
-    delete ob.brodyPace;delete ob.artPerDay;renderOnboard();});
+    delete ob.brodyPace;delete ob.vidPerDay;delete ob.artPerDay;renderOnboard();});
   document.querySelectorAll("[data-sinc]").forEach(b=>b.onclick=()=>{const s=b.dataset.sinc;const k=ob.systems.indexOf(s);if(k>=0){if(ob.systems.length>1)ob.systems.splice(k,1);}else ob.systems.push(s);renderOnboard();});
   document.querySelectorAll("[data-pathch]").forEach(b=>b.onclick=()=>{togglePathCh(ob,+b.dataset.pathch);renderOnboard();});
   bindThreadTopics(ob,()=>renderOnboard());
@@ -5836,12 +5910,18 @@ function renderObTogs(){
   document.querySelectorAll("[data-odow]").forEach(b=>b.classList.toggle("on",_ob.restDays.includes(+b.dataset.odow)));
   document.querySelectorAll("[data-ores]").forEach(b=>b.classList.toggle("on",resOn(_ob.resources,b.dataset.ores)));
 }
-function obPaceHelp(ob){const pace=brodyPace(ob),rec=brodyRecPace(ob,brodyBlock(ob)||BRODY_BLOCKS[0]);
+function obPaceVal(ob){return paceVids(ob)?String(brodyVidPace(ob)):(brodyPace(ob)+' h');}
+function obPaceUnit(ob){return paceVids(ob)?('video'+(brodyVidPace(ob)===1?'':'s')+' · per day'):'of video · per day';}
+function obPaceHelp(ob){
+  if(paceVids(ob)){const pv=brodyVidPace(ob),rv=brodyRecVids(ob,brodyBlock(ob)||BRODY_BLOCKS[0]);
+    return ob.vidPerDay?('Set to '+paceTxt(pv,ob)+'.'+(pv<rv?(' Below the ~'+paceTxt(rv,ob)+' this block needs — '+(brodyFree(ob)?'you may not finish before the exam.':'you may fall behind a quiz.')):' You’ll finish with room to spare.'))
+      :('Recommended ~'+paceTxt(rv,ob)+', spread evenly across your open days — nudge it to fit your schedule.');}
+  const pace=brodyPace(ob),rec=brodyRecPace(ob,brodyBlock(ob)||BRODY_BLOCKS[0]);
   const short=brodyFree(ob)?' Below the ~'+rec+' h/day this block needs — you may not finish before the exam.':' Below the ~'+rec+' h/day this block needs — you may fall behind a quiz.';
   return ob.brodyPace?('Set to '+pace+' h/day.'+(pace<rec?short:' You’ll finish with room to spare.')):('Recommended ~'+rec+' h/day, spread evenly across your open days — nudge it to fit your schedule.');}
 function obLive(){const c=document.getElementById("o_reco");if(c){c.innerHTML='<div class="cardhd">Recommended pace</div>'+obPreview();bindUsePace();}
   // keep the Daily-pace control in sync as resources / rest days change (Brody plans)
-  if(_ob&&_ob.brody){const pv=document.getElementById("ob_paceval");if(pv)pv.textContent=brodyPace(_ob)+' h';const ph=document.getElementById("ob_pacehelp");if(ph)ph.innerHTML=obPaceHelp(_ob);}}
+  if(_ob&&_ob.brody){const pv=document.getElementById("ob_paceval");if(pv)pv.textContent=obPaceVal(_ob);const pu=document.getElementById("ob_paceunit");if(pu)pu.textContent=obPaceUnit(_ob);const ph=document.getElementById("ob_pacehelp");if(ph)ph.innerHTML=obPaceHelp(_ob);}}
 /* pacing recommendation for onboarding — a suggestion only; the user keeps
    full control of rest days and weekday/weekend hours. */
 function obReco(){const ob=_ob;
@@ -5920,10 +6000,10 @@ function seqEditorBind(c,changed){
 function seqPreviewHTML(c){
   const blk=brodyBlock(c);if(!blk)return '';
   const loads=brodyWeekLoads(c,blk);const tot=loads.reduce((a,w)=>a+w.loadMin,0);
-  const rec=brodyRecPace(c,blk);const cut=brodyReviewCutoff(c,blk);
+  const rec=paceTxt(brodyRecOf(c,blk),c);const cut=brodyReviewCutoff(c,blk);
   const days=brodyStudyDays(c,blk,blk.weeks[0].start).filter(d=>d<cut).length;
   let h='<p class="muted small" style="margin:0 0 10px">'+blk.weeks.length+' topics, '+fmtShort(blk.weeks[0].start)+' → '+escHTML(c.examLabel||'your exam')+' on '+fmtShort(blk.shelf)
-    +' · '+(Math.round(tot/6)/10)+' h of video over '+days+' study days → about <b>'+rec+' h/day</b>, evenly, finishing by '+fmtShort(cut)+'.</p>';
+    +' · '+(Math.round(tot/6)/10)+' h of video over '+days+' study days → about <b>'+rec+'</b>, evenly, finishing by '+fmtShort(cut)+'.</p>';
   h+='<div class="brodywks">'+loads.map(w=>'<div class="brodywk"><span class="bw-n">'+w.n+'</span><span class="bw-l">'+escHTML(w.label)+'</span><span class="bw-h">'+(Math.round(w.loadMin/6)/10)+' h</span></div>').join('')+'</div>';
   return h;
 }
@@ -5960,7 +6040,7 @@ function brodyPreview(ob){
     ? (tightWks.length?' <b>⚠ More third-party than fits before the exam</b>, even at a high pace — trim a resource or prioritize the high-yield ones.':' Everything clears before the exam.')
     : (tightWks.length?(' <b>⚠ Week '+tightWks.join(', ')+'</b> is a firehose — more third-party than fits before its quiz. Trim a resource or prioritize the high-yield ones there.'):' Comfortably ahead of every quiz.');
   const what=[total?(Math.round(total/60)+' h of video'):'',artTotal?(artTotal+' article'+(artTotal===1?'':'s')):''].filter(Boolean).join(' + ');
-  const at=[total?('<b>'+pace+' h/day</b>'):'',artTotal?('<b>'+artPace+' article'+(artPace===1?'':'s')+'/day</b>'):''].filter(Boolean).join(' + ');
+  const at=[total?('<b>'+paceTxt(paceOf(ob),ob)+'</b>'):'',artTotal?('<b>'+artPace+' article'+(artPace===1?'':'s')+'/day</b>'):''].filter(Boolean).join(' + ');
   let h='<p class="muted small" style="margin:0 0 10px">'+what+' across '+shown.length+' Brody week'+(shown.length===1?'':'s')+' → block exam '+fmtShort(blk.shelf)+'. At '+at+', spread evenly across your open days.'+(total?tightMsg:'')
     +(free?' Quiz dates are shown for reference — they don’t set your pace in this mode.':'')+(skipped>0?(' You’re starting at week '+(skipped+1)+' — earlier weeks aren’t included, so there’s no backlog to clear.'):'')+'</p>';
   h+='<div class="brodywks">'+rows+'</div>';
@@ -5992,7 +6072,7 @@ function commitOnboard(){const ob=_ob;
     // brodyPace is locked to the plan at creation (reflowBrody stamps it if the catalog wasn't ready yet)
     // carried on an edit, cleared by a brand-new plan — a fresh plan starts on Brody's
     // own quiz weeks, which is the mode the calendar is named after
-    brody:(brody?brody.id:undefined),seqUnit:((brody&&brody.seq)?seqUnitId(ob):undefined),seqTopics:((brody&&brody.seq)?seqTopics(ob).slice():undefined),brodyFree:((brody&&ob.brodyFree)?true:undefined),artPerDay:((brody&&ob.artPerDay)?ob.artPerDay:undefined),contentOff:((brody&&ob.contentOff&&Object.keys(ob.contentOff).length)?JSON.parse(JSON.stringify(ob.contentOff)):undefined),brodyPace:(brody?(ob.brodyPace||(catReady()?brodyPace(ob):undefined)):undefined),brodyJoinWk:(brody?(ob.brodyJoinWk!=null?ob.brodyJoinWk:undefined):undefined),brodyJoinDate:(brody?(ob.brodyJoinDate||todayISO()):undefined),brodyReviewDays:(brody?brodyReviewBuf(ob):undefined),
+    brody:(brody?brody.id:undefined),seqUnit:((brody&&brody.seq)?seqUnitId(ob):undefined),seqTopics:((brody&&brody.seq)?seqTopics(ob).slice():undefined),brodyFree:((brody&&ob.brodyFree)?true:undefined),artPerDay:((brody&&ob.artPerDay)?ob.artPerDay:undefined),contentOff:((brody&&ob.contentOff&&Object.keys(ob.contentOff).length)?JSON.parse(JSON.stringify(ob.contentOff)):undefined),brodyPace:(brody?(ob.brodyPace||(catReady()?brodyPace(ob):undefined)):undefined),paceBy:((brody&&ob.paceBy==="videos")?"videos":undefined),vidPerDay:((brody&&ob.paceBy==="videos")?(ob.vidPerDay||(catReady()?brodyVidPace(ob):undefined)):undefined),brodyJoinWk:(brody?(ob.brodyJoinWk!=null?ob.brodyJoinWk:undefined):undefined),brodyJoinDate:(brody?(ob.brodyJoinDate||todayISO()):undefined),brodyReviewDays:(brody?brodyReviewBuf(ob):undefined),
     examISO:(brody?brody.shelf:ob.examISO),startISO:(brody?brody.weeks[0].start:ob.startISO),wkdayHrs:ob.wkdayHrs,wkendHrs:ob.wkendHrs,restDays:ob.restDays.slice(),
     reviewDays:(brody?0:ob.reviewDays),resources:Object.assign({},ob.resources),systems:(brody?brody.systems.slice():ob.systems.slice()),sysOrder:(ob.sysOrder||SYS_ORDER_DEFAULT).slice(),pathChapters:(Array.isArray(ob.pathChapters)?ob.pathChapters.slice():undefined),threadTopics:(brody?undefined:(Array.isArray(ob.threadTopics)?ob.threadTopics.slice():undefined)),weeklyQGoal:(ob.weeklyQGoal>0?ob.weeklyQGoal:0),qGoalPer:qGoalPer(ob),catOrder:(ob.catOrder?JSON.parse(JSON.stringify(ob.catOrder)):undefined),quizzes:(Array.isArray(ob.quizzes)?ob.quizzes.filter(q=>q&&q.iso):[]),skip:Object.assign({},ob.skip||{})});
   c.off=c.off||{};c.on=c.on||{};
@@ -6039,11 +6119,18 @@ function doResetAll(){
     S.cfgs=snap.cfgs;S.active=snap.active;S.cfg=S.active?S.cfgs[S.active]:null;_prevSig=progressSig();save();
     if(S.cfg){reflow();render();}else renderWelcome();toast("Restored ✓");});
 }
-const BUILD="2026-11-08";
+const BUILD="2026-11-08b";
 /* ---------- What's new (changelog) ----------
    Newest entry first. Bump the top entry's id whenever you add one and the
    pop-up shows once per person (tracked in synced settings.seenUpdate). */
 const CHANGELOG=[
+  {id:"2026-11-08b", date:"November 2026", title:"Pace by number of videos", items:[
+    "A Brody plan can now be paced by a set number of videos a day instead of hours of video. In Plan \u2192 View / edit current plan, under Daily pace, pick Number of videos. Setup offers the same choice when you start a new unit.",
+    "Hours of video is still the default. Switch back any time and you get exactly the schedule hours gave you before.",
+    "By videos, each video counts as one however long it runs, so some days run longer than others. The recommended number works like the hours: enough to finish every week before its quiz and the whole unit before your review days.",
+    "The + and \u2212 buttons move it one video at a time. Videos you check off still count toward that day, so finishing early never pulls tomorrow\u2019s videos forward. Use Re-fit your schedule for that.",
+    "Study shows each day as a count (\u201c12 videos\u201d, then \u201c9 of 12 left\u201d), and Re-fit, the pace banner and the line at the top of Study all read in videos.",
+  ]},
   {id:"2026-11-08", date:"November 2026", title:"New unit: GI, Nutrition & Multisystem", items:[
     "The next Brody unit is ready: GI, Nutrition & Multisystem (SYST 9500), from Monday Nov 9 to Exam 5 on Friday Dec 11. Start it from Plan \u2192 Start a new plan. Your Musculoskeletal & Skin plan stays under Plan \u2192 Open old plans.",
     "It runs five weeks, paced to Extended Quizzes 9, 10 and 11. Thanksgiving week has no quiz, so its videos are due with week 4\u2019s on Dec 4.",
