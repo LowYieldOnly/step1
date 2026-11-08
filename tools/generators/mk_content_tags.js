@@ -226,6 +226,19 @@ const ITEMS = [
   ['uwlib','Endocrinology','','Formation and remodeling of bone','physio'],
   ['uwlib','Neurology','','Peripheral nerve structure and function','physio'],
   // 'Basic dermatology vocabulary' stays, as Bootcamp's 'Skin Lesions' does.
+  // ---- Boards & Beyond · Gastroenterology ----
+  // The "Anatomy" section is anatomy and embryology, except Hernias (clinical) and Salivary
+  // Glands (half of it is salivary disease). "GI Physiology" is physiology, except
+  // Bilirubin, which is the jaundice syndromes.
+  ['bnb','Gastroenterology','Anatomy','Gastrointestinal Embryology','embryo'],
+  ['bnb','Gastroenterology','Anatomy','Gastrointestinal Anatomy','anat'],
+  ['bnb','Gastroenterology','Anatomy','Gastrointestinal Blood Supply','anat'],
+  ['bnb','Gastroenterology','Anatomy','Gastrointestinal Tract','hist'],
+  ['bnb','Gastroenterology','Anatomy','Liver, Gallbladder, and Pancreas','anat'],
+  ['bnb','Gastroenterology','GI Physiology','Gastrointestinal Secretions','physio'],
+  ['bnb','Gastroenterology','GI Physiology','Gastrointestinal Hormones','physio'],
+  ['bnb','Gastroenterology','GI Physiology','Bile','physio'],
+  ['bnb','Gastroenterology','GI Physiology','Exocrine Pancreas','physio'],
 ];
 
 /* ---------------- validate against the real catalog ---------------- */
@@ -272,6 +285,7 @@ fs.writeFileSync(APP, app);
 const UNITS = {
   'Nervous & Sensory': ['Neurology', 'Psychiatry', 'Ophthalmology'],
   'Musculoskeletal & Skin': ['Musculoskeletal', 'Dermatology'],
+  'GI, Nutrition & Multisystem': ['Gastroenterology'],
 };
 const tagFor = v => { const r = RULES.find(rr => ruleHit(v, rr)); return r ? r.tag : (tagOf[K(v)] || null); };
 console.log(RULES.length + ' section rules + ' + ITEMS.length + ' per-item tags spliced into index.html');

@@ -87,19 +87,26 @@ if (after !== before) fs.writeFileSync(CAT, after);
 let app = fs.readFileSync(APP, 'utf8');
 const order = app.match(/const BRODY_BLOCKS=\[([^\]]*)\];/)[1].split(',').map(s => s.trim());
 const current = new Set(cat.videos.map(K));
+/* A block built on the CURRENT list names rows by their current keys; a plan still on an older
+   edition (one made before the correction, then moved onto the unit by editing — an edit keeps
+   its edition) sees those rows under their old keys. So a block built after an edition also
+   names each row as the older editions had it. Only those blocks: adding old keys to a block
+   that was live before would change the plans already on it. */
+const BOTH_WAYS = ['BRODY_GI'];
+const revMap = {};                     // the current key → every older key of the same row
+Object.entries(keyMap).forEach(([o, c]) => { (revMap[c] = revMap[c] || []).push(o); });
 const dual = [];
 order.forEach(name => {
   const m = app.match(new RegExp('\\nconst ' + name + '=(.*?);\\n'));
   const blk = JSON.parse(m[1]);
   let added = 0;
-  ['include', 'exclude'].forEach(f => (blk[f] || []).slice().forEach(k => {
-    const to = keyMap[k];
-    if (to && !blk[f].includes(to)) { blk[f].push(to); added++; }
-  }));
-  ['videoWeek', 'artWeek'].forEach(f => Object.entries(blk[f] || {}).forEach(([k, w]) => {
-    const to = keyMap[k];
-    if (to && blk[f][to] == null) { blk[f][to] = w; added++; }
-  }));
+  const twins = k => [keyMap[k]].concat(BOTH_WAYS.includes(name) ? (revMap[k] || []) : []).filter(Boolean);
+  ['include', 'exclude'].forEach(f => (blk[f] || []).slice().forEach(k => twins(k).forEach(to => {
+    if (!blk[f].includes(to)) { blk[f].push(to); added++; }
+  })));
+  ['videoWeek', 'artWeek'].forEach(f => Object.entries(blk[f] || {}).forEach(([k, w]) => twins(k).forEach(to => {
+    if (blk[f][to] == null) { blk[f][to] = w; added++; }
+  })));
   // every key a block names must be a row in SOME edition, or the block points at nothing
   const anyEd = new Set([...current, ...Object.keys(keyMap)]);
   Object.keys(EDITIONS).forEach(ed => JSON.parse(fs.readFileSync(path.join(REPO, 'tools/generators/data/catalog-' + ed + '.json'), 'utf8')).videos.forEach(v => anyEd.add(K(v))));
@@ -117,4 +124,4 @@ Object.entries(editions).forEach(([ed, E]) => {
   const same = E.filter(x => typeof x === 'number').length - (added[ed] || 0), then = E.filter(Array.isArray).length, gone = E.filter(x => typeof x === 'object' && !Array.isArray(x)).length;
   console.log('  ' + ed + ': ' + same + ' rows unchanged, ' + then + ' as they were then, ' + gone + ' since removed; + ' + (added[ed] || 0) + ' of resources new since (own toggle, off) · ' + EDITIONS[ed]);
 });
-if (dual.length) console.log('  unit blocks given the current key beside each renamed one: ' + dual.join(', '));
+if (dual.length) console.log('  unit blocks given the other edition\'s key beside each renamed one: ' + dual.join(', '));

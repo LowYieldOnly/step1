@@ -278,8 +278,8 @@ const d7=await p.evaluate(()=>{
   return {blockTxt,unitChips,before,own,kept,heme,brodyAgain,steps,chips,dflt,noExam,early,ok,editor,seqTxt,quiz,review,
     cfg:S.cfg&&{brody:S.cfg.brody,unit:S.cfg.seqUnit,topics:S.cfg.seqTopics&&S.cfg.seqTopics.length,end:S.cfg.examISO},items:SCHED&&SCHED.stats.totalItems};
 });
-chk('C67-21 setup asks for your unit, then the order — four unit chips, Brody\'s order chosen, nothing about "all units"',
-    JSON.stringify(d7.unitChips)===JSON.stringify(['heme-renal','cardiopulm','neuro-sensory','msk-skin'])&&d7.before.brody==='msk-skin'&&d7.before.unitOn==='msk-skin'
+chk('C67-21 setup asks for your unit, then the order — a chip per unit, Brody\'s order chosen, nothing about "all units"',
+    JSON.stringify(d7.unitChips)===JSON.stringify(['heme-renal','cardiopulm','neuro-sensory','msk-skin','gi-multisystem'])&&d7.before.brody==='msk-skin'&&d7.before.unitOn==='msk-skin'
     &&d7.before.ordOn==='brody'&&d7.before.steps.indexOf('sequence')<0&&!/all units|every unit/i.test(d7.blockTxt),
     JSON.stringify({chips:d7.unitChips,before:d7.before,txt:d7.blockTxt.slice(0,160)}));
 chk('C67-22 "My own order" keeps the unit you picked: its weeks, its exam (Exam 4, Nov 9), then the order and dates steps',

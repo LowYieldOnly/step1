@@ -21,7 +21,8 @@ import path from 'path';
 const { page: p, errors, close } = await openApp();
 const { chk, report } = checker('The #1 law — lectures mapped, every resource video scheduled in its system');
 
-const COVERAGE_PENDING = ['heme-renal', 'cardiopulm', 'neuro-sensory'];   // remove an id as its file lands
+// GI is built after the law's retirement (2026-10-24): its lectures are mapped in mk_gi.js, with no coverage file
+const COVERAGE_PENDING = ['heme-renal', 'cardiopulm', 'neuro-sensory', 'gi-multisystem'];   // remove an id as its file lands
 
 const units = await p.evaluate(()=>BRODY_BLOCKS.map(b=>b.id));
 
@@ -29,7 +30,7 @@ const units = await p.evaluate(()=>BRODY_BLOCKS.map(b=>b.id));
 const covDir = path.join(REPO, 'tools/generators/coverage');
 const haveCov = units.filter(id => fs.existsSync(path.join(covDir, id + '.js')));
 const missing = units.filter(id => !haveCov.includes(id));
-chk('C65-1 every unit has a lecture-coverage file, except the three older units still to be written',
+chk('C65-1 every unit has a lecture-coverage file, except the units listed as pending',
     JSON.stringify(missing) === JSON.stringify(COVERAGE_PENDING.filter(id => units.includes(id))),
     'missing: ' + JSON.stringify(missing) + ' · pending list: ' + JSON.stringify(COVERAGE_PENDING));
 haveCov.forEach((id, i) => {
@@ -43,7 +44,8 @@ const law = await p.evaluate(()=>{
   const isCancerPharm = v => (v.res === 'bnb' && v.cat === 'Cancer Drugs')
     || (v.res === 'skpharm' && ['Antimetabolites', 'DNA & Cellular Division', 'Kinase Inhibitors & Monoclonal Antibodies', 'Immunology'].includes(v.cat));
   return BRODY_BLOCKS.map(b => {
-    const own = catVideos().filter(v => !isArticle(v) && b.systems.includes(v.sys));
+    // a resource the unit doesn't carry by decision (noRes: Bootcamp, retired after MSK) isn't owed a week
+    const own = catVideos().filter(v => !isArticle(v) && b.systems.includes(v.sys) && !(b.noRes || []).includes(v.res));
     const excluded = own.filter(v => brodyExcluded(b, v));
     const kept = own.filter(v => !brodyExcluded(b, v));
     const explicit = v => (b.videoWeek || {})[brodyKey(v)] != null
