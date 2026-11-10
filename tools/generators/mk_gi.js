@@ -22,7 +22,12 @@
  *    toxicology 1-5 (beyond free-radical injury, the toxic alcohols and copper/iron),
  *    sexual health, laboratory medicine and drug-drug interactions.
  *
- * 4. Five weeks, and Thanksgiving week has no quiz. Quizzes: Extended Quiz 9 (Fri Nov 13),
+ * 4. B&B microbiology follows the Sketchy Micro videos (Dylan, 2026-11-10). For every Sketchy
+ *    Micro video below, the B&B Infectious Disease video that teaches the same organism is
+ *    added, in the week of the first of them (lib/micro_pairs.js): C. diff brings Other Gram
+ *    Positives, the gut viruses RNA Viruses, the gut protozoa Protozoa, the worms Helminths.
+ *
+ * 5. Five weeks, and Thanksgiving week has no quiz. Quizzes: Extended Quiz 9 (Fri Nov 13),
  *    10 (Fri Nov 20), 11 (Fri Dec 4); Exam 5 Fri Dec 11. A week is due at the first quiz
  *    on or after its Friday, so week 3 is due Dec 4 with week 4, and week 5 at the exam.
  *
@@ -31,6 +36,7 @@
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import { microPairs } from './lib/micro_pairs.js';
 
 const REPO = path.join(path.dirname(fileURLToPath(import.meta.url)), '..', '..');
 const APP = path.join(REPO, 'index.html');
@@ -274,6 +280,10 @@ Object.keys(include).forEach(k => {
   if (!cat.videos.some(v => K(v) === k)) { console.error('include key is not in the catalog: ' + k); process.exit(1); }
   videoWeek[k] = include[k];
 });
+/* B&B microbiology paired with the Sketchy Micro videos scheduled above */
+const pairs = microPairs(cat.videos, videoWeek);
+if (pairs.problems.length) { console.error('MICRO PAIRING:', pairs.problems); process.exit(1); }
+Object.entries(pairs.add).forEach(([k, w]) => { include[k] = w; videoWeek[k] = w; });
 
 const stale = Object.entries(maps).flatMap(([r, m]) => Object.keys(m).filter(n => !used[r].has(n)).map(n => r + ': ' + n));
 if (missed.length) {
@@ -327,4 +337,7 @@ Object.keys(byRes).sort().forEach(r => console.log('    ' + r.padEnd(10) + Strin
   + (byRes[r].m / 60).toFixed(1).padStart(8) + ' h'));
 console.log('\n  ' + Object.keys(include).length + ' videos pulled in from outside Gastroenterology for named lectures');
 console.log('  not carried: ' + cat.videos.filter(v => SYS.includes(v.sys) && NO_RES.includes(v.res)).length + ' Bootcamp GI videos (Bootcamp retired after MSK)');
+console.log('  B&B microbiology paired with Sketchy Micro: ' + Object.entries(pairs.add).map(([k, w]) => k.split('|').pop() + ' (wk ' + w + ')').join(', ')
+  + (pairs.kept.length ? '; already placed by a lecture: ' + pairs.kept.map(k => k.split('|').pop()).join(', ') : ''));
+if (pairs.unpaired.length) console.log('  Sketchy Micro with no B&B home yet: ' + pairs.unpaired.join(', '));
 console.log('  checks: every video mapped, every mapping resolves, no mapping points at a missing week');
