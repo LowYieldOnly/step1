@@ -1,6 +1,6 @@
 # One hub for every class: the plan
 
-**Status:** plan only. No code has been written for this.
+**Status:** ON HOLD (Dylan, November 11, 2026): "I am disregarding the M1 plan for now. Our only focus is on M2 schedule." Don't build any of this, or add M1 work, until he picks it back up. Plan only. No code has been written for it.
 **Date:** October 20, 2026
 **Goal:** the M2 Scheduler gets an **M1 section**. M1s get their own units, built from Brody's official M1 schedule and mapped lecture by lecture exactly as the M2 units are, with the same features and the same core ideas.
 
