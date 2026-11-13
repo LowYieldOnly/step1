@@ -499,14 +499,20 @@ has failed, and dressing the failure as a plan transfers the failure to the stud
 same rule applies to the article-based mode, with its own ceiling in items per day rather
 than minutes.
 
-## Step 22 — Let students join late without punishment
+## Step 22 — When a student starts late, schedule the whole unit
 
-A student who starts in week 3 should not be handed weeks 1 and 2 as a debt. Start their
-plan at the **current** week. Show the earlier material — they can study it, and it counts
-when they do — but never *owe* it to them.
+A student who starts in week 3 still sits an exam on weeks 1 and 2. Put the whole unit in
+their plan. The videos from before they started come **first**, from the day they start,
+and are due with the next quiz, because a quiz that has already happened cannot be a
+deadline. When a week cannot fit before its quiz for that reason, say it is the late start;
+do not call it a week with too much content.
 
-This is a small amount of code and a large amount of adoption. Nobody adopts a tool whose
-first screen tells them they are 180 videos behind.
+The first version did the opposite. It started the plan at the current week and showed
+the earlier material as optional and never owed, on the theory that nobody adopts a tool
+whose first screen says they are 180 videos behind. In use that was not practical: a
+student who started a unit on its first Friday got a plan that left out most of that
+week's videos, which the exam still covered. It was reversed on 2026-11-13. Let students
+check off or leave out what they have already covered another way.
 
 ## Step 23 — Make done work stay put
 

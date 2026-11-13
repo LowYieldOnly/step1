@@ -237,12 +237,11 @@ chk('C62-29 …so the day after the Nervous & Sensory exam it is Musculoskeletal
 const late=await p.evaluate(()=>{
   const b=brodyBlockById('msk-skin');
   window.__mk({today:b.weeks[2].start,join:3});
-  return {skipped:SCHED.skippedWeeks,wks:[...new Set(SCHED.planItems.map(v=>v.wk))].sort(),
-          earlier:SCHED.days.some(d=>d.earlier)};
+  return {wks:[...new Set(SCHED.planItems.map(v=>v.wk))].sort(),
+          earlier:SCHED.days.some(d=>d.earlier),past:SCHED.days.filter(d=>d.past&&d.items.length).length};
 });
-chk('C62-30 a late joiner starts at their join week, with the earlier weeks optional',
-    late.skipped===2&&late.wks.length===1&&late.wks[0]===3&&late.earlier===true,
-    'skipped '+late.skipped+' weeks '+JSON.stringify(late.wks));
+chk('C62-30 starting in week 3 still schedules weeks 1 and 2, with nothing set aside as earlier',
+    JSON.stringify(late.wks)==='[1,2,3]'&&late.earlier===false&&late.past===0, JSON.stringify(late));
 
 const m=await mobilePage();
 const mob=await m.evaluate(()=>{

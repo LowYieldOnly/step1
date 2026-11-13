@@ -89,7 +89,7 @@ Boundaries are interpretive; the commit dates and PR numbers are not.
 | Brody-calendar plan type (curriculum-mapped scheduling) | #36 | 2026-07-09 |
 | Review/practice buffer before the block exam | #41 | 2026-07-09 |
 | Real quiz dates as deadlines; firehose-week flagging | #48 | 2026-07-10 |
-| Late joiners start at the current week, no forced catch-up | #46 | 2026-07-10 |
+| Late joiners start at the current week, no forced catch-up (reversed 2026-11-13: a plan started late schedules the whole unit) | #46 | 2026-07-10 |
 | M1 daily-flow planner from the class calendar | #57 | 2026-07-14 |
 | Step 1 readiness snapshot / weak-system tracker | #59, #61 | 2026-07-14 |
 | Cloud sync durability: sync status, version history, export | #68 | 2026-07-15 |
@@ -220,7 +220,7 @@ before the quiz that tests it**. Supporting behaviour:
 | Review buffer: last N study days before the block exam kept video-free | #41 |
 | Real quiz dates as per-week deadlines | #48 |
 | "Firehose week" flag when a week cannot be finished before its quiz at a realistic pace (>6 h/day of video) | #48, #53 |
-| Late joiners start at the current week; earlier material shown but never owed | #46, #105 |
+| A plan started late schedules the whole unit, earlier weeks first. Until 2026-11-13 late joiners started at the current week and earlier material was shown but never owed | #46, #105, reversed 2026-11-13 |
 | Checking a video off never refills that day or reorders the calendar | #50, #55, #56, #116, #127 |
 | Per-video opt-out at plan creation and in the plan editor | #135 |
 | "Study this day" — opt a single rest day back in without changing the weekly pattern | #139 |
