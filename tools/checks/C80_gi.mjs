@@ -175,9 +175,11 @@ chk('C80-24 the current unit is MSK through its Nov 9 exam, then GI to Dec 11',
   roll['2026-11-08'] === 'msk-skin' && roll['2026-11-09'] === 'msk-skin' && roll['2026-11-10'] === 'gi-multisystem' && roll['2026-12-11'] === 'gi-multisystem', J(roll));
 const late = await p.evaluate(() => {
   const b = brodyBlockById('gi-multisystem'); window.__mk({ today: b.weeks[1].start, join: 2 });
-  return { skipped: SCHED.skippedWeeks, wks: [...new Set(SCHED.planItems.map(v => v.wk))].sort(), earlier: SCHED.days.some(d => d.earlier) };
+  const first = SCHED.days.find(d => d.items.length);
+  return { wks: [...new Set(SCHED.planItems.map(v => v.wk))].sort(), earlier: SCHED.days.some(d => d.earlier), first: first && first.items[0].wk, firstDay: first && first.iso, t: b.weeks[1].start };
 });
-chk('C80-25 a late joiner starts at their join week, the earlier week optional', late.skipped === 1 && J(late.wks) === '[2,3,4,5]' && late.earlier, J(late));
+chk('C80-25 starting in week 2 still schedules week 1, first, with nothing set aside as earlier',
+  J(late.wks) === '[1,2,3,4,5]' && late.earlier === false && late.first === 1 && late.firstDay === late.t, J(late));
 
 const m = await mobilePage();
 const mob = await m.evaluate(() => {

@@ -74,10 +74,10 @@ const d2=await p.evaluate(()=>{
   // start weeks after the unit's real dates: a date-based join week would drop everything "before" it
   window.__seq({start:'2026-12-01',today:'2026-12-01',end:'2027-04-01'});
   return {n:SCHED.planVideos.length,union:window.__items('msk-skin',false).size,join:S.cfg.brodyJoinWk,
-    earlier:brodyEarlierIds(S.cfg,SCHED.brody).ids.size,skipped:SCHED.skippedWeeks,first:SCHED.planVideos[0].wk};
+    earlier:SCHED.days.some(d=>d.earlier),first:SCHED.planVideos[0].wk};
 });
 chk('C67-4 starting after the unit\'s real dates still owes all of it — nothing reads as "before you arrived"',
-    d2.n===d2.union&&d2.join===1&&d2.earlier===0&&d2.skipped===0&&d2.first===1, JSON.stringify(d2));
+    d2.n===d2.union&&d2.join===1&&d2.earlier===false&&d2.first===1, JSON.stringify(d2));
 
 // ---------- 3. order ----------
 const d3=await p.evaluate(()=>{

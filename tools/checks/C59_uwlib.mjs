@@ -248,12 +248,13 @@ chk('C59-26 an individual article can be left out of the plan',
 chk('C59-27 …and articles appear in the opt-out picker', !opt.noArts&&opt.inPicker===true, '');
 const late=await p.evaluate(()=>{
   const blk=brodyBlockById('neuro-sensory');
+  window.__mk({arts:true});const all=SCHED.stats.totalArts;
   window.__mk({arts:true,today:blk.weeks[2].start,join:3});
-  return {wks:[...new Set(SCHED.planArts.map(a=>a.wk))].sort(),total:SCHED.stats.totalArts};
+  return {wks:[...new Set(SCHED.planArts.map(a=>a.wk))].sort(),total:SCHED.stats.totalArts,all};
 });
-chk('C59-28 a late joiner only owes the reading from their join week on',
-    late.wks.length===1&&late.wks[0]===3&&late.total===6,
-    'weeks '+JSON.stringify(late.wks)+', '+late.total+' articles');
+chk('C59-28 starting late still owes all of the unit\'s reading, from week 1',
+    late.wks[0]===1&&late.total===late.all&&late.all>6,
+    'weeks '+JSON.stringify(late.wks)+', '+late.total+' of '+late.all+' articles');
 
 // ---------- 7. other blocks have no articles mapped ----------
 const other=await p.evaluate(()=>{

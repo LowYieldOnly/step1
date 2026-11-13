@@ -388,17 +388,18 @@ chk('C58-46 …turning a resource off still re-flows and re-prices the plan',
     'base '+other.base+' → no-bootcamp '+other.noBC+' ('+other.pace+' h/day) → back '+other.backAgain);
 chk('C58-47 …and the weekly question goal is untouched by any of this', other.goal===true, '');
 
-// (f) joining late still starts you at the current week
+// (f) starting late schedules the whole unit, free-paced too (2026-11-13)
 const late=await p.evaluate(()=>{
   const blk=brodyBlockById('heme-renal');
   window.__mk('heme-renal',true,blk.weeks[2].start,3);
-  return {skipped:SCHED.skippedWeeks,weeks:[...new Set(SCHED.planItems.map(v=>v.wk))].sort(),
-          earlier:SCHED.days.some(d=>d.earlier)};
+  const first=SCHED.days.find(d=>d.items.length);
+  return {weeks:[...new Set(SCHED.planItems.map(v=>v.wk))].sort(),first:first&&first.items[0].wk,
+          earlier:SCHED.days.some(d=>d.earlier),past:SCHED.days.filter(d=>d.past&&d.items.length).length};
 });
-chk('C58-48 free-paced, a late joiner still starts at their join week',
-    late.skipped===2&&late.weeks[0]===3, 'skipped '+late.skipped+', weeks '+JSON.stringify(late.weeks));
-chk('C58-49 …with the pre-arrival videos still shown as optional "earlier" work',
-    late.earlier===true, 'no earlier-marked days were produced');
+chk('C58-48 free-paced, starting late still schedules the whole unit, earliest week first',
+    late.weeks[0]===1&&late.first===1, 'weeks '+JSON.stringify(late.weeks)+', first video is week '+late.first);
+chk('C58-49 …with nothing set aside as optional "earlier" work',
+    late.earlier===false&&late.past===0, JSON.stringify(late));
 
 /* ---------- 11. the on-open notice ----------
    The mode is opt-in and lives two taps deep, so nobody finds it unless they are

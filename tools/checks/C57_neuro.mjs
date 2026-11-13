@@ -203,16 +203,19 @@ chk('C57-20 the stats breakdown covers exactly the systems this block touches',
     JSON.stringify(done.sys)===JSON.stringify(['Behavioral Science','Neurology','Ophthalmology','Psychiatry']),
     JSON.stringify(done.sys));
 
-// ---------- 8. joining late ----------
+// ---------- 8. starting late ----------
+// A plan started after the unit's first day covers the whole unit (2026-11-13): the weeks from
+// before the start are scheduled first, from the day you start, and nothing sits on past days.
 const late=await p.evaluate(()=>{
-  __mk(null,'2026-10-05',3);
-  const b=brodyBlockById('neuro-sensory'),loads=brodyWeekLoads(S.cfg,b);
-  return {pre:loads.filter(w=>w.pre).map(w=>w.n),preEmpty:loads.filter(w=>w.pre).every(w=>w.loadMin===0),
-    earlier:brodyEarlierIds(S.cfg,b).ids.size,
-    pastShown:SCHED.days.filter(d=>d.iso<'2026-10-05'&&d.items.length).length};
+  const b=brodyBlockById('neuro-sensory'),t=b.weeks[1].start;
+  __mk(null,t,2);
+  const loads=brodyWeekLoads(S.cfg,b),first=SCHED.days.find(d=>d.items.length);
+  return {t,owed:loads.filter(w=>w.loadMin>0).map(w=>w.n),wks:[...new Set(SCHED.planItems.map(v=>v.wk))].sort(),
+    firstDay:first&&first.iso,firstWk:first&&first.items[0].wk,
+    pastShown:SCHED.days.filter(d=>d.iso<t&&d.items.length).length};
 });
-chk('C57-21 joining in week 3 owes nothing from weeks 1-2, but still shows them',
-    JSON.stringify(late.pre)==='[1,2]'&&late.preEmpty&&late.earlier>0&&late.pastShown>0, JSON.stringify(late));
+chk('C57-21 starting in week 2 still schedules week 1, first, from the day you start',
+    late.owed[0]===1&&late.wks[0]===1&&late.firstDay===late.t&&late.firstWk===1&&late.pastShown===0, JSON.stringify(late));
 
 // ---------- 9. the rest of the app ----------
 const rest=await p.evaluate(async()=>{

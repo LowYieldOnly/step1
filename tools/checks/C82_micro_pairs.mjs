@@ -109,7 +109,7 @@ chk('C82-11 a plan on the first catalog edition gets the same B&B videos',
   plan.firstEd === '2026.1' && J(plan.first.names) === J(plan.both.names), plan.firstEd + ' ' + J(plan.first.names));
 
 // ---------- 4. What's new ----------
-const wn = await p.evaluate(() => ({ title: CHANGELOG[0].title, items: CHANGELOG[0].items.join(' ') }));
+const wn = await p.evaluate(() => { const e = CHANGELOG.find(x => /Sketchy Micro/.test(x.title) && /Boards & Beyond/.test(x.title)) || { title: '', items: [] }; return { title: e.title, items: e.items.join(' ') }; });
 chk('C82-12 What\'s new says B&B micro now comes with Sketchy Micro',
   /Boards & Beyond/.test(wn.title) && /Sketchy Micro/.test(wn.title) && /Other Gram Positives/.test(wn.items) && /Helminths/.test(wn.items), J(wn).slice(0, 160));
 
